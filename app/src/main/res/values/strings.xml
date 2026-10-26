@@ -342,4 +342,14 @@
 	<string name="trace_numbers">Numbers</string>
 	<string name="trace_lines">Lines and dots</string>
 	<string name="trace_clear_all">Clear all traces</string>
+	<string name="autoMappingConfirm">Fit the autoplay? Waits will match sound lengths. Your current autoplay will be backed up. Simultaneous pads stay together.</string>
+	<string name="autoMappingApply">Fit</string>
+	<string name="autoMappingSaved">Autoplay saved. You can restore the previous version from the menu.</string>
+	<string name="autoMappingFailed">Could not save. Your existing autoplay is unchanged.</string>
+	<string name="autoPlayRestore">Restore previous autoplay</string>
+	<string name="autoPlayNoBackup">No saved backup</string>
+	<string name="autoPlayRestoreConfirm">Restore the previous backup? It will swap with the current autoplay. You can swap them again after restoring.</string>
+	<string name="autoPlayRestoreApply">Restore</string>
+	<string name="autoPlayRestored">Previous autoplay restored. You can swap back from the menu.</string>
+	<string name="autoPlayRestoreFailed">Could not restore. Your current autoplay and backup are unchanged.</string>
 </resources>

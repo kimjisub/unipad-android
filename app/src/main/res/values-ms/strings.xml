@@ -295,4 +295,14 @@
 	<string name="trace_numbers">Nombor</string>
 	<string name="trace_lines">Garisan dan titik</string>
 	<string name="trace_clear_all">Padam semua jejak</string>
+	<string name="autoMappingConfirm">Laraskan main automatik? Masa menunggu akan mengikut panjang bunyi. Main automatik semasa akan disandarkan. Pad yang ditekan serentak kekal serentak.</string>
+	<string name="autoMappingApply">Laraskan</string>
+	<string name="autoMappingSaved">Main automatik disimpan. Versi sebelumnya boleh dipulihkan melalui menu.</string>
+	<string name="autoMappingFailed">Tidak dapat menyimpan. Main automatik sedia ada tidak berubah.</string>
+	<string name="autoPlayRestore">Pulihkan main automatik sebelumnya</string>
+	<string name="autoPlayNoBackup">Tiada sandaran tersimpan</string>
+	<string name="autoPlayRestoreConfirm">Pulihkan sandaran sebelumnya? Sandaran akan ditukar dengan main automatik semasa. Kedua-duanya boleh ditukar semula.</string>
+	<string name="autoPlayRestoreApply">Pulihkan</string>
+	<string name="autoPlayRestored">Main automatik sebelumnya dipulihkan. Kedua-duanya boleh ditukar semula melalui menu.</string>
+	<string name="autoPlayRestoreFailed">Tidak dapat memulihkan. Main automatik semasa dan sandaran tidak berubah.</string>
 </resources>

@@ -2,10 +2,12 @@ package com.kimjisub.launchpad.tool
 
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.launchpad.unipack.struct.Sound
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.math.roundToInt
 
 /**
  * Rewrites a pack's autoPlay so each wait matches the length of the sound pressed before it.
@@ -24,7 +26,7 @@ class UniPackAutoMapper(
 	}
 
 	/** Calls [listener] in the caller's context; throws when the pack cannot be read or written. */
-	suspend fun run(listener: Listener) {
+	suspend fun run(listener: Listener, validate: () -> Unit = {}) {
 		val autoPlayFile = unipack.autoPlayFile ?: throw FileNotFoundException("autoPlay")
 		val autoPlay = unipack.autoPlayTable ?: throw IllegalStateException("autoPlay is not loaded")
 		val elements = mergeDelays(autoPlay.elements)
@@ -37,7 +39,7 @@ class UniPackAutoMapper(
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it) } }
+						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt() } }
 						result.add(e)
 					}
 					is AutoPlay.Element.Chain -> result.add(e)
@@ -49,15 +51,17 @@ class UniPackAutoMapper(
 			}
 		}
 
-		val content = render(result)
+		val content = render(result) { sound(it)?.wormhole?.takeIf { chain -> chain != Sound.NO_WORMHOLE } }
 		// withContext checks for cancellation before writing; the replacement itself is not interrupted.
-		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content) }
+		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content, validate) }
 	}
 
-	private fun soundFile(e: AutoPlay.Element.On): File? {
+	private fun soundFile(e: AutoPlay.Element.On): File? = sound(e)?.file
+
+	private fun sound(e: AutoPlay.Element.On): Sound? {
 		val sounds = unipack.soundTable?.getOrNull(e.currChain)?.getOrNull(e.x)?.getOrNull(e.y)
 		if (sounds.isNullOrEmpty()) return null
-		return sounds.elementAt(e.num % sounds.size).file
+		return sounds.elementAt(e.num % sounds.size)
 	}
 
 	companion object {
@@ -95,12 +99,27 @@ class UniPackAutoMapper(
 			return merged
 		}
 
-		internal fun render(elements: List<AutoPlay.Element>): String = buildString {
+		internal fun render(
+			elements: List<AutoPlay.Element>,
+			chainAfter: (AutoPlay.Element.On) -> Int? = { null },
+		): String = buildString {
+			var inferredChain: Int? = null
 			for (e in elements) {
 				when (e) {
-					is AutoPlay.Element.On -> append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
-					is AutoPlay.Element.Chain -> append("c ").append(e.c + 1).append('\n')
-					is AutoPlay.Element.Delay -> append("d ").append(e.delay).append('\n')
+					is AutoPlay.Element.On -> {
+						append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
+						inferredChain = chainAfter(e)
+					}
+					is AutoPlay.Element.Chain -> {
+						// Re-reading `t` already follows the sound's wormhole. Keep any following
+						// explicit chain commands, but do not emit that inferred change twice.
+						if (inferredChain != e.c) append("c ").append(e.c + 1).append('\n')
+						inferredChain = null
+					}
+					is AutoPlay.Element.Delay -> {
+						append("d ").append(e.delay).append('\n')
+						inferredChain = null
+					}
 					is AutoPlay.Element.Off -> {}
 				}
 			}

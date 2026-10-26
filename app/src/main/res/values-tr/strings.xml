@@ -296,4 +296,14 @@
 	<string name="trace_numbers">Sayılar</string>
 	<string name="trace_lines">Çizgiler ve noktalar</string>
 	<string name="trace_clear_all">Tüm izleri temizle</string>
+	<string name="autoMappingConfirm">Otomatik çalma ayarlansın mı? Beklemeler ses uzunluklarıyla değiştirilecek. Mevcut otomatik çalma yedeklenecek. Aynı anda basılan padler birlikte kalacak.</string>
+	<string name="autoMappingApply">Ayarla</string>
+	<string name="autoMappingSaved">Otomatik çalma kaydedildi. Önceki sürümü menüden geri yükleyebilirsiniz.</string>
+	<string name="autoMappingFailed">Kaydedilemedi. Mevcut otomatik çalma değişmedi.</string>
+	<string name="autoPlayRestore">Önceki otomatik çalmayı geri yükle</string>
+	<string name="autoPlayNoBackup">Kayıtlı yedek yok</string>
+	<string name="autoPlayRestoreConfirm">Önceki yedek geri yüklensin mi? Mevcut otomatik çalmayla yer değiştirecek. Daha sonra yeniden değiştirebilirsiniz.</string>
+	<string name="autoPlayRestoreApply">Geri yükle</string>
+	<string name="autoPlayRestored">Önceki otomatik çalma geri yüklendi. Menüden yeniden değiştirebilirsiniz.</string>
+	<string name="autoPlayRestoreFailed">Geri yüklenemedi. Mevcut otomatik çalma ve yedek değişmedi.</string>
 </resources>

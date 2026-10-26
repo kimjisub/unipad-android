@@ -295,4 +295,14 @@
 	<string name="trace_numbers">Angka</string>
 	<string name="trace_lines">Garis dan titik</string>
 	<string name="trace_clear_all">Hapus semua jejak</string>
+	<string name="autoMappingConfirm">Sesuaikan putar otomatis? Jeda akan mengikuti durasi suara. Putar otomatis saat ini akan dicadangkan. Pad yang ditekan bersamaan tetap bersamaan.</string>
+	<string name="autoMappingApply">Sesuaikan</string>
+	<string name="autoMappingSaved">Putar otomatis disimpan. Versi sebelumnya dapat dipulihkan dari menu.</string>
+	<string name="autoMappingFailed">Gagal menyimpan. Putar otomatis yang ada tidak berubah.</string>
+	<string name="autoPlayRestore">Pulihkan putar otomatis sebelumnya</string>
+	<string name="autoPlayNoBackup">Tidak ada cadangan tersimpan</string>
+	<string name="autoPlayRestoreConfirm">Pulihkan cadangan sebelumnya? Cadangan akan ditukar dengan putar otomatis saat ini. Keduanya dapat ditukar lagi.</string>
+	<string name="autoPlayRestoreApply">Pulihkan</string>
+	<string name="autoPlayRestored">Putar otomatis sebelumnya dipulihkan. Keduanya dapat ditukar lagi dari menu.</string>
+	<string name="autoPlayRestoreFailed">Gagal memulihkan. Putar otomatis saat ini dan cadangan tidak berubah.</string>
 </resources>

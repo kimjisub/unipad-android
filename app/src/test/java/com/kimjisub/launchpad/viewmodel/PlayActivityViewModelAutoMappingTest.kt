@@ -8,6 +8,8 @@ import com.kimjisub.launchpad.tool.SoundDurationReader
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import com.kimjisub.launchpad.audio.OboeAudioEngine
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
@@ -53,7 +55,7 @@ class PlayActivityViewModelAutoMappingTest {
 	private var reloadThread: Thread? = null
 
 	private object FixedLengths : SoundDurationReader {
-		override fun durationMs(file: File) = 400
+		override fun durationMs(file: File) = 400.0
 		override fun close() {}
 	}
 
@@ -61,10 +63,10 @@ class PlayActivityViewModelAutoMappingTest {
 	private class HeldLengths : SoundDurationReader {
 		val reading = CountDownLatch(1)
 		val release = CountDownLatch(1)
-		override fun durationMs(file: File): Int {
+		override fun durationMs(file: File): Double {
 			reading.countDown()
 			release.await(5, TimeUnit.SECONDS)
-			return 400
+			return 400.0
 		}
 		override fun close() {}
 	}
@@ -87,7 +89,7 @@ class PlayActivityViewModelAutoMappingTest {
 		Dispatchers.resetMain()
 	}
 
-	private fun openPack(lengths: SoundDurationReader = FixedLengths): PlayActivityViewModel {
+	private fun openPack(lengths: SoundDurationReader = FixedLengths, engine: SoundRunner.Engine = SoundRunner.OboeEngine): PlayActivityViewModel {
 		root = tmp.newFolder("pack")
 		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
 		File(root, "keySound").writeText("1 1 1 a.wav\n")
@@ -98,6 +100,7 @@ class PlayActivityViewModelAutoMappingTest {
 			mockk<UnipackRepository>(relaxed = true),
 			UsageAnalytics { _, _ -> },
 			autoMapper = { UniPackAutoMapper(it, { lengths }) },
+			soundEngine = engine,
 		)
 		store.put("play", vm)
 		vm.uiCallback = ui
@@ -126,7 +129,7 @@ class PlayActivityViewModelAutoMappingTest {
 
 		assertEquals("d 1000\nt 1 1\nd 400\nt 1 1\n", File(root, "autoPlay").readText())
 		assertEquals(2, vm.unipack.autoPlayTable!!.elements.count { it is AutoPlay.Element.Delay })
-		verify(exactly = 0) { ui.showToast(any()) }
+		verify(exactly = 1) { ui.showToast(R.string.autoMappingSaved) }
 	}
 
 	@Test
@@ -154,7 +157,7 @@ class PlayActivityViewModelAutoMappingTest {
 
 		assertNotNull(reloadThread)
 		assertFalse(vm.autoMappingActive)
-		verify { ui.showToast(R.string.failed) }
+		verify { ui.showToast(R.string.autoMappingFailed) }
 	}
 
 	@Test
@@ -166,7 +169,7 @@ class PlayActivityViewModelAutoMappingTest {
 		vm.autoMapping()
 		runUntil { !vm.autoMappingActive }
 
-		verify { ui.showToast(R.string.failed) }
+		verify { ui.showToast(R.string.autoMappingFailed) }
 		assertEquals(original, File(root, "autoPlay").readText())
 		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
 	}
@@ -186,4 +189,70 @@ class PlayActivityViewModelAutoMappingTest {
 		assertEquals(original, File(root, "autoPlay").readText())
 		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
 	}
+	@Test
+	fun aCompletedSaveNotifiesTheUser() {
+		val vm = openPack()
+		vm.autoMapping()
+		runUntil { !vm.autoMappingActive }
+		verify(exactly = 1) { ui.showToast(any()) }
+	}
+
+	@Test
+	fun repeatedRequestsCannotSaveOrRestoreWhileMappingIsRunning() {
+		val lengths = HeldLengths()
+		val vm = openPack(lengths)
+		vm.autoMapping()
+		assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
+		vm.autoMapping()
+		vm.restoreAutoPlay()
+		lengths.release.countDown()
+		runUntil { !vm.autoMappingActive }
+		assertTrue(vm.autoPlayBackupAvailable)
+		assertEquals(original, File(root, "autoPlay_previous").readText())
+		verify(exactly = 1) { ui.showToast(R.string.autoMappingSaved) }
+		vm.restoreAutoPlay()
+		runUntil { !vm.autoMappingActive }
+		assertEquals(original, File(root, "autoPlay").readText())
+		assertTrue(vm.autoPlayBackupAvailable)
+		verify(exactly = 1) { ui.showToast(R.string.autoPlayRestored) }
+	}
+
+	private class RecordingEngine : SoundRunner.Engine {
+		val voices = mutableSetOf<Int>()
+		var plays = 0
+		override fun start() = true
+		override fun stop() {}
+		override fun decode(file: File) = OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44100)
+		override fun load(decoded: OboeAudioEngine.DecodedAudio) = 1
+		override fun unloadSound(soundId: Int) {}
+		override fun unloadAll() {}
+		override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int) = (++plays).also { voices.add(it) }
+		override fun stopVoice(stopKey: Int) { voices.remove(stopKey) }
+		override fun stopAllVoices() { voices.clear() }
+	}
+
+	@Test
+	fun savingStopsManualSoundAndRejectsNewPressesUntilItFinishes() {
+		val lengths = HeldLengths()
+		val engine = RecordingEngine()
+		val vm = openPack(lengths, engine)
+		vm.initState()
+		vm.initPlayback()
+		vm.requestAudioFocus = { true }
+		runUntil { vm.unipack.soundGet(0, 0, 0)?.id == 1 }
+		vm.padTouch(0, 0, true)
+		assertTrue(engine.voices.isNotEmpty())
+		vm.autoMapping()
+		try {
+			assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
+			assertTrue("Saving must stop the sound already playing", engine.voices.isEmpty())
+			val played = engine.plays
+			vm.padTouch(0, 0, true, 7)
+			assertEquals("New presses must wait until saving finishes", played, engine.plays)
+		} finally {
+			lengths.release.countDown()
+			runUntil { !vm.autoMappingActive }
+		}
+	}
+
 }

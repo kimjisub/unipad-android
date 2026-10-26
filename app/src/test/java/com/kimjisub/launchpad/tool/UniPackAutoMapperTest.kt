@@ -32,7 +32,7 @@ class UniPackAutoMapperTest {
 
 	private class FakeReader(private val lengths: Map<String, Int>) : SoundDurationReader {
 		var closed = false
-		override fun durationMs(file: File) = lengths[file.name]
+		override fun durationMs(file: File) = lengths[file.name]?.toDouble()
 		override fun close() {
 			closed = true
 		}
@@ -42,7 +42,7 @@ class UniPackAutoMapperTest {
 	private lateinit var pack: UniPackFolder
 
 	private fun createPack() {
-		root = tmp.newFolder("pack")
+		root = tmp.newFolder()
 		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
 		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 2 b.wav\n1 1 4 c.wav\n")
 		File(root, "sounds").mkdir()
@@ -176,6 +176,65 @@ class UniPackAutoMapperTest {
 		runBlocking { mapper().run(noProgress) }
 
 		assertEquals("d 1000\nt 1 1\nt 1 2\nd 250\nt 1 4\n", autoPlay())
+	}
+
+	@Test
+	fun fractionalMillisecondsRoundHalfUpInTheMapper() {
+		createPack()
+		File(root, "autoPlay").writeText("on 1 1\nd 50\non 1 2\nd 50\non 1 4\n")
+		pack.reloadAutoPlay()
+		val reader = java.lang.reflect.Proxy.newProxyInstance(
+			SoundDurationReader::class.java.classLoader, arrayOf(SoundDurationReader::class.java),
+		) { _, method, args ->
+			if (method.name == "durationMs") {
+				if ((args!![0] as File).name == "a.wav") 400.4 else 400.5
+			} else null
+		} as SoundDurationReader
+
+		runBlocking { UniPackAutoMapper(pack, { reader }).run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nd 400\nt 1 2\nd 401\nt 1 4\n", autoPlay())
+	}
+
+	@Test
+	fun savedTouchesKeepChainAndSoundOrderAndReleaseAtTheSameTime() {
+		createPack()
+		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=2\n")
+		File(root, "keySound").writeText("1 1 1 a.wav\n1 2 1 b.wav\n2 1 1 b.wav\n")
+		File(root, "autoPlay").writeText("on 1 1\nd 50\nc 2\non 1 1\nd 50\non 1 1\n")
+		pack = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		val reader = FakeReader(mapOf("a.wav" to 300, "b.wav" to 500))
+
+		runBlocking { mapper(reader).run(noProgress) }
+		val reopened = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		var time = 0
+		val events = reopened.autoPlayTable!!.elements.mapNotNull {
+			when (it) {
+				is AutoPlay.Element.Delay -> { time += it.delay; null }
+				is AutoPlay.Element.Chain -> "chain $time ${it.c}"
+				is AutoPlay.Element.On -> "on $time ${it.currChain} ${it.x} ${it.y} ${it.num}"
+				is AutoPlay.Element.Off -> "off $time ${it.currChain} ${it.x} ${it.y}"
+			}
+		}
+		assertEquals(listOf(
+			"on 1000 0 0 0 0", "off 1000 0 0 0", "chain 1300 1",
+			"on 1300 1 0 0 0", "off 1300 1 0 0", "on 1800 1 0 0 1", "off 1800 1 0 0",
+		), events)
+	}
+
+	@Test
+	fun aSoundsChainChangeIsNotWrittenTwice() {
+		createPack()
+		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=2\n")
+		File(root, "keySound").writeText("1 1 1 a.wav 1 2\n2 1 1 b.wav\n")
+		File(root, "autoPlay").writeText("on 1 1\nd 50\non 1 1\n")
+		pack = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		val originalChains = pack.autoPlayTable!!.elements.filterIsInstance<AutoPlay.Element.Chain>().map { it.c }
+
+		runBlocking { mapper().run(noProgress) }
+		pack.reloadAutoPlay()
+
+		assertEquals(originalChains, pack.autoPlayTable!!.elements.filterIsInstance<AutoPlay.Element.Chain>().map { it.c })
 	}
 
 }

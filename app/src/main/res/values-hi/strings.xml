@@ -296,4 +296,14 @@
 	<string name="trace_numbers">संख्याएँ</string>
 	<string name="trace_lines">रेखाएँ और बिंदु</string>
 	<string name="trace_clear_all">सभी निशान मिटाएँ</string>
+	<string name="autoMappingConfirm">अपने आप बजाने को समायोजित करें? प्रतीक्षा की जगह ध्वनि की अवधि लगेगी। वर्तमान क्रम का बैकअप बनेगा। साथ दबाए गए पैड साथ ही रहेंगे।</string>
+	<string name="autoMappingApply">समायोजित करें</string>
+	<string name="autoMappingSaved">अपने आप बजाने का क्रम सहेजा गया। मेन्यू से पिछला क्रम बहाल कर सकते हैं।</string>
+	<string name="autoMappingFailed">सहेज नहीं सके। मौजूदा क्रम बदला नहीं है।</string>
+	<string name="autoPlayRestore">पिछला क्रम बहाल करें</string>
+	<string name="autoPlayNoBackup">कोई बैकअप नहीं है</string>
+	<string name="autoPlayRestoreConfirm">पिछला बैकअप बहाल करें? यह वर्तमान क्रम से बदल जाएगा। बहाल करने के बाद फिर बदल सकते हैं।</string>
+	<string name="autoPlayRestoreApply">बहाल करें</string>
+	<string name="autoPlayRestored">पिछला क्रम बहाल हुआ। मेन्यू से फिर बदल सकते हैं।</string>
+	<string name="autoPlayRestoreFailed">बहाल नहीं कर सके। वर्तमान क्रम और बैकअप बदले नहीं हैं।</string>
 </resources>

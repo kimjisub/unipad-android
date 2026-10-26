@@ -295,4 +295,14 @@
 	<string name="trace_numbers">ตัวเลข</string>
 	<string name="trace_lines">เส้นและจุด</string>
 	<string name="trace_clear_all">ลบรอยแตะทั้งหมด</string>
+	<string name="autoMappingConfirm">ปรับการเล่นอัตโนมัติหรือไม่? เวลารอจะเปลี่ยนเป็นความยาวเสียง จะสำรองการเล่นปัจจุบัน แพดที่กดพร้อมกันจะยังคงเล่นพร้อมกัน</string>
+	<string name="autoMappingApply">ปรับ</string>
+	<string name="autoMappingSaved">บันทึกการเล่นอัตโนมัติแล้ว กู้คืนเวอร์ชันก่อนหน้าได้จากเมนู</string>
+	<string name="autoMappingFailed">บันทึกไม่ได้ การเล่นอัตโนมัติเดิมไม่เปลี่ยนแปลง</string>
+	<string name="autoPlayRestore">กู้คืนการเล่นอัตโนมัติก่อนหน้า</string>
+	<string name="autoPlayNoBackup">ไม่มีข้อมูลสำรองที่บันทึกไว้</string>
+	<string name="autoPlayRestoreConfirm">กู้คืนข้อมูลสำรองก่อนหน้าหรือไม่? จะสลับกับการเล่นปัจจุบัน หลังจากกู้คืนแล้วยังสลับกลับได้</string>
+	<string name="autoPlayRestoreApply">กู้คืน</string>
+	<string name="autoPlayRestored">กู้คืนการเล่นก่อนหน้าแล้ว สลับกลับได้จากเมนู</string>
+	<string name="autoPlayRestoreFailed">กู้คืนไม่ได้ การเล่นปัจจุบันและข้อมูลสำรองไม่เปลี่ยนแปลง</string>
 </resources>
