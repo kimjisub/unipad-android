@@ -9,6 +9,8 @@ runs:
         java-version: '21'
     # Save Gradle dependencies on the default branch; other branches stay read-only.
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      with:
+        gradle-home-cache-excludes: caches/build-cache-1
     - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       with:
         cmdline-tools-version: '15859902'

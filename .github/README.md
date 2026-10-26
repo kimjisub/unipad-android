@@ -20,8 +20,12 @@ No release signing key is needed.
 
 The shared setup uses `setup-gradle`'s default cache policy: jobs on the default
 branch save Gradle User Home state, including downloaded build plugins and
-dependencies; pull requests only read it. The build, unit test, lint and release
-dependency audit jobs all use this setup. This reduces Maven Central requests
+dependencies; pull requests only read it. Scheduled dependency audits also save
+state because they run on the default branch. The build, unit test, lint and
+release dependency audit jobs all use this setup. Each job has its own cache key,
+with fallback to compatible entries when an exact match is unavailable. The local
+build cache (`caches/build-cache-1`) is excluded so unit tests and lint execute
+again instead of restoring task results. This reduces Maven Central requests
 after a default-branch run populates the cache. A cold or evicted cache still
 requires downloads. `GRADLE_BUILD_ACTION_CACHE_RESTORED=true` marks that the
 restore procedure ran; check the cache report for an actual cache hit.
