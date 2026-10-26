@@ -69,6 +69,7 @@ class AppUpdateWrappingTest : BaseUITest() {
             takeScreenshot("${prefix}_check")
             checkText(R.string.update_check, requireComplete = true)
             source.emit(UpdateStatus.Failed)
+            compose.waitForIdle()
             assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_failed))), 10000L))
             takeScreenshot("${prefix}_failed")
             // A long status may ellipsize after three lines at the largest font size.
