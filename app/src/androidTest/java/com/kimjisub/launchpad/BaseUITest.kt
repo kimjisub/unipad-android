@@ -7,6 +7,9 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.runner.lifecycle.ActivityLifecycleCallback
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
@@ -580,6 +583,16 @@ abstract class BaseUITest {
             Thread.sleep(200)
         }
         return condition()
+    }
+
+    /** A failure keeps the screen and [displayState] of the node and every node under [panelTag]. */
+    protected fun assertDisplayed(compose: ComposeTestRule, node: SemanticsNodeInteraction, panelTag: String) {
+        try {
+            node.assertIsDisplayed()
+        } catch (e: AssertionError) {
+            takeScreenshot("not_displayed_${System.currentTimeMillis()}")
+            throw AssertionError("${e.message}\n${displayState(compose, node, panelTag)}", e)
+        }
     }
 
     /**

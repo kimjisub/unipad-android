@@ -326,12 +326,7 @@ class LargeTextLayoutTest : BaseUITest() {
     }
 
     private fun assertReadable(node: SemanticsNodeInteraction) {
-        try {
-            node.assertIsDisplayed()
-        } catch (e: AssertionError) {
-            takeScreenshot("not_displayed_${System.currentTimeMillis()}")
-            throw AssertionError("${e.message}\n${displayState(node)}", e)
-        }
+        assertDisplayed(compose, node, "main_left_panel")
         val layouts = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val layout = layouts.single()
@@ -350,43 +345,6 @@ class LargeTextLayoutTest : BaseUITest() {
         }
         assertTrue("Visible bounds clip text: ${layout.layoutInput.text}",
             node.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(layout.lineCount - 1) - 1f)
-    }
-
-    /**
-     * What the display check reads. It also fails when no node matches, so this says whether the node
-     * still exists, then lists each ancestor's placement, window bounds and scroll, the host view and
-     * every node in the left panel.
-     */
-    private fun displayState(node: SemanticsNodeInteraction): String {
-        val clock = compose.mainClock.currentTime
-        val semantics = runCatching { node.fetchSemanticsNode() }
-        val view = semantics.getOrNull()?.let { (it.root as? androidx.compose.ui.platform.ViewRootForTest)?.view }
-        val visible = android.graphics.Rect()
-        var viewState = ""
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            viewState = "view=${view?.width}x${view?.height} shown=${view?.isShown} " +
-                "visible=${view?.getGlobalVisibleRect(visible)} $visible attached=${view?.isAttachedToWindow}"
-        }
-        fun describe(n: androidx.compose.ui.semantics.SemanticsNode) =
-            "  #${n.id} placed=${n.layoutInfo.isPlaced} attached=${n.layoutInfo.isAttached} " +
-                "window=${n.boundsInWindow} size=${n.size} " +
-                "scroll=${n.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)
-                    ?.let { "${it.value()}/${it.maxValue()}" }} tag=${n.config.getOrNull(SemanticsProperties.TestTag)} " +
-                "text=${n.config.getOrNull(SemanticsProperties.Text)} " +
-                "desc=${n.config.getOrNull(SemanticsProperties.ContentDescription)}"
-        val chain = semantics.fold(
-            { generateSequence(it) { n -> n.parent }.joinToString("\n", transform = ::describe) },
-            { "  matching node not found now: ${it.message?.lineSequence()?.firstOrNull()}" },
-        )
-        val panel = runCatching {
-            compose.onNode(hasTestTag("main_left_panel"), useUnmergedTree = true).fetchSemanticsNode()
-        }.fold(
-            { root -> generateSequence(listOf(root)) { level -> level.flatMap { it.children }.ifEmpty { null } }
-                .flatten().joinToString("\n", transform = ::describe) },
-            { "  left panel not found: ${it.message?.lineSequence()?.firstOrNull()}" },
-        )
-        return "clockBefore=$clock clockAfter=${compose.mainClock.currentTime} $viewState\n" +
-            "node and ancestors:\n$chain\nleft panel:\n$panel"
     }
 
     companion object {
