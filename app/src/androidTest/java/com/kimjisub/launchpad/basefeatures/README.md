@@ -464,8 +464,12 @@ screenshots and screen snapshots of each step beside it.
 
 The screen is used only through the device rental's UI entry (`devices.py ui DEVICE --generation
 TOKEN -- ...`, agent-device in the rental's own session): launching the app, snapshots, presses, the
-list drags (600 ms pans), Back and screenshots. The check closes that session when it ends, passed or
-failed; returning the rental (`devices.py down`) then retires it. adb is kept for inspecting and
+list drags (600 ms pans), Back and screenshots. When the check ends, passed or failed, it sets the
+language and analytics property back and then closes that session; each step runs even if the one
+before it fails or times out, and such a failure is listed in `cleanup_errors` in `store-check.json`
+without changing the verdict. Returning the rental (`devices.py down`) then retires the session. A UI
+command is given longer than the rental's own per-command limit, so the rental ends a stuck command
+itself. The check needs a device rental that offers this UI entry; without one it cannot run. adb is kept for inspecting and
 preparing the app, never for input: root, API level, package flags and notification permission state,
 setting and restoring the app language and analytics property, stopping the app before launch, finding
 the pack folders, and copying the app database to read the pack's record. Reading the list stops after

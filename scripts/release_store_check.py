@@ -22,7 +22,9 @@ library is not scrolled, so the new pack must be on its first screen.
 Everything on the screen — launching the app, reading the screen, presses, drags, Back and
 screenshots — goes through the device rental's UI entry (`devices.py ui DEVICE --generation
 TOKEN -- ...`, which drives agent-device in the rental's own session), so only the rented device
-and its session are used. The session is closed when the check ends, however it ends. adb is
+and its session are used. When the check ends, however it ends, the app language and analytics
+property are set back and then the session is closed; each of these steps runs even if an earlier
+one fails, and a failure there is listed in `cleanup_errors` without changing the verdict. adb is
 used only to inspect and prepare the app: root, API level, package flags and notification
 permission state, the app language and analytics property (set and restored), stopping the app
 before launch, the pack folders, and a copy of the app database.
@@ -67,7 +69,9 @@ LIST_TIMEOUT = 30
 DOWNLOAD_TIMEOUT = 180
 DIALOG_TIMEOUT = 10
 SCREEN_TIMEOUT = 20
-UI_COMMAND_TIMEOUT = 90
+# Longer than the rental's own limit for one UI command (600 s), so the rental ends a stuck command
+# and cleans up after it; this limit only catches the rental itself hanging.
+UI_COMMAND_TIMEOUT = 660
 # Drags past the last new row before the list counts as read to its end.
 UNCHANGED_SCREENS = 2
 
@@ -306,8 +310,11 @@ class Screen:
         self._run = run
 
     def ui(self, *args, check=True):
-        result = self._run(self.command + [str(arg) for arg in args], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                           timeout=UI_COMMAND_TIMEOUT)
+        try:
+            result = self._run(self.command + [str(arg) for arg in args], stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, timeout=UI_COMMAND_TIMEOUT)
+        except (subprocess.TimeoutExpired, OSError) as error:
+            raise CheckFailed(f"ui {' '.join(str(arg) for arg in args)} failed: {type(error).__name__}: {error}")
         output = result.stdout.decode(errors="replace")
         try:
             answer = json.loads(output)
@@ -556,9 +563,20 @@ class StoreCheck:
             self.download(pack, permission_before)
             self.check_library(pack)
         finally:
-            self.screen.close()
-            self.adb.shell("cmd", "locale", "set-app-locales", self.package, "--locales", shlex.quote(locales), check=False)
-            self.adb.shell("setprop", "debug.firebase.analytics.app", analytics or ".none.", check=False)
+            self.clean_up("app language", lambda: self.adb.shell(
+                "cmd", "locale", "set-app-locales", self.package, "--locales", shlex.quote(locales), check=False))
+            self.clean_up("analytics property", lambda: self.adb.shell(
+                "setprop", "debug.firebase.analytics.app", analytics or ".none.", check=False))
+            self.clean_up("UI session", self.screen.close)
+
+    def clean_up(self, what, action):
+        """Run one closing step; a step that fails is noted beside the verdict and never replaces it."""
+        try:
+            action()
+        except Exception as error:
+            note = f"{what}: {type(error).__name__}: {error}"
+            self.result.setdefault("cleanup_errors", []).append(note)
+            print(f"cleanup failed: {note}", file=sys.stderr)
 
 
 def main(argv=None):

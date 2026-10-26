@@ -347,6 +347,18 @@ class UiEntryTest(unittest.TestCase):
         screen.close()
         self.assertEqual(self.calls[0][-1], "close")
 
+    def test_a_ui_command_that_times_out_or_cannot_start_fails_naming_the_command(self):
+        for error in (check.subprocess.TimeoutExpired(["devices.py"], check.UI_COMMAND_TIMEOUT),
+                      FileNotFoundError("devices.py")):
+            def run(command, **kwargs):
+                raise error
+            screen = check.Screen(Path("/tools/devices.py"), "emulator-5560", "gen1", Path("/out"), run=run)
+            with self.assertRaisesRegex(check.CheckFailed, f"ui close failed: {type(error).__name__}"):
+                screen.close()
+
+    def test_a_ui_command_may_run_longer_than_the_rentals_own_limit(self):
+        self.assertGreater(check.UI_COMMAND_TIMEOUT, 600)
+
 
 class VerdictTest(unittest.TestCase):
     def verdict(self, device, list_body, pack=None):
@@ -399,6 +411,71 @@ class RestoreTest(unittest.TestCase):
         self.assertIn(("cmd", "locale", "set-app-locales", check.RELEASE_PACKAGE, "--locales", "ko-KR"), device.commands)
         self.assertIn(("setprop", "debug.firebase.analytics.app", ".none."), device.commands)
         self.assertEqual(screen.commands, [("close",)])
+
+
+class ClosingTest(unittest.TestCase):
+    """Setting the device back and closing the session run whatever happens, and never replace the verdict."""
+    def run_check(self, failing_step=None, adb_fails_on=None):
+        class Device(FakeDevice):
+            def shell(self, *args, **kwargs):
+                if args[:2] == ("cmd", "locale") and "get-app-locales" in args:
+                    self.commands.append(args)
+                    return "Locales for p for user 0 are [ko-KR]"
+                if adb_fails_on and args[0] == adb_fails_on and "en-US" not in args and kwargs.get("check") is False:
+                    self.commands.append(args)
+                    raise check.subprocess.TimeoutExpired(["adb"], 60)
+                return super().shell(*args, **kwargs)
+
+        calls = []
+
+        def run(command, **kwargs):
+            calls.append(command[-1])
+            raise check.subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+        device = Device(sdk="")
+        screen = check.Screen(Path("/tools/devices.py"), "emulator-5560", "gen1", Path("/out"), run=run)
+        store_check = check.StoreCheck(device, screen, check.RELEASE_PACKAGE, "unused", "a")
+        store_check.check_installed = lambda: ""
+        store_check.choose_pack = lambda packs: packs[0]
+        for step in ("open_store", "check_listing", "download", "check_library"):
+            setattr(store_check, step, lambda *args: None)
+        if failing_step:
+            def fail(*args):
+                raise check.CheckFailed("the Store count did not appear")
+            setattr(store_check, failing_step, fail)
+        fetch, check.fetch_store_list = check.fetch_store_list, lambda url: [{"code": "a", "title": "A"}]
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                code = check.run_and_record(store_check, Path(directory))
+                result = json.loads((Path(directory) / "store-check.json").read_text())
+        finally:
+            check.fetch_store_list = fetch
+        return code, result, device.commands, calls
+
+    def assert_set_back(self, commands):
+        self.assertIn(("cmd", "locale", "set-app-locales", check.RELEASE_PACKAGE, "--locales", "ko-KR"), commands)
+        self.assertIn(("setprop", "debug.firebase.analytics.app", ".none."), commands)
+
+    def test_a_session_close_that_times_out_still_sets_the_device_back_and_keeps_a_pass(self):
+        code, result, commands, calls = self.run_check()
+        self.assert_set_back(commands)
+        self.assertEqual(calls, ["close"])
+        self.assertEqual((code, result["verdict"]), (0, "passed"))
+        self.assertEqual(len(result["cleanup_errors"]), 1)
+        self.assertRegex(result["cleanup_errors"][0], "^UI session: CheckFailed: ui close failed: TimeoutExpired")
+
+    def test_a_session_close_that_times_out_keeps_the_earlier_failure(self):
+        code, result, commands, calls = self.run_check(failing_step="check_listing")
+        self.assert_set_back(commands)
+        self.assertEqual((code, result["verdict"]), (1, "failed"))
+        self.assertEqual(result["error"], "CheckFailed: the Store count did not appear")
+
+    def test_a_language_reset_that_times_out_still_resets_analytics_and_closes_the_session(self):
+        code, result, commands, calls = self.run_check(adb_fails_on="cmd")
+        self.assert_set_back(commands)
+        self.assertEqual(calls, ["close"])
+        self.assertEqual(result["verdict"], "passed")
+        self.assertEqual([note.split(":")[0] for note in result["cleanup_errors"]], ["app language", "UI session"])
 
 
 if __name__ == "__main__":
