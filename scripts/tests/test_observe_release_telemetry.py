@@ -144,6 +144,53 @@ class PreparationTest(unittest.TestCase):
         self.assertIn(unittest.mock.call('chown', '-R', '10207:10207', base), adb.shell.call_args_list)
         self.assertIn(unittest.mock.call('restorecon', '-RF', base), adb.shell.call_args_list)
 
+    def test_first_install_repairs_files_directory_before_the_app_runs(self):
+        adb = Mock()
+        files = f'/data/user/0/{observe.PACKAGE}/files'
+        pack = f'{files}/UniPack'
+        state = {}
+        def shell(*args, **kwargs):
+            if args[0] == 'dumpsys':
+                return 'versionCode=120\n versionName=4.2.1\n flags=[ HAS_CODE ]'
+            if args[0] == 'pm':
+                return 'package:/data/app/base.apk'
+            if args[0] == 'sha256sum':
+                return hashlib.sha256(b'apk').hexdigest() + '  /data/app/base.apk'
+            if args[0] == 'stat':
+                return '10207:10207'
+            if args[:2] == ('getprop', observe.DEBUG_PROP):
+                return observe.PACKAGE
+            if args[:2] == ('mkdir', '-p'):
+                # A root adb shell creates each missing ancestor with its own
+                # owner, mode and label, even when the leaf is later repaired.
+                for path in (files, pack):
+                    state.setdefault(path, dict(owner='0:0', mode='777', labelled=False))
+            if args[0] in ('chown', 'chmod', 'restorecon'):
+                recursive = '-R' in args or '-RF' in args
+                for path, values in state.items():
+                    if path == args[-1] or (recursive and path.startswith(args[-1] + '/')):
+                        if args[0] == 'chown':
+                            values['owner'] = args[-2]
+                        elif args[0] == 'chmod':
+                            values['mode'] = '700' if args[-2] == 'u=rwX,go=' else args[-2]
+                        else:
+                            values['labelled'] = True
+            if args[:2] == ('ls', '-ldZ'):
+                return 'app-owned private directories with app security categories'
+            return ''
+        adb.shell.side_effect = shell
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'apk')
+            observer = observe.Observer(adb, Mock(), apk)
+            observer.prepare()
+        self.assertEqual(set(state), {files, pack})
+        for path, values in state.items():
+            with self.subTest(path=path):
+                self.assertEqual(values, dict(owner='10207:10207', mode='700', labelled=True))
+        self.assertEqual(observer.result['fixture_directory_listing'],
+                         'app-owned private directories with app security categories')
+
     def test_different_installed_apk_is_not_reported_as_the_candidate(self):
         adb = Mock()
         adb.shell.side_effect = lambda *args, **kwargs: ('package:/data/app/base.apk' if args[0] == 'pm' else 'different')

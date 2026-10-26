@@ -29,7 +29,10 @@ The candidate is installed with `adb install -r`. Its installed package hash mus
 match the supplied APK. Existing application data is
 kept, and the reserved `telemetry-observer` pack is populated from the existing
 audio-output fixture (sound files go in `sounds/`, owned by the app). This pack
-and the installation stay on the emulator. Use a fresh rental for an isolated
+and the installation stay on the emulator. Before launching the app, the command
+sets `files/` and the fixture tree to the app owner, removes group/other access
+and restores app-specific SELinux labels, including when `files/` did not exist.
+The JSON includes `ls -ldZ` output for `files/` and `files/UniPack`. Use a fresh rental for an isolated
 observation. The app is stopped before debug Analytics is enabled, then launched,
 and its pack row, Play control and pad are located in the screen hierarchy.
 The first cell is derived from the square grid and adjacent chain strip for the

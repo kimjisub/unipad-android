@@ -172,8 +172,16 @@ class Observer:
         for sound in sorted(fixture.iterdir()):
             if sound.suffix in ('.wav', '.mp3', '.ogg', '.m4a'):
                 self.adb.run('push', str(sound), f'{destination}/sounds/{sound.name}')
+        # mkdir -p also creates files/ on a first install. Repair that ancestor
+        # itself: fixing only UniPack leaves root ownership and a generic label.
+        self.adb.shell('chown', owner, f'{base}/files')
+        self.adb.shell('chmod', '700', f'{base}/files')
+        self.adb.shell('restorecon', '-F', f'{base}/files')
         self.adb.shell('chown', '-R', owner, f'{base}/files/UniPack')
+        self.adb.shell('chmod', '-R', 'u=rwX,go=', f'{base}/files/UniPack')
         self.adb.shell('restorecon', '-RF', f'{base}/files/UniPack')
+        self.result['fixture_directory_listing'] = self.adb.shell(
+            'ls', '-ldZ', f'{base}/files', f'{base}/files/UniPack')
 
     def drive(self):
         self.ui.launch(PACKAGE)
