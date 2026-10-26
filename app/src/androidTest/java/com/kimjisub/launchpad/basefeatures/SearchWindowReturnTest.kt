@@ -92,7 +92,14 @@ class SearchWindowReturnTest : PlaybackScreenTest() {
         ).lineSequence().map(String::trim).last { it.contains('/') }.substringBefore('/')
         screen.await("System file picker did not open") { screen.device.currentPackageName == packageName }
         screen.capture("${type.simpleName}-file-picker")
-        screen.device.pressBack()
+        // A tree picker can start in Documents/Unipad. Back first visits its parent directories;
+        // cancel the picker itself before checking the app, without pressing Back in the app.
+        repeat(4) {
+            if (screen.device.currentPackageName == packageName) {
+                assertTrue("Back key injection failed in the system picker", screen.device.pressBack())
+                screen.device.waitForIdle(500)
+            }
+        }
         screen.awaitActivity(type)
     }
 
