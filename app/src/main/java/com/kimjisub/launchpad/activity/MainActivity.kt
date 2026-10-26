@@ -90,6 +90,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.DataSnapshot
@@ -249,6 +250,9 @@ class MainActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		// Let Compose receive IME insets on older Android versions too. The panels stay
+		// full height while the results reserve enough space to scroll above the keyboard.
+		WindowCompat.setDecorFitsSystemWindows(window, false)
 
 		totalPanelVM = ViewModelProvider(
 			this,

@@ -362,10 +362,8 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             if (moved != null && moved == bounds) break
             bounds = moved
         }
+        println("$name field=$field target=$bounds keyboardTop=$keyboardTop")
         screen.capture("$name-keyboard")
-        // Below API 35 the main window is not edge-to-edge, so its content is never told the keyboard's
-        // height and the keyboard still covers the list's end there (see the README).
-        if (android.os.Build.VERSION.SDK_INT < 35) return
         assertNotNull("$target never came into view above the keyboard from $keyboardTop", bounds)
         assertTrue("$target $bounds stays under the keyboard from $keyboardTop", bounds!!.bottom <= keyboardTop)
     }
