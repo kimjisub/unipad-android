@@ -12,6 +12,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
 import com.kimjisub.launchpad.chainrelease.ChainReleaseLights
@@ -82,6 +84,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     @Test fun twoSimultaneousFingersPlayBothPadsAndReleaseBoth() {
         screen.openPlay()
         screen.options()
+        screen.scrollTo(By.text(screen.text(R.string.feedbackLight)), Direction.DOWN)
         screen.clickText(R.string.feedbackLight)
         screen.device.pressBack()
         screen.await("Options remained open") { screen.onMain { !screen.vm().isOptionWindowVisible } }
