@@ -420,3 +420,10 @@ exported source, test hash, APK hashes, raw output, and exit codes. Do not switc
 touches. With a host session it coordinates external emulator recording; only
 the host WAV verdict counts as an audio pass. See [the capture commands, stable
 result names and evidence contract](../../../scripts/AUDIO_OUTPUT.md).
+
+### Upgrade over the published build
+
+Not an instrumented test: release builds are not debuggable, so `scripts/upgrade_check.py`
+installs the published build and the candidate over each other on a rooted emulator and
+compares packs, database rows and settings before and after. See [its usage, scenarios and
+evidence](../../../scripts/UPGRADE_CHECK.md).
