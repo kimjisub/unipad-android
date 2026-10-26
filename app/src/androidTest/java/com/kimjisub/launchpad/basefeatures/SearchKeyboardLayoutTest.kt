@@ -10,8 +10,6 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
@@ -71,21 +69,12 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             compose.onNodeWithContentDescription(screen.text(R.string.transfer_search)).performClick()
             compose.onNode(hasSetTextAction()).performTextInput("Base")
             compose.waitForIdle()
-            var keyboard = -1 to 0L
-            screen.await("Keyboard did not settle") {
-                val height = screen.onMain {
-                    ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)
-                        ?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-                }
-                val now = android.os.SystemClock.elapsedRealtime()
-                if (height != keyboard.first) keyboard = height to now
-                height > 0 && now - keyboard.second >= 500
-            }
-            val keyboardTop = screen.onMain { screen.bounds(screen.resumed().window.decorView).bottom - keyboard.first }
+            val keyboardTop = screen.awaitKeyboardTopOnScreen()
+            val windowTop = screen.onMain { screen.bounds(screen.resumed().window.decorView).top }
             for (description in listOf(R.string.transfer_search, R.string.store, R.string.import_unipack)) {
                 val control = compose.onNode(hasContentDescription(screen.text(description)) and hasClickAction())
                     .fetchSemanticsNode()
-                assertTrue("Search action ${screen.text(description)} must remain above the keyboard", control.boundsInWindow.bottom <= keyboardTop)
+                assertTrue("Search action ${screen.text(description)} must remain above the keyboard", control.boundsInWindow.bottom + windowTop <= keyboardTop)
                 assertEquals("Search action must remain fully visible", control.size.height.toFloat(), control.boundsInWindow.height, 1f)
             }
             val label = screen.text(R.string.guide_import_external)
@@ -97,12 +86,12 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             for (drag in 1..20) {
                 val field = screen.node(By.focused(true)).visibleBounds
                 val button = compose.onAllNodes(buttonMatcher).fetchSemanticsNodes().singleOrNull()
-                if (button != null && button.boundsInWindow.bottom <= keyboardTop &&
+                if (button != null && button.boundsInWindow.bottom + windowTop <= keyboardTop &&
                     button.boundsInWindow.height >= button.size.height - 1f) break
                 val touchSlop = screen.onMain { android.view.ViewConfiguration.get(screen.context).scaledTouchSlop }
-                val clippedAtTop = button != null && button.positionInWindow.y < field.bottom + 12
-                val remaining = if (clippedAtTop) field.bottom + 12 - button.positionInWindow.y
-                    else (button?.let { it.positionInWindow.y + it.size.height } ?: screen.device.displayHeight.toFloat()) - keyboardTop + 8
+                val clippedAtTop = button != null && button.positionInWindow.y + windowTop < field.bottom + 12
+                val remaining = if (clippedAtTop) field.bottom + 12 - button.positionInWindow.y - windowTop
+                    else (button?.let { it.positionInWindow.y + windowTop + it.size.height } ?: screen.device.displayHeight.toFloat()) - keyboardTop + 8
                 val maxDistance = keyboardTop - field.top - 16
                 assertTrue("No room for a physical drag: field=$field keyboardTop=$keyboardTop touchSlop=$touchSlop", maxDistance >= touchSlop + 12)
                 val distance = (remaining.toInt() + touchSlop).coerceIn(touchSlop + 12, maxDistance)
@@ -124,12 +113,12 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             val button = compose.onNode(buttonMatcher).fetchSemanticsNode()
             val visible = button.boundsInWindow
             println("font=$fontScale buttonVisible=$visible buttonSize=${button.size} keyboardTop=$keyboardTop")
-            if (visible.bottom > keyboardTop || kotlin.math.abs(visible.height - button.size.height) > 1f) {
+            if (visible.bottom + windowTop > keyboardTop || kotlin.math.abs(visible.height - button.size.height) > 1f) {
                 ActivityReadiness.captureState(screen.context, screen.device, "search-input-failure", "state")
                 TestCaptures.save(screen.device, "search-input-failure/input.txt") { it.writeText(screen.device.executeShellCommand("dumpsys input")); true }
                 TestCaptures.save(screen.device, "search-input-failure/windows.txt") { it.writeText(screen.device.executeShellCommand("dumpsys window windows")); true }
             }
-            assertTrue("Import button bottom $visible must be above keyboard $keyboardTop", visible.bottom <= keyboardTop)
+            assertTrue("Import button bottom $visible must be above keyboard $keyboardTop", visible.bottom + windowTop <= keyboardTop)
             assertEquals("Import button must retain its full height above the list's top", button.size.height.toFloat(), visible.height, 1f)
             assertEquals("Import button must retain its full width", button.size.width.toFloat(), visible.width, 1f)
             screen.device.pressBack()
@@ -140,10 +129,7 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             screen.capture("$prefix-keyboard-dismissed")
             screen.node(By.clazz("android.widget.EditText")).click()
             screen.await("Search keyboard did not reopen") {
-                screen.onMain {
-                    ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)
-                        ?.isVisible(WindowInsetsCompat.Type.ime()) == true
-                }
+                screen.keyboardTopOnScreen() < screen.device.displayHeight
             }
             compose.onNode(hasContentDescription(screen.text(R.string.transfer_search)) and hasClickAction()).performClick()
             compose.waitForIdle()

@@ -112,6 +112,7 @@ import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -249,6 +250,7 @@ class MainActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		configureSearchWindowInsets(window)
 
 		totalPanelVM = ViewModelProvider(
 			this,

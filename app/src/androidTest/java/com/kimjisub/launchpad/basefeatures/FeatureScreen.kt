@@ -147,6 +147,25 @@ class FeatureScreen {
             throw AssertionError(message())
         }
     }
+    /** Actual IME window position, independent of whether the app received its keyboard insets. */
+    fun keyboardTopOnScreen(): Int = instrumentation.uiAutomation.windows
+        .firstOrNull { it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD }
+        ?.let { window -> Rect().also(window::getBoundsInScreen).top }
+        ?: device.displayHeight
+
+    /** Returns the same keyboard boundary observed stable for 500 ms, rather than sampling again. */
+    fun awaitKeyboardTopOnScreen(): Int {
+        var top = device.displayHeight
+        var changed = SystemClock.elapsedRealtime()
+        await("Search keyboard did not finish opening") {
+            val current = keyboardTopOnScreen()
+            val now = SystemClock.elapsedRealtime()
+            if (current != top) { top = current; changed = now }
+            top < device.displayHeight && now - changed >= 500
+        }
+        return top
+    }
+
     fun <T> onMain(block: () -> T): T {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) return block()
         var result: Result<T>? = null
