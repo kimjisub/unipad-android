@@ -22,5 +22,6 @@ import org.junit.runners.Suite
     SharedMidiPadTest::class,
     StoreDownloadTest::class,
     AppearanceAndInsetsTest::class,
+    SearchKeyboardLayoutTest::class,
 )
 class BaseFeaturesSuite
