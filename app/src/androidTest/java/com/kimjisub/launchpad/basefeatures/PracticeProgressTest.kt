@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.os.SystemClock
+import android.util.Log
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.viewmodel.PlayMode
@@ -18,7 +19,23 @@ class PracticeProgressTest : PlaybackScreenTest() {
         (0 until 64).filter { screen.vm().channelManager.get(it / 8, it % 8)?.channel == Channel.GUIDE }.toSet()
     }
 
-    private fun record(name: String) {
+    private data class SeekObservation(
+        val elapsedMs: Long,
+        val hints: Set<Int>,
+        val progress: Int,
+        val progressMax: Int,
+    )
+
+    private fun observeSeek(startedAt: Long): SeekObservation = screen.onMain {
+        SeekObservation(
+            SystemClock.elapsedRealtime() - startedAt,
+            hints(),
+            screen.vm().autoPlayProgress,
+            screen.vm().autoPlayProgressMax,
+        )
+    }
+
+    private fun record(name: String, observations: List<SeekObservation> = emptyList()) {
         val drawn = CountDownLatch(1)
         screen.onMain {
             val decor = screen.resumed().window.decorView
@@ -26,8 +43,8 @@ class PracticeProgressTest : PlaybackScreenTest() {
         }
         assertTrue("The screen did not draw its updated practice guide", drawn.await(10, TimeUnit.SECONDS))
         screen.capture(name)
-        val observed = screen.onMain { "mode=${screen.vm().playMode}\nactive=${screen.vm().autoPlayRunner?.active}\nprogress=${screen.vm().autoPlayProgress}\nstepMode=${screen.vm().autoPlayRunner?.stepMode}\nhints=${hints()}\n" }
-        assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") { it.writeText(observed); true })
+        val observed = screen.onMain { "captureElapsedRealtimeMs=${SystemClock.elapsedRealtime()}\nmode=${screen.vm().playMode}\nactive=${screen.vm().autoPlayRunner?.active}\nprogress=${screen.vm().autoPlayProgress}\nstepMode=${screen.vm().autoPlayRunner?.stepMode}\nhints=${hints()}\n" }
+        assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") { it.writeText("assertionObservations=$observations\n$observed"); true })
     }
 
     @Test fun theFinalStepRemainsAvailableUntilItIsPlayed() {
@@ -61,11 +78,47 @@ class PracticeProgressTest : PlaybackScreenTest() {
         screen.openPlay()
         screen.onMain { screen.vm().switchPlayMode(PlayMode.GuidePlay) }
         screen.await("The sequence did not start waiting at the first delay") { screen.onMain { screen.vm().autoPlayProgress == 1 } }
-        screen.onMain { screen.vm().autoPlayNext() }
-        SystemClock.sleep(200)
-        record("practice-seek-forward")
-        assertEquals("Seeking must guide the upcoming pad at the new song time", setOf(9), hints())
-        assertFalse(screen.onMain { screen.vm().autoPlayProgress >= screen.vm().autoPlayProgressMax })
+        val startedAt = screen.onMain {
+            val now = SystemClock.elapsedRealtime()
+            screen.vm().autoPlayNext()
+            now
+        }
+        val observations = mutableListOf<SeekObservation>()
+        fun observe(): SeekObservation = observeSeek(startedAt).also {
+            observations += it
+            Log.i("PracticeProgressTest", "seek observation: $it")
+        }
+        try {
+            SystemClock.sleep(200)
+            var upcoming = observe()
+            assertTrue(
+                "Timing condition failed: first main-thread read was +${upcoming.elapsedMs} ms; " +
+                    "the upcoming hint must be read before +500 ms. $upcoming",
+                upcoming.elapsedMs < 500,
+            )
+            // Poll only inside the fixture's original hint window. A missing hint in that
+            // window is a value failure, distinct from a first read that missed the window.
+            while (upcoming.hints != setOf(9)) {
+                SystemClock.sleep(25)
+                val next = observe()
+                if (next.elapsedMs >= 500) break
+                upcoming = next
+            }
+            assertEquals("Seeking must guide the upcoming pad at the new song time: $upcoming", setOf(9), upcoming.hints)
+            assertFalse("Seeking must leave progress unfinished: $upcoming", upcoming.progress >= upcoming.progressMax)
+
+            // Reuse the existing state-wait deadline for the separate, normal expiry check.
+            var expired: SeekObservation? = null
+            screen.await({ "The seek hint did not expire and advance after +500 ms: $expired" }) {
+                observe().also { expired = it }.let {
+                    it.elapsedMs >= 500 && it.hints.isEmpty() && it.progress > upcoming.progress
+                }
+            }
+        } finally {
+            // Capturing can outlast the hint. Preserve the assertion reads separately from
+            // the later screen state, including when an assertion fails.
+            record("practice-seek-forward", observations)
+        }
     }
 
     @Test fun pausingGuidePlayLetsThePerformerAdvanceTheNextStep() {
