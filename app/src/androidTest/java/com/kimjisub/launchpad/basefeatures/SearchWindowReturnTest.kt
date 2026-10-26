@@ -2,6 +2,8 @@ package com.kimjisub.launchpad.basefeatures
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.SystemClock
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -98,30 +100,59 @@ class SearchWindowReturnTest : PlaybackScreenTest() {
         screen.awaitActivity(type)
         var last: Boolean? = null
         var changed = SystemClock.elapsedRealtime()
-        var visible = true
         screen.await("Status bar visibility did not settle after $name") {
             val focused = screen.onMain { screen.resumed().window.decorView.hasWindowFocus() }
             if (!focused) return@await false
-            visible = if (android.os.Build.VERSION.SDK_INT < 30) {
-                // Compat visibility on these edge-to-edge windows includes stable bar space even
-                // when the bar is hidden. Read the system's actual status-bar window instead.
-                val dump = screen.device.executeShellCommand("dumpsys window windows")
-                val status = Regex("(?ms)^  Window #\\d+ Window\\{[^\\n]* StatusBar\\}:.*?(?=^  Window #|\\z)")
-                    .find(dump)?.value ?: error("System status-bar window missing")
-                Regex("\\bisVisible=(true|false)\\b").find(status)!!.groupValues[1].toBoolean()
-            } else screen.onMain {
-                ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)!!
-                    .isVisible(WindowInsetsCompat.Type.statusBars())
-            }
+            val visible = statusBarVisible()
             val now = SystemClock.elapsedRealtime()
             if (visible != last) { last = visible; changed = now }
             now - changed >= 500
         }
-        screen.capture(name)
+        // A focused, laid-out activity can still be behind the other window's closing animation.
+        // Keep a rendered frame as evidence, and check the bar once more after that transition.
+        captureRenderedScreen(name)
+        val visible = statusBarVisible()
         assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name-windows.txt") {
             it.writeText(screen.device.executeShellCommand("dumpsys window windows")); true
         })
         println("$name statusBarVisible=$visible")
         assertFalse("Status bar covers the search screen after $name", visible)
     }
+
+    private fun statusBarVisible(): Boolean {
+        return if (android.os.Build.VERSION.SDK_INT < 30) {
+            // Compat visibility on these edge-to-edge windows includes stable bar space even
+            // when the bar is hidden. Read the system's actual status-bar window instead.
+            val dump = screen.device.executeShellCommand("dumpsys window windows")
+            val status = Regex("(?ms)^  Window #\\d+ Window\\{[^\\n]* StatusBar\\}:.*?(?=^  Window #|\\z)")
+                .find(dump)?.value ?: error("System status-bar window missing")
+            Regex("\\bisVisible=(true|false)\\b").find(status)!!.groupValues[1].toBoolean()
+        } else screen.onMain {
+            ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)!!
+                .isVisible(WindowInsetsCompat.Type.statusBars())
+        }
+    }
+
+    private fun captureRenderedScreen(name: String) {
+        var frame: Bitmap? = null
+        try {
+            screen.await("Returned screen stayed black after $name") {
+                frame?.recycle()
+                frame = screen.instrumentation.uiAutomation.takeScreenshot()
+                val bitmap = frame ?: return@await false
+                // Sample the centre of the app, excluding the system bars. A black transition
+                // frame must not stand in for the requested before/after screenshot.
+                (2..8).any { x -> (2..8).any { y ->
+                    val pixel = bitmap.getPixel(bitmap.width * x / 10, bitmap.height * y / 10)
+                    maxOf(Color.red(pixel), Color.green(pixel), Color.blue(pixel)) > 16
+                } }
+            }
+            assertTrue("Rendered screenshot was not saved", TestCaptures.save(screen.device, "basefeatures-captures/$name.png") {
+                it.outputStream().use { output -> frame!!.compress(Bitmap.CompressFormat.PNG, 100, output) }
+            })
+        } finally {
+            frame?.recycle()
+        }
+    }
+
 }
