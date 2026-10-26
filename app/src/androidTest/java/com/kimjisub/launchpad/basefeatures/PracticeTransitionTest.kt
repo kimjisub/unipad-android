@@ -152,9 +152,16 @@ class PracticeTransitionTest : PlaybackScreenTest() {
         pressPad(0)
         screen.await("The last input did not end practice") { screen.onMain { !vm.autoPlayRunner!!.active } }
         assertSounds("pad-1-1", "pad-1-2", "pad-1-3", "pad-2-1")
+        // Practice leaves finite pack animations lit. Clear them before checking a fresh run,
+        // otherwise a missing autoplay light could be hidden by the earlier manual input.
+        screen.onMain { vm.switchPlayMode(PlayMode.None) }
+        screen.await("The previous run's lights did not clear") { screen.onMain {
+            (0..2).all { vm.channelManager.get(it, 0)?.channel != Channel.LED }
+        } }
+        assertGuide()
         screen.chooseOption(R.string.autoPlay)
-        screen.await("A fresh run did not replay the earlier pressed pad") { audio.plays.size >= 7 }
-        assertSounds("pad-1-1", "pad-1-2", "pad-1-3", "pad-2-1", "pad-1-1", "pad-1-2", "pad-1-3")
+        screen.await("A fresh run did not finish both chains") { screen.onMain { !vm.autoPlayRunner!!.active } && audio.plays.size >= 8 }
+        assertSounds("pad-1-1", "pad-1-2", "pad-1-3", "pad-2-1", "pad-1-1", "pad-1-2", "pad-1-3", "pad-2-1")
         assertGuide()
         assertLight(0)
         assertLight(1)

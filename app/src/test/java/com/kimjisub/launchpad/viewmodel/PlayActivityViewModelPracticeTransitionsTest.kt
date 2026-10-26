@@ -126,11 +126,15 @@ class PlayActivityViewModelPracticeTransitionsTest {
         assertGuides(0 to 1)
         advance(300)
         val replayAt = scheduler.currentTime
+        guideHistory.clear()
         vm.switchPlayMode(PlayMode.AutoPlay)
         scheduler.runCurrent()
         assertOutputs(Output(0, 0, 0, 1), Output(0, 0, 1, replayAt))
         assertGuides()
+        assertTrue("Autoplay must not emit even a transient practice guide", guideHistory.isEmpty())
         advance(1000)
+        // Keep every guide emitted by the switch and by pause/resume, even one removed in the same tick.
+        guideHistory.clear()
         vm.switchPlayMode(PlayMode.GuidePlay)
         advance(1)
         assertGuides()
@@ -142,7 +146,6 @@ class PlayActivityViewModelPracticeTransitionsTest {
             scheduler.runCurrent()
             assertGuides()
         }
-        guideHistory.clear()
         val target = replayAt + 5000 + pauseMs
         advance(target - 801 - scheduler.currentTime)
         assertGuides()
@@ -242,7 +245,8 @@ class PlayActivityViewModelPracticeTransitionsTest {
             advance(4999)
             assertEquals(3, sounds.size)
             advance(1)
-            assertEquals(Output(0, 0, 1, replayAt + 5000), sounds.last())
+            assertOutputs(Output(0, 0, 0, 1), Output(0, 1, 0, 2), Output(0, 2, 0, replayAt),
+                Output(0, 0, 1, replayAt + 5000))
         }
         advance(1)
         assertFalse(vm.autoPlayRunner!!.active)

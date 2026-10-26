@@ -138,6 +138,7 @@ class PlayActivityViewModelStepToAutoPlayTest(
             scheduler.advanceTimeBy(5000)
             scheduler.runCurrent()
             assertTrue("Timed guidance must remain silent", plays.isEmpty())
+            assertTrue("Timed guidance must not request pack lights", lights.isEmpty())
             return
         }
         vm.switchPlayMode(PlayMode.AutoPlay)
