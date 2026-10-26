@@ -66,6 +66,9 @@ class AppUpdateWrappingTest : BaseUITest() {
                 println("Geometry: ${device.displayWidth}x${device.displayHeight}, density=$density, scale=$scale, language=$language")
             }
             assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_check))), 10000L))
+            compose.waitUntil(timeoutMillis = 10000L) {
+                device.findObject(By.res("app_update_notice"))?.isEnabled == true
+            }
             takeScreenshot("${prefix}_check")
             checkText(R.string.update_check, requireComplete = true)
             source.emit(UpdateStatus.Failed)
