@@ -74,7 +74,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -876,7 +876,7 @@ class MainActivity : BaseActivity() {
 							.size(18.dp)
 							.focusRing(CircleShape)
 							.semantics { stateDescription = orderState }
-							.clickable { vm.updateSortOrder(!sortOrder) },
+							.clickable(role = Role.Button) { vm.updateSortOrder(!sortOrder) },
 					)
 				}
 				ExposedDropdownMenu(
@@ -1148,11 +1148,9 @@ class MainActivity : BaseActivity() {
 			flagClickable = isSelected,
 			onFlagClick = onPlayClick,
 			flagContent = {
-				// Until the row is selected the flag sits under the row's content, so it is not read out either.
 				Row(
 					verticalAlignment = Alignment.CenterVertically,
 					horizontalArrangement = Arrangement.Center,
-					modifier = if (isSelected) Modifier else Modifier.clearAndSetSemantics {},
 				) {
 					Icon(
 						imageVector = Icons.Filled.PlayArrow,

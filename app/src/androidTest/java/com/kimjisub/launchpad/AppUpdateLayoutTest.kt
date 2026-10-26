@@ -90,7 +90,7 @@ class AppUpdateLayoutTest : BaseUITest() {
             device.pressBack()
             assertTrue(waitForMainScreen())
             assertFalse(device.hasObject(By.res("app_update_dialog")))
-            assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_ready_title))), 5000L))
+            assertTrue(device.wait(Until.hasObject(noticeSaying(R.string.update_ready_title)), 5000L))
         } finally { MainActivity.appUpdateSourceForTest = null }
     }
 
@@ -106,7 +106,7 @@ class AppUpdateLayoutTest : BaseUITest() {
             }
             assertTrue("could not focus the update control", control()?.isFocused == true)
             source.emit(UpdateStatus.Downloaded)
-            assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_ready_title))), 5000L))
+            assertTrue(device.wait(Until.hasObject(noticeSaying(R.string.update_ready_title)), 5000L))
             assertTrue("an automatic result moved keyboard focus", control()?.isFocused == true)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
         } finally { MainActivity.appUpdateSourceForTest = null }
@@ -157,15 +157,12 @@ class AppUpdateLayoutTest : BaseUITest() {
             val automaticChoices = device.hasObject(By.res("app_update_card"))
             val statePositions = mutableListOf(positions())
             takeScreenshot("update_${language}_${scale}_offer")
-            val notice = device.findObject(By.text(str(R.string.update_offer_title)))
+            val notice = device.findObject(noticeSaying(R.string.update_offer_title))
             if (notice != null) {
-                // Compose exposes the name as a child of the actual action node.
-                val action = clickableAncestor(notice)
-                assertEquals("app_update_notice", action.resourceName?.substringAfterLast('/'))
                 assertTrue("notice must become enabled", waitUntil(5000L) {
                     device.findObject(By.res("app_update_notice"))?.isEnabled == true
                 })
-                assertTrue("notice target is too small", action.visibleBounds.height() >= 48 * context.resources.displayMetrics.density - 2)
+                assertTrue("notice target is too small", notice.visibleBounds.height() >= 48 * context.resources.displayMetrics.density - 2)
                 TestCaptures.save(device, "notice-${language}-${scale}.xml") { file -> device.dumpWindowHierarchy(file); true }
                 assertTrue("notice could not be tapped", clickFresh(5000L) {
                     device.findObject(By.res("app_update_notice"))?.takeIf { it.isEnabled }
@@ -200,9 +197,10 @@ class AppUpdateLayoutTest : BaseUITest() {
         }
     }
 
-    private fun waitForState(title: Int): Boolean = waitUntil(10000L) {
-        device.hasObject(By.desc(str(title))) || device.hasObject(By.text(str(title)))
-    }
+    private fun waitForState(title: Int): Boolean = waitUntil(10000L) { device.hasObject(By.text(str(title))) }
+
+    /** The small update notice itself, not the update choices' title that shares its text. */
+    private fun noticeSaying(title: Int) = By.res("app_update_notice").hasDescendant(By.text(str(title)))
 
     private fun positions(): List<Rect> = listOf(
         By.desc(str(R.string.cd_logo)), By.desc(str(R.string.setting)),

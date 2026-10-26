@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.graphics.Rect
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.test.platform.app.InstrumentationRegistry
 
 /**
@@ -14,6 +15,9 @@ import androidx.test.platform.app.InstrumentationRegistry
  * Its name is its content description, else its text, else what its unfocusable descendants say,
  * each followed by its state. The order is the tree order, rearranged by each node's traversal-before
  * link, which Compose sets to the next item in reading order.
+ *
+ * State and screen-reader focusability are read through [AccessibilityNodeInfoCompat], as TalkBack
+ * does: before Android 11 and 9 they travel in the node's extras rather than in their own fields.
  */
 object ScreenReaderOrder {
     /** [tag] is the node's Compose test tag or view id, if it has one. */
@@ -72,16 +76,15 @@ object ScreenReaderOrder {
         node.isClickable || node.isLongClickable || node.isFocusable ||
             node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_CLICK || it.id == AccessibilityNodeInfo.ACTION_LONG_CLICK }
 
-    private fun isFocusable(node: AccessibilityNodeInfo) = isActionable(node) || node.isScreenReaderFocusable
+    private fun isFocusable(node: AccessibilityNodeInfo) =
+        isActionable(node) || AccessibilityNodeInfoCompat.wrap(node).isScreenReaderFocusable
 
-    private fun hasOwnSpeech(node: AccessibilityNodeInfo) =
-        !node.contentDescription.isNullOrBlank() || !node.text.isNullOrBlank() || !node.stateDescription.isNullOrBlank()
+    private fun hasOwnSpeech(node: AccessibilityNodeInfo) = ownName(node) != null || state(node) != null
 
     private fun spokenName(node: AccessibilityNodeInfo): String {
-        val own = node.contentDescription?.takeIf { it.isNotBlank() } ?: node.text?.takeIf { it.isNotBlank() }
         val parts = mutableListOf<CharSequence>()
-        if (own != null) parts += own else collectDescendantSpeech(node, parts)
-        node.stateDescription?.takeIf { it.isNotBlank() }?.let { parts += it }
+        ownName(node)?.let { parts += it } ?: collectDescendantSpeech(node, parts)
+        state(node)?.let { parts += it }
         return parts.joinToString(", ")
     }
 
@@ -89,9 +92,14 @@ object ScreenReaderOrder {
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
             if (!child.isVisibleToUser || isFocusable(child)) continue
-            val own = child.contentDescription?.takeIf { it.isNotBlank() } ?: child.text?.takeIf { it.isNotBlank() }
-            if (own != null) into += own else collectDescendantSpeech(child, into)
-            child.stateDescription?.takeIf { it.isNotBlank() }?.let { into += it }
+            ownName(child)?.let { into += it } ?: collectDescendantSpeech(child, into)
+            state(child)?.let { into += it }
         }
     }
+
+    private fun ownName(node: AccessibilityNodeInfo): CharSequence? =
+        node.contentDescription?.takeIf { it.isNotBlank() } ?: node.text?.takeIf { it.isNotBlank() }
+
+    private fun state(node: AccessibilityNodeInfo): CharSequence? =
+        AccessibilityNodeInfoCompat.wrap(node).stateDescription?.takeIf { it.isNotBlank() }
 }

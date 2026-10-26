@@ -50,13 +50,16 @@ class MainScreenReaderOrderTest : BaseUITest() {
             }
 
             selectTestPack()
-            val selected = ScreenReaderOrder.read()
-            val row = selected.indexOfFirst { it.tag == "main_pack_${TestUniPack.FOLDER_NAME}" }
-            assertTrue("selected row missing:\n${selected.joinToString("\n")}", row >= 0)
-            val flag = selected.getOrNull(row + 1)
-            assertEquals("the selected row's play flag is not the next item:\n${selected.joinToString("\n")}",
-                str(R.string.unipack_play), flag?.name)
-            assertTrue("the play flag cannot be activated", flag!!.actionable)
+            awaitStops("selected") { stops ->
+                val row = stops.indexOfFirst { it.tag == "main_pack_${TestUniPack.FOLDER_NAME}" }
+                val flag = stops.getOrNull(row + 1)
+                when {
+                    row < 0 -> "selected row missing"
+                    flag?.name != str(R.string.unipack_play) -> "the selected row's play flag is not the next item"
+                    !flag.actionable -> "the play flag cannot be activated"
+                    else -> null
+                }
+            }
         } finally {
             MainActivity.appUpdateSourceForTest = null
             AppLanguage.set(originalLanguage)
@@ -87,24 +90,31 @@ class MainScreenReaderOrderTest : BaseUITest() {
 
     /** Reads until the first items say [expected], then checks every item has a name. */
     private fun awaitOrder(state: String, expected: List<Expected>): List<ScreenReaderOrder.Stop> {
-        val deadline = SystemClock.uptimeMillis() + 10000L
-        var stops: List<ScreenReaderOrder.Stop>
-        var mismatch: String?
-        do {
-            stops = ScreenReaderOrder.read()
-            mismatch = expected.indices.firstNotNullOfOrNull { i ->
+        val stops = awaitStops(state) { stops ->
+            expected.indices.firstNotNullOfOrNull { i ->
                 val actual = stops.getOrNull(i)?.name
                 if (actual != null && expected[i].matches(actual)) null
                 else "item ${i + 1} should be ${expected[i].label}, was ${actual?.let { "\"$it\"" } ?: "missing"}"
             }
-            if (mismatch == null) break
-            SystemClock.sleep(200)
-        } while (SystemClock.uptimeMillis() < deadline)
-        if (mismatch != null) fail("$state: $mismatch\n${stops.joinToString("\n")}")
+        }
         stops.filter { it.actionable && it.name.isBlank() }.forEach {
             fail("$state: a control has no name: $it\n${stops.joinToString("\n")}")
         }
         return stops
+    }
+
+    /** Reads until [mismatch] finds nothing wrong, as the screen may still be settling. */
+    private fun awaitStops(state: String, mismatch: (List<ScreenReaderOrder.Stop>) -> String?): List<ScreenReaderOrder.Stop> {
+        val deadline = SystemClock.uptimeMillis() + 10000L
+        var stops: List<ScreenReaderOrder.Stop>
+        var problem: String?
+        do {
+            stops = ScreenReaderOrder.read()
+            problem = mismatch(stops)
+            if (problem == null) return stops
+            SystemClock.sleep(200)
+        } while (SystemClock.uptimeMillis() < deadline)
+        throw AssertionError("$state: $problem\n${stops.joinToString("\n")}")
     }
 
     /** Rows say the pack before anything else, then the guide actions follow the last row. */

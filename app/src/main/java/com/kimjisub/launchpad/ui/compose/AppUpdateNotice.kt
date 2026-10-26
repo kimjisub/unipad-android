@@ -65,7 +65,7 @@ fun AppUpdateBadge(card: Card?, enabled: Boolean, onClick: () -> Unit, checking:
 			.heightIn(min = 48.dp)
 			.focusRing()
 			.testTag("app_update_notice")
-			// The text already names the notice; a description beside it is read a second time.
+			// The text alone names the notice; only download progress adds a state.
 			.semantics {
 				if (card is Card.Downloading && card.fraction != null) {
 					stateDescription = "${(card.fraction * 100).toInt()}%"
