@@ -11,8 +11,9 @@ SPEC = importlib.util.spec_from_file_location("release_store_check", SCRIPTS / "
 check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
-# A real dump of the release Store screen on a 2400x1080 emulator: five full rows and one cut off at the bottom.
-STORE_SCREEN = (SCRIPTS / "fixtures" / "release-store-check" / "store-list.xml").read_text()
+# A real snapshot of the release Store screen on a 2400x1080 emulator, taken through the rental's UI
+# entry and trimmed to the fields read: five full rows and one cut off at the bottom.
+STORE_SCREEN = json.loads((SCRIPTS / "fixtures" / "release-store-check" / "store-list.json").read_text())
 
 PERMISSION_UNANSWERED = """
       android.permission.POST_NOTIFICATIONS: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
@@ -39,22 +40,11 @@ class ScreenTest(unittest.TestCase):
         ])
 
     def test_a_row_cut_off_at_the_edge_is_not_read_with_its_indicator_as_producer(self):
-        def row(top, bottom, *texts):
-            children = "".join(f'<node text="{text}" clickable="false" bounds="[1149,{top}][1378,{bottom}]" />'
-                               for text in texts)
-            return f'<node text="" clickable="true" bounds="[1084,{top}][2358,{bottom}]">{children}</node>'
-        screen = check.parse_screen(
-            '<hierarchy><node text="" scrollable="true" bounds="[1042,158][2400,1080]">'
-            + row(179, 337, "Full", "Producer", "LED ●", "AUTOPLAY ●")
-            + row(980, 1080, "Cut", "LED ●", "AUTOPLAY ●")
-            + "</node></hierarchy>")
+        screen = snapshot([store_row("Full", "Producer", top=179), store_row("Cut", "", top=980, height=100)])
         self.assertEqual([key for key, _ in check.store_rows(screen)], [("Full", "Producer")])
 
     def test_a_pack_without_producer_is_read_by_its_title_alone(self):
-        screen = check.parse_screen(
-            '<hierarchy><node text="" scrollable="true" bounds="[1042,158][2400,1080]">'
-            + store_row("B", "", top=179) + store_row("C", "Producer", top=337)
-            + "</node></hierarchy>")
+        screen = snapshot([store_row("B", "", top=179), store_row("C", "Producer", top=337)])
         self.assertEqual([key for key, _ in check.store_rows(screen)], [("B",), ("C", "Producer")])
         self.assertEqual(check.row_key("B", None), ("B",))
         self.assertEqual(check.row_key("C\t", "Producer"), ("C", "Producer"))
@@ -74,35 +64,71 @@ class ScreenTest(unittest.TestCase):
         _, row = check.store_rows(check.parse_screen(STORE_SCREEN))[0]
         self.assertEqual(row.center, (1721, 258))
 
+    def test_a_snapshot_without_nodes_is_a_failure_not_an_empty_screen(self):
+        for answer in ({"success": True, "data": {"message": "unchanged"}}, {"success": True}, None):
+            with self.assertRaisesRegex(check.CheckFailed, "no node list"):
+                check.parse_screen(answer)
+
+    def test_finds_nodes_by_label_and_by_exposed_identifier(self):
+        root = check.parse_screen({"data": {"nodes": [
+            {"index": 0, "rect": {"x": 0, "y": 0, "width": 100, "height": 100}},
+            {"index": 1, "parentIndex": 0, "identifier": "main_pack__Joanna", "hittable": True,
+             "rect": {"x": 10, "y": 20, "width": 30, "height": 40}},
+            {"index": 2, "parentIndex": 1, "label": "Joanna", "rect": {"x": 10, "y": 20, "width": 30, "height": 20}}]}})
+        self.assertEqual(check.find(root, identifier="main_pack__Joanna").center, (25, 40))
+        self.assertEqual(check.find(root, text="Joanna").bounds, (10, 20, 40, 40))
+        self.assertIsNone(check.find(root, text="Tired"))
+
     def test_titles_compare_without_stray_whitespace(self):
         self.assertEqual(check.normalized("Alan Walker - Tired (We Rabbitz Remix)\t"),
                          "Alan Walker - Tired (We Rabbitz Remix)")
         self.assertEqual(check.normalized(None), "")
 
 
+def rect(left, top, width, height):
+    return {"x": left, "y": top, "width": width, "height": height}
+
+
 def store_row(title, producer, top, height=158):
-    texts = [text for text in (title, producer, "LED ●", "AUTOPLAY ●")]
-    children = "".join(f'<node text="{text}" clickable="false" bounds="[1149,{top}][1378,{top + height}]" />'
-                       for text in texts)
-    return f'<node text="" clickable="true" bounds="[1084,{top}][2358,{top + height}]">{children}</node>'
+    """One Store row as snapshot entries: the clickable row, then its texts, as the app draws them
+    (an empty producer draws no text)."""
+    texts = [text for text in (title, producer) if text] + ["LED ●", "AUTOPLAY ●"]
+    return [{"hittable": True, "rect": rect(1084, top, 1274, height)}] + [
+        {"label": text, "rect": rect(1149, top, 229, min(63, height))} for text in texts]
+
+
+def snapshot(rows, before=()):
+    """A snapshot answer: `before` entries under the screen, then a list holding the rows' entries."""
+    nodes = [{"index": 0, "rect": rect(0, 0, 2400, 1080)}]
+    for entry in before:
+        nodes.append(dict(entry, index=len(nodes), parentIndex=0))
+    listing = len(nodes)
+    nodes.append({"index": listing, "parentIndex": 0, "rect": rect(1042, 158, 1358, 922)})
+    for row in rows:
+        row_index = len(nodes)
+        nodes.append(dict(row[0], index=row_index, parentIndex=listing))
+        nodes.extend(dict(text, index=row_index + offset, parentIndex=row_index) for offset, text in enumerate(row[1:], 1))
+    return check.parse_screen({"success": True, "data": {"nodes": nodes}})
 
 
 def store_screen(count, rows):
     """A Store screen: the count beside its label and the rows (title, producer) in its list."""
-    listed = "".join(store_row(title, producer, top=179 + 158 * index) for index, (title, producer) in enumerate(rows))
-    return check.parse_screen(
-        f'<hierarchy><node text="{check.STORE_COUNT_LABEL}" bounds="[0,0][100,50]" />'
-        f'<node text="{count}" bounds="[0,50][100,100]" />'
-        f'<node text="" scrollable="true" bounds="[1042,158][2400,1080]">{listed}</node></hierarchy>')
+    return snapshot([store_row(title, producer, top=179 + 158 * index) for index, (title, producer) in enumerate(rows)],
+                    before=[{"label": check.STORE_COUNT_LABEL, "rect": rect(0, 0, 100, 50)},
+                            {"label": str(count), "rect": rect(0, 50, 100, 50)}])
 
 
 class ScreenDevice:
     """Serves one Store screen per swipe, staying on the last, as a list scrolled to its end does."""
-    def __init__(self, screens):
+    def __init__(self, screens, cycle=False):
         self.screens = screens
+        self.cycle = cycle
         self.index = 0
+        self.saved = []
 
     def screen(self, name=None):
+        if name:
+            self.saved.append(name)
         return self.screens[self.index]
 
     def wait(self, predicate, timeout, what, name):
@@ -112,18 +138,19 @@ class ScreenDevice:
         return found
 
     def capture(self, name):
-        pass
+        self.saved.append(name)
 
     def swipe(self, node, up=True):
-        self.index = min(self.index + 1, len(self.screens) - 1)
+        self.swipes = getattr(self, "swipes", 0) + 1
+        self.index = (self.index + 1) % len(self.screens) if self.cycle else min(self.index + 1, len(self.screens) - 1)
 
 
 class ListingTest(unittest.TestCase):
     PACKS = [{"title": "A", "producerName": "p"}, {"title": "X", "producerName": "q"},
              {"title": "X", "producerName": "q"}, {"title": "B"}]
 
-    def listing(self, screens):
-        store_check = check.StoreCheck(ScreenDevice(screens), check.RELEASE_PACKAGE, "unused")
+    def listing(self, screens, device=None):
+        store_check = check.StoreCheck(FakeDevice(), device or ScreenDevice(screens), check.RELEASE_PACKAGE, "unused")
         check.time.sleep, sleep = (lambda seconds: None), check.time.sleep
         try:
             store_check.check_listing(self.PACKS)
@@ -139,6 +166,14 @@ class ListingTest(unittest.TestCase):
     def test_one_of_two_alike_packs_missing_from_the_screen_fails(self):
         with self.assertRaisesRegex(check.CheckFailed, "3 rows for 4 listed packs"):
             self.listing([store_screen(4, [("A", "p"), ("X", "q")]), store_screen(4, [("X", "q"), ("B", "")])])
+
+    def test_a_list_that_keeps_alternating_stops_at_the_screen_limit_with_its_last_screen(self):
+        device = ScreenDevice([store_screen(4, [("A", "p"), ("X", "q")]), store_screen(4, [("B", ""), ("Y", "r")])],
+                              cycle=True)
+        with self.assertRaisesRegex(check.CheckFailed, r"still showed new rows after 7 screens"):
+            self.listing(None, device)
+        self.assertEqual(device.swipes, 6)
+        self.assertEqual(device.saved[-2:], ["store-list-unsettled", "store-list-unsettled"])
 
 
 class PackChoiceTest(unittest.TestCase):
@@ -165,7 +200,7 @@ class PackChoiceTest(unittest.TestCase):
                  {"code": "c", "URL": "https://x/c.zip", "title": "C"}]
         self.assertEqual([pack["code"] for pack in check.downloadable(packs)], ["c"])
         with self.assertRaisesRegex(check.CheckFailed, "same title and producer"):
-            check.StoreCheck(FakeDevice(), check.RELEASE_PACKAGE, "unused", "b1").choose_pack(packs)
+            check.StoreCheck(FakeDevice(), None, check.RELEASE_PACKAGE, "unused", "b1").choose_pack(packs)
 
     def test_no_sized_pack_fails(self):
         with self.assertRaises(check.CheckFailed):
@@ -227,7 +262,7 @@ class FakeDevice:
 
 class RefusalTest(unittest.TestCase):
     def store_check(self, device, pack=None):
-        return check.StoreCheck(device, check.RELEASE_PACKAGE, "unused", pack)
+        return check.StoreCheck(device, None, check.RELEASE_PACKAGE, "unused", pack)
 
     def test_refuses_before_api_33(self):
         with self.assertRaisesRegex(check.CheckFailed, "API 32"):
@@ -265,12 +300,60 @@ class RefusalTest(unittest.TestCase):
                 [{"code": "_Joanna", "URL": "file:///nonexistent", "title": "Joanna"}])
 
 
+class RecordedScreen:
+    """A Screen whose UI commands are recorded instead of sent."""
+    def __init__(self):
+        self.commands = []
+
+    def close(self):
+        self.commands.append(("close",))
+
+
+class UiEntryTest(unittest.TestCase):
+    """Screen work goes only to the rental's UI entry, for the rented device and generation."""
+    def screen(self, answers):
+        self.calls = []
+
+        def run(command, **kwargs):
+            self.calls.append(command)
+            returncode, stdout = answers.pop(0) if answers else (0, json.dumps({"success": True, "data": {}}))
+            return check.subprocess.CompletedProcess(command, returncode, stdout.encode(), b"refused by the rental")
+        return check.Screen(Path("/tools/devices.py"), "emulator-5560", "gen1", Path("/out"), run=run)
+
+    def test_every_screen_action_is_a_ui_command_on_the_rented_device(self):
+        screen = self.screen([(0, json.dumps(STORE_SCREEN))])
+        rows = check.store_rows(screen.screen())
+        screen.launch(check.RELEASE_PACKAGE)
+        screen.tap(rows[0][1])
+        screen.swipe(check.store_list(check.parse_screen(STORE_SCREEN)))
+        screen.back()
+        screen.capture("library")
+        screen.close()
+        prefix = [check.sys.executable, "/tools/devices.py", "ui", "emulator-5560", "--generation", "gen1", "--"]
+        self.assertTrue(all(call[:len(prefix)] == prefix for call in self.calls))
+        self.assertEqual([call[len(prefix):] for call in self.calls], [
+            ["snapshot"], ["open", check.RELEASE_PACKAGE], ["press", "1721", "258"],
+            ["gesture", "pan", "1721", "927", "0", "-616", "600"], ["back", "--system"],
+            ["screenshot", "/out/library.png"], ["close"]])
+
+    def test_a_refused_or_unsuccessful_ui_command_fails_the_check(self):
+        for answer in ((1, ""), (0, json.dumps({"success": False, "error": {"code": "DEVICE_IN_USE"}})), (0, "not json")):
+            screen = self.screen([answer])
+            with self.assertRaisesRegex(check.CheckFailed, "ui press 1 2 failed"):
+                screen.ui("press", 1, 2)
+
+    def test_closing_the_session_never_raises(self):
+        screen = self.screen([(1, "")])
+        screen.close()
+        self.assertEqual(self.calls[0][-1], "close")
+
+
 class VerdictTest(unittest.TestCase):
     def verdict(self, device, list_body, pack=None):
         with tempfile.TemporaryDirectory() as directory:
             listed = Path(directory) / "store.json"
             listed.write_text(list_body)
-            store_check = check.StoreCheck(device, check.RELEASE_PACKAGE, listed.as_uri(), pack)
+            store_check = check.StoreCheck(device, RecordedScreen(), check.RELEASE_PACKAGE, listed.as_uri(), pack)
             self.assertEqual(check.run_and_record(store_check, Path(directory)), 1)
             return json.loads((Path(directory) / "store-check.json").read_text())
 
@@ -304,7 +387,8 @@ class RestoreTest(unittest.TestCase):
                 return super().shell(*args, **kwargs)
 
         device = FailingDevice()
-        store_check = check.StoreCheck(device, check.RELEASE_PACKAGE, "unused", "a")
+        screen = RecordedScreen()
+        store_check = check.StoreCheck(device, screen, check.RELEASE_PACKAGE, "unused", "a")
         store_check.choose_pack = lambda packs: packs[0]
         fetch, check.fetch_store_list = check.fetch_store_list, lambda url: [{"code": "a", "title": "A"}]
         try:
@@ -314,6 +398,7 @@ class RestoreTest(unittest.TestCase):
             check.fetch_store_list = fetch
         self.assertIn(("cmd", "locale", "set-app-locales", check.RELEASE_PACKAGE, "--locales", "ko-KR"), device.commands)
         self.assertIn(("setprop", "debug.firebase.analytics.app", ".none."), device.commands)
+        self.assertEqual(screen.commands, [("close",)])
 
 
 if __name__ == "__main__":

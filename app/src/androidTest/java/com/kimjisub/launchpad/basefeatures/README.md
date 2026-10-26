@@ -442,8 +442,8 @@ requests or replace production repositories in an unchanged candidate.
 
 ## Release candidate against the real Store
 
-`scripts/release_store_check.py` drives the installed release app from outside, on one rooted,
-online emulator on API 33 or newer (no instrumentation, so the candidate is not rebuilt). It reads
+`scripts/release_store_check.py` drives the installed release app from outside, on one rented,
+rooted, online emulator on API 33 or newer (no instrumentation, so the candidate is not rebuilt). It reads
 the same Store list the app subscribes to and checks that the Store screen counts and shows every
 listed pack (title and producer), downloads one pack, by default the smallest file, sized with HEAD
 requests that download nothing, and checks that a first download on a fresh install asks for the
@@ -460,13 +460,27 @@ and marks the app's analytics as debug events (`debug.firebase.analytics.app`). 
 language is set back, and the property is set back to its earlier value or, when it had none, to
 `.none.`, Firebase's off value (a system property cannot be removed). The downloaded pack and the
 permission answer stay. The verdict is in `<out>/store-check.json` whatever stops the run, with
-screenshots and screen dumps of each step beside it.
+screenshots and screen snapshots of each step beside it.
+
+The screen is used only through the device rental's UI entry (`devices.py ui DEVICE --generation
+TOKEN -- ...`, agent-device in the rental's own session): launching the app, snapshots, presses, the
+list drags (600 ms pans), Back and screenshots. The check closes that session when it ends, passed or
+failed; returning the rental (`devices.py down`) then retires it. adb is kept for inspecting and
+preparing the app, never for input: root, API level, package flags and notification permission state,
+setting and restoring the app language and analytics property, stopping the app before launch, finding
+the pack folders, and copying the app database to read the pack's record. Reading the list stops after
+one screen per listed pack plus three; a list still showing new rows then fails with its last screen
+saved as `store-list-unsettled`.
 
 ```bash
 bundletool build-apks --mode=universal --bundle=app-release.aab --output=candidate.apks
 unzip -o candidate.apks universal.apk
-adb -s "$ANDROID_SERIAL" install universal.apk   # on a fresh emulator
-python3 scripts/release_store_check.py --serial "$ANDROID_SERIAL" --out store-check
+python3 devices.py up android --fresh                     # prints DEVICE
+GENERATION=$(python3 devices.py lease DEVICE | python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])')
+python3 devices.py ui DEVICE --generation "$GENERATION" -- install com.kimjisub.launchpad "$PWD/universal.apk"
+python3 scripts/release_store_check.py --serial DEVICE --generation "$GENERATION" \
+  --devices-tool /path/to/devices.py --out store-check
+python3 devices.py down
 ```
 
 ## Things the emulator cannot establish

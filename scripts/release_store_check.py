@@ -2,8 +2,8 @@
 """Check an installed release build against the real Store, the way a user reaches it.
 
 The instrumented Store tests replace the catalogue with an offline fixture. This check drives
-the installed app (by default the release package) on one rooted emulator from the outside,
-with the device online:
+the installed app (by default the release package) on one rented, rooted emulator from the
+outside, with the device online:
 
 1. the Store screen lists every pack the Store database lists (count and title/producer pairs);
 2. one pack — by default the smallest file in the list — downloads, and on a first download
@@ -19,7 +19,15 @@ when it had none, to `.none.` (Firebase's off value; a system property cannot be
 The downloaded pack and the permission answer stay. Run it on a fresh installation: the
 library is not scrolled, so the new pack must be on its first screen.
 
-Results, screenshots and screen dumps go to `--out`; `store-check.json` holds the verdict.
+Everything on the screen — launching the app, reading the screen, presses, drags, Back and
+screenshots — goes through the device rental's UI entry (`devices.py ui DEVICE --generation
+TOKEN -- ...`, which drives agent-device in the rental's own session), so only the rented device
+and its session are used. The session is closed when the check ends, however it ends. adb is
+used only to inspect and prepare the app: root, API level, package flags and notification
+permission state, the app language and analytics property (set and restored), stopping the app
+before launch, the pack folders, and a copy of the app database.
+
+Results, screenshots and screen snapshots go to `--out`; `store-check.json` holds the verdict.
 """
 import argparse
 from collections import Counter
@@ -36,7 +44,6 @@ import tempfile
 import time
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ElementTree
 
 # The same Realtime Database node the app subscribes to (`FirebaseStoreCatalog`), read over REST.
 STORE_LIST_URL = "https://unipad-e41ab.firebaseio.com/store.json"
@@ -60,6 +67,9 @@ LIST_TIMEOUT = 30
 DOWNLOAD_TIMEOUT = 180
 DIALOG_TIMEOUT = 10
 SCREEN_TIMEOUT = 20
+UI_COMMAND_TIMEOUT = 90
+# Drags past the last new row before the list counts as read to its end.
+UNCHANGED_SCREENS = 2
 
 
 class CheckFailed(Exception):
@@ -74,10 +84,8 @@ def normalized(text):
 @dataclass
 class Node:
     text: str
-    description: str
-    resource_id: str
+    identifier: str
     clickable: bool
-    scrollable: bool
     bounds: tuple
     children: list = field(default_factory=list)
 
@@ -99,22 +107,30 @@ class Node:
         return [node.text for node in self.walk() if node.text]
 
 
-def parse_screen(xml_text):
-    """The root of a `uiautomator dump` hierarchy as Nodes."""
-    def build(element):
-        numbers = [int(value) for value in re.findall(r"-?\d+", element.get("bounds", "[0,0][0,0]"))]
-        node = Node(element.get("text", ""), element.get("content-desc", ""), element.get("resource-id", ""),
-                    element.get("clickable") == "true", element.get("scrollable") == "true", tuple(numbers[:4]))
-        node.children = [build(child) for child in element if child.tag == "node"]
-        return node
-    root = ElementTree.fromstring(xml_text)
-    return Node("", "", "", False, False, (0, 0, 0, 0), [build(child) for child in root if child.tag == "node"])
+def parse_screen(snapshot):
+    """The root of an agent-device snapshot (`{"data": {"nodes": [...]}}`) as a Node tree.
+
+    Snapshot nodes come flat in drawing order and name their parent by index; a node's label is
+    its text or content description, its identifier its resource ID or exposed test tag, and its
+    rect the part visible on screen."""
+    nodes = (snapshot.get("data") or {}).get("nodes") if isinstance(snapshot, dict) else None
+    if not isinstance(nodes, list):
+        raise CheckFailed("The screen snapshot has no node list")
+    root = Node("", "", False, (0, 0, 0, 0))
+    built = {}
+    for entry in nodes:
+        rect = entry.get("rect") or {}
+        left, top = rect.get("x", 0), rect.get("y", 0)
+        built[entry["index"]] = Node(entry.get("label") or "", entry.get("identifier") or "", bool(entry.get("hittable")),
+                                     (left, top, left + rect.get("width", 0), top + rect.get("height", 0)))
+    for entry in nodes:
+        built.get(entry.get("parentIndex"), root).children.append(built[entry["index"]])
+    return root
 
 
-def find(root, text=None, description=None, resource_id=None):
+def find(root, text=None, identifier=None):
     for node in root.walk():
-        if ((text is None or node.text == text) and (description is None or node.description == description)
-                and (resource_id is None or node.resource_id == resource_id)):
+        if (text is None or node.text == text) and (identifier is None or node.identifier == identifier):
             return node
     return None
 
@@ -129,9 +145,9 @@ def value_after(root, label):
 
 
 def store_list(root):
-    """The Store's scrolling pack list: the scrollable node holding clickable rows."""
+    """The Store's pack list: the node whose children are clickable rows with text."""
     for node in root.walk():
-        if node.scrollable and any(child.clickable for child in node.children):
+        if any(child.clickable and child.texts() for child in node.children):
             return node
     return None
 
@@ -153,7 +169,7 @@ def row_texts(row):
 def store_rows(root):
     """(row_key, row node) of each Store row fully on screen, top to bottom.
 
-    A dump gives each node's visible bounds, so a row cut off at the list's edge is shorter
+    A snapshot gives each node's visible bounds, so a row cut off at the list's edge is shorter
     than the others and may lack its producer line; only rows of full height are read."""
     listing = store_list(root)
     if listing is None:
@@ -257,10 +273,10 @@ def pack_record(database_files, code):
         connection.close()
 
 
-class Device:
-    def __init__(self, adb, serial, out):
+class Adb:
+    """adb on the rented device, for inspecting and preparing the app; never for the screen."""
+    def __init__(self, adb, serial):
         self.command = [adb, "-s", serial]
-        self.out = out
 
     def run(self, *args, timeout=60, check=True):
         result = subprocess.run(self.command + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -278,29 +294,57 @@ class Device:
         if self.shell("id", "-u") != "0":
             raise CheckFailed("adb root is not available on this device; use an emulator image that allows it")
 
+    def file_exists(self, path):
+        return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
+
+
+class Screen:
+    """The rented device's screen, through the rental's UI entry (`devices.py ui`)."""
+    def __init__(self, devices_tool, serial, generation, out, run=subprocess.run):
+        self.command = [sys.executable, str(devices_tool), "ui", serial, "--generation", generation, "--"]
+        self.out = out
+        self._run = run
+
+    def ui(self, *args, check=True):
+        result = self._run(self.command + [str(arg) for arg in args], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                           timeout=UI_COMMAND_TIMEOUT)
+        output = result.stdout.decode(errors="replace")
+        try:
+            answer = json.loads(output)
+        except ValueError:
+            answer = None
+        if check and (result.returncode != 0 or not isinstance(answer, dict) or not answer.get("success")):
+            detail = result.stderr.decode(errors="replace").strip() or output.strip()
+            raise CheckFailed(f"ui {' '.join(str(arg) for arg in args)} failed: {detail[-600:]}")
+        return answer
+
+    def launch(self, package):
+        self.ui("open", package)
+
+    def close(self):
+        self.ui("close", check=False)
+
     def screen(self, name=None):
-        self.shell("uiautomator", "dump", "/data/local/tmp/release-store-check.xml", timeout=30)
-        xml_text = self.run("exec-out", "cat", "/data/local/tmp/release-store-check.xml").decode(errors="replace")
+        snapshot = self.ui("snapshot")
         if name:
-            (self.out / f"{name}.xml").write_text(xml_text)
-        return parse_screen(xml_text)
+            (self.out / f"{name}.json").write_text(json.dumps(snapshot, indent=1, ensure_ascii=False) + "\n")
+        return parse_screen(snapshot)
 
     def capture(self, name):
-        (self.out / f"{name}.png").write_bytes(self.run("exec-out", "screencap", "-p", timeout=30))
+        self.ui("screenshot", self.out / f"{name}.png")
 
     def tap(self, node):
-        x, y = node.center
-        self.shell("input", "tap", str(x), str(y))
+        self.ui("press", *node.center)
 
     def swipe(self, node, up=True):
-        """Drag across two thirds of the node: up shows what lies below, down what lies above."""
+        """Drag across two thirds of the node over 600 ms: up shows what lies below, down what lies above."""
         x, (top, bottom) = node.center[0], (node.bounds[1], node.bounds[3])
         near_top, near_bottom = top + (bottom - top) // 6, bottom - (bottom - top) // 6
         start, end = (near_bottom, near_top) if up else (near_top, near_bottom)
-        self.shell("input", "swipe", str(x), str(start), str(x), str(end), "600")
+        self.ui("gesture", "pan", x, start, 0, end - start, 600)
 
-    def file_exists(self, path):
-        return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
+    def back(self):
+        self.ui("back", "--system")
 
     def wait(self, predicate, timeout, what, name):
         deadline = time.monotonic() + timeout
@@ -317,8 +361,9 @@ class Device:
 
 
 class StoreCheck:
-    def __init__(self, device, package, list_url, pack_code=None):
-        self.device = device
+    def __init__(self, adb, screen, package, list_url, pack_code=None):
+        self.adb = adb
+        self.screen = screen
         self.package = package
         self.list_url = list_url
         self.pack_code = pack_code
@@ -333,7 +378,7 @@ class StoreCheck:
 
     def pack_folders(self, code):
         """Folders named after the pack in every place the app keeps packs (internal and external storage)."""
-        found = self.device.shell("find", self.app_data("files"), f"/storage/emulated/0/Android/data/{self.package}/files",
+        found = self.adb.shell("find", self.app_data("files"), f"/storage/emulated/0/Android/data/{self.package}/files",
                                   "-maxdepth", "2", "-type", "d", "-name", code, check=False)
         return [line for line in found.splitlines() if line.strip() and "No such file" not in line]
 
@@ -342,20 +387,20 @@ class StoreCheck:
             copy = Path(directory) / DATABASE
             for suffix in ("", "-wal", "-shm"):
                 source = self.app_data("databases", DATABASE + suffix)
-                if self.device.file_exists(source):
-                    Path(str(copy) + suffix).write_bytes(self.device.run("exec-out", "cat", source))
+                if self.adb.file_exists(source):
+                    Path(str(copy) + suffix).write_bytes(self.adb.run("exec-out", "cat", source))
             if not copy.exists():
                 return None
             return pack_record(copy, code)
 
     def check_installed(self):
-        sdk = self.device.shell("getprop", "ro.build.version.sdk")
+        sdk = self.adb.shell("getprop", "ro.build.version.sdk")
         if not sdk.isdigit():
             raise CheckFailed(f"ro.build.version.sdk is {sdk!r}, not an API level")
         sdk = int(sdk)
         if sdk < 33:
             raise CheckFailed(f"API {sdk}: this check needs API 33+ (per-app language, notification permission)")
-        package = self.device.shell("dumpsys", "package", self.package)
+        package = self.adb.shell("dumpsys", "package", self.package)
         version = re.search(r"versionCode=(\d+).*?\n\s*versionName=(\S+)", package, re.S)
         if not version:
             raise CheckFailed(f"{self.package} is not installed")
@@ -387,35 +432,43 @@ class StoreCheck:
         return pack
 
     def open_store(self):
-        self.device.shell("am", "force-stop", self.package)
-        launcher = self.device.shell("cmd", "package", "resolve-activity", "--brief",
-                                     "-c", "android.intent.category.LAUNCHER", self.package).splitlines()[-1].strip()
-        if "/" not in launcher:
-            raise CheckFailed(f"{self.package} has no launcher activity ({launcher})")
-        self.device.shell("am", "start", "-W", "-n", launcher, timeout=60)
-        entry = self.device.wait(lambda root: find(root, description=STORE_BUTTON_DESCRIPTION)
+        self.adb.shell("am", "force-stop", self.package)
+        self.screen.launch(self.package)
+        entry = self.screen.wait(lambda root: find(root, text=STORE_BUTTON_DESCRIPTION)
                                  or find(root, text=DOWNLOAD_NEW_PACKS), SCREEN_TIMEOUT, "The main screen's Store entry", "main-screen")
-        self.device.capture("main-screen")
-        self.device.tap(entry)
+        self.screen.capture("main-screen")
+        self.screen.tap(entry)
 
     def check_listing(self, packs):
         expected = len(packs)
-        self.device.wait(lambda root: value_after(root, STORE_COUNT_LABEL) == str(expected), LIST_TIMEOUT,
+        self.screen.wait(lambda root: value_after(root, STORE_COUNT_LABEL) == str(expected), LIST_TIMEOUT,
                          f"Store count {expected}", "store-count")
-        self.device.capture("store-list")
+        self.screen.capture("store-list")
         wanted = Counter(row_key(pack.get("title"), pack.get("producerName")) for pack in packs)
         seen, unchanged = [], 0
-        root = self.device.screen("store-list")
+        root = self.screen.screen("store-list")
         listing = store_list(root)
         if listing is None:
-            raise CheckFailed("The Store screen has no scrolling pack list (see store-list.xml)")
-        while unchanged < 2:
+            raise CheckFailed("The Store screen has no pack list (see store-list.json)")
+        # Every drag before the end shows at least one new row, so a list of N packs is read
+        # within N screens plus the unchanged ones; a list still changing past that never settles.
+        limit = expected + UNCHANGED_SCREENS + 1
+        for screens in range(1, limit + 1):
             new = merge_screen(seen, [key for key, _ in store_rows(root)])
             seen.extend(new)
             unchanged = 0 if new else unchanged + 1
-            self.device.swipe(listing)
-            time.sleep(0.4)
-            root = self.device.screen()
+            if unchanged >= UNCHANGED_SCREENS:
+                break
+            if screens < limit:
+                self.screen.swipe(listing)
+                time.sleep(0.4)
+                root = self.screen.screen()
+        else:
+            self.screen.screen("store-list-unsettled")
+            self.screen.capture("store-list-unsettled")
+            self.result["listing"] = {"count": expected, "rows_seen": len(seen), "settled": False}
+            raise CheckFailed(f"The Store list still showed new rows after {limit} screens "
+                              f"({len(seen)} rows read for {expected} listed packs; see store-list-unsettled.png)")
         shown = Counter(seen)
         missing, extra = sorted((wanted - shown).elements()), sorted((shown - wanted).elements())
         self.result["listing"] = {"count": expected, "rows_seen": len(seen), "missing": missing, "extra": extra}
@@ -427,34 +480,39 @@ class StoreCheck:
     def find_row(self, pack):
         key = row_key(pack.get("title"), pack.get("producerName"))
         for _ in range(60):
-            root = self.device.screen()
+            root = self.screen.screen()
             row = dict(store_rows(root)).get(key)
             if row:
                 return row
-            self.device.swipe(store_list(root), up=False)
+            listing = store_list(root)
+            if listing is None:
+                self.screen.screen("store-find-row")
+                raise CheckFailed(f"The Store screen lost its pack list while looking for {pack['code']} "
+                                  "(see store-find-row.json)")
+            self.screen.swipe(listing, up=False)
             time.sleep(0.4)
         raise CheckFailed(f"Row of {pack['code']} not found while scrolling back up the Store list")
 
     def download(self, pack, permission_before):
-        self.device.tap(self.find_row(pack))
-        button = self.device.wait(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
-        self.device.capture("store-detail")
+        self.screen.tap(self.find_row(pack))
+        button = self.screen.wait(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
+        self.screen.capture("store-detail")
         started = time.monotonic()
-        self.device.tap(button)
+        self.screen.tap(button)
         expect_dialog = not permission_before[0] and not permission_before[1]
         dialog = None
         if expect_dialog:
-            dialog = self.device.wait(lambda root: find(root, resource_id=PERMISSION_ALLOW), DIALOG_TIMEOUT,
+            dialog = self.screen.wait(lambda root: find(root, identifier=PERMISSION_ALLOW), DIALOG_TIMEOUT,
                                       "The notification permission dialog", "notification-permission")
-            self.device.capture("notification-permission")
-            self.device.tap(dialog)
-        state = self.device.wait(lambda root: (find(root, text=DOWNLOADED) and DOWNLOADED) or (find(root, text=FAILED) and FAILED),
+            self.screen.capture("notification-permission")
+            self.screen.tap(dialog)
+        state = self.screen.wait(lambda root: (find(root, text=DOWNLOADED) and DOWNLOADED) or (find(root, text=FAILED) and FAILED),
                                  DOWNLOAD_TIMEOUT, "The download result", "download-result")
         seconds = round(time.monotonic() - started, 1)
-        self.device.capture("store-downloaded")
+        self.screen.capture("store-downloaded")
         if state == FAILED:
             raise CheckFailed(f"The app showed \"{FAILED}\" for {pack['code']} after {seconds} s")
-        self.device.screen("store-downloaded")
+        self.screen.screen("store-downloaded")
         self.result["download"] = {"seconds": seconds, "notification_dialog": bool(dialog)}
         self.step("download", f"{DOWNLOADED} after {seconds} s; notification permission dialog "
                               f"{'shown and allowed' if dialog else 'not asked (already answered)'}")
@@ -462,16 +520,16 @@ class StoreCheck:
     def check_library(self, pack):
         code = pack["code"]
         folders = self.pack_folders(code)
-        if len(folders) != 1 or not self.device.file_exists(f"{folders[0]}/info"):
+        if len(folders) != 1 or not self.adb.file_exists(f"{folders[0]}/info"):
             raise CheckFailed(f"Expected one folder of {code} with an info file, found {folders}")
         for _ in range(2):
-            self.device.shell("input", "keyevent", "KEYCODE_BACK")
+            self.screen.back()
             time.sleep(1)
-        item = self.device.wait(lambda root: find(root, resource_id=f"main_pack_{code}"), SCREEN_TIMEOUT,
+        item = self.screen.wait(lambda root: find(root, identifier=f"main_pack_{code}"), SCREEN_TIMEOUT,
                                 f"{code} in the library", "library")
-        self.device.tap(item)
+        self.screen.tap(item)
         time.sleep(1.5)
-        self.device.capture("library")
+        self.screen.capture("library")
         record = self.read_record(code)
         self.result["library"] = {"folder": folders[0], "record": record}
         if record is None:
@@ -483,36 +541,43 @@ class StoreCheck:
         self.step("library", f"{folders[0]} with info; listed; record bookmark=0 openCount=0 lastOpenedAt=none")
 
     def run(self):
-        self.device.root()
+        self.adb.root()
         dumpsys = self.check_installed()
         permission_before = notification_permission(dumpsys)
         packs = fetch_store_list(self.list_url)
         pack = self.choose_pack(packs)
-        locales = app_locales(self.device.shell("cmd", "locale", "get-app-locales", self.package))
-        analytics = self.device.shell("getprop", "debug.firebase.analytics.app")
+        locales = app_locales(self.adb.shell("cmd", "locale", "get-app-locales", self.package))
+        analytics = self.adb.shell("getprop", "debug.firebase.analytics.app")
         try:
-            self.device.shell("cmd", "locale", "set-app-locales", self.package, "--locales", "en-US")
-            self.device.shell("setprop", "debug.firebase.analytics.app", self.package)
+            self.adb.shell("cmd", "locale", "set-app-locales", self.package, "--locales", "en-US")
+            self.adb.shell("setprop", "debug.firebase.analytics.app", self.package)
             self.open_store()
             self.check_listing(packs)
             self.download(pack, permission_before)
             self.check_library(pack)
         finally:
-            self.device.shell("cmd", "locale", "set-app-locales", self.package, "--locales", shlex.quote(locales), check=False)
-            self.device.shell("setprop", "debug.firebase.analytics.app", analytics or ".none.", check=False)
+            self.screen.close()
+            self.adb.shell("cmd", "locale", "set-app-locales", self.package, "--locales", shlex.quote(locales), check=False)
+            self.adb.shell("setprop", "debug.firebase.analytics.app", analytics or ".none.", check=False)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--serial", required=True, help="the one emulator to drive (adb serial)")
-    parser.add_argument("--out", required=True, type=Path, help="folder for the verdict, screenshots and screen dumps")
+    parser.add_argument("--serial", required=True, help="the rented emulator (adb serial)")
+    parser.add_argument("--generation", required=True, help="the rental's generation (`devices.py lease DEVICE`)")
+    parser.add_argument("--devices-tool", required=True, type=Path, help="the device rental tool, devices.py")
+    parser.add_argument("--out", required=True, type=Path, help="folder for the verdict, screenshots and screen snapshots")
     parser.add_argument("--adb", default="adb")
     parser.add_argument("--package", default=RELEASE_PACKAGE)
     parser.add_argument("--pack", help="Store code of the pack to download (default: the smallest file)")
     parser.add_argument("--list-url", default=STORE_LIST_URL)
     args = parser.parse_args(argv)
+    if not args.devices_tool.is_file():
+        parser.error(f"--devices-tool {args.devices_tool} does not exist")
+    args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
-    return run_and_record(StoreCheck(Device(args.adb, args.serial, args.out), args.package, args.list_url, args.pack),
+    screen = Screen(args.devices_tool.resolve(), args.serial, args.generation, args.out)
+    return run_and_record(StoreCheck(Adb(args.adb, args.serial), screen, args.package, args.list_url, args.pack),
                           args.out)
 
 
