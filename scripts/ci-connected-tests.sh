@@ -25,7 +25,15 @@ if [[ -n "$not_class" ]]; then
   # Quotes preserve comma-separated values through Gradle's property parsing.
   RUNNER_ARGS+=("-Pandroid.testInstrumentationRunnerArguments.notClass='$not_class'")
 fi
-mkdir -p .ci-results
+RESULTS="${CI_RESULTS_DIR:-.ci-results}"
+mkdir -p "$RESULTS"
+for output in gradle-ui.txt test-starts.txt preflight-build.txt device-settings-app.txt; do
+  : > "$RESULTS/$output"
+done
+SETTINGS="$(dirname "${BASH_SOURCE[0]}")/prepare_device_settings.py"
+device_settings() {
+  python3 "$SETTINGS" "$1" --serial "$ANDROID_SERIAL" --results "$RESULTS"
+}
 # Results left by an earlier run must never be counted as this run's tests.
 for module in "${MODULES[@]}"; do
   rm -rf "$module/build/outputs/androidTest-results/connected"
@@ -39,28 +47,39 @@ finish() {
     kill "$log_pid" 2>/dev/null || true
     wait "$log_pid" 2>/dev/null || true
   fi
-  adb -s "$ANDROID_SERIAL" logcat -d -v threadtime > .ci-results/logcat.txt 2>&1 || true
+  adb -s "$ANDROID_SERIAL" logcat -d -v threadtime > "$RESULTS"/logcat.txt 2>&1 || true
   # Gradle can succeed without installing the app, so the reports decide; a Gradle failure keeps its code.
   check=0
-  python3 "$CHECKER" --gradle-output .ci-results/gradle-ui.txt --test-starts .ci-results/test-starts.txt ${SELECTION[@]+"${SELECTION[@]}"} "${MODULES[@]}" \
-    > .ci-results/ui-check.txt 2>&1 || check=$?
+  python3 "$CHECKER" --gradle-output "$RESULTS"/gradle-ui.txt --test-starts "$RESULTS"/test-starts.txt ${SELECTION[@]+"${SELECTION[@]}"} "${MODULES[@]}" \
+    > "$RESULTS"/ui-check.txt 2>&1 || check=$?
   if [[ "$result" -eq 0 && "$check" -ne 0 ]]; then result=1; fi
-  printf 'exit_code=%s\nelapsed_seconds=%s\n' "$result" "$SECONDS" > .ci-results/ui-status.txt
-  cat .ci-results/ui-check.txt >> .ci-results/ui-status.txt
-  rm -f .ci-results/ui-check.txt
-  cat .ci-results/ui-status.txt
+  if ! device_settings finish; then
+    if [[ "$result" -eq 0 ]]; then result=1; fi
+  fi
+  cat "$RESULTS"/device-settings-summary.txt > "$RESULTS"/ui-status.txt
+  printf 'exit_code=%s\nelapsed_seconds=%s\n' "$result" "$SECONDS" >> "$RESULTS"/ui-status.txt
+  cat "$RESULTS"/ui-check.txt >> "$RESULTS"/ui-status.txt
+  rm -f "$RESULTS"/ui-check.txt
+  cat "$RESULTS"/ui-status.txt
   exit "$result"
 }
 trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+device_settings prepare
 # A run stopped early leaves the apps installed with the permissions its tests gave them,
 # so every run starts from a device these apps are not installed on.
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test com.kimjisub.design.test; do
   adb -s "$ANDROID_SERIAL" uninstall "$package" > /dev/null 2>&1 || true
 done
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon --console=plain 2>&1 | tee "$RESULTS"/preflight-build.txt
+adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+device_settings verify
 adb -s "$ANDROID_SERIAL" logcat -c
 # Stream throughout the run: the device's ring buffer can drop the first starts.
-adb -s "$ANDROID_SERIAL" logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I '*:S' > .ci-results/test-starts.txt 2>&1 &
+adb -s "$ANDROID_SERIAL" logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I '*:S' > "$RESULTS"/test-starts.txt 2>&1 &
 log_pid=$!
 tasks=()
 for module in "${MODULES[@]}"; do tasks+=(":$module:connectedDebugAndroidTest"); done
-./gradlew "${tasks[@]}" --no-daemon --console=plain ${RUNNER_ARGS[@]+"${RUNNER_ARGS[@]}"} 2>&1 | tee .ci-results/gradle-ui.txt
+./gradlew "${tasks[@]}" --no-daemon --console=plain ${RUNNER_ARGS[@]+"${RUNNER_ARGS[@]}"} 2>&1 | tee "$RESULTS"/gradle-ui.txt
