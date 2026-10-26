@@ -210,6 +210,9 @@
 	<string name="sort_play_count">플레이 횟수</string>
 	<string name="sort_last_opened_date">최근 연 날짜</string>
 	<string name="sort_download_date">다운로드 날짜</string>
+	<string name="sort_order">정렬 순서</string>
+	<string name="sort_ascending">오름차순</string>
+	<string name="sort_descending">내림차순</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>

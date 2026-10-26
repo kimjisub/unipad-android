@@ -167,6 +167,9 @@
 	<string name="sort_play_count">Bilang ng Paglalaro</string>
 	<string name="sort_last_opened_date">Huling Binuksan</string>
 	<string name="sort_download_date">Petsa ng Download</string>
+	<string name="sort_order">Pagkakasunod-sunod ng pag-uuri</string>
+	<string name="sort_ascending">Pataas</string>
+	<string name="sort_descending">Pababa</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Laki ng Pad</string>

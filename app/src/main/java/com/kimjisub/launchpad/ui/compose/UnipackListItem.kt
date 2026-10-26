@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -49,7 +50,7 @@ import com.kimjisub.launchpad.ui.theme.TitleColor
  * @param flagColor Background color of the flag area
  * @param flagWidth Width of the flag area
  * @param contentStartPadding Start padding of the content area (used for slide-to-reveal effect)
- * @param flagClickable Whether the flag area is clickable
+ * @param flagClickable Whether the flag area is clickable; until it is, screen readers skip its content
  * @param onFlagClick Callback when flag is clicked
  * @param flagContent Composable slot for flag area content
  * @param onClick Callback when the entire item is clicked
@@ -88,7 +89,10 @@ fun UnipackListItem(
 					.width(flagWidth)
 					.fillMaxHeight()
 					.background(flagColor, RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp))
-					.then(if (flagClickable) Modifier.focusRing(RoundedCornerShape(5.dp)).clickable { onFlagClick() } else Modifier),
+					.then(
+						if (flagClickable) Modifier.focusRing(RoundedCornerShape(5.dp)).clickable { onFlagClick() }
+						else Modifier.clearAndSetSemantics {},
+					),
 				contentAlignment = Alignment.Center,
 			) {
 				flagContent()

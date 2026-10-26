@@ -178,6 +178,9 @@
 	<string name="sort_play_count">Wiedergaben</string>
 	<string name="sort_last_opened_date">Zuletzt geöffnet</string>
 	<string name="sort_download_date">Download-Datum</string>
+	<string name="sort_order">Sortierreihenfolge</string>
+	<string name="sort_ascending">Aufsteigend</string>
+	<string name="sort_descending">Absteigend</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad-Größe</string>

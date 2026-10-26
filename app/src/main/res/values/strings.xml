@@ -223,6 +223,9 @@
 	<string name="sort_play_count">Play Count</string>
 	<string name="sort_last_opened_date">Last Opened Date</string>
 	<string name="sort_download_date">Download Date</string>
+	<string name="sort_order">Sort order</string>
+	<string name="sort_ascending">Ascending</string>
+	<string name="sort_descending">Descending</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Size</string>
