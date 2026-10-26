@@ -66,7 +66,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.R
@@ -78,6 +77,7 @@ import com.kimjisub.launchpad.tool.SafMigrationHelper
 import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.ui.theme.Red

@@ -323,18 +323,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     private fun openSearchKeyboard(open: () -> Unit = { screen.clickDescription(R.string.transfer_search) }): Int {
         open()
-        var keyboard = -1 to 0L
-        screen.await("Search keyboard did not finish opening") {
-            val height = screen.onMain { keyboardHeight(screen.resumed().window.decorView) }
-            val now = android.os.SystemClock.elapsedRealtime()
-            if (height != keyboard.first) keyboard = height to now
-            height > 0 && now - keyboard.second >= KEYBOARD_SETTLE_MS
-        }
-        screen.instrumentation.waitForIdleSync()
-        return screen.onMain {
-            val decor = screen.resumed().window.decorView
-            screen.bounds(decor).bottom - keyboardHeight(decor)
-        }
+        return screen.awaitKeyboardTopOnScreen()
     }
 
     /**
@@ -382,9 +371,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             rows = moved
         }
     }
-
-    private fun keyboardHeight(decor: android.view.View) =
-        ViewCompat.getRootWindowInsets(decor)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
 
     /**
      * Turns the resumed screen to each landscape rotation, waits until the side navigation bar and the
@@ -511,7 +497,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     private companion object {
-        const val KEYBOARD_SETTLE_MS = 500L
         const val NO_MATCH = "zz-no-pack-matches"
         const val LARGEST_FONT_SCALE = "2.0"
         const val MAX_DRAGS = 20

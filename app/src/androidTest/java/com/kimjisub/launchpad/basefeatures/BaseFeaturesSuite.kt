@@ -23,5 +23,6 @@ import org.junit.runners.Suite
     StoreDownloadTest::class,
     AppearanceAndInsetsTest::class,
     SearchKeyboardLayoutTest::class,
+    SearchWindowReturnTest::class,
 )
 class BaseFeaturesSuite

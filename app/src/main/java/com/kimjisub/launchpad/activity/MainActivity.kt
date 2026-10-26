@@ -90,7 +90,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.DataSnapshot
@@ -113,6 +112,7 @@ import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
