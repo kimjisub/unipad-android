@@ -17,6 +17,9 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
+The real Store list and one real download are checked on the release candidate instead, by
+`scripts/release_store_check.py`.
+
 For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
