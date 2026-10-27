@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+results="${CI_RESULTS_DIR:-.ci-results/base-features}"
+# Only the exit handler writes this, so a run that stops before it leaves none, not an earlier verdict.
+rm -f "$results/ui-status.txt"
 serial="${1:-${ANDROID_SERIAL:-}}"
 if [[ -z "$serial" ]]; then
   echo 'Pass the test device serial from adb devices (or set ANDROID_SERIAL).' >&2
@@ -23,7 +26,6 @@ if ! counted="$(python3 scripts/check_connected_results.py \
   exit 2
 fi
 expected="${counted#suite_expected=}"
-results="${CI_RESULTS_DIR:-.ci-results/base-features}"
 mkdir -p "$results"
 for output in gradle-ui.txt instrumentation.txt device-settings-app.txt; do
   : > "$results/$output"

@@ -291,7 +291,8 @@ the app APK failed to install and no app test ran. GitHub CI does not run the UI
 `ANDROID_SERIAL=<device> bash scripts/ci-connected-tests.sh` on a local emulator before pushing.
 It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
 number with no failure, error or skip and Gradle printed no install failure. It records the counts
-and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlapDeviceTest` is
+and reasons in `.ci-results/ui-status.txt`; the file is deleted when a run starts, so a missing
+`ui-status.txt` means that run never finished. On API 24–28 `UniPackImportOverlapDeviceTest` is
 filtered by `@SdkSuppress`, so that script expects an API 29+ device.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.

@@ -5,6 +5,9 @@ set -euo pipefail
 # With no arguments every test of both modules runs; otherwise only the named classes or methods.
 # Use only the emulator named by ANDROID_SERIAL (a local one or the hosted runner's).
 : "${ANDROID_SERIAL:?Set ANDROID_SERIAL to the emulator serial from adb devices}"
+RESULTS="${CI_RESULTS_DIR:-.ci-results}"
+# Only the exit handler writes these, so a run that stops before it leaves none, not an earlier verdict.
+rm -f "$RESULTS"/ui-status.txt "$RESULTS"/ui-check.txt "$RESULTS"/logcat.txt
 MODULES=(app design)
 CHECKER="$(dirname "${BASH_SOURCE[0]}")/check_connected_results.py"
 SELECTION=()
@@ -25,7 +28,6 @@ if [[ -n "$not_class" ]]; then
   # Quotes preserve comma-separated values through Gradle's property parsing.
   RUNNER_ARGS+=("-Pandroid.testInstrumentationRunnerArguments.notClass='$not_class'")
 fi
-RESULTS="${CI_RESULTS_DIR:-.ci-results}"
 mkdir -p "$RESULTS"
 for output in gradle-ui.txt test-starts.txt preflight-build.txt device-settings-app.txt; do
   : > "$RESULTS/$output"

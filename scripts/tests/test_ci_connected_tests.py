@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 import unittest
 
+from forced_stop import kill_once_started
+
 RUNNER = Path(__file__).resolve().parents[1] / "ci-connected-tests.sh"
 CHECKER = RUNNER.with_name("check_connected_results.py")
 COMMAND = ":app:connectedDebugAndroidTest :design:connectedDebugAndroidTest --no-daemon --console=plain"
@@ -57,10 +59,13 @@ def passed(count, class_name="ExampleTest"):
 class ConnectedTestRunnerTest(unittest.TestCase):
     def run_runner(self, gradle_exit=0, logcat_exit=0, serial="emulator-5678",
                    sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None,
-                   probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n"):
+                   probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n", earlier=None,
+                   kill_during_tests=False):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
+        `earlier` maps result file names to contents a previous run left behind. With
+        `kill_during_tests` the connected tests hang and the runner is SIGKILLed; the exit code is returned.
         """
         sources = {"app": 2, "design": 1} if sources is None else sources
         results = {"app": passed(2), "design": passed(1)} if results is None else results
@@ -86,6 +91,10 @@ class ConnectedTestRunnerTest(unittest.TestCase):
             path.write_text(junit_xml(cases))
         (root / "fake-gradle-output.txt").write_text(gradle_output + "\n")
         (root / "probe.txt").write_text(probe_output)
+        for name, content in (earlier or {}).items():
+            path = root / ".ci-results" / name
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(content)
         starts = [item for cases in results.values() for item in cases] if starts is None else starts
         (root / "fake-starts.txt").write_text("".join(
             f"10-25 12:00:00.000 123 456 I TestRunner: started: {name}({classname})\n"
@@ -100,6 +109,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         gradle = root / "gradlew"
         gradle.write_text("#!/bin/bash\n[[ \"$*\" == *assembleDebug* ]] && exit 0\nprintf '%s\\n' \"$*\" > gradle-args.txt\nprintf '%s\\n' connected-tests >> adb-calls.txt\n"
                           "for ((i=0; i<100; i++)); do [[ -f logcat-ready ]] && break; sleep 0.01; done\n"
+                          "if [[ -n \"${HANG:-}\" ]]; then touch connected-started; sleep 60; fi\n"
                           "if [[ -d fake-results ]]; then cp -R fake-results/. .; fi\n"
                           "cat fake-gradle-output.txt\nexit \"$GRADLE_EXIT\"\n")
         gradle.chmod(0o755)
@@ -108,8 +118,11 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         env.pop("ANDROID_SERIAL", None)
         if serial is not None:
             env["ANDROID_SERIAL"] = serial
-        result = subprocess.run(["bash", str(RUNNER), *tests], cwd=root, env=env,
-                                capture_output=True, text=True)
+        command = ["bash", str(RUNNER), *tests]
+        if kill_during_tests:
+            env["HANG"] = "1"
+            return root, kill_once_started(command, root, env, "connected-started")
+        result = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True)
         return root, result
 
     def assert_probe_packages_removed(self, root):
@@ -194,6 +207,20 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         root, result = self.run_runner(gradle_exit=7, results={"design": passed(1)})
         self.assertEqual(result.returncode, 7, result.stderr)
         self.assertIn("verdict=fail", self.status(root))
+
+    def test_run_stopped_during_tests_leaves_no_earlier_summary(self):
+        earlier = {"ui-status.txt": "exit_code=0\nelapsed_seconds=151\nverdict=pass\n",
+                   "ui-check.txt": "verdict=pass\n", "logcat.txt": "earlier-run-logcat\n"}
+        root, exit_code = self.run_runner(earlier=earlier, kill_during_tests=True)
+        self.assertEqual(exit_code, -9)
+        for name in earlier:
+            self.assertFalse((root / ".ci-results" / name).exists(), f"{name} from the earlier run remains")
+
+    def test_refused_selection_leaves_no_earlier_summary(self):
+        root, result = self.run_runner(tests=["com.example.Missing"],
+                                       earlier={"ui-status.txt": "exit_code=0\nverdict=pass\n"})
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertFalse((root / ".ci-results/ui-status.txt").exists())
 
     def test_missing_device_id_fails_before_driving_any_device(self):
         root, result = self.run_runner(serial=None)
