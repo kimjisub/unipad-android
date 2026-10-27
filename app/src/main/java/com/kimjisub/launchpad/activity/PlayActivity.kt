@@ -38,6 +38,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -435,7 +437,7 @@ class PlayActivity : BaseActivity() {
 		val report = vm.soundLoadReport ?: return
 		if (!vm.soundLoadNoticeVisible) return
 		val details = vm.soundLoadDetailsVisible
-		val counts = report.failures.groupingBy { it.reason }.eachCount()
+		val counts = remember(report) { report.failures.groupingBy { it.reason }.eachCount() }
 		val messages = SoundRunner.FailureReason.entries.mapNotNull { reason ->
 			counts[reason]?.let { count ->
 				val resource = when (reason) {
@@ -451,9 +453,9 @@ class PlayActivity : BaseActivity() {
 			onDismissRequest = { if (!report.allFailed) vm.closeSoundLoadDetails() },
 			title = { Text(stringResource(if (details) string.audio_load_details else if (report.allFailed) string.audio_load_failed_title else string.warning)) },
 			text = {
-				Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-					if (details) {
-						report.failures.forEach { failure ->
+				if (details) {
+					LazyColumn(Modifier.heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+						items(report.failures) { failure ->
 							val reason = when (failure.reason) {
 								SoundRunner.FailureReason.LIMIT -> string.audio_load_reason_limit
 								SoundRunner.FailureReason.UNREADABLE -> string.audio_load_reason_unreadable
@@ -462,7 +464,11 @@ class PlayActivity : BaseActivity() {
 							}
 							Text("${failure.file.name} — ${stringResource(reason)}")
 						}
-					} else messages.forEach { Text(it) }
+					}
+				} else {
+					Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+						messages.forEach { Text(it) }
+					}
 				}
 			},
 			confirmButton = {

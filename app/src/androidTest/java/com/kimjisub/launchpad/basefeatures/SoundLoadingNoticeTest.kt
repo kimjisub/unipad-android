@@ -61,6 +61,32 @@ class SoundLoadingNoticeTest {
         screen.capture("audio-retry-recovered")
     }
 
+    @Test fun aLargeFailureReportCanOpenDetailsWithoutBuildingEveryRow() {
+        File(screen.pack(), "sounds/broken.wav").writeText("not audio")
+        File(screen.pack(), "keySound").writeText("1 1 1 silence.wav\n1 1 2 broken.wav\n")
+        screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+        screen.node(By.text("1 sound file cannot be read"))
+        // Exercise report rendering independently of disk/decoder cost. This is not a physical
+        // low-memory device measurement, and no production hook is added for the synthetic report.
+        val failures = List(100_000) { index ->
+            com.kimjisub.launchpad.unipack.runner.SoundRunner.FileFailure(
+                File("missing-$index.wav"), com.kimjisub.launchpad.unipack.runner.SoundRunner.FailureReason.UNREADABLE)
+        }
+        screen.onMain {
+            val vm = screen.vm()
+            @Suppress("UNCHECKED_CAST")
+            val state = vm.javaClass.getDeclaredField("soundLoadReport\$delegate").apply { isAccessible = true }.get(vm)
+                as androidx.compose.runtime.MutableState<com.kimjisub.launchpad.unipack.runner.SoundRunner.LoadReport?>
+            state.value = com.kimjisub.launchpad.unipack.runner.SoundRunner.LoadReport(100_001, 1, failures, 0)
+        }
+        screen.node(By.text("100000 sound files cannot be read"))
+        screen.click(By.text("Details"))
+        screen.node(By.textContains("missing-0.wav"))
+        screen.capture("audio-large-failure-list")
+        screen.click(By.text("Close"))
+        screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
+    }
+
     @Test fun multipleReasonsAreCountedOnceAndSurviveRecreation() = checkMixed("en")
     @Test fun koreanShowsTheApprovedReasonsAndReturnsFromDetails() = checkMixed("ko")
 
