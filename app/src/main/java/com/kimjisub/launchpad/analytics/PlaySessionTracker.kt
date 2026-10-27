@@ -58,9 +58,10 @@ class PlaySessionTracker internal constructor(
 		)
 	}
 
-	fun loadFailed(errorType: UsageErrorType) = transition {
+	/** A partial sound failure records the failed load but can still leave a playable session. */
+	fun loadFailed(errorType: UsageErrorType, canPlay: Boolean = false) = transition {
 		if (state !is State.Loading) return@transition null
-		state = State.Finished
+		state = if (canPlay) State.Loaded else State.Finished
 		Event(
 			UsageEvent.PACK_LOAD,
 			mapOf(

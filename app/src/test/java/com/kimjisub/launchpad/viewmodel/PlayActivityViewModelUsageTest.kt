@@ -385,6 +385,73 @@ class PlayActivityViewModelUsageTest {
     }
 
 	@Test
+	fun aPartialDecodeFailureStillRecordsThePlayableSession() {
+		assertPartialFailureRecordsPlay(memoryFailure = false)
+	}
+
+	@Test
+	fun aPartialMemoryFailureStillRecordsThePlayableSession() {
+		assertPartialFailureRecordsPlay(memoryFailure = true)
+	}
+
+	private fun assertPartialFailureRecordsPlay(memoryFailure: Boolean) {
+		val engine = object : SoundRunner.Engine by FakeEngine() {
+			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? {
+				if (file.name == "a.wav") {
+					if (memoryFailure) throw OutOfMemoryError("simulated decode failure")
+					return null
+				}
+				return OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44_100)
+			}
+		}
+		val vm = newVm(engine)
+		val root = createPack()
+		File(root, "sounds/b.wav").writeText("")
+		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 2 b.wav\n")
+		load(vm, root)
+		startPlayback(vm)
+		runUntil { vm.soundLoadReport != null && !vm.soundLoadingActive }
+		assertEquals(1, vm.soundLoadReport?.loadedFiles)
+		repeat(2) {
+			vm.padTouch(0, 1, true)
+			vm.padTouch(0, 1, false)
+		}
+		leave(vm)
+		leave(vm)
+
+		assertEquals(
+			listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END),
+			names(),
+		)
+		assertEquals(
+			mapOf(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine"),
+			loadSuccess().parameters,
+		)
+		assertEquals("screen", sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters[UsageParam.INPUT_SOURCE])
+	}
+
+	@Test
+	fun aPackWhoseSoundsAllFailNeverRecordsPlay() {
+		val engine = object : SoundRunner.Engine by FakeEngine() {
+			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? = null
+		}
+		val vm = newVm(engine)
+		load(vm, createPack())
+		startPlayback(vm)
+		runUntil { vm.soundLoadReport != null && !vm.soundLoadingActive }
+		assertEquals(true, vm.soundLoadReport?.allFailed)
+		vm.padTouch(0, 0, true)
+		vm.padTouch(0, 0, false)
+		leave(vm)
+
+		assertEquals(listOf(UsageEvent.PACK_LOAD), names())
+		assertEquals(
+			mapOf(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine"),
+			loadSuccess().parameters,
+		)
+	}
+
+	@Test
 	fun decodingMemoryFailureKeepsTheMemoryReasonAndRetryOnScreen() {
 		val engine = object : SoundRunner.Engine by FakeEngine() {
 			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio = throw OutOfMemoryError("simulated decode failure")

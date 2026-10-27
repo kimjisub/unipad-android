@@ -491,7 +491,9 @@ class PlayActivityViewModel(
 				}
 
 				override fun onReport(report: SoundRunner.LoadReport) {
-					if (report.compatibilityFailed || report.allFailed) playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
+					if (report.compatibilityFailed || report.allFailed) {
+						playSession.loadFailed(UsageErrorType.SOUND_ENGINE, canPlay = !report.allFailed)
+					}
 					viewModelScope.launch {
 						soundLoadReport = report
 						soundLoadNoticeVisible = report.failures.isNotEmpty()
@@ -506,8 +508,8 @@ class PlayActivityViewModel(
 				}
 
 				override fun onEnd() {
-					// loadFailed is terminal in the session tracker, so partial decoder/memory
-					// failures cannot become a successful compatibility result here.
+					// A report already settled a partial failure; this callback only records
+					// success when no compatibility failure was reported.
 					playSession.loadSucceeded()
 					viewModelScope.launch {
 						soundLoadingActive = false
