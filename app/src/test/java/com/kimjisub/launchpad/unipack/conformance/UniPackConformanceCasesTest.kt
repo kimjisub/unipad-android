@@ -3,11 +3,13 @@ package com.kimjisub.launchpad.unipack.conformance
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.junit.AfterClass
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +35,12 @@ class UniPackConformanceCasesTest(private val id: String) {
 	fun case() {
 		val c = corpus.cases.first { it.id == id }
 		verifyFingerprint(c, corpus)
-		val result = resultFor(c, corpus)
+		val result = try {
+			resultFor(c, corpus)
+		} catch (error: Exception) {
+			results.add(Result(c.id, c.fingerprint, Outcome("fail", true, "execution threw ${error.javaClass.name}: ${error.message}"), JsonNull))
+			throw error
+		}
 		results.add(Result(c.id, c.fingerprint, result.outcome, result.actual))
 		if (recordOnly) return
 		assertFalse(
@@ -73,6 +80,10 @@ class UniPackConformanceCasesTest(private val id: String) {
 						put("status", r.outcome.status)
 						put("detail", r.outcome.detail)
 						put("actual", r.actual)
+						r.outcome.operationAdapter?.let { put("operationAdapter", it) }
+						r.outcome.storedInputPaths?.let { paths ->
+							putJsonArray("storedInputPaths") { paths.forEach { add(JsonPrimitive(it)) } }
+						}
 					})
 				}
 			}
@@ -86,6 +97,8 @@ class UniPackConformanceCasesTest(private val id: String) {
 			println("UNIPACK-CONFORMANCE-CORPUS " + buildJsonObject {
 				put("platform", PLATFORM); put("corpusSha256", corpus.sha256); put("cases", JsonPrimitive(sorted.size))
 			})
+			assertEquals("Every registered case must produce exactly one result",
+				corpus.cases.map { it.id }.sorted(), sorted.map { it.id })
 			if (recordOnly) {
 				println("UNIPACK-CONFORMANCE-RECORD-ONLY $RECORD_ONLY_NOTICE")
 				fail(RECORD_ONLY_NOTICE)

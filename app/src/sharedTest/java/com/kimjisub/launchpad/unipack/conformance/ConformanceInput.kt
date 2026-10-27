@@ -40,6 +40,8 @@ data class CorpusCase(
 	/** Selects an operation adapter rather than the ordinary pack parser. */
 	val observation: String? = null,
 	val soundIdentity: Boolean = false,
+	val screenInputs: Boolean = false,
+	val requiresCaseSensitiveFiles: Boolean = false,
 )
 
 class Corpus(val assets: Map<String, String>, val cases: List<CorpusCase>, val sha256: String)
@@ -67,6 +69,7 @@ fun parseCorpus(bytes: ByteArray, digest: String?): Corpus {
 	val root = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)).jsonObject
 	val assets = root.getValue("assets").jsonObject.mapValues { it.value.jsonObject.getValue("base64").jsonPrimitive.content }
 	val cases = root.getValue("cases").jsonArray.map { it.jsonObject.toCase() }
+	check(cases.map { it.id }.distinct().size == cases.size) { "corpus contains duplicate case IDs" }
 	return Corpus(assets, cases, sha256)
 }
 
@@ -95,6 +98,8 @@ fun JsonObject.toCase(): CorpusCase = CorpusCase(
 	unobserved = (this["unobserved"] as? JsonObject)?.mapValues { it.value.jsonPrimitive.content } ?: emptyMap(),
 	observation = string("observation"),
 	soundIdentity = string("soundIdentity") == "true",
+	screenInputs = string("screenInputs") == "true",
+	requiresCaseSensitiveFiles = string("requiresCaseSensitiveFiles") == "true",
 )
 
 fun CorpusFile.bytes(corpus: Corpus): ByteArray = when {

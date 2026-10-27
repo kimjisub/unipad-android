@@ -21,6 +21,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.nio.file.Files
 
 /**
  * A comparison that cannot fail proves nothing. Each test breaks one thing the corpus cases rely on
@@ -31,6 +32,102 @@ class UniPackConformanceChecksTest {
 	private val corpus = loadCorpus()
 
 	private fun byId(id: String) = corpus.cases.first { it.id == id }
+
+	@Test
+	fun delayedWormholeDoesNotArriveBeforeTheScenarioDeadline() {
+		val actual = actualFor(byId("RUN-G605"), corpus).jsonObject.getValue("checkpoints").jsonArray
+		assertTrue("A 100 ms wormhole must not fire within 20 ms of scenario time",
+			actual[0].jsonArray.none { it.jsonArray[0].jsonPrimitive.content == "chain" })
+	}
+
+	@Test
+	fun screenInputCasesCannotPassThroughTheGenericRunner() {
+		val neverRun = Deps(loadPack = { error("screen input case reached the generic runner") })
+		for (id in listOf("RUN-G606", "RUN-G607", "RUN-G608", "RUN-G609", "RUN-G610", "RUN-G616", "RUN-G617", "RUN-G618")) {
+			val result = resultFor(byId(id), corpus, neverRun)
+			assertEquals(id, "unverified", result.outcome.status)
+			assertEquals(id, JsonNull, result.actual)
+		}
+	}
+
+	@Test
+	fun unknownLayersAreRejectedInsteadOfBeingRunAsPlayback() {
+		val unknown = byId("KS-001").copy(layer = "unregistered")
+		assertThrows(IllegalArgumentException::class.java) { actualFor(unknown, corpus) }
+	}
+
+	@Test
+	fun everyG6InputRejectsAChangedFile() {
+		val added = corpus.cases.filter { "-G6" in it.id }
+		assertEquals("The complete G6 addition must be registered", 55, added.size)
+		for (c in added) {
+			verifyFingerprint(c, corpus)
+			val at = c.files.indexOfFirst { it.text != null }
+			check(at >= 0) { "${c.id}: no text file to mutate" }
+			val changed = c.files.mapIndexed { index, file ->
+				if (index == at) CorpusFile(file.path, file.text + "\n", null, null) else file
+			}
+			assertThrows("${c.id}: changed input must be rejected", IllegalStateException::class.java) {
+				verifyFingerprint(c.copy(files = changed), corpus)
+			}
+		}
+	}
+
+	@Test
+	fun noG6CaseAcceptsAnInjectedObservation() {
+		val added = corpus.cases.filter { "-G6" in it.id }
+		assertEquals(55, added.size)
+		for (c in added) {
+			val wrong = buildJsonObject { put("injectedObservation", true) }
+			assertEquals(c.id, "fail", classify(c, wrong).status)
+			assertTrue(c.id, classify(c, wrong).unexpected)
+		}
+	}
+
+	@Test
+	fun inputsWhoseFileNamesChangeAreNotSentToTheParser() {
+		val c = byId("KS-G601").copy(soundIdentity = false)
+		val root = Files.createTempDirectory("corpus-name-probe").toFile()
+		val preserved = try {
+			c.writeTo(root, corpus)
+			c.files.map { it.path }.sorted() == root.walkTopDown().filter { it.isFile }
+				.map { it.relativeTo(root).invariantSeparatorsPath }.sorted().toList()
+		} finally { root.deleteRecursively() }
+		var parsed = false
+		val result = resultFor(c, corpus, Deps(loadPack = {
+			parsed = true
+			UniPackFolder(it).load().loadDetail()
+		}))
+		assertEquals("Only faithfully stored inputs may reach the parser", preserved, parsed)
+		if (!preserved) {
+			assertEquals("unverified", result.outcome.status)
+			assertEquals(JsonNull, result.actual)
+		}
+	}
+
+	@Test
+	fun fractionalMapperInputsReachTheAppAndItsSavedOutput() {
+		val neverParse = Deps(loadPack = { error("mapper operation reached the generic parser") })
+		for (id in listOf("MAP-P001", "MAP-P003", "MAP-P004")) {
+			val c = byId(id)
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(id, "auto-map", result.outcome.operationAdapter)
+			assertEquals(id, c.expected, result.actual)
+			assertEquals(id, "pass", result.outcome.status)
+		}
+	}
+
+	@Test
+	fun audioOperationsUseTheRealAppOperationWithoutParsingAPack() {
+		val neverParse = Deps(loadPack = { error("operation reached the pack parser") })
+		val cases = corpus.cases.filter { it.observation in setOf("audio-cost", "audio-file", "audio-wave", "audio-selection") }
+		assertEquals(106, cases.size)
+		for (c in cases) {
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(c.id, c.expected, result.actual)
+			assertEquals(c.id, "pass", result.outcome.status)
+		}
+	}
 
 	private fun withKeySound(c: CorpusCase, text: String) =
 		c.copy(files = c.files.map { if (it.path == "keySound") CorpusFile(it.path, text, null, null) else it })
@@ -141,7 +238,7 @@ class UniPackConformanceChecksTest {
 	@Test
 	fun anOperationWithoutAnAdapterNeverRunsAsAnOrdinaryPack() {
 		val neverParse = Deps(loadPack = { error("operation was sent to the pack parser") })
-		for (observation in listOf("audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map", "future-operation")) {
+		for (observation in listOf("future-operation")) {
 			val c = byId("KS-001").copy(observation = observation)
 			val result = resultFor(c, corpus, neverParse)
 			assertEquals(JsonNull, result.actual)

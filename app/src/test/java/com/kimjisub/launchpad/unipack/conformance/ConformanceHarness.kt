@@ -16,7 +16,6 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import com.kimjisub.launchpad.viewmodel.stopPlayViewModels
@@ -27,6 +26,8 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.JsonElement
@@ -63,10 +64,24 @@ private fun hex8(value: Int) = "%08x".format(value)
 
 class CaseResult(val actual: JsonElement, val outcome: Outcome)
 
+private class InputNamesNotPreserved(val paths: List<String>) : IllegalStateException("the filesystem changed the input file names")
+
 /** What Android reports for a case: its result and status, or why the corpus says it is not observed here. */
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
+	if (c.screenInputs) return CaseResult(JsonNull, Outcome("unverified", false,
+		"requires the real play screen's distinct pointer/MIDI inputs and auto-play listeners; the generic runner cannot observe it"))
+	if (c.requiresCaseSensitiveFiles && !caseSensitiveFileSystem()) return CaseResult(JsonNull, Outcome("unverified", false,
+		"this filesystem cannot preserve the case-distinct input files"))
 	val unobserved = c.unobserved[PLATFORM]
 	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
+	if (c.observation == "auto-map") {
+		val actual = observeAutoMap(c, corpus)
+		return CaseResult(actual, classify(c, actual).copy(operationAdapter = c.observation))
+	}
+	if (c.observation in AUDIO_OPERATIONS) {
+		val actual = observeAudioOperation(c, corpus)
+		return CaseResult(actual, classify(c, actual).copy(operationAdapter = c.observation))
+	}
 	if (c.observation != null && c.observation != "runner") {
 		return CaseResult(JsonNull, Outcome("unverified", false,
 			"the Android harness has no ${c.observation} operation adapter; the pack parser cannot observe this operation"))
@@ -75,17 +90,30 @@ fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 		return CaseResult(JsonNull, Outcome("unverified", false,
 			"the Android harness records relative sound names, not original archive entries and selected file hashes"))
 	}
-	val actual = actualFor(c, corpus, deps)
+	val actual = try {
+		actualFor(c, corpus, deps)
+	} catch (changed: InputNamesNotPreserved) {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the filesystem changed the input file names before parsing; see storedInputPaths", changed.paths))
+	}
 	return CaseResult(actual, classify(c, actual))
 }
 
 fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), includePressFeedback: Boolean = false): JsonElement {
+	require(c.observation == null || c.observation == "runner") { "${c.id}: operations require their own adapter" }
+	require(!c.soundIdentity) { "${c.id}: original archive identity must be observed" }
+	require(c.layer in setOf("parse", "run", "palette")) { "${c.id}: unregistered layer ${c.layer}" }
+	require(!c.screenInputs && c.scenario.none { "input" in it }) { "${c.id}: distinct screen inputs require a device recorder" }
+	require(!c.requiresCaseSensitiveFiles || caseSensitiveFileSystem()) { "${c.id}: case-sensitive files are required" }
 	if (c.layer == "palette") {
 		return buildJsonObject { putJsonArray("argb") { LaunchpadColor.ARGB.forEach { add(JsonPrimitive(hex8(it.toInt()))) } } }
 	}
 	val root = Files.createTempDirectory("unipack-conformance").toFile()
 	try {
 		c.writeTo(root, corpus)
+		val stored = root.walkTopDown().filter { it.isFile }
+			.map { it.relativeTo(root).invariantSeparatorsPath }.sorted().toList()
+		if (stored != c.files.map { it.path }.sorted()) throw InputNamesNotPreserved(stored)
 		val pack = deps.loadPack(root)
 		if (pack.criticalError) return buildJsonObject { put("loaded", false) }
 		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps, includePressFeedback)
@@ -233,7 +261,11 @@ private class RecordingEngine(
 	override fun unloadAll() = stopAllVoices()
 
 	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-		val stopEvent = onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
+		// AudioEngine::onAudioReady repeats only -1 (forever) and positive counts. All other
+		// negative values finish after one play, just like 0. Report that playback behavior,
+		// rather than mistaking SoundRunner's raw engine argument for extra negative repeats.
+		val playbackLoop = if (loop < -1) 0 else loop
+		val stopEvent = onPlay(synchronized(this) { fileById.getValue(soundId) }, playbackLoop)
 		return synchronized(this) { nextStopKey++.also { key ->
 			stopEvents[key] = stopEvent
 			if (loop == -1) endless[key] = stopEvent.jsonArray[2].jsonPrimitive.int to stopEvent.jsonArray[3].jsonPrimitive.int
@@ -278,7 +310,8 @@ private class ScenarioRun(
 	private val chainLog = java.util.Collections.synchronizedList(ArrayList<Int>())
 	private val chainTag = ThreadLocal<String?>()
 
-	private val main = FakeMainDispatcher()
+	private val scheduler = TestCoroutineScheduler()
+	private val main = StandardTestDispatcher(scheduler)
 	private val engine = RecordingEngine(
 		onPlay = { file, loop ->
 			val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
@@ -339,7 +372,7 @@ private class ScenarioRun(
 			}
 			return checkpoints
 		} finally {
-			stopPlayViewModels(listOf(vm), drain = { main.runAll() }, restore = {
+			stopPlayViewModels(listOf(vm), drain = { scheduler.runCurrent() }, restore = {
 				unmockkStatic(SystemClock::class)
 				Dispatchers.resetMain()
 			}) {
@@ -388,7 +421,7 @@ private class ScenarioRun(
 		// The app's LED runner ticks every 4 ms of real time. This one is the same class ticked on the
 		// virtual clock; its own coroutine runs the first tick at launch and then waits an hour.
 		vm.ledRunner?.let { vm.ledRunner = deps.wrapLedRunner(LedRunner(pack, vm.ledRunnerListener, vm.chain, 3_600_000L)) }
-		waitUntil("the sounds to finish loading", seconds = 10) { main.runAll(); !vm.soundLoadingActive }
+		waitUntil("the sounds to finish loading", seconds = 10) { scheduler.runCurrent(); !vm.soundLoadingActive }
 		check(!finished) { "${c.id}: sound loading failed" }
 		start()
 		// The screen's own lights blink on and off while the options above are set; a case starts after that.
@@ -408,7 +441,7 @@ private class ScenarioRun(
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -470,7 +503,7 @@ private class ScenarioRun(
 			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole.coerceIn(vm.chain.range), chainLog.size))
 		}
 		touch()
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -537,10 +570,10 @@ private class ScenarioRun(
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
 			val requiredReads = if (runner.playmode) reads else 1
-			waitUntil(what) { main.runAll(); watchReads.get() >= requiredReads || !runner.active || runner.suspended }
+			waitUntil(what) { scheduler.runCurrent(); watchReads.get() >= requiredReads || !runner.active || runner.suspended }
 		}
 		watchFrom.set(Long.MAX_VALUE)
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -561,7 +594,7 @@ private class ScenarioRun(
 			val now = clock.get() + step
 			setClock(now)
 			vm.ledRunner?.takeIf { it.active }?.let { loopMethod.invoke(it) }
-			main.runAll()
+			scheduler.runCurrent()
 			awaitWormholes(now)
 		}
 	}
@@ -569,18 +602,26 @@ private class ScenarioRun(
 	private fun setClock(now: Long) {
 		val runner = autoPlay
 		if (runner == null || !runner.active || !runner.playmode) {
-			clock.set(now)
+			advanceMainClock(now)
 			return
 		}
 		watchReads.set(0)
 		watchFrom.set(now)
-		clock.set(now)
-		waitUntil("the auto-play runner to see $now") { main.runAll(); watchReads.get() >= 2 || !runner.active }
+		advanceMainClock(now)
+		waitUntil("the auto-play runner to see $now") { scheduler.runCurrent(); watchReads.get() >= 2 || !runner.active }
 		watchFrom.set(Long.MAX_VALUE)
 	}
 
+	/** The main coroutine delays and SystemClock move together, independently of host speed. */
+	private fun advanceMainClock(now: Long) {
+		val elapsed = now - clock.get()
+		clock.set(now)
+		scheduler.advanceTimeBy(elapsed)
+		scheduler.runCurrent()
+	}
+
 	/**
-	 * A wormhole switches the chain 100 ms after its sound, on the main thread, after a real delay. A
+	 * A wormhole switches the chain 100 ms after its sound, on the main coroutine's virtual clock. A
 	 * runner that does not switch (a sound that failed to decode) is waited for no longer than
 	 * [WORMHOLE_WAIT_MS]; the missing chain event then shows in the result.
 	 */
@@ -590,7 +631,7 @@ private class ScenarioRun(
 			wormholes.remove(w)
 			val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(WORMHOLE_WAIT_MS)
 			while (System.nanoTime() < deadline) {
-				main.runAll()
+				scheduler.runCurrent()
 				if (synchronized(chainLog) { chainLog.drop(w.third).contains(w.second) }) break
 				Thread.sleep(1)
 			}

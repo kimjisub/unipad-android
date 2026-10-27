@@ -12,7 +12,7 @@ fun loadCorpus(): Corpus {
 	return parseCorpus(bytes, resourceBytes(DIGEST_RESOURCE)?.toString(Charsets.UTF_8))
 }
 
-data class Outcome(val status: String, val unexpected: Boolean, val detail: String)
+data class Outcome(val status: String, val unexpected: Boolean, val detail: String, val storedInputPaths: List<String>? = null, val operationAdapter: String? = null)
 
 fun classify(c: CorpusCase, actual: JsonElement, platform: String = PLATFORM): Outcome {
 	if (!c.determined) return Outcome("unverified", false, "no doc or stated intent decides this: ${c.question}")
