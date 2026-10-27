@@ -75,6 +75,26 @@ are preserved. `zero-middle-packets.m4a` additionally zeroes that second run and
 `alac-96000.m4a` was generated with `ffmpeg -f lavfi -i sine=r=96000:d=2 -ac 2 -c:a alac`;
 its ALAC configuration independently specifies 96,000 Hz, two channels and 192,000 frames.
 
+Shared formats are only RIFF/WAVE, MPEG audio (MP3 and raw ADTS AAC), Ogg, FLAC and the MP4
+family. AIFF, AIFF-C and CAF are `INVALID_FORMAT` whatever their extension, even where a native
+decoder could play them. `tone.aiff` and `tone.caf` hold `tone.wav`'s 16-bit PCM
+(`ffmpeg -i tone.wav -fflags +bitexact -map_metadata -1 -c:a pcm_s16be tone.aiff`, and `pcm_s16le`
+for `tone.caf`). `ssnd-first.aiff` (`SSND` before `COMM`), `ulaw.aifc` (mu-law AIFF-C) and
+`ima4.caf`, `aac.caf` and `alac.caf` are 13,230-frame mono 44.1 kHz conversions of the same tone,
+copied unchanged from unipad-ios `unipadTests/Fixtures/NativeAudio`. `aiff-named.mp3` is
+`tone.aiff` byte for byte. `chained-false-headers.mp3` prefixes `tone.mp3` with 3,419 bytes of
+five mono MPEG frames with zero-valued bodies, each declared length leading exactly to the next
+header: MPEG-1 48 kHz 256 kbit/s twice, 44.1 kHz 224 kbit/s, 48 kHz 224 kbit/s, then MPEG-2
+24 kHz 160 kbit/s. It mirrors a damaged MP3 found in a real pack. The two consecutive 48 kHz
+frames already form a stream before the actual 44.1 kHz frames begin, so the audio has no single
+start and the file is `INVALID_FORMAT`. In `leading-false-header.mp3` the one MPEG-2 header is
+followed by zeros, not by a frame it leads to, so only the MPEG-1 run forms a stream and the file
+is admitted. `false-sync.mp3` and `false-layer-sync.mp3` insert one header that overlaps frames of
+the actual stream. Some decoders play the later part of a chained file, but Chromium does not, so
+admitting it would not give the same result on every platform. A pack loader reports these files
+as unreadable: the partial-failure notice counts them as sound files that cannot be read, and if
+every used sound fails the pack's sounds cannot be opened.
+
 Inspection work ceilings are separate from the integer sound/pack limits. MPEG header
 searches within each MPEG payload share at most `min(1048576, max(4096, 4 * physicalPayloadBytes))` probes; exhaustion
 is READ_FAILURE, never a partial low-cost success. The resource test adds 1,024 unrelated

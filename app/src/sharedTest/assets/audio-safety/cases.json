@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "costs": [
     {
       "id": "48000-2-0",
@@ -647,6 +647,51 @@
       "channels": 2,
       "frames": 33600000,
       "sha256": "8f633f90f19144f8ba9913b7fd2644cd38b8c3e4335a9d70e956b4381a275f51"
+    },
+    {
+      "file": "tone.aiff",
+      "sha256": "8a4c09a4b77bedf2af4a0952048dad65752d1c1107a5173c2d6df94279fd365f",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "ssnd-first.aiff",
+      "sha256": "49646f0c03882265d1335f899eea7d74efbec41f17d18695251575669eafc0bb",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "ulaw.aifc",
+      "sha256": "62c83f78371c979d6b51c0f792d05fb452a3bcde358206a225bce3dda1f2f3c5",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "tone.caf",
+      "sha256": "5bf6455aa86b96a0ffec4c9e0f697a44560b6692a3e753c2470d28d4b62785d7",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "ima4.caf",
+      "sha256": "a5d76ff6caab42a72f7889a493f9c38e90be7954cbdc397bf158f814402a7249",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "aac.caf",
+      "sha256": "eb15c1342b054f88be2d0cac4026dfd3692c50a032d9181df127a98a68c1d47b",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "alac.caf",
+      "sha256": "24be1e0b4797def00ed1ab6cfe29e73002209c46f49af1b0a835ed5496d31f41",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "aiff-named.mp3",
+      "sha256": "8a4c09a4b77bedf2af4a0952048dad65752d1c1107a5173c2d6df94279fd365f",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "chained-false-headers.mp3",
+      "sha256": "d599f55c0839bde616e9a959febeccef6f9d90173c2c4007b57425a5cfeeb634",
+      "exclusion": "INVALID_FORMAT"
     }
   ],
   "wavRecipes": [
