@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Não foi possível abrir os sons deste pack</string>
+    <string name="audio_load_details">Ver detalhes</string>
+    <string name="audio_load_close">Fechar</string>
+    <string name="audio_load_retry">Tentar novamente</string>
+    <string name="audio_load_pack_list">Lista de packs</string>
+    <string name="audio_load_reason_limit">Muito longo ou grande</string>
+    <string name="audio_load_reason_unreadable">Não foi possível ler o arquivo</string>
+    <string name="audio_load_reason_decode">Não foi possível reproduzir o som</string>
+    <string name="audio_load_reason_memory">Memória do dispositivo insuficiente</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d som é muito longo ou grande e não será reproduzido</item>
+        <item quantity="other">%1$d sons são muito longos ou grandes e não serão reproduzidos</item>
+        <item quantity="many">%1$d sons são muito longos ou grandes e não serão reproduzidos</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">Não foi possível ler %1$d arquivo de som</item>
+        <item quantity="other">Não foi possível ler %1$d arquivos de som</item>
+        <item quantity="many">Não foi possível ler %1$d arquivos de som</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">Não foi possível reproduzir %1$d som</item>
+        <item quantity="other">Não foi possível reproduzir %1$d sons</item>
+        <item quantity="many">Não foi possível reproduzir %1$d sons</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">Memória insuficiente para carregar %1$d som. Feche outros aplicativos e abra o pack novamente.</item>
+        <item quantity="other">Memória insuficiente para carregar %1$d sons. Feche outros aplicativos e abra o pack novamente.</item>
+        <item quantity="many">Memória insuficiente para carregar %1$d sons. Feche outros aplicativos e abra o pack novamente.</item>
+    </plurals>
+</resources>

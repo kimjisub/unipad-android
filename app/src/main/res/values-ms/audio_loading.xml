@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Bunyi dalam pack ini tidak dapat dibuka</string>
+    <string name="audio_load_details">Lihat butiran</string>
+    <string name="audio_load_close">Tutup</string>
+    <string name="audio_load_retry">Cuba lagi</string>
+    <string name="audio_load_pack_list">Senarai pack</string>
+    <string name="audio_load_reason_limit">Terlalu panjang atau besar</string>
+    <string name="audio_load_reason_unreadable">Fail tidak dapat dibaca</string>
+    <string name="audio_load_reason_decode">Bunyi tidak dapat dimainkan</string>
+    <string name="audio_load_reason_memory">Memori peranti tidak mencukupi</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">%1$d bunyi terlalu panjang atau besar dan tidak akan dimainkan</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">%1$d fail bunyi tidak dapat dibaca</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">%1$d bunyi tidak dapat dimainkan</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">Memori peranti tidak mencukupi untuk memuatkan %1$d bunyi. Tutup aplikasi lain dan buka semula pack.</item>
+    </plurals>
+</resources>

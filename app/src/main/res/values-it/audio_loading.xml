@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Impossibile aprire i suoni di questo pack</string>
+    <string name="audio_load_details">Dettagli</string>
+    <string name="audio_load_close">Chiudi</string>
+    <string name="audio_load_retry">Riprova</string>
+    <string name="audio_load_pack_list">Elenco pack</string>
+    <string name="audio_load_reason_limit">Troppo lungo o grande</string>
+    <string name="audio_load_reason_unreadable">Impossibile leggere il file</string>
+    <string name="audio_load_reason_decode">Impossibile riprodurre il suono</string>
+    <string name="audio_load_reason_memory">Memoria del dispositivo insufficiente</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d suono è troppo lungo o grande e non verrà riprodotto</item>
+        <item quantity="other">%1$d suoni sono troppo lunghi o grandi e non verranno riprodotti</item>
+        <item quantity="many">%1$d suoni sono troppo lunghi o grandi e non verranno riprodotti</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">Impossibile leggere %1$d file audio</item>
+        <item quantity="other">Impossibile leggere %1$d file audio</item>
+        <item quantity="many">Impossibile leggere %1$d file audio</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">Impossibile riprodurre %1$d suono</item>
+        <item quantity="other">Impossibile riprodurre %1$d suoni</item>
+        <item quantity="many">Impossibile riprodurre %1$d suoni</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">Memoria insufficiente per caricare %1$d suono. Chiudi le altre app e riapri il pack.</item>
+        <item quantity="other">Memoria insufficiente per caricare %1$d suoni. Chiudi le altre app e riapri il pack.</item>
+        <item quantity="many">Memoria insufficiente per caricare %1$d suoni. Chiudi le altre app e riapri il pack.</item>
+    </plurals>
+</resources>

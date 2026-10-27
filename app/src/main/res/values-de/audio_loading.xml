@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Die Sounds dieses Packs können nicht geöffnet werden</string>
+    <string name="audio_load_details">Details</string>
+    <string name="audio_load_close">Schließen</string>
+    <string name="audio_load_retry">Erneut versuchen</string>
+    <string name="audio_load_pack_list">Packliste</string>
+    <string name="audio_load_reason_limit">Zu lang oder zu groß</string>
+    <string name="audio_load_reason_unreadable">Datei kann nicht gelesen werden</string>
+    <string name="audio_load_reason_decode">Sound kann nicht abgespielt werden</string>
+    <string name="audio_load_reason_memory">Nicht genügend Gerätespeicher</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d Sound ist zu lang oder zu groß und wird nicht abgespielt</item>
+        <item quantity="other">%1$d Sounds sind zu lang oder zu groß und werden nicht abgespielt</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">%1$d Sounddatei kann nicht gelesen werden</item>
+        <item quantity="other">%1$d Sounddateien können nicht gelesen werden</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">%1$d Sound kann nicht abgespielt werden</item>
+        <item quantity="other">%1$d Sounds können nicht abgespielt werden</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">Nicht genügend Gerätespeicher: %1$d Sound konnte nicht geladen werden. Schließe andere Apps und öffne das Pack erneut.</item>
+        <item quantity="other">Nicht genügend Gerätespeicher: %1$d Sounds konnten nicht geladen werden. Schließe andere Apps und öffne das Pack erneut.</item>
+    </plurals>
+</resources>

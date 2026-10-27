@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Bu paketin sesleri açılamıyor</string>
+    <string name="audio_load_details">Ayrıntılar</string>
+    <string name="audio_load_close">Kapat</string>
+    <string name="audio_load_retry">Yeniden dene</string>
+    <string name="audio_load_pack_list">Paket listesi</string>
+    <string name="audio_load_reason_limit">Çok uzun veya büyük</string>
+    <string name="audio_load_reason_unreadable">Dosya okunamıyor</string>
+    <string name="audio_load_reason_decode">Ses çalınamıyor</string>
+    <string name="audio_load_reason_memory">Cihaz belleği yetersiz</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">%1$d ses çok uzun veya büyük olduğu için çalınmayacak</item>
+        <item quantity="one">%1$d ses çok uzun veya büyük olduğu için çalınmayacak</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">%1$d ses dosyası okunamıyor</item>
+        <item quantity="one">%1$d ses dosyası okunamıyor</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">%1$d ses çalınamıyor</item>
+        <item quantity="one">%1$d ses çalınamıyor</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">Cihaz belleği yetersiz olduğundan %1$d ses yüklenemedi. Diğer uygulamaları kapatıp paketi yeniden açın.</item>
+        <item quantity="one">Cihaz belleği yetersiz olduğundan %1$d ses yüklenemedi. Diğer uygulamaları kapatıp paketi yeniden açın.</item>
+    </plurals>
+</resources>

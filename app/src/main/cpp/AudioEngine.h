@@ -30,7 +30,7 @@ public:
     void stop();
 
     // Load a decoded PCM buffer, returns soundId
-    int loadSound(const int16_t* data, int numFrames, int channels, int sampleRate);
+    int loadSound(std::vector<int16_t>&& data, int numFrames, int channels, int sampleRate);
 
     // Unload a sound by ID
     void unloadSound(int soundId);

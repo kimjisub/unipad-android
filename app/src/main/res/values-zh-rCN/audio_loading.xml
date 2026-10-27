@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">无法打开此音效包的声音</string>
+    <string name="audio_load_details">查看详情</string>
+    <string name="audio_load_close">关闭</string>
+    <string name="audio_load_retry">重试</string>
+    <string name="audio_load_pack_list">音效包列表</string>
+    <string name="audio_load_reason_limit">声音过长或过大</string>
+    <string name="audio_load_reason_unreadable">无法读取文件</string>
+    <string name="audio_load_reason_decode">无法播放声音</string>
+    <string name="audio_load_reason_memory">设备内存不足</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">%1$d个声音过长或过大，将不会播放</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">无法读取%1$d个声音文件</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">无法播放%1$d个声音</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">设备内存不足，无法加载%1$d个声音。请关闭其他应用后重新打开音效包。</item>
+    </plurals>
+</resources>

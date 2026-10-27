@@ -6,6 +6,8 @@ import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.analytics.UsageEvent
 import com.kimjisub.launchpad.analytics.UsageParam
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -56,6 +58,7 @@ class PlayActivityViewModelUsageTest {
 
 	/** Loads without the native audio library; [startOk] false makes the engine fail to start. */
 	private class FakeEngine(private val startOk: Boolean = true) : SoundRunner.Engine {
+		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start() = startOk
 		override fun stop() {}
 		override fun decode(file: JFile) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100)
@@ -365,8 +368,91 @@ class PlayActivityViewModelUsageTest {
 		verify(exactly = 1) { callback.finishWithNotice(notices.single()) }
 	}
 
+    @Test fun aPartialDecodeFailureIsNotRecordedAsSuccessfulCompatibility() {
+        val engine = object : SoundRunner.Engine by FakeEngine() {
+            override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? =
+                if (file.name == "a.wav") null else OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44_100)
+        }
+        val vm = newVm(engine)
+        val root = createPack()
+        File(root, "sounds/b.wav").writeText("")
+        File(root, "keySound").writeText("1 1 1 a.wav\n1 1 2 b.wav\n")
+        load(vm, root)
+        startPlayback(vm)
+        sink.awaitEvent(UsageEvent.PACK_LOAD)
+        assertEquals("failure", loadSuccess().parameters[UsageParam.RESULT])
+        assertEquals("sound_engine", loadSuccess().parameters[UsageParam.ERROR_TYPE])
+    }
+
 	@Test
-	fun decodingMemoryFailureKeepsTheExistingPerformanceNotice() {
+	fun aPartialDecodeFailureStillRecordsThePlayableSession() {
+		assertPartialFailureRecordsPlay(memoryFailure = false)
+	}
+
+	@Test
+	fun aPartialMemoryFailureStillRecordsThePlayableSession() {
+		assertPartialFailureRecordsPlay(memoryFailure = true)
+	}
+
+	private fun assertPartialFailureRecordsPlay(memoryFailure: Boolean) {
+		val engine = object : SoundRunner.Engine by FakeEngine() {
+			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? {
+				if (file.name == "a.wav") {
+					if (memoryFailure) throw OutOfMemoryError("simulated decode failure")
+					return null
+				}
+				return OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44_100)
+			}
+		}
+		val vm = newVm(engine)
+		val root = createPack()
+		File(root, "sounds/b.wav").writeText("")
+		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 2 b.wav\n")
+		load(vm, root)
+		startPlayback(vm)
+		runUntil { vm.soundLoadReport != null && !vm.soundLoadingActive }
+		assertEquals(1, vm.soundLoadReport?.loadedFiles)
+		repeat(2) {
+			vm.padTouch(0, 1, true)
+			vm.padTouch(0, 1, false)
+		}
+		leave(vm)
+		leave(vm)
+
+		assertEquals(
+			listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END),
+			names(),
+		)
+		assertEquals(
+			mapOf(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine"),
+			loadSuccess().parameters,
+		)
+		assertEquals("screen", sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters[UsageParam.INPUT_SOURCE])
+	}
+
+	@Test
+	fun aPackWhoseSoundsAllFailNeverRecordsPlay() {
+		val engine = object : SoundRunner.Engine by FakeEngine() {
+			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? = null
+		}
+		val vm = newVm(engine)
+		load(vm, createPack())
+		startPlayback(vm)
+		runUntil { vm.soundLoadReport != null && !vm.soundLoadingActive }
+		assertEquals(true, vm.soundLoadReport?.allFailed)
+		vm.padTouch(0, 0, true)
+		vm.padTouch(0, 0, false)
+		leave(vm)
+
+		assertEquals(listOf(UsageEvent.PACK_LOAD), names())
+		assertEquals(
+			mapOf(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine"),
+			loadSuccess().parameters,
+		)
+	}
+
+	@Test
+	fun decodingMemoryFailureKeepsTheMemoryReasonAndRetryOnScreen() {
 		val engine = object : SoundRunner.Engine by FakeEngine() {
 			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio = throw OutOfMemoryError("simulated decode failure")
 		}
@@ -377,9 +463,12 @@ class PlayActivityViewModelUsageTest {
 		vm.uiCallback = callback
 		load(vm, createPack())
 		startPlayback(vm)
-		runUntil { notices.isNotEmpty() }
-		assertEquals(listOf(com.kimjisub.launchpad.R.string.outOfCPU), notices)
-		verify(exactly = 1) { callback.finishWithNotice(notices.single()) }
+		runUntil { vm.soundLoadReport != null }
+        assertEquals(emptyList<Int>(), notices)
+        assertEquals(true, vm.soundLoadReport?.allFailed)
+        assertEquals(listOf(SoundRunner.FailureReason.MEMORY), vm.soundLoadReport!!.failures.map { it.reason })
+        assertEquals(true, vm.soundLoadNoticeVisible)
+        verify(exactly = 0) { callback.finishWithNotice(any()) }
 	}
 
 	/** A pack of only LEDs or auto play has nothing to decode; its load still ends and a press still starts a session. */

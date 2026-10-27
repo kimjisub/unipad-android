@@ -9,6 +9,8 @@ import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import io.mockk.every
 import io.mockk.mockk
@@ -220,6 +222,7 @@ class PlayActivityViewModelAutoMappingTest {
 	private class RecordingEngine : SoundRunner.Engine {
 		val voices = mutableSetOf<Int>()
 		var plays = 0
+		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start() = true
 		override fun stop() {}
 		override fun decode(file: File) = OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44100)

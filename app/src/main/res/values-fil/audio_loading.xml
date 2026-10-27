@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Hindi mabuksan ang mga tunog ng pack na ito</string>
+    <string name="audio_load_details">Mga detalye</string>
+    <string name="audio_load_close">Isara</string>
+    <string name="audio_load_retry">Subukan muli</string>
+    <string name="audio_load_pack_list">Listahan ng pack</string>
+    <string name="audio_load_reason_limit">Masyadong mahaba o malaki</string>
+    <string name="audio_load_reason_unreadable">Hindi mabasa ang file</string>
+    <string name="audio_load_reason_decode">Hindi mapatugtog ang tunog</string>
+    <string name="audio_load_reason_memory">Kulang ang memory ng device</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">Hindi patutugtugin ang %1$d tunog na masyadong mahaba o malaki</item>
+        <item quantity="other">Hindi patutugtugin ang %1$d tunog na masyadong mahaba o malaki</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">Hindi mabasa ang %1$d file ng tunog</item>
+        <item quantity="other">Hindi mabasa ang %1$d file ng tunog</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">Hindi mapatugtog ang %1$d tunog</item>
+        <item quantity="other">Hindi mapatugtog ang %1$d tunog</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">Hindi na-load ang %1$d tunog dahil kulang ang memory. Isara ang ibang app at buksan muli ang pack.</item>
+        <item quantity="other">Hindi na-load ang %1$d tunog dahil kulang ang memory. Isara ang ibang app at buksan muli ang pack.</item>
+    </plurals>
+</resources>

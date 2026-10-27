@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
@@ -72,6 +74,7 @@ class SoundRunnerTest {
 		var streamOpen = false
 			private set
 
+		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start(): Boolean {
 			streamOpen = true
 			return true
@@ -130,6 +133,7 @@ class SoundRunnerTest {
 	}
 
 	private class RecordingListener(private val engine: FakeEngine? = null) : SoundRunner.LoadingListener {
+		var report: SoundRunner.LoadReport? = null
 		val ticks = AtomicInteger(0)
 		val ended = CountDownLatch(1)
 		val failed = CountDownLatch(1)
@@ -144,6 +148,7 @@ class SoundRunnerTest {
 		override fun onProgressTick() {
 			ticks.incrementAndGet()
 		}
+		override fun onReport(report: SoundRunner.LoadReport) { this.report = report }
 		override fun onEnd() = ended.countDown()
 		override fun onException(throwable: Throwable) {
 			engineCallsAtFailure = engine?.callsInFlight?.get() ?: -1
@@ -364,16 +369,21 @@ class SoundRunnerTest {
 	}
 
 	@Test
-	fun outOfMemoryWhileDecoding_isReportedOnceAndDoesNotEscapeTheScope() {
-		val unipack = pack(fileCount = 30)
-		val failure = OutOfMemoryError("simulated decode allocation failure")
-		val engine = FakeEngine(throwingDecodes = mapOf("12.wav" to failure))
-		val listener = RecordingListener(engine)
-
-		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
-
-		assertFailureContainedAndCleanedUp(unipack, engine, listener, runner, failure)
-	}
+    fun outOfMemoryWhileDecoding_reportsOnlyThatFileAndContinuesWithoutCrashing() {
+        val unipack = pack(fileCount = 30)
+        val engine = FakeEngine(throwingDecodes = mapOf("12.wav" to OutOfMemoryError("simulated decode allocation failure")))
+        val listener = RecordingListener(engine)
+        val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+        assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+        awaitLoadJobsFinished()
+        assertEquals(null, listener.failure)
+        assertEquals(29, listener.report!!.loadedFiles)
+        assertEquals(listOf(SoundRunner.FailureReason.MEMORY), listener.report!!.failures.map { it.reason })
+        assertTrue(uncaught.isEmpty())
+        runner.destroy()
+        assertTrue(engine.liveIds.isEmpty())
+        assertTrue(unipack.sounds().all { it.id == Sound.NOT_LOADED })
+    }
 
 	@Test
 	fun reopenAfterFailedLoad_loadsThePackAgain() {

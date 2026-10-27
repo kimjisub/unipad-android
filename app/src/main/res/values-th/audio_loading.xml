@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">ไม่สามารถเปิดเสียงของแพ็กนี้ได้</string>
+    <string name="audio_load_details">ดูรายละเอียด</string>
+    <string name="audio_load_close">ปิด</string>
+    <string name="audio_load_retry">ลองอีกครั้ง</string>
+    <string name="audio_load_pack_list">รายการแพ็ก</string>
+    <string name="audio_load_reason_limit">เสียงยาวหรือใหญ่เกินไป</string>
+    <string name="audio_load_reason_unreadable">อ่านไฟล์ไม่ได้</string>
+    <string name="audio_load_reason_decode">เล่นเสียงไม่ได้</string>
+    <string name="audio_load_reason_memory">หน่วยความจำอุปกรณ์ไม่เพียงพอ</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">เสียง %1$d เสียงยาวหรือใหญ่เกินไปและจะไม่ถูกเล่น</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">อ่านไฟล์เสียง %1$d ไฟล์ไม่ได้</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">เล่นเสียง %1$d เสียงไม่ได้</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">หน่วยความจำไม่เพียงพอ จึงโหลดเสียง %1$d เสียงไม่ได้ โปรดปิดแอปอื่นแล้วเปิดแพ็กอีกครั้ง</item>
+    </plurals>
+</resources>

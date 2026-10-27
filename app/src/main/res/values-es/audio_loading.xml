@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">No se pueden abrir los sonidos de este pack</string>
+    <string name="audio_load_details">Ver detalles</string>
+    <string name="audio_load_close">Cerrar</string>
+    <string name="audio_load_retry">Reintentar</string>
+    <string name="audio_load_pack_list">Lista de packs</string>
+    <string name="audio_load_reason_limit">Demasiado largo o grande</string>
+    <string name="audio_load_reason_unreadable">No se puede leer el archivo</string>
+    <string name="audio_load_reason_decode">No se puede reproducir el sonido</string>
+    <string name="audio_load_reason_memory">Memoria del dispositivo insuficiente</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d sonido es demasiado largo o grande y no se reproducirá</item>
+        <item quantity="other">%1$d sonidos son demasiado largos o grandes y no se reproducirán</item>
+        <item quantity="many">%1$d sonidos son demasiado largos o grandes y no se reproducirán</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">No se puede leer %1$d archivo de sonido</item>
+        <item quantity="other">No se pueden leer %1$d archivos de sonido</item>
+        <item quantity="many">No se pueden leer %1$d archivos de sonido</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">No se puede reproducir %1$d sonido</item>
+        <item quantity="other">No se pueden reproducir %1$d sonidos</item>
+        <item quantity="many">No se pueden reproducir %1$d sonidos</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">No hay memoria suficiente para cargar %1$d sonido. Cierra otras aplicaciones y vuelve a abrir el pack.</item>
+        <item quantity="other">No hay memoria suficiente para cargar %1$d sonidos. Cierra otras aplicaciones y vuelve a abrir el pack.</item>
+        <item quantity="many">No hay memoria suficiente para cargar %1$d sonidos. Cierra otras aplicaciones y vuelve a abrir el pack.</item>
+    </plurals>
+</resources>

@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.viewmodel
 import android.os.SystemClock
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -41,6 +43,7 @@ class PlayActivityViewModelInputOwnershipTest {
     private class RecordingEngine : SoundRunner.Engine {
         val voices = linkedMapOf<Int, Int>()
         var plays = 0
+        override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
         override fun start() = true
         override fun stop() = Unit
         override fun decode(file: File) = OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44100)

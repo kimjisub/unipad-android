@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">इस पैक की आवाज़ें नहीं खोली जा सकतीं</string>
+    <string name="audio_load_details">विवरण देखें</string>
+    <string name="audio_load_close">बंद करें</string>
+    <string name="audio_load_retry">फिर कोशिश करें</string>
+    <string name="audio_load_pack_list">पैक सूची</string>
+    <string name="audio_load_reason_limit">बहुत लंबी या बड़ी आवाज़</string>
+    <string name="audio_load_reason_unreadable">फ़ाइल पढ़ी नहीं जा सकती</string>
+    <string name="audio_load_reason_decode">आवाज़ चलाई नहीं जा सकती</string>
+    <string name="audio_load_reason_memory">डिवाइस की मेमोरी कम है</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d आवाज़ बहुत लंबी या बड़ी है और नहीं चलेगी</item>
+        <item quantity="other">%1$d आवाज़ें बहुत लंबी या बड़ी हैं और नहीं चलेंगी</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">%1$d आवाज़ की फ़ाइल पढ़ी नहीं जा सकती</item>
+        <item quantity="other">%1$d आवाज़ों की फ़ाइलें पढ़ी नहीं जा सकतीं</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">%1$d आवाज़ चलाई नहीं जा सकती</item>
+        <item quantity="other">%1$d आवाज़ें चलाई नहीं जा सकतीं</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">डिवाइस की मेमोरी कम होने के कारण %1$d आवाज़ लोड नहीं हुई। दूसरे ऐप बंद करके पैक फिर खोलें।</item>
+        <item quantity="other">डिवाइस की मेमोरी कम होने के कारण %1$d आवाज़ें लोड नहीं हुईं। दूसरे ऐप बंद करके पैक फिर खोलें।</item>
+    </plurals>
+</resources>

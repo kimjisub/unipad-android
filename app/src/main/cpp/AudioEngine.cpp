@@ -113,8 +113,8 @@ void AudioEngine::stopLocked() {
     for (auto& v : voices_) v.active = false;
 }
 
-int AudioEngine::loadSound(const int16_t* data, int numFrames, int channels, int sampleRate) {
-    return soundBank_.load(data, numFrames, channels, sampleRate);
+int AudioEngine::loadSound(std::vector<int16_t>&& data, int numFrames, int channels, int sampleRate) {
+    return soundBank_.load(std::move(data), numFrames, channels, sampleRate);
 }
 
 // Both unloads detach buffers under voiceMutex_ (no voice or callback can reach them after
