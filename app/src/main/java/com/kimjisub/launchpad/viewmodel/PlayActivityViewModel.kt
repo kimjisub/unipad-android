@@ -182,6 +182,23 @@ class PlayActivityViewModel(
 	var soundLoadingProgress by mutableIntStateOf(0)
 	var soundLoadingMax by mutableIntStateOf(0)
 
+	var soundLoadReport by mutableStateOf<SoundRunner.LoadReport?>(null)
+		private set
+	var soundLoadNoticeVisible by mutableStateOf(false)
+	var soundLoadDetailsVisible by mutableStateOf(false)
+
+	fun closeSoundLoadDetails() {
+		soundLoadDetailsVisible = false
+		if (soundLoadReport?.allFailed != true) soundLoadNoticeVisible = false
+	}
+
+	fun prepareSoundRetry() {
+		enable = false
+		autoPlayRunner?.stop()
+		ledRunner?.stop()
+		soundRunner?.destroy()
+	}
+
 	// Auto mapping state
 	var autoMappingActive by mutableStateOf(false)
 	var autoMappingProgress by mutableIntStateOf(0)
@@ -473,7 +490,24 @@ class PlayActivityViewModel(
 					}
 				}
 
+				override fun onReport(report: SoundRunner.LoadReport) {
+					if (report.compatibilityFailed || report.allFailed) playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
+					viewModelScope.launch {
+						soundLoadReport = report
+						soundLoadNoticeVisible = report.failures.isNotEmpty()
+						soundLoadDetailsVisible = false
+						if (report.allFailed) {
+							enable = false
+							silenceAllInputs()
+							autoPlayRunner?.stop()
+							ledRunner?.stop()
+						}
+					}
+				}
+
 				override fun onEnd() {
+					// loadFailed is terminal in the session tracker, so partial decoder/memory
+					// failures cannot become a successful compatibility result here.
 					playSession.loadSucceeded()
 					viewModelScope.launch {
 						soundLoadingActive = false
@@ -484,6 +518,7 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
+						if (throwable is SoundRunner.NoPlayableSoundsException && throwable.report != null) return@launch
 						uiCallback?.finishWithNotice(
 							when (throwable) {
 								is SoundRunner.NoPlayableSoundsException -> string.pack_no_playable_sounds

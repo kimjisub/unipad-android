@@ -34,17 +34,19 @@ Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStop(JNIEnv*, jobject) {
 JNIEXPORT jint JNICALL
 Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeLoadSound(
         JNIEnv* env, jobject, jshortArray pcmData, jint numFrames, jint channels, jint sampleRate) {
-    if (!sEngine) return -1;
-    if (numFrames <= 0 || channels <= 0) return -1;
-    const jsize len = env->GetArrayLength(pcmData);
-    if (static_cast<jlong>(numFrames) * channels > len) return -1; // caller lied about the size
+    if (!sEngine || !pcmData || numFrames <= 0 || channels < 1 || channels > 8 ||
+        sampleRate < 8000 || sampleRate > 384000) return -1;
+    const jlong samples = static_cast<jlong>(numFrames) * channels;
+    if (samples > env->GetArrayLength(pcmData)) return -1;
+    try {
+        std::vector<int16_t> data(static_cast<size_t>(samples));
+        env->GetShortArrayRegion(pcmData, 0, static_cast<jsize>(samples), data.data());
+        if (env->ExceptionCheck()) return -1;
+        return sEngine->loadSound(std::move(data), numFrames, channels, sampleRate);
+    } catch (const std::bad_alloc&) {
+        return SoundBank::LOAD_MEMORY_FAILURE;
+    }
 
-    jshort* data = env->GetShortArrayElements(pcmData, nullptr);
-    if (!data) return -1;
-
-    int soundId = sEngine->loadSound(data, numFrames, channels, sampleRate);
-    env->ReleaseShortArrayElements(pcmData, data, JNI_ABORT);
-    return soundId;
 }
 
 JNIEXPORT void JNICALL

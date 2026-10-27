@@ -14,6 +14,8 @@ import java.nio.ByteOrder
  */
 object OboeAudioEngine {
 
+	private const val LOAD_MEMORY_FAILURE = -2
+
 	init {
 		System.loadLibrary("unipad_audio")
 	}
@@ -27,7 +29,7 @@ object OboeAudioEngine {
 	 */
 	fun loadSound(file: File): Int {
 		val decoded = decodeAudioFile(file) ?: return -1
-		return nativeLoadSound(decoded.pcm, decoded.numFrames, decoded.channels, decoded.sampleRate)
+		return loadDecoded(decoded)
 	}
 
 	/**
@@ -41,7 +43,9 @@ object OboeAudioEngine {
 	 * Must be called from a single thread (native SoundBank uses mutex but JNI calls should be serialized).
 	 */
 	fun loadDecoded(decoded: DecodedAudio): Int {
-		return nativeLoadSound(decoded.pcm, decoded.numFrames, decoded.channels, decoded.sampleRate)
+		return nativeLoadSound(decoded.pcm, decoded.numFrames, decoded.channels, decoded.sampleRate).also {
+			if (it == LOAD_MEMORY_FAILURE) throw OutOfMemoryError("Native sound allocation failed")
+		}
 	}
 
 	fun unloadSound(soundId: Int) = nativeUnloadSound(soundId)
@@ -99,13 +103,8 @@ object OboeAudioEngine {
 			// asShortBuffer() would read as noise.
 			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
 
-			// Pre-allocate based on duration estimate
-			val durationUs = format.getLongOrDefault(MediaFormat.KEY_DURATION, 0L)
-			val estimatedSamples = if (durationUs > 0) {
-				((durationUs * sampleRate * channels) / 1_000_000L).toInt()
-			} else {
-				sampleRate * channels * 2 // fallback: 2 seconds
-			}
+			// Displayed duration is untrusted. Start small and grow from actual decoder output.
+			// The shared structural inspection has already decided which files may be decoded.
 
 			val codec = MediaCodec.createDecoderByType(mime)
 			try {
@@ -113,7 +112,7 @@ object OboeAudioEngine {
 			codec.start()
 
 			// Single growing array instead of chunk list
-			var pcm = ShortArray(estimatedSamples)
+			var pcm = ShortArray(16_384)
 			var totalSamples = 0
 			val bufferInfo = MediaCodec.BufferInfo()
 			var inputDone = false
@@ -170,8 +169,11 @@ object OboeAudioEngine {
 						val numShorts = bufferInfo.size / 2
 
 						// Grow array if needed
-						if (totalSamples + numShorts > pcm.size) {
-							pcm = pcm.copyOf(maxOf(pcm.size * 2, totalSamples + numShorts))
+						val needed = totalSamples.toLong() + numShorts
+						if (needed > Int.MAX_VALUE - 8L) throw OutOfMemoryError("Decoded PCM exceeds array capacity")
+						if (needed > pcm.size) {
+							val capacity = maxOf(pcm.size.toLong() * 2, needed).coerceAtMost(Int.MAX_VALUE - 8L)
+							pcm = pcm.copyOf(capacity.toInt())
 						}
 						shortBuf.get(pcm, totalSamples, numShorts)
 						totalSamples += numShorts
@@ -185,11 +187,9 @@ object OboeAudioEngine {
 
 			if (totalSamples == 0) return null
 
-			// Trim to exact size
-			val finalPcm = if (pcm.size == totalSamples) pcm else pcm.copyOf(totalSamples)
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null
-			return DecodedAudio(stereoPcm(finalPcm, channels, decoderChannelMask(channels, channelMask)),
+			return DecodedAudio(stereoPcm(pcm, channels, decoderChannelMask(channels, channelMask), totalSamples),
 				numFrames, minOf(channels, 2), sampleRate)
 			} finally {
 				// Released on every path; a codec leaked per failed file exhausted the device's
@@ -204,7 +204,4 @@ object OboeAudioEngine {
 		}
 	}
 
-	private fun MediaFormat.getLongOrDefault(key: String, default: Long): Long {
-		return try { getLong(key) } catch (_: Exception) { default }
-	}
 }

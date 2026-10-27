@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Impossible d’ouvrir les sons de ce pack</string>
+    <string name="audio_load_details">Voir les détails</string>
+    <string name="audio_load_close">Fermer</string>
+    <string name="audio_load_retry">Réessayer</string>
+    <string name="audio_load_pack_list">Liste des packs</string>
+    <string name="audio_load_reason_limit">Trop long ou trop volumineux</string>
+    <string name="audio_load_reason_unreadable">Fichier illisible</string>
+    <string name="audio_load_reason_decode">Son impossible à lire</string>
+    <string name="audio_load_reason_memory">Mémoire de l’appareil insuffisante</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">%1$d son est trop long ou trop volumineux et ne sera pas lu</item>
+        <item quantity="other">%1$d sons sont trop longs ou trop volumineux et ne seront pas lus</item>
+        <item quantity="many">%1$d sons sont trop longs ou trop volumineux et ne seront pas lus</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">%1$d fichier audio est illisible</item>
+        <item quantity="other">%1$d fichiers audio sont illisibles</item>
+        <item quantity="many">%1$d fichiers audio sont illisibles</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">%1$d son ne peut pas être lu</item>
+        <item quantity="other">%1$d sons ne peuvent pas être lus</item>
+        <item quantity="many">%1$d sons ne peuvent pas être lus</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">La mémoire est insuffisante pour charger %1$d son. Fermez les autres applications et rouvrez le pack.</item>
+        <item quantity="other">La mémoire est insuffisante pour charger %1$d sons. Fermez les autres applications et rouvrez le pack.</item>
+        <item quantity="many">La mémoire est insuffisante pour charger %1$d sons. Fermez les autres applications et rouvrez le pack.</item>
+    </plurals>
+</resources>

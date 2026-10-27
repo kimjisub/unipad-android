@@ -313,7 +313,7 @@ class PlayActivity : BaseActivity() {
 		vm.bindPreferences(p)
 		vm.requestAudioFocus = { audioFocus.request() }
 		vm.uiCallback = uiCallback
-		vm.enable = true
+		vm.enable = vm.soundLoadReport?.allFailed != true
 		reportScreenLayout()
 		addOnConfigurationChangedListener { reportScreenLayout(configuration = it) }
 		addOnMultiWindowModeChangedListener {
@@ -336,7 +336,8 @@ class PlayActivity : BaseActivity() {
 						vm.toggleOptionWindow(true)
 					}
 				}
-				PlayScreen()
+				if (vm.soundLoadReport?.allFailed != true) PlayScreen()
+				SoundLoadNotice()
 				autoPlayChangeDialog?.let { restore ->
 					AppAlertDialog(
 						onDismissRequest = { autoPlayChangeDialog = null },
@@ -427,6 +428,65 @@ class PlayActivity : BaseActivity() {
 				closeWithNotice("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
+	}
+
+	@Composable
+	private fun SoundLoadNotice() {
+		val report = vm.soundLoadReport ?: return
+		if (!vm.soundLoadNoticeVisible) return
+		val details = vm.soundLoadDetailsVisible
+		val counts = report.failures.groupingBy { it.reason }.eachCount()
+		val messages = SoundRunner.FailureReason.entries.mapNotNull { reason ->
+			counts[reason]?.let { count ->
+				val resource = when (reason) {
+					SoundRunner.FailureReason.LIMIT -> com.kimjisub.launchpad.R.plurals.audio_load_limit
+					SoundRunner.FailureReason.UNREADABLE -> com.kimjisub.launchpad.R.plurals.audio_load_unreadable
+					SoundRunner.FailureReason.DECODE -> com.kimjisub.launchpad.R.plurals.audio_load_decode
+					SoundRunner.FailureReason.MEMORY -> com.kimjisub.launchpad.R.plurals.audio_load_memory
+				}
+				resources.getQuantityString(resource, count, count)
+			}
+		}
+		AppAlertDialog(
+			onDismissRequest = { if (!report.allFailed) vm.closeSoundLoadDetails() },
+			title = { Text(stringResource(if (details) string.audio_load_details else if (report.allFailed) string.audio_load_failed_title else string.warning)) },
+			text = {
+				Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+					if (details) {
+						report.failures.forEach { failure ->
+							val reason = when (failure.reason) {
+								SoundRunner.FailureReason.LIMIT -> string.audio_load_reason_limit
+								SoundRunner.FailureReason.UNREADABLE -> string.audio_load_reason_unreadable
+								SoundRunner.FailureReason.DECODE -> string.audio_load_reason_decode
+								SoundRunner.FailureReason.MEMORY -> string.audio_load_reason_memory
+							}
+							Text("${failure.file.name} — ${stringResource(reason)}")
+						}
+					} else messages.forEach { Text(it) }
+				}
+			},
+			confirmButton = {
+				Column(horizontalAlignment = Alignment.End) {
+					if (details) {
+						TextButton(onClick = vm::closeSoundLoadDetails) { Text(stringResource(string.audio_load_close)) }
+					} else {
+						TextButton(onClick = { vm.soundLoadDetailsVisible = true }) { Text(stringResource(string.audio_load_details)) }
+						if (report.allFailed) {
+							TextButton(onClick = {
+								// Release synchronously before a fresh activity starts its engine. Re-read the
+								// original pack so retry repeats selection rather than recycling reservations.
+								vm.prepareSoundRetry()
+								startActivity(intent)
+								finish()
+							}) { Text(stringResource(string.audio_load_retry)) }
+							TextButton(onClick = { finish() }) { Text(stringResource(string.audio_load_pack_list)) }
+						} else {
+							TextButton(onClick = { vm.soundLoadNoticeVisible = false }) { Text(stringResource(string.audio_load_close)) }
+						}
+					}
+				}
+			},
+		)
 	}
 
 	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */

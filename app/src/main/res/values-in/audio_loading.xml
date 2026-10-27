@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Suara dalam pack ini tidak dapat dibuka</string>
+    <string name="audio_load_details">Lihat detail</string>
+    <string name="audio_load_close">Tutup</string>
+    <string name="audio_load_retry">Coba lagi</string>
+    <string name="audio_load_pack_list">Daftar pack</string>
+    <string name="audio_load_reason_limit">Terlalu panjang atau besar</string>
+    <string name="audio_load_reason_unreadable">File tidak dapat dibaca</string>
+    <string name="audio_load_reason_decode">Suara tidak dapat diputar</string>
+    <string name="audio_load_reason_memory">Memori perangkat tidak cukup</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">%1$d suara terlalu panjang atau besar dan tidak akan diputar</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">%1$d file suara tidak dapat dibaca</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">%1$d suara tidak dapat diputar</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">Memori perangkat tidak cukup untuk memuat %1$d suara. Tutup aplikasi lain dan buka kembali pack.</item>
+    </plurals>
+</resources>

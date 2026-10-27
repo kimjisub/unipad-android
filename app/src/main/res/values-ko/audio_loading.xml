@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">이 팩의 소리를 열 수 없습니다</string>
+    <string name="audio_load_details">자세히 보기</string>
+    <string name="audio_load_close">닫기</string>
+    <string name="audio_load_retry">다시 시도</string>
+    <string name="audio_load_pack_list">팩 목록</string>
+    <string name="audio_load_reason_limit">너무 길거나 큰 소리</string>
+    <string name="audio_load_reason_unreadable">파일을 읽을 수 없습니다</string>
+    <string name="audio_load_reason_decode">재생할 수 없습니다</string>
+    <string name="audio_load_reason_memory">기기 메모리 부족</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">너무 길거나 큰 소리 %1$d개는 재생하지 않습니다</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">소리 %1$d개의 파일을 읽을 수 없습니다</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">소리 %1$d개를 재생할 수 없습니다</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">기기 메모리가 부족해 소리 %1$d개를 불러오지 못했습니다. 다른 앱을 닫고 팩을 다시 열어 보세요</item>
+    </plurals>
+</resources>

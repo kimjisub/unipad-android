@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Không thể mở âm thanh của gói này</string>
+    <string name="audio_load_details">Xem chi tiết</string>
+    <string name="audio_load_close">Đóng</string>
+    <string name="audio_load_retry">Thử lại</string>
+    <string name="audio_load_pack_list">Danh sách gói</string>
+    <string name="audio_load_reason_limit">Quá dài hoặc quá lớn</string>
+    <string name="audio_load_reason_unreadable">Không thể đọc tệp</string>
+    <string name="audio_load_reason_decode">Không thể phát âm thanh</string>
+    <string name="audio_load_reason_memory">Thiếu bộ nhớ thiết bị</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">%1$d âm thanh quá dài hoặc quá lớn sẽ không được phát</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">Không thể đọc %1$d tệp âm thanh</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">Không thể phát %1$d âm thanh</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">Thiếu bộ nhớ nên không thể tải %1$d âm thanh. Hãy đóng ứng dụng khác rồi mở lại gói.</item>
+    </plurals>
+</resources>

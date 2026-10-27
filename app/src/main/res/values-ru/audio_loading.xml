@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">Не удалось открыть звуки этого пака</string>
+    <string name="audio_load_details">Подробнее</string>
+    <string name="audio_load_close">Закрыть</string>
+    <string name="audio_load_retry">Повторить</string>
+    <string name="audio_load_pack_list">Список паков</string>
+    <string name="audio_load_reason_limit">Слишком длинный или большой звук</string>
+    <string name="audio_load_reason_unreadable">Не удалось прочитать файл</string>
+    <string name="audio_load_reason_decode">Не удалось воспроизвести звук</string>
+    <string name="audio_load_reason_memory">Недостаточно памяти устройства</string>
+    <plurals name="audio_load_limit">
+        <item quantity="one">Не будут воспроизводиться слишком длинные или большие звуки: %1$d</item>
+        <item quantity="few">Не будут воспроизводиться слишком длинные или большие звуки: %1$d</item>
+        <item quantity="many">Не будут воспроизводиться слишком длинные или большие звуки: %1$d</item>
+        <item quantity="other">Не будут воспроизводиться слишком длинные или большие звуки: %1$d</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="one">Не удалось прочитать звуковые файлы: %1$d</item>
+        <item quantity="few">Не удалось прочитать звуковые файлы: %1$d</item>
+        <item quantity="many">Не удалось прочитать звуковые файлы: %1$d</item>
+        <item quantity="other">Не удалось прочитать звуковые файлы: %1$d</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="one">Не удалось воспроизвести звуки: %1$d</item>
+        <item quantity="few">Не удалось воспроизвести звуки: %1$d</item>
+        <item quantity="many">Не удалось воспроизвести звуки: %1$d</item>
+        <item quantity="other">Не удалось воспроизвести звуки: %1$d</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="one">Недостаточно памяти для загрузки звуков: %1$d. Закройте другие приложения и снова откройте пак.</item>
+        <item quantity="few">Недостаточно памяти для загрузки звуков: %1$d. Закройте другие приложения и снова откройте пак.</item>
+        <item quantity="many">Недостаточно памяти для загрузки звуков: %1$d. Закройте другие приложения и снова откройте пак.</item>
+        <item quantity="other">Недостаточно памяти для загрузки звуков: %1$d. Закройте другие приложения и снова откройте пак.</item>
+    </plurals>
+</resources>

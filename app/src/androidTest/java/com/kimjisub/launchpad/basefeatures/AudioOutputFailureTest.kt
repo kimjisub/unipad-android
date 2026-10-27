@@ -75,15 +75,34 @@ class AudioOutputFailureTest {
     @Test fun outputStartupFailureShowsKoreanNoticeAndClosesPlayback() =
         assertVisibleNotice(Locale.KOREAN, "소리 출력을 시작하지 못했습니다.\n팩을 다시 열어 주세요.")
 
-    @Test fun decodingFailureShowsEnglishNoticeAndClosesPlayback() =
-        assertVisibleNotice(Locale.ENGLISH, "Couldn't start pack\nbecause of phone specifications…\nTry again.", decodeFailure = true)
+    @Test fun decodingFailureShowsEnglishReasonsAndKeepsRetry() = assertDecodeNotice(Locale.ENGLISH)
 
-    @Test fun decodingFailureShowsKoreanNoticeAndClosesPlayback() =
-        assertVisibleNotice(Locale.KOREAN, "사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요", decodeFailure = true)
+    @Test fun decodingFailureShowsKoreanReasonsAndKeepsRetry() = assertDecodeNotice(Locale.KOREAN)
 
-    private fun assertVisibleNotice(locale: Locale, expected: String, decodeFailure: Boolean = false) {
-        failDuringDecode = decodeFailure
-        val captureName = if (decodeFailure) "audio-decoding-failure" else "audio-output-failure"
+    private fun assertDecodeNotice(locale: Locale) {
+        failDuringDecode = true
+        localeManager.applicationLocales = LocaleList(locale)
+        screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+        val activity = screen.resumed()
+        startGate.countDown()
+        val korean = locale.language == "ko"
+        val title = if (korean) "이 팩의 소리를 열 수 없습니다" else "Cannot open this pack’s sounds"
+        screen.node(androidx.test.uiautomator.By.text(title))
+        screen.node(androidx.test.uiautomator.By.text(if (korean) "소리 2개를 재생할 수 없습니다" else "2 sounds cannot be played"))
+        assertTrue("The failure must stay open for retry", !activity.isFinishing && !activity.isDestroyed)
+        screen.capture("audio-decoding-reasons-${locale.language}")
+        screen.click(androidx.test.uiautomator.By.text(if (korean) "자세히 보기" else "Details"))
+        screen.node(androidx.test.uiautomator.By.textContains("silence.wav"))
+        screen.node(androidx.test.uiautomator.By.textContains("silence2.wav"))
+        screen.click(androidx.test.uiautomator.By.text(if (korean) "닫기" else "Close"))
+        screen.node(androidx.test.uiautomator.By.text(title))
+        screen.click(androidx.test.uiautomator.By.text(if (korean) "팩 목록" else "Pack list"))
+        screen.await("Pack list action did not close the failed pack") { activity.isFinishing || activity.isDestroyed }
+    }
+
+    private fun assertVisibleNotice(locale: Locale, expected: String) {
+        failDuringDecode = false
+        val captureName = "audio-output-failure"
         localeManager.applicationLocales = LocaleList(locale)
         screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
         val activity = screen.resumed()

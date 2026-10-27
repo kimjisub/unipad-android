@@ -4,6 +4,8 @@ import android.media.AudioManager
 import android.os.SystemClock
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -217,6 +219,7 @@ private class RecordingEngine(
 	private var nextStopKey = 1
 	private val endless = HashMap<Int, Pair<Int, Int>>()
 
+	override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 	override fun start() = true
 	override fun stop() = stopAllVoices()
 

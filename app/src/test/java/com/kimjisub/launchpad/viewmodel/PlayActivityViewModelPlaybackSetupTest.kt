@@ -70,6 +70,8 @@ class PlayActivityViewModelPlaybackSetupTest {
         File(root, "autoPlay").writeText("on 1 1\ndelay 60000\noff 1 1\n")
         val engine = mockk<SoundRunner.Engine>(relaxed = true)
         every { engine.start() } returns true
+        every { engine.inspect(any()) } returns com.kimjisub.launchpad.audio.AudioInspection.Readable(
+            com.kimjisub.launchpad.audio.AudioFileFacts(44_100, 1, 1))
         every { engine.decode(any()) } returns if (playable) OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100) else null
         every { engine.load(any()) } returns 1
         vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
@@ -111,18 +113,21 @@ class PlayActivityViewModelPlaybackSetupTest {
         assertFalse(vm.scbFeedbackLight.checked)
     }
 
-    @Test fun unplayablePackClosesWithAnExplanation() {
+    @Test fun unplayablePackKeepsTheExplanationAndRetryInsteadOfEnteringPlayback() {
         load(square = true, playable = false)
-        var closed = false
-        every { vm.uiCallback!!.finishWithNotice(any()) } answers { closed = true }
         val deadline = System.nanoTime() + 5_000_000_000L
-        while (!closed && System.nanoTime() < deadline) {
+        while (vm.soundLoadReport == null && System.nanoTime() < deadline) {
             main.runAll()
             Thread.sleep(5)
         }
-        assertTrue("A pack with no decodable audio must close", closed)
+        main.runAll()
+        assertEquals(true, vm.soundLoadReport?.allFailed)
+        assertEquals(1, vm.soundLoadReport!!.failures.size) // three pad references share one file
+        assertEquals(listOf(SoundRunner.FailureReason.DECODE), vm.soundLoadReport!!.failures.map { it.reason })
+        assertTrue(vm.soundLoadNoticeVisible)
+        assertFalse(vm.enable)
         assertFalse(vm.soundLoadingActive)
-        verify(exactly = 1) { vm.uiCallback?.finishWithNotice(R.string.pack_no_playable_sounds) }
+        verify(exactly = 0) { vm.uiCallback?.finishWithNotice(any()) }
     }
 
     private fun controller(): MidiController {

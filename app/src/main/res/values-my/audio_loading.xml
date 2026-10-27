@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_load_failed_title">ဤပက်ခ်၏ အသံများကို ဖွင့်၍မရပါ</string>
+    <string name="audio_load_details">အသေးစိတ်ကြည့်ရန်</string>
+    <string name="audio_load_close">ပိတ်ရန်</string>
+    <string name="audio_load_retry">ထပ်စမ်းရန်</string>
+    <string name="audio_load_pack_list">ပက်ခ်စာရင်း</string>
+    <string name="audio_load_reason_limit">ရှည်လွန်းသော သို့မဟုတ် ကြီးလွန်းသော အသံ</string>
+    <string name="audio_load_reason_unreadable">ဖိုင်ကို ဖတ်၍မရပါ</string>
+    <string name="audio_load_reason_decode">အသံကို ဖွင့်၍မရပါ</string>
+    <string name="audio_load_reason_memory">စက်မှတ်ဉာဏ် မလုံလောက်ပါ</string>
+    <plurals name="audio_load_limit">
+        <item quantity="other">ရှည်လွန်းသော သို့မဟုတ် ကြီးလွန်းသော အသံ %1$d ခုကို ဖွင့်မည်မဟုတ်ပါ</item>
+    </plurals>
+    <plurals name="audio_load_unreadable">
+        <item quantity="other">အသံဖိုင် %1$d ခုကို ဖတ်၍မရပါ</item>
+    </plurals>
+    <plurals name="audio_load_decode">
+        <item quantity="other">အသံ %1$d ခုကို ဖွင့်၍မရပါ</item>
+    </plurals>
+    <plurals name="audio_load_memory">
+        <item quantity="other">စက်မှတ်ဉာဏ် မလုံလောက်၍ အသံ %1$d ခုကို တင်၍မရပါ။ အခြားအက်ပ်များကို ပိတ်ပြီး ပက်ခ်ကို ပြန်ဖွင့်ပါ။</item>
+    </plurals>
+</resources>

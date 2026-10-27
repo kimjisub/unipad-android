@@ -14,8 +14,10 @@ struct SoundBuffer {
 
 class SoundBank {
 public:
-    // Load PCM data, returns soundId (0-based index)
-    int load(const int16_t* data, int numFrames, int channels, int sampleRate);
+    static constexpr int LOAD_MEMORY_FAILURE = -2;
+
+    // Adopt the JNI destination buffer without another full PCM copy; returns a sound ID.
+    int load(std::vector<int16_t>&& data, int numFrames, int channels, int sampleRate);
 
     // Get a loaded sound buffer (nullptr if not found)
     const SoundBuffer* get(int soundId) const;

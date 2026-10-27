@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import java.io.File
 import java.util.IdentityHashMap
@@ -21,6 +23,7 @@ internal class RecordingSoundEngine(
 	val plays = CopyOnWriteArrayList<Pair<String, Int>>()
 	val stops = CopyOnWriteArrayList<Int>()
 
+	override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 	override fun start() = true
 	override fun stop() {}
 	override fun decode(file: File): OboeAudioEngine.DecodedAudio? {

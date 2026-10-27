@@ -1,6 +1,12 @@
 package com.kimjisub.launchpad.unipack.runner
 
 import com.kimjisub.launchpad.audio.OboeAudioEngine
+import com.kimjisub.launchpad.audio.AudioFileInspector
+import com.kimjisub.launchpad.audio.AudioInspection
+import com.kimjisub.launchpad.audio.AudioExclusion
+import com.kimjisub.launchpad.audio.AudioReference
+import com.kimjisub.launchpad.audio.AudioPackBounds
+import com.kimjisub.launchpad.audio.AudioSelector
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
@@ -9,14 +15,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import java.io.File
 
 class SoundRunner(
@@ -26,6 +27,8 @@ class SoundRunner(
 	private val scope: CoroutineScope,
 	private val engine: Engine = OboeEngine,
 ) {
+
+	private data class PendingSound(val sound: Sound, val chain: Int, val x: Int, val y: Int, val line: Int)
 
 	private var stopKey: Array<Array<Array<Int>>>
 
@@ -43,7 +46,14 @@ class SoundRunner(
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
-	class NoPlayableSoundsException : IllegalStateException("This pack has no playable sound files")
+	class NoPlayableSoundsException(val report: LoadReport? = null) : IllegalStateException("This pack has no playable sound files")
+
+	enum class FailureReason { LIMIT, UNREADABLE, DECODE, MEMORY }
+	data class FileFailure(val file: File, val reason: FailureReason, val exclusion: AudioExclusion? = null)
+	data class LoadReport(val usedFiles: Int, val loadedFiles: Int, val failures: List<FileFailure>, val reservedCost: Long) {
+		val allFailed: Boolean get() = usedFiles > 0 && loadedFiles == 0
+		val compatibilityFailed: Boolean get() = failures.any { it.reason == FailureReason.DECODE || it.reason == FailureReason.MEMORY }
+	}
 
 	class AudioOutputUnavailableException : RuntimeException("Failed to open audio output")
 
@@ -61,6 +71,7 @@ class SoundRunner(
 		fun onStart(soundCount: Int)
 		fun onProgressTick()
 		fun onEnd()
+		fun onReport(report: LoadReport) {}
 		fun onException(throwable: Throwable)
 	}
 
@@ -68,6 +79,7 @@ class SoundRunner(
 	interface Engine {
 		fun start(): Boolean
 		fun stop()
+		fun inspect(file: File): AudioInspection = AudioFileInspector.inspect(file)
 		fun decode(file: File): OboeAudioEngine.DecodedAudio?
 		fun load(decoded: OboeAudioEngine.DecodedAudio): Int
 		fun unloadSound(soundId: Int)
@@ -94,13 +106,16 @@ class SoundRunner(
 		chain.addSelectionObserver(cancelWormholesOnChainSelection)
 		val table = unipack.soundTable
 		// Take references before playback can rotate a pad's mapping during asynchronous loading.
-		val soundsToLoad = mutableListOf<Sound>()
+		val pending = mutableListOf<PendingSound>()
 		if (table != null) {
 			for (i in 0 until unipack.chain)
 				for (j in 0 until unipack.buttonX)
 					for (k in 0 until unipack.buttonY)
-						for (sound in table[i][j][k] ?: continue) soundsToLoad.add(sound)
+						for ((line, sound) in (table[i][j][k] ?: continue).withIndex()) {
+							pending.add(PendingSound(sound, i, j, k, line))
+						}
 		}
+		val soundsToLoad = pending.map { it.sound }
 		val soundCount = soundsToLoad.size
 
 		Log.play("soundCount: $soundCount")
@@ -130,52 +145,62 @@ class SoundRunner(
 					throw AudioOutputUnavailableException()
 				}
 
-				// Phase 1: Collect all unique files and map sounds to them
-				val allSounds = soundsToLoad
-				val uniqueFiles = LinkedHashMap<String, MutableList<Sound>>()
-				for (sound in allSounds) {
-					val key = sound.file.absolutePath
-					uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
+				val references = pending.map { AudioReference(it.chain, it.x, it.y, it.line, it.sound.file.absolutePath) }
+				val uniqueFiles = soundsToLoad.groupBy { it.file.absolutePath }
+				// Inspect and reserve the complete plan before any decoder can run. Neither a decoder's
+				// completion order nor an allocation failure can change a later admission decision.
+				val plan = AudioSelector.select(references, AudioPackBounds(unipack.chain, unipack.buttonX, unipack.buttonY)) {
+					ensureActive()
+					engine.inspect(File(it))
 				}
-
-				Log.play("uniqueFiles: ${uniqueFiles.size} / totalSounds: ${allSounds.size}")
-
-				// Phase 2: Decode unique files in parallel and hand each one to the native engine as
-				// soon as it is decoded. The engine keeps its own copy, so only the files currently
-				// being decoded sit on the Java heap instead of the PCM of the whole pack.
-				// coroutineScope keeps a failing file inside this load: it cancels the other files,
-				// waits for them to stop and rethrows here, so the failure reaches onException below
-				// instead of failing the caller's scope.
-				val semaphore = Semaphore(Runtime.getRuntime().availableProcessors().coerceIn(2, 8))
-
-				coroutineScope {
-					uniqueFiles.map { (filePath, sounds) ->
-						async(Dispatchers.IO) {
-							semaphore.withPermit {
-								val decoded = engine.decode(File(filePath))
-								if (decoded == null) Log.err("Failed to decode: $filePath")
-								ensureActive()
-								synchronized(engineLock) {
-									if (destroyed) {
-										Log.play("SoundRunner destroyed while loading; skipped $filePath")
-										return@withPermit
-									}
-									val soundId = decoded?.let(engine::load) ?: Sound.UNDECODABLE
-									if (decoded != null && soundId < 0) Log.err("Failed to load into engine: $filePath")
-									for (sound in sounds) {
-										sound.id = if (soundId < 0) Sound.UNDECODABLE else soundId
-									}
-								}
-								// Report progress for all sounds sharing this file
-								repeat(sounds.size) { loadingListener.onProgressTick() }
-							}
+				val failures = mutableListOf<FileFailure>()
+				var loadedFiles = 0
+				// One decoder at a time keeps PCM growth, down-mixing and the native copy from overlapping
+				// across files. Real-device peak-memory verification remains necessary.
+				for (selection in plan.files) {
+					ensureActive()
+					val file = File(selection.identity)
+					val sounds = uniqueFiles.getValue(selection.identity)
+					var reason: FailureReason? = selection.exclusion?.let {
+						when (it) {
+							AudioExclusion.INVALID_FORMAT, AudioExclusion.READ_FAILURE -> FailureReason.UNREADABLE
+							else -> FailureReason.LIMIT
 						}
-					}.awaitAll()
+					}
+					var soundId = Sound.UNDECODABLE
+					if (reason == null) {
+						try {
+							val decoded = try {
+								engine.decode(file)
+							} catch (e: CancellationException) {
+								throw e
+							} catch (e: Exception) {
+								Log.err("Sound decode failed: ${file.name}", e)
+								null
+							}
+							ensureActive()
+							soundId = synchronized(engineLock) {
+								if (destroyed) return@launch
+								decoded?.let(engine::load) ?: Sound.UNDECODABLE
+							}
+							reason = if (soundId < 0) FailureReason.DECODE else null
+						} catch (e: CancellationException) {
+							throw e
+						} catch (_: OutOfMemoryError) {
+							reason = FailureReason.MEMORY
+						}
+					}
+					synchronized(engineLock) {
+						if (destroyed) return@launch
+						sounds.forEach { it.id = if (reason == null) soundId else Sound.UNDECODABLE }
+					}
+					if (reason == null) loadedFiles++ else failures.add(FileFailure(file, reason, selection.exclusion))
+					repeat(sounds.size) { loadingListener.onProgressTick() }
 				}
-
 				ensureActive()
-				// Light-only packs have no audio to fail; reject actual files only when none loaded.
-				if (allSounds.isNotEmpty() && allSounds.none { it.id >= 0 }) throw NoPlayableSoundsException()
+				val report = LoadReport(plan.files.size, loadedFiles, failures.toList(), plan.reservedCost)
+				loadingListener.onReport(report)
+				if (report.allFailed) throw NoPlayableSoundsException(report)
 				loadingListener.onEnd()
 			} catch (e: CancellationException) {
 				// destroy() cancelled the load; this is not a loading failure to report.

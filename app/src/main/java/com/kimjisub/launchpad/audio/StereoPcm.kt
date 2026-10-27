@@ -29,10 +29,10 @@ internal fun decoderChannelMask(channels: Int, channelMask: Int): Int {
  * https://www.w3.org/TR/webaudio-1.0/#down-mixing
  * https://developer.android.com/reference/android/media/AudioFormat#channelMask
  */
-internal fun stereoPcm(pcm: ShortArray, channels: Int, channelMask: Int = 0): ShortArray {
-    require(channels > 0)
+internal fun stereoPcm(pcm: ShortArray, channels: Int, channelMask: Int = 0, sampleCount: Int = pcm.size): ShortArray {
+    require(channels > 0 && sampleCount in 0..pcm.size)
     if (channels <= 2) return pcm
-    require(pcm.size % channels == 0)
+    require(sampleCount % channels == 0)
     val fl = AudioFormat.CHANNEL_OUT_FRONT_LEFT
     val fr = AudioFormat.CHANNEL_OUT_FRONT_RIGHT
     val fc = AudioFormat.CHANNEL_OUT_FRONT_CENTER
@@ -72,8 +72,8 @@ internal fun stereoPcm(pcm: ShortArray, channels: Int, channelMask: Int = 0): Sh
         left[0] = 1.0
         right[1] = 1.0
     }
-    return ShortArray(pcm.size / channels * 2).also { output ->
-        for (frame in 0 until pcm.size / channels) {
+    return ShortArray(sampleCount / channels * 2).also { output ->
+        for (frame in 0 until sampleCount / channels) {
             var l = 0.0
             var r = 0.0
             for (channel in 0 until channels) {

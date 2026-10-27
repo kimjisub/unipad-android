@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.viewmodel
 import android.media.AudioManager
 import android.os.SystemClock
 import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.audio.AudioFileFacts
+import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.db.repository.UnipackRepository
@@ -38,6 +40,7 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		val voices = mutableMapOf<Int, Int>()
 		var playCount = 0
 			private set
+		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start() = true
 		override fun stop() {}
 		override fun decode(file: File) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100)
