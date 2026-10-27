@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.viewmodel
 
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.arch.core.executor.TaskExecutor
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.activity.PlayActivity
@@ -50,11 +49,12 @@ class PlayActivityViewModelPlaybackSetupTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        main.runAll()
-        unmockkObject(MidiConnection)
-        Dispatchers.resetMain()
-        ArchTaskExecutor.getInstance().setDelegate(null)
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            unmockkObject(MidiConnection)
+            Dispatchers.resetMain()
+            ArchTaskExecutor.getInstance().setDelegate(null)
+        }
     }
 
     private fun load(square: Boolean, lights: Boolean = true, playable: Boolean = true) {

@@ -18,6 +18,7 @@ import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
+import com.kimjisub.launchpad.viewmodel.stopPlayViewModels
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -74,8 +75,6 @@ fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 	val unobserved = c.unobserved[PLATFORM]
 	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
 	if (c.observation == "auto-map") {
-		val limitation = autoMapLimitation(c, corpus)
-		if (limitation != null) return CaseResult(JsonNull, Outcome("unverified", false, limitation))
 		val actual = observeAutoMap(c, corpus)
 		return CaseResult(actual, classify(c, actual).copy(operationAdapter = c.observation))
 	}
@@ -373,12 +372,16 @@ private class ScenarioRun(
 			}
 			return checkpoints
 		} finally {
-			autoPlay?.stop()
-			vm.ledRunner?.stop()
-			vm.soundRunner?.destroy()
-			vm.viewModelScope.cancel()
-			unmockkStatic(SystemClock::class)
-			Dispatchers.resetMain()
+			stopPlayViewModels(listOf(vm), drain = { scheduler.runCurrent() }, restore = {
+				unmockkStatic(SystemClock::class)
+				Dispatchers.resetMain()
+			}) {
+				autoPlay?.stop()
+				it.autoPlayRunner?.stop()
+				it.ledRunner?.stop()
+				it.soundRunner?.destroy()
+				it.viewModelScope.cancel()
+			}
 		}
 	}
 
@@ -556,7 +559,8 @@ private class ScenarioRun(
 	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
 	 * reads the clock once, at its top, and the next pass's read marks its end. Starting reads it once more
 	 * before the first pass (the start time). A paused pass reads it once before waiting for a signal;
-	 * it no longer reads it a second time to discard the pause's elapsed time.
+	 * it no longer reads it a second time to discard the pause's elapsed time. An interruption
+	 * suspends synchronously without a further clock read, so its actual suspended state acknowledges it.
 	 */
 	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
 		val runner = autoPlay
@@ -566,7 +570,7 @@ private class ScenarioRun(
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
 			val requiredReads = if (runner.playmode) reads else 1
-			waitUntil(what) { scheduler.runCurrent(); watchReads.get() >= requiredReads || !runner.active }
+			waitUntil(what) { scheduler.runCurrent(); watchReads.get() >= requiredReads || !runner.active || runner.suspended }
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		scheduler.runCurrent()

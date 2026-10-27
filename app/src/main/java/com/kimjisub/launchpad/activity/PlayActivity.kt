@@ -45,6 +45,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +59,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -69,6 +73,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -84,6 +90,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
@@ -170,6 +177,7 @@ class PlayActivity : BaseActivity() {
 	private var unipackErrorDialog by mutableStateOf<Pair<String, String>?>(null) // title, message
 	private var unipackErrorIsCritical by mutableStateOf(false)
 	private var showRestartDialog by mutableStateOf(false)
+	private var autoPlayChangeDialog by mutableStateOf<Boolean?>(null)
 
 	// UI - Theme
 	private var theme by mutableStateOf<IThemeResources?>(null)
@@ -290,7 +298,6 @@ class PlayActivity : BaseActivity() {
 		override fun onRequestRelayout() {
 			layoutArea?.let { area ->
 				vm.uiLoaded = false
-				vm.traceLogInit()
 				initLayout(area)
 			}
 		}
@@ -303,6 +310,8 @@ class PlayActivity : BaseActivity() {
 			this,
 			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
+		vm.bindPreferences(p)
+		vm.requestAudioFocus = { audioFocus.request() }
 		vm.uiCallback = uiCallback
 		vm.enable = true
 		reportScreenLayout()
@@ -328,6 +337,22 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				PlayScreen()
+				autoPlayChangeDialog?.let { restore ->
+					AppAlertDialog(
+						onDismissRequest = { autoPlayChangeDialog = null },
+						text = { Text(stringResource(if (restore) string.autoPlayRestoreConfirm else string.autoMappingConfirm)) },
+						confirmButton = {
+							TextButton(enabled = !vm.autoMappingActive, onClick = {
+								autoPlayChangeDialog = null
+								if (restore) vm.restoreAutoPlay() else vm.autoMapping()
+							}) { Text(stringResource(if (restore) string.autoPlayRestoreApply else string.autoMappingApply)) }
+						},
+						dismissButton = {
+							TextButton(onClick = { autoPlayChangeDialog = null }) { Text(stringResource(string.cancel)) }
+						},
+					)
+				}
+
 
 				unipackErrorDialog?.let { (title, message) ->
 					AppAlertDialog(
@@ -711,38 +736,32 @@ class PlayActivity : BaseActivity() {
 	 * gesture whose first finger landed outside it (a palm on the margin silenced every pad).
 	 */
 	private fun Modifier.padTouchInput() = pointerInput(Unit) {
-		awaitPointerEventScope {
-			while (true) {
-				for (change in awaitPointerEvent().changes) {
-					val id = change.id.value
-					val (px, py) = change.position
-					when {
-						change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
-						change.changedToUpIgnoreConsumed() -> padTouch.up(id)
-						change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+		try {
+			awaitPointerEventScope {
+				while (true) {
+					for (change in awaitPointerEvent().changes) {
+						val id = change.id.value
+						val (px, py) = change.position
+						when {
+							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
+							change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+							change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+						}
 					}
 				}
 			}
+		} finally {
+			padTouch.cancel()
 		}
 	}
 
-	/**
-	 * Chain buttons for every pointer, taken in Compose like the pads. Compose stops handing an
-	 * embedded view the press that follows a mouse hover across the screen, so the buttons' own
-	 * clicks never came with a mouse. A chain is selected when the pointer that pressed it is
-	 * released over it, as a tap; a cancelled gesture selects nothing.
-	 */
+	/** Select once at the initial press, like the controller. Moves, lifts and cancels keep it. */
 	private fun Modifier.chainTouchInput(container: () -> ViewGroup?) = pointerInput(Unit) {
 		awaitPointerEventScope {
-			val pressed = HashMap<Long, ChainView>()
 			while (true) {
 				for (change in awaitPointerEvent().changes) {
-					val id = change.id.value
-					if (change.changedToDownIgnoreConsumed()) {
-						container()?.chainAt(change.position)?.let { pressed[id] = it }
-					} else if (change.changedToUpIgnoreConsumed()) {
-						val chain = pressed.remove(id) ?: continue
-						if (!change.isConsumed && container()?.chainAt(change.position) === chain) chain.click()
+					if (change.changedToDownIgnoreConsumed() && !change.isConsumed && !vm.isOptionWindowVisible) {
+						container()?.chainAt(change.position)?.click()
 					}
 				}
 			}
@@ -945,10 +964,37 @@ class PlayActivity : BaseActivity() {
 
 			SectionTitle(string.play_section_tools, sectionColor)
 			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
+			if (vm.scbTraceLog.visible) TraceOptions(textColor, tint, accentColor)
 			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.weight(1f))
 			// Footer Quit removed — header icon is the single Quit entry point.
+		}
+	}
+
+	@Composable
+	private fun TraceOptions(textColor: Color, tint: Color, accentColor: Color) {
+		var classic by remember { mutableStateOf(p.traceLogClassic) }
+		Text(stringResource(string.trace_display_style), color = tint, fontSize = 13.sp,
+			modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp))
+		Column(Modifier.selectableGroup()) {
+			listOf(true to string.trace_numbers, false to string.trace_lines).forEach { (numbers, label) ->
+				Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).focusRing()
+					.selectable(selected = classic == numbers, role = Role.RadioButton) {
+						p.traceLogClassic = numbers
+						classic = numbers
+						uiCallback.updateTraceLogOverlay()
+					}.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+					RadioButton(selected = classic == numbers, onClick = null,
+						colors = RadioButtonDefaults.colors(selectedColor = accentColor, unselectedColor = tint))
+					Text(stringResource(label), color = textColor, fontSize = 14.sp,
+						modifier = Modifier.padding(start = 8.dp))
+				}
+			}
+		}
+		TextButton(onClick = { vm.scbTraceLog.onLongClick?.invoke() },
+			modifier = Modifier.padding(horizontal = 12.dp)) {
+			Text(stringResource(string.trace_clear_all), color = textColor)
 		}
 	}
 
@@ -1013,7 +1059,7 @@ class PlayActivity : BaseActivity() {
 				modifier = Modifier
 					.fillMaxWidth()
 					.focusRing()
-					.clickable { vm.autoMapping() }
+					.clickable { autoPlayChangeDialog = false }
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
@@ -1021,6 +1067,22 @@ class PlayActivity : BaseActivity() {
 				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
+		Column(
+			modifier = Modifier.fillMaxWidth()
+				.clickable(enabled = !vm.autoMappingActive && vm.autoPlayBackupAvailable) { autoPlayChangeDialog = true }
+				.padding(horizontal = 24.dp, vertical = 10.dp),
+		) {
+			Text(
+				stringResource(string.autoPlayRestore), color = textColor, fontSize = 13.sp,
+				modifier = Modifier.semantics {
+					if (vm.autoMappingActive || !vm.autoPlayBackupAvailable) disabled()
+				},
+			)
+			if (!vm.autoPlayBackupAvailable) {
+				Text(stringResource(string.autoPlayNoBackup), color = textColor, fontSize = 11.sp)
+			}
+		}
+
 	}
 
 	@Composable
@@ -1102,6 +1164,7 @@ class PlayActivity : BaseActivity() {
 	private fun initLayout(area: PlayLayout.Area) {
 		try {
 			log("[05] Set Button Layout (squareButton = ${vm.unipack.squareButton})")
+			padTouch.cancel()
 			vm.setupCheckBoxVisibility()
 
 			val buttonSize = PlayLayout.buttonSize(
@@ -1118,6 +1181,7 @@ class PlayActivity : BaseActivity() {
 			chainsRightContainer?.removeAllViews()
 			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
+			classicTraceShown = false
 			setupPads(buttonSize.x, buttonSize.y)
 			setupChains(buttonSize.chain)
 			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
@@ -1372,8 +1436,8 @@ class PlayActivity : BaseActivity() {
 		super.onResume()
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-		// Also retakes focus after a call ends, which resumes autoplay paused by a transient loss.
-		audioFocus.request()
+		// Reconnect output permission without starting the interrupted song.
+		if (!audioFocus.request()) vm.interruptPlayback()
 		launchpadOutputEnabled = true
 		if (vm.uiLoaded) {
 			controller = midiController
@@ -1383,11 +1447,21 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	override fun onWindowFocusChanged(hasFocus: Boolean) {
+		super.onWindowFocusChanged(hasFocus)
+		if (::vm.isInitialized) {
+			if (!hasFocus) {
+				vm.interruptPlayback()
+				padTouch.cancel()
+			} else if (!audioFocus.request()) vm.interruptPlayback()
+		}
+	}
+
 	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
-		vm.soundRunner?.cancelPendingWormholes()
+		vm.interruptPlayback()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false
@@ -1402,10 +1476,7 @@ class PlayActivity : BaseActivity() {
 		vm.screenVisible = true
 	}
 
-	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
-	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
-	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
-	// asks for it again. The LED runner and the audio stream stop until onStart; loaded sounds stay.
+	// Hidden screens also stop the audio stream. Returning reconnects it, but keeps the song suspended.
 	override fun onStop() {
 		super.onStop()
 		audioFocus.abandon()
@@ -1416,6 +1487,7 @@ class PlayActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		vm.requestAudioFocus = null
 		vm.uiCallback = null
 		vm.enable = false
 		midiController?.let { removeController(it) }

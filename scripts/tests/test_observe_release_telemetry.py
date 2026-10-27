@@ -1,0 +1,312 @@
+"""Offline parsing and cleanup checks for the release telemetry observer."""
+import json
+import hashlib
+from pathlib import Path
+import sys
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import Mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import observe_release_telemetry as observe
+
+
+class ParsingTest(unittest.TestCase):
+    def test_literal_punctuation_does_not_hide_following_parameters(self):
+        for note in ("Don't stop", 'say "hello', 'a)b', 'a]b', 'a}b', 'path\\'):
+            with self.subTest(note=note):
+                line = ('Logging event: origin=app,name=play_first_input,'
+                        f'params=Bundle[{{note={note}, input_source=screen, _dbg=1}}]')
+                event, = observe.parse_events(line)
+                self.assertEqual(event['parameters'], {'note': note, 'input_source': 'screen', '_dbg': '1'})
+                self.assertTrue(event['debug'])
+                self.assertEqual(event['raw'], line)
+
+    def test_keeps_every_parameter_and_unknown_nested_values(self):
+        line = ('10-26 11:00:00.846 1400 7527 V FA-SVC : Logging event: origin=app,'
+                'name=play_first_input,params=Bundle[{trigger=pad, input_source=screen, '
+                'future=Bundle[{a=1, b=two}], list=[a, b], ga_screen_id(_si)=-123}]')
+        event, = observe.parse_events(line)
+        self.assertEqual(event['name'], 'play_first_input')
+        self.assertEqual(event['parameters'], {'trigger': 'pad', 'input_source': 'screen',
+                         'future': 'Bundle[{a=1, b=two}]', 'list': '[a, b]', 'ga_screen_id(_si)': '-123'})
+        self.assertIsNone(event['debug'])
+        self.assertEqual(event['raw'], line)
+
+    def test_debug_is_associated_with_the_event_not_a_nearby_event(self):
+        lines = ('FA: Logging event (FE): other, Bundle[{_dbg=1}]\n'
+                 'FA: Logging event (FE): play_first_input, Bundle[{input_source=screen}]\n'
+                 'FA-SVC: Logging event: origin=app,name=play_first_input,'
+                 'params=Bundle[{input_source=midi, debug(_dbg)=1, unknown=keep}]')
+        events = observe.parse_events(lines)
+        self.assertIsNone(events[1]['debug'])
+        self.assertTrue(events[2]['debug'])
+        self.assertEqual(events[2]['parameters']['unknown'], 'keep')
+
+    def test_upload_protocol_text_retains_all_parameters(self):
+        text = '''event {
+  name: play_first_input
+  params {
+    name: input_source
+    string_value: screen
+  }
+  params {
+    name: _dbg
+    int_value: 1
+  }
+  params {
+    name: future
+    double_value: 0.5
+  }
+}'''
+        event, = observe.parse_events(text)
+        self.assertTrue(event['debug'])
+        self.assertEqual(event['parameters'], {'input_source': 'screen', '_dbg': '1', 'future': '0.5'})
+
+    def test_does_not_invent_event_from_truncated_or_unrelated_logs(self):
+        self.assertEqual(observe.parse_events('name=play_first_input,params=Bundle[{input_source=screen'), [])
+        self.assertEqual(observe.parse_events('Something else with play_first_input and _dbg=1'), [])
+
+    def test_crash_keys_and_binary_queue_log(self):
+        result = observe.parse_session('{"screen":"PlayActivity","future":"keep"}',
+                     b'\x00\x00\x00\x16123 MainActivity paused\n\x18125 PlayActivity resumed\n'
+                     b'garbage\n!130 MainActivity destroyed\n')
+        self.assertEqual(result['screen'], 'PlayActivity')
+        self.assertEqual(result['keys']['future'], 'keep')
+        self.assertEqual(result['transitions'], ['123 MainActivity paused', '125 PlayActivity resumed',
+                                                '130 MainActivity destroyed'])
+
+    def test_missing_screen_is_observable_and_malformed_keys_fail(self):
+        self.assertIsNone(observe.parse_session('{}', b'')['screen'])
+        for text in ('[1]', 'invalid'):
+            with self.assertRaises(observe.CheckFailed):
+                observe.parse_session(text, b'')
+
+
+class ScreenTest(unittest.TestCase):
+    def test_chain_touch_space_before_grid_is_not_selected_as_a_pad(self):
+        from release_store_check import Node
+        chain = Node('', '', False, (595, 24, 716, 992), [
+            Node('', f'{observe.PACKAGE}:id/touchSpace', True, (595, 24, 716, 145))])
+        grid = Node('', '', False, (716, 24, 1684, 992), [
+            Node('', f'{observe.PACKAGE}:id/touchSpace', True, (716, 24, 837, 145))])
+        logo = Node('', 'play_logo', False, (2122, 42, 2358, 101))
+        for children in ([chain, grid, logo], [grid, chain, logo]):
+            with self.subTest(chain_first=children[0] is chain):
+                root = Node('', '', False, (0, 0, 2400, 1080), children)
+                pad = observe.first_pad(root)
+                self.assertEqual(pad.bounds, (716, 24, 837, 145))
+                self.assertEqual(pad.center, (776, 84))
+
+    def test_release_grid_container_locates_first_pad_without_view_ids(self):
+        from release_store_check import Node
+        root = Node('', '', False, (0, 0, 2400, 1080), [
+            Node('', '', False, (716, 24, 1684, 992)),
+            Node('', '', False, (595, 24, 716, 992)),
+            Node('', 'play_logo', False, (2122, 42, 2358, 101))])
+        self.assertEqual(observe.first_pad(root).center, (776, 84))
+        root.children.pop()
+        self.assertIsNone(observe.first_pad(root))
+
+    def test_an_unrelated_square_is_not_accepted_as_a_grid(self):
+        from release_store_check import Node
+        root = Node('', '', False, (0, 0, 2400, 1080), [
+            Node('', '', False, (100, 100, 900, 900)),
+            Node('', 'play_logo', False, (2122, 42, 2358, 101))])
+        self.assertIsNone(observe.first_pad(root))
+
+
+class PreparationTest(unittest.TestCase):
+    def test_fixture_uses_sounds_directory_and_preserves_app_owner(self):
+        adb = Mock()
+        def shell(*args, **kwargs):
+            if args[0] == 'dumpsys':
+                return 'versionCode=120\n versionName=4.2.1\n flags=[ HAS_CODE ]'
+            if args[0] == 'pm':
+                return 'package:/data/app/base.apk'
+            if args[0] == 'sha256sum':
+                return hashlib.sha256(b'apk').hexdigest() + '  /data/app/base.apk'
+            if args[0] == 'stat':
+                return '10207:10207'
+            if args[:2] == ('getprop', observe.DEBUG_PROP):
+                return observe.PACKAGE
+            return ''
+        adb.shell.side_effect = shell
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'apk')
+            observer = observe.Observer(adb, Mock(), apk)
+            observer.prepare()
+        base = f'/data/user/0/{observe.PACKAGE}/files/UniPack'
+        pushes = [call.args for call in adb.run.call_args_list if call.args[0] == 'push']
+        self.assertTrue(any(args[2] == f'{base}/{observe.PACK}/sounds/pcm.wav' for args in pushes))
+        self.assertTrue(any(args[2] == f'{base}/{observe.PACK}/keySound' for args in pushes))
+        self.assertIn(unittest.mock.call('chown', '-R', '10207:10207', base), adb.shell.call_args_list)
+        self.assertIn(unittest.mock.call('restorecon', '-RF', base), adb.shell.call_args_list)
+
+    def test_first_install_repairs_files_directory_before_the_app_runs(self):
+        adb = Mock()
+        files = f'/data/user/0/{observe.PACKAGE}/files'
+        pack = f'{files}/UniPack'
+        state = {}
+        def shell(*args, **kwargs):
+            if args[0] == 'dumpsys':
+                return 'versionCode=120\n versionName=4.2.1\n flags=[ HAS_CODE ]'
+            if args[0] == 'pm':
+                return 'package:/data/app/base.apk'
+            if args[0] == 'sha256sum':
+                return hashlib.sha256(b'apk').hexdigest() + '  /data/app/base.apk'
+            if args[0] == 'stat':
+                return '10207:10207'
+            if args[:2] == ('getprop', observe.DEBUG_PROP):
+                return observe.PACKAGE
+            if args[:2] == ('mkdir', '-p'):
+                # A root adb shell creates each missing ancestor with its own
+                # owner, mode and label, even when the leaf is later repaired.
+                for path in (files, pack):
+                    state.setdefault(path, dict(owner='0:0', mode='777', labelled=False))
+            if args[0] in ('chown', 'chmod', 'restorecon'):
+                recursive = '-R' in args or '-RF' in args
+                for path, values in state.items():
+                    if path == args[-1] or (recursive and path.startswith(args[-1] + '/')):
+                        if args[0] == 'chown':
+                            values['owner'] = args[-2]
+                        elif args[0] == 'chmod':
+                            values['mode'] = '700' if args[-2] == 'u=rwX,go=' else args[-2]
+                        else:
+                            values['labelled'] = True
+            if args[:2] == ('ls', '-ldZ'):
+                return 'app-owned private directories with app security categories'
+            return ''
+        adb.shell.side_effect = shell
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'apk')
+            observer = observe.Observer(adb, Mock(), apk)
+            observer.prepare()
+        self.assertEqual(set(state), {files, pack})
+        for path, values in state.items():
+            with self.subTest(path=path):
+                self.assertEqual(values, dict(owner='10207:10207', mode='700', labelled=True))
+        self.assertEqual(observer.result['fixture_directory_listing'],
+                         'app-owned private directories with app security categories')
+
+    def test_different_installed_apk_is_not_reported_as_the_candidate(self):
+        adb = Mock()
+        adb.shell.side_effect = lambda *args, **kwargs: ('package:/data/app/base.apk' if args[0] == 'pm' else 'different')
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'apk')
+            with self.assertRaisesRegex(observe.CheckFailed, 'does not match'):
+                observe.Observer(adb, Mock(), apk).prepare()
+
+    def test_root_refusal_stops_before_install_or_app_input(self):
+        adb, ui = Mock(), Mock()
+        adb.root.side_effect = observe.CheckFailed('root unavailable')
+        with self.assertRaisesRegex(observe.CheckFailed, 'root unavailable'):
+            observe.Observer(adb, ui, Path('candidate.apk')).prepare()
+        adb.run.assert_not_called()
+        ui.launch.assert_not_called()
+
+
+class CollectionTest(unittest.TestCase):
+    def test_retains_unknown_input_source_and_debug_flag_from_upload(self):
+        adb = Mock()
+        adb.shell.side_effect = lambda *args, **kwargs: ('new' if args[0] == 'ls' else '{"screen":"MainActivity"}')
+        log = ('Logging event: origin=app,name=play_first_input,'
+               'params=Bundle[{input_source=future-controller, new_value=keep, _dbg=1}]')
+        adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'
+        observer = observe.Observer(adb, Mock(), Path('candidate.apk'), timeout=0)
+        observer.sessions_path, observer.previous_sessions = '/sessions', {'old'}
+        observer.collect()
+        self.assertEqual(observer.result['events'][0]['parameters']['input_source'], 'future-controller')
+        self.assertTrue(observer.result['first_input_debug'])
+        self.assertEqual(observer.result['sessions'][0]['id'], 'new')
+
+    def test_does_not_accept_a_stale_session_or_an_event_without_input_source(self):
+        for log, previous in (
+                ('Logging event: origin=app,name=play_first_input,params=Bundle[{_dbg=1}]', set()),
+                ('Logging event: origin=app,name=play_first_input,params=Bundle[{input_source=screen}]', {'old'})):
+            adb = Mock()
+            adb.shell.side_effect = lambda *args, **kwargs: ('old' if args[0] == 'ls' else '{"screen":"MainActivity"}')
+            adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'
+            observer = observe.Observer(adb, Mock(), Path('candidate.apk'), timeout=0)
+            observer.sessions_path, observer.previous_sessions = '/sessions', previous
+            with self.assertRaisesRegex(observe.CheckFailed, 'Not observed'):
+                observer.collect()
+
+
+class CleanupTest(unittest.TestCase):
+    def run_observer(self, failure=None, cleanup_failure=False, ui=None):
+        props = {observe.DEBUG_PROP: 'old.app', observe.LOG_PROP: 'WARN'}
+        adb = Mock()
+        def shell(*args, **kwargs):
+            if args[0] == 'getprop':
+                return props.get(args[1], '')
+            if args[0] == 'setprop':
+                if cleanup_failure and args[1:] == (observe.DEBUG_PROP, '.none.'):
+                    raise observe.CheckFailed('reset refused')
+                props[args[1]] = args[2]
+            return ''
+        adb.shell.side_effect = shell
+        observer = observe.Observer(adb, ui if ui is not None else Mock(), Path('candidate.apk'), timeout=0)
+        observer.prepare = Mock(side_effect=failure)
+        observer.drive = Mock()
+        observer.collect = Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            code = observe.run_and_record(observer, Path(directory) / 'result.json')
+            result = json.loads((Path(directory) / 'result.json').read_text())
+        return code, result, props, adb
+
+    def test_success_resets_and_reads_both_properties(self):
+        code, result, props, _ = self.run_observer()
+        self.assertEqual(code, 0)
+        self.assertEqual(props, {observe.DEBUG_PROP: '.none.', observe.LOG_PROP: 'WARN'})
+        self.assertEqual(result['cleanup']['analytics_debug'], '.none.')
+        self.assertEqual(result['cleanup']['log_tag'], 'WARN')
+
+    def test_real_screen_close_response_controls_cleanup_result(self):
+        for returncode, success in ((1, False), (0, False), (1, True), (0, True)):
+            with self.subTest(returncode=returncode, success=success):
+                answer = dict(success=success)
+                if not success:
+                    answer['error'] = 'close failed'
+                run = Mock(return_value=subprocess.CompletedProcess(
+                    [], returncode, json.dumps(answer).encode(), b''))
+                ui = observe.Screen(Path('devices.py'), 'rented-device', 'generation', Path('.'), run=run)
+                code, result, props, adb = self.run_observer(ui=ui)
+                failed = returncode != 0 or not success
+                self.assertEqual(code, 1 if failed else 0)
+                self.assertEqual(result['exit_code'], code)
+                self.assertEqual(len(result['cleanup']['errors']), 1 if failed else 0)
+                if failed:
+                    self.assertIn('UI close:', result['cleanup']['errors'][0])
+                    self.assertIn(json.dumps(answer), result['cleanup']['errors'][0])
+                self.assertEqual(result['status'], 'observed')
+                self.assertIn('finished_at', result)
+                self.assertEqual(props, {observe.DEBUG_PROP: '.none.', observe.LOG_PROP: 'WARN'})
+                adb.shell.assert_any_call('am', 'force-stop', observe.PACKAGE)
+                self.assertEqual(result['cleanup']['analytics_debug'], '.none.')
+                self.assertEqual(result['cleanup']['log_tag'], 'WARN')
+                self.assertEqual(run.call_count, 1)
+                self.assertEqual(run.call_args.args[0], ui.command + ['close'])
+
+    def test_failure_and_interrupt_restore_properties_and_keep_failure(self):
+        for error in (observe.CheckFailed('root unavailable'), RuntimeError('UI failed'), KeyboardInterrupt()):
+            code, result, props, _ = self.run_observer(error)
+            self.assertNotEqual(code, 0)
+            self.assertEqual(props[observe.DEBUG_PROP], '.none.')
+            self.assertEqual(props[observe.LOG_PROP], 'WARN')
+            self.assertEqual(result['status'], 'not_observed')
+
+    def test_reset_failure_is_nonzero_and_still_restores_log_tag(self):
+        code, result, props, adb = self.run_observer(cleanup_failure=True)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(props[observe.LOG_PROP], 'WARN')
+        self.assertTrue(result['cleanup']['errors'])
+        self.assertIn(unittest.mock.call('getprop', observe.DEBUG_PROP), adb.shell.call_args_list)
+
+
+if __name__ == '__main__':
+    unittest.main()

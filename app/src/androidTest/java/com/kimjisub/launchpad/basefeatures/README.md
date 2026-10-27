@@ -104,8 +104,8 @@ sink; this suite does not change that file.
 | 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `padPressedWhileTheClosedOptionsWindowFadesOutPlays`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `HeldPadLeavingScreenTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, a pad pressed while the closed options window still fades out, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, lifting or cancelling a finger after the chain changed, for sounds and keyLED loops (the shared chain-release cases), a held pad released when the play screen pauses behind another activity or Home hides it, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks`, `stepPracticeFollowsHintsAcrossChainsAndEndsOnlyAfterTheLastPad` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, a pad whose sound moves to a chain the pack lacks, and a whole step practice: a short four-pad sequence over two chains is followed by pressing each hinted pad and the hinted chain button. Practice does not move on a press on the wrong chain or an unhinted pad, and only the last pad ends it (mode off, runner stopped, controls gone). Packs with long sequences are not stepped through to the end. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
-| 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh`, `deleteConfirmationIgnoresRightAndMiddleClicksButNotLeftClicks` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark; injected right/middle mouse clicks on the confirmation do not delete, a left click still acts. Real catalog/server availability separate. |
-| 7. Language, skin, rotation, bars/cutout, keyboard | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout`, `mainScreenButtonsStayClearOfSideNavigationBarAndCutout`, `settingsScreenStaysClearOfSideNavigationBarAndCutout`, `themeScreenStaysClearOfSideNavigationBarAndCutout`, `transferScreenStaysClearOfSideNavigationBarAndCutout`, `midiSelectScreenStaysClearOfSideNavigationBarAndCutout`, `settingsScreenEndsAboveTabletNavigationBar`, `themeScreenEndsAboveTabletNavigationBar`, `transferScreenEndsAboveTabletNavigationBar`, `midiSelectScreenEndsAboveTabletNavigationBar`, `emptyLibraryGuideStaysClearOfGestureNavigation`, `mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt`, `mainScreenSearchResultsScrollAboveKeyboard`, `mainScreenNoSearchResultsScrollAboveKeyboard`, `transferScreenSearchResultsScrollAboveKeyboardOnTablet` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. The main, settings (both categories), theme, transfer and MIDI device screen tests turn on three-button navigation and a punch-hole cutout themselves (`DisplayOverlays`, restored afterwards) and check every control on screen lies clear of the side bar and the cutout in both landscape rotations. The tablet tests turn on three-button navigation and lower the display density until the smallest width is 720 dp and lock the display in landscape (`wm density`, `wm user-rotation`, restored afterwards), so the bar, or the taskbar holding its buttons, runs along the bottom in landscape; they drag every list on the settings (both categories), theme, transfer (30 packs) and MIDI device screens to its end and check every control then lies above the bar. The empty library test turns on gesture navigation and the largest font size (2.0, restored afterwards), scrolls the guide to its end and checks its buttons stay above the gesture handle. The search keyboard covers the main screen's left panel without resizing it; dragging the results in the strip left above the keyboard brings the last row, and the "no results" clear button, above it. On the tablet-sized transfer screen a search matching ten of the packs likewise leaves the last match draggable above the keyboard. On a landscape phone that keyboard reaches up to the transfer screen's search field and leaves none of its list in view, which this suite does not change. Below API 35 the main window is not edge-to-edge and is never told the keyboard's height, so the keyboard still covers the end of the list there; those three keyboard tests check that only from API 35. The play screen rotation test still runs in the device's own navigation mode and cutout profile, so three-button navigation on the play screen and other form factors need repeated device configurations. |
+| 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh`, `deleteConfirmationIgnoresRightAndMiddleClicksButNotLeftClicks` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark; injected right/middle mouse clicks on the confirmation do not delete, a left click still acts. The real Store list and one real download on the release candidate: `scripts/release_store_check.py` (see below). |
+| 7. Language, skin, rotation, bars/cutout, keyboard | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout`, `mainScreenButtonsStayClearOfSideNavigationBarAndCutout`, `settingsScreenStaysClearOfSideNavigationBarAndCutout`, `themeScreenStaysClearOfSideNavigationBarAndCutout`, `transferScreenStaysClearOfSideNavigationBarAndCutout`, `midiSelectScreenStaysClearOfSideNavigationBarAndCutout`, `settingsScreenEndsAboveTabletNavigationBar`, `themeScreenEndsAboveTabletNavigationBar`, `transferScreenEndsAboveTabletNavigationBar`, `midiSelectScreenEndsAboveTabletNavigationBar`, `emptyLibraryGuideStaysClearOfGestureNavigation`, `mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt`, `mainScreenSearchResultsScrollAboveKeyboard`, `mainScreenNoSearchResultsScrollAboveKeyboard`, `transferScreenSearchResultsScrollAboveKeyboardOnTablet` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. The main, settings (both categories), theme, transfer and MIDI device screen tests turn on three-button navigation and a punch-hole cutout themselves (`DisplayOverlays`, restored afterwards) and check every control on screen lies clear of the side bar and the cutout in both landscape rotations. The tablet tests turn on three-button navigation and lower the display density until the smallest width is 720 dp and lock the display in landscape (`wm density`, `wm user-rotation`, restored afterwards), so the bar, or the taskbar holding its buttons, runs along the bottom in landscape; they drag every list on the settings (both categories), theme, transfer (30 packs) and MIDI device screens to its end and check every control then lies above the bar. The empty library test turns on gesture navigation and the largest font size (2.0, restored afterwards), scrolls the guide to its end and checks its buttons stay above the gesture handle. The search keyboard covers the main screen's left panel without resizing it; dragging the results in the strip left above the keyboard brings the last row, and the "no results" clear button, above it. On the tablet-sized transfer screen a search matching ten of the packs likewise leaves the last match draggable above the keyboard. On a landscape phone that keyboard reaches up to the transfer screen's search field and leaves none of its list in view, which this suite does not change. The main and transfer windows explicitly draw edge-to-edge and request `adjustResize`. Below API 30 they hide the status bar when created and whenever their window regains focus, without `FLAG_FULLSCREEN`, which otherwise blocks the keyboard insets needed by Compose. Their lists reserve the keyboard space while the panels remain full height. The four keyboard tests and `SearchKeyboardLayoutTest` can also run separately below API 33 (verified on API 29); they do not require the language/Downloads APIs used by the complete suite. `SearchWindowReturnTest` checks the status bar remains hidden after returning from settings, playing and the system file picker on the main screen, and after the file picker or a dialog on the transfer screen. It reads the actual system status-bar window below API 30. The keyboard tests share the actual keyboard window boundary, independent of the insets received by the app. `SearchKeyboardLayoutTest` also requires the complete import button to remain reachable by physical drags at font scales 1.0 and 2.0, checks the search actions, dismissal/reopening and closing search, and restores an originally unset font scale. The play screen rotation test still runs in the device's own navigation mode and cutout profile, so three-button navigation on the play screen and other form factors need repeated device configurations. |
 | 8. Background/lock/return while playing | `AudioFocusPolicyTest` covers focus policy; transfer lifecycle test covers a different screen | `playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain` | Partial: Home, screen off/on, silence on leave, same activity/viewmodel/process/chain and a new sound request after returning. OS process eviction/OEM lock/power policies need hardware/long-duration checks. |
 
 ## Touch cancellation regression (base feature 3)
@@ -341,6 +341,9 @@ Not established by these tests:
 
 ## Device settings the screen tests change
 
+Both repository test scripts reset leftover font/animation scales and require app-process
+confirmation before tests; see [device preparation and results](../../../../../../../../scripts/DEVICE_SETTINGS.md).
+
 `DisplayOverlays` switches the emulated navigation mode and display cutout,
 `emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size, and the tablet tests in
 `AppearanceAndInsetsTest` lower the display density and lock the display in landscape; each is
@@ -437,17 +440,65 @@ candidate gate with a debug pass. A future standalone external UIAutomator test 
 black-box candidate screens without using in-process injection; it cannot observe internal sound
 requests or replace production repositories in an unchanged candidate.
 
+## Release candidate against the real Store
+
+`scripts/release_store_check.py` drives the installed release app from outside, on one rented,
+rooted, online emulator on API 33 or newer (no instrumentation, so the candidate is not rebuilt). It reads
+the same Store list the app subscribes to and checks that the Store screen counts and shows every
+listed pack (title and producer), downloads one pack, by default the smallest file, sized with HEAD
+requests that download nothing, and checks that a first download on a fresh install asks for the
+notification permission, the app shows the pack as downloaded, its folder holds `info`, the
+library lists it, and its database record starts with no bookmark, no plays and no last-played
+date. It refuses a debuggable build, and a pack already in the library or database, before
+changing anything on the device.
+
+Each run adds one to the downloaded pack's public download count, so run it once per candidate,
+on a fresh installation (the library is not scrolled to find the new pack). Packs without a code,
+packs shown with the same title and producer as another, and packs the app would fetch through the
+legacy download function are not picked by default. For the run it sets the app language to English
+and marks the app's analytics as debug events (`debug.firebase.analytics.app`). Afterwards the
+language is set back, and the property is set back to its earlier value or, when it had none, to
+`.none.`, Firebase's off value (a system property cannot be removed). The downloaded pack and the
+permission answer stay. The verdict is in `<out>/store-check.json` whatever stops the run, with
+screenshots and screen snapshots of each step beside it.
+
+The screen is used only through the device rental's UI entry (`devices.py ui DEVICE --generation
+TOKEN -- ...`, agent-device in the rental's own session): launching the app, snapshots, presses, the
+list drags (600 ms pans), Back and screenshots. When the check ends, passed or failed, it sets the
+language and analytics property back and then closes that session; each step runs even if the one
+before it fails or times out, and such a failure is listed in `cleanup_errors` in `store-check.json`
+without changing the verdict. Returning the rental (`devices.py down`) then retires the session. A UI
+command is given longer than the rental's own per-command limit, so the rental ends a stuck command
+itself. The check needs a device rental that offers this UI entry; without one it cannot run. adb is kept for inspecting and
+preparing the app, never for input: root, API level, package flags and notification permission state,
+setting and restoring the app language and analytics property, stopping the app before launch, finding
+the pack folders, and copying the app database to read the pack's record. Reading the list stops after
+one screen per listed pack plus three; a list still showing new rows then fails with its last screen
+saved as `store-list-unsettled`.
+
+```bash
+bundletool build-apks --mode=universal --bundle=app-release.aab --output=candidate.apks
+unzip -o candidate.apks universal.apk
+python3 devices.py up android --fresh                     # prints DEVICE
+GENERATION=$(python3 devices.py lease DEVICE | python3 -c 'import json,sys; print(json.load(sys.stdin)["generation"])')
+python3 devices.py ui DEVICE --generation "$GENERATION" -- install com.kimjisub.launchpad "$PWD/universal.apk"
+python3 scripts/release_store_check.py --serial DEVICE --generation "$GENERATION" \
+  --devices-tool /path/to/devices.py --out store-check
+python3 devices.py down
+```
+
 ## Things the emulator cannot establish
 
 - USB Launchpad: use a physical supported controller, verify permission/discovery, simultaneous pads,
   chain selection, LED on/off and detach/reconnect on the exact candidate.
 - Audible output/latency: perform a silent-safe headphone check, including sample timing and recovery
   after background/focus loss. A recorded play request proves only that the app asked to play.
-- API 24–32: this suite's platform language/Downloads APIs require API 33+. Existing unit tests still
+- API 24–32: the complete suite's platform language/Downloads APIs require API 33+. The standalone
+  search keyboard tests are checked separately on API 29; other cases and existing unit tests still
   apply; run candidate startup/import/playback on oldest supported real OS versions. No `@Ignore`
   or conditional pass hides this limitation.
 - OEM process eviction, long locks, low-memory conditions, tablets and cutouts: run separate candidate
   checks on those devices/configurations. The rotation test asserts only insets actually present on
   the device under test; a rectangular emulator cannot prove behavior around a notch.
-- Live store servers: run read-only catalog availability checks separately and
-  use an explicitly designated synthetic download if end-to-end server verification is needed.
+- Live store servers: this suite never contacts them; the release candidate check above reads the
+  real list and downloads one pack.

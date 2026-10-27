@@ -88,8 +88,8 @@
 	<string name="stepPractice">Schritt</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback-Licht</string>
-	<string name="traceLog">Ablaufprotokoll</string>
-	<string name="traceLogClear">Ablaufprotokoll wurde zurückgesetzt.</string>
+	<string name="traceLog">Spuraufzeichnung</string>
+	<string name="traceLogClear">Alle Spuren wurden gelöscht.</string>
 	<string name="record">Aufnahme</string>
 	<string name="hideUI">UI ausblenden</string>
 	<string name="watermark">Wasserzeichen</string>
@@ -178,6 +178,9 @@
 	<string name="sort_play_count">Wiedergaben</string>
 	<string name="sort_last_opened_date">Zuletzt geöffnet</string>
 	<string name="sort_download_date">Download-Datum</string>
+	<string name="sort_order">Sortierreihenfolge</string>
+	<string name="sort_ascending">Aufsteigend</string>
+	<string name="sort_descending">Absteigend</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad-Größe</string>
@@ -285,8 +288,22 @@
 	<string name="backup_recovery_later">Später</string>
 	<string name="settings_play">Spielen</string>
 	<string name="trace_log_classic">Tipp-Reihenfolge als Zahlen auf Pads</string>
-	<string name="trace_log_classic_desc">Bei eingeschaltetem Ablaufprotokoll im Spiel wird die Reihenfolge der Berührungen als Zahlen auf den Pads statt als Linien und Punkte angezeigt</string>
+	<string name="trace_log_classic_desc">Bei eingeschalteter Spuraufzeichnung wird die Reihenfolge der Berührungen als Zahlen auf den Pads statt als Linien und Punkte angezeigt</string>
 	<string name="slide_mode">Über Pads streichen</string>
 	<string name="slide_mode_desc">Wenn ein Finger auf ein Pad gezogen wird, klingt dieses Pad und das verlassene hört auf</string>
 	<string name="no_app_for_link">Auf diesem Gerät kann keine App diesen Link öffnen.</string>
+	<string name="trace_display_style">Spurdarstellung</string>
+	<string name="trace_numbers">Zahlen</string>
+	<string name="trace_lines">Linien und Punkte</string>
+	<string name="trace_clear_all">Alle Spuren löschen</string>
+	<string name="autoMappingConfirm">Autoplay anpassen? Wartezeiten werden durch Klanglängen ersetzt. Das aktuelle Autoplay wird gesichert. Gleichzeitig gedrückte Pads bleiben gleichzeitig.</string>
+	<string name="autoMappingApply">Anpassen</string>
+	<string name="autoMappingSaved">Autoplay gespeichert. Die vorherige Version kann im Menü wiederhergestellt werden.</string>
+	<string name="autoMappingFailed">Speichern fehlgeschlagen. Das bisherige Autoplay bleibt unverändert.</string>
+	<string name="autoPlayRestore">Vorheriges Autoplay wiederherstellen</string>
+	<string name="autoPlayNoBackup">Keine gespeicherte Sicherung</string>
+	<string name="autoPlayRestoreConfirm">Vorherige Sicherung wiederherstellen? Sie wird mit dem aktuellen Autoplay getauscht. Der Tausch lässt sich wiederholen.</string>
+	<string name="autoPlayRestoreApply">Wiederherstellen</string>
+	<string name="autoPlayRestored">Vorheriges Autoplay wiederhergestellt. Im Menü kann erneut getauscht werden.</string>
+	<string name="autoPlayRestoreFailed">Wiederherstellung fehlgeschlagen. Autoplay und Sicherung bleiben unverändert.</string>
 </resources>

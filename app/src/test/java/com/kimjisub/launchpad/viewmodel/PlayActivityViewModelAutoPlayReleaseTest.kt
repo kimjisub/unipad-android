@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
+import android.media.AudioManager
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
@@ -56,10 +57,11 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 	}
 
 	@After fun tearDown() {
-		if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-		main.runAll()
-		unmockkStatic(SystemClock::class)
-		Dispatchers.resetMain()
+		clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+			main.runAll()
+			unmockkStatic(SystemClock::class)
+			Dispatchers.resetMain()
+		}
 	}
 
 	private fun await(check: () -> Boolean) {
@@ -99,7 +101,8 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertEquals(1, held.size)
 
 		if (controllerFirst) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
-		assertEquals("Releasing one input must keep the shared loop", held, engine.voices)
+		assertEquals("Only the input that started the current loop may stop it",
+			if (controllerFirst) emptyMap<Int, Int>() else held, engine.voices)
 		assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
 
 		if (controllerFirst) vm.padTouch(0, 0, false) else vm.controllerPadTouch(0, 0, false)
@@ -158,11 +161,11 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		)
 	}
 
-	@Test fun controllerReleaseKeepsThePadHeldOnScreen() = sharedPadRelease(controllerFirst = true, autoplay = false)
+	@Test fun controllerReleaseStopsItsLoopAndKeepsTheScreenFeedback() = sharedPadRelease(controllerFirst = true, autoplay = false)
 
 	@Test fun screenReleaseKeepsThePadHeldOnController() = sharedPadRelease(controllerFirst = false, autoplay = false)
 
-	@Test fun lastScreenReleaseOverridesAutoplayAfterControllerRelease() = sharedPadRelease(controllerFirst = true, autoplay = true)
+	@Test fun controllerReleaseStopsItsLoopWhileScreenAndAutoplayRemainHeld() = sharedPadRelease(controllerFirst = true, autoplay = true)
 
 	@Test fun lastControllerReleaseOverridesAutoplayAfterScreenRelease() = sharedPadRelease(controllerFirst = false, autoplay = true)
 
@@ -284,6 +287,188 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		val manual = engine.voices.toMap()
 		vm.switchPlayMode(PlayMode.None)
 		assertEquals(manual, engine.voices)
+	}
+
+	@Test fun interruptionReleasesEveryInputAndFiniteSound() {
+		start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n1 1 3 a.wav 3\n")
+		vm.scbFeedbackLight.setChecked(true)
+		vm.padTouch(0, 1, true)
+		vm.controllerPadTouch(0, 2, true)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		assertEquals(emptyMap<Int, Int>(), engine.voices)
+		assertNull("Screen presses must be released", vm.channelManager.get(0, 1))
+		assertNull("Controller presses must be released", vm.channelManager.get(0, 2))
+		val plays = engine.playCount
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertEquals(plays, engine.playCount)
+		assertTrue(!vm.isAutoPlayPlaying)
+	}
+
+	@Test fun deniedManualResumeKeepsThePositionAndNeedsANewRequest() {
+		start()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		val progress = vm.autoPlayRunner!!.progress
+		val plays = engine.playCount
+		vm.requestAudioFocus = { false }
+		vm.autoPlayResume()
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertTrue(vm.autoPlayRunner!!.suspended)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertEquals(progress, vm.autoPlayRunner!!.progress)
+		vm.requestAudioFocus = { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN); true }
+		vm.autoPlayResume()
+		assertTrue(vm.isAutoPlayPlaying)
+		assertTrue(!vm.autoPlayRunner!!.suspended)
+		main.runAll()
+		assertEquals("Resume does not recreate the old press", plays, engine.playCount)
+	}
+
+	private fun manualPadAfterPermanentFocusLoss(controller: Boolean) {
+		start(autoplay = false)
+		var requests = 0
+		vm.requestAudioFocus = {
+			requests++
+			vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+			true
+		}
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+		if (controller) vm.controllerPadTouch(0, 0, true) else vm.padTouch(0, 0, true)
+		assertEquals("The explicit pad press requests audio again", 1, requests)
+		assertEquals("The first press after focus loss must sound", 1, engine.playCount)
+		if (controller) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
+		assertTrue(engine.voices.isEmpty())
+		assertEquals("Release does not request audio", 1, requests)
+	}
+
+	@Test fun screenPadAfterPermanentFocusLossRequestsAudioAndPlays() =
+		manualPadAfterPermanentFocusLoss(controller = false)
+
+	@Test fun controllerPadAfterPermanentFocusLossRequestsAudioAndPlays() =
+		manualPadAfterPermanentFocusLoss(controller = true)
+
+	@Test fun deniedPadPressShowsNoticeAndRequiresAnotherPress() {
+		start(autoplay = false)
+		val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
+		vm.uiCallback = ui
+		var requests = 0
+		vm.requestAudioFocus = { requests++; false }
+		vm.interruptPlayback()
+		vm.padTouch(0, 0, true)
+		vm.padTouch(0, 0, false)
+		verify(exactly = 1) { ui.showToast(com.kimjisub.launchpad.R.string.playback_audio_unavailable) }
+		assertEquals(1, requests)
+		assertEquals(0, engine.playCount)
+		assertNull(vm.channelManager.get(0, 0))
+		vm.requestAudioFocus = {
+			requests++
+			vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+			true
+		}
+		main.runAll()
+		assertEquals("Granting a later request cannot recreate a rejected press", 0, engine.playCount)
+		vm.padTouch(0, 0, true)
+		assertEquals(2, requests)
+		assertEquals(1, engine.playCount)
+		vm.padTouch(0, 0, false)
+		assertTrue(engine.voices.isEmpty())
+	}
+
+	@Test fun manualPadReacquiresAudioWithoutResumingTheInterruptedSong() {
+		start()
+		vm.interruptPlayback()
+		val progress = vm.autoPlayRunner!!.progress
+		val plays = engine.playCount
+		vm.requestAudioFocus = {
+			vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+			true
+		}
+		vm.padTouch(0, 0, true)
+		assertEquals(plays + 1, engine.playCount)
+		assertTrue("Only Play can resume the song", vm.autoPlayRunner!!.suspended)
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.AutoPlay, vm.playMode)
+		assertEquals(progress, vm.autoPlayRunner!!.progress)
+		vm.padTouch(0, 0, false)
+	}
+
+	@Test fun automaticInputCannotRequestAudioAfterFocusLoss() {
+		start(autoplay = false)
+		var requests = 0
+		vm.requestAudioFocus = { requests++; true }
+		vm.interruptPlayback()
+		vm.autoPlayPadTouch(0, 0, true, SystemClock.elapsedRealtime())
+		assertEquals(0, requests)
+		assertEquals(0, engine.playCount)
+	}
+
+	@Test fun padWithAudioFocusDoesNotRequestItAgain() {
+		start(autoplay = false)
+		var requests = 0
+		vm.requestAudioFocus = { requests++; true }
+		vm.padTouch(0, 0, true)
+		vm.padTouch(0, 0, false)
+		assertEquals(0, requests)
+		assertEquals(1, engine.playCount)
+	}
+
+	@Test fun deniedStartDoesNotLaunchWhenPermissionLaterReturns() {
+		start(autoplay = false)
+		vm.requestAudioFocus = { false }
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!vm.autoPlayRunner!!.active)
+		assertEquals(PlayMode.None, vm.playMode)
+		assertEquals(0, engine.playCount)
+	}
+
+	@Test fun replacingASuspendedRunnerCannotResumeItOnPermission() {
+		start()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		val old = vm.autoPlayRunner!!
+		vm.initAutoPlayRunner()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!old.active)
+		assertTrue(!vm.autoPlayRunner!!.active)
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertTrue(engine.voices.isEmpty())
+	}
+
+	@Test fun deniedModeChangeSuspendsTheCurrentPlayback() {
+		start()
+		vm.requestAudioFocus = { false }
+		vm.switchPlayMode(PlayMode.GuidePlay)
+		assertTrue("Denied output must suspend the old playback too", !vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.AutoPlay, vm.playMode)
+		assertTrue(vm.autoPlayRunner!!.suspended)
+		assertTrue(engine.voices.isEmpty())
+	}
+
+	@Test fun onePlayRequestResumesAManuallyPausedAutoplayAfterInterruption() {
+		start()
+		vm.autoPlayPause()
+		assertTrue(!vm.autoPlayRunner!!.playmode)
+		vm.interruptPlayback()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		vm.autoPlayResume()
+		assertTrue("One explicit Play request must start the preserved auto-play mode", vm.autoPlayRunner!!.playmode)
+		assertTrue(vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.AutoPlay, vm.playMode)
+	}
+
+	@Test fun naturalEndKeepsTheLoopHeldByThePlayer() {
+		start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n", sequence = "on 1 1\ndelay 100\n", autoplay = false)
+		vm.padTouch(0, 1, true)
+		val manualVoice = engine.playCount
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		await { vm.playMode == PlayMode.None && !vm.autoPlayRunner!!.active }
+		assertEquals("Only autoplay's unmatched press is released at the end", mapOf(manualVoice to -1), engine.voices)
+		vm.padTouch(0, 1, false)
+		assertTrue(engine.voices.isEmpty())
 	}
 
 	@Test fun naturalEndReleasesAnUnmatchedAutoplayPress() {

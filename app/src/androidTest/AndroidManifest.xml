@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Gradle applies its runner overrides to the first instrumentation element. -->
+    <instrumentation
+        android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:targetPackage="com.kimjisub.launchpad.dev" />
+    <!-- A preparation probe, separate from JUnit discovery and the test suites. -->
+    <instrumentation
+        android:name="com.kimjisub.launchpad.DeviceSettingsProbe"
+        android:targetPackage="com.kimjisub.launchpad.dev" />
+</manifest>

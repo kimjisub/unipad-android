@@ -88,8 +88,8 @@
 	<string name="stepPractice">အဆင့်</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">တုံ့ပြန်မှုမီး</string>
-	<string name="traceLog">ခြေရာခံမှတ်တမ်း</string>
-	<string name="traceLogClear">ခြေရာခံမှတ်တမ်း ပြန်လည်သတ်မှတ်ပြီး။</string>
+	<string name="traceLog">ခြေရာ မှတ်တမ်းတင်ခြင်း</string>
+	<string name="traceLogClear">ခြေရာအားလုံးကို ဖျက်ပြီးပါပြီ။</string>
 	<string name="record">အသံဖမ်း</string>
 	<string name="hideUI">UI ဖျောက်</string>
 	<string name="watermark">ရေစာ</string>
@@ -169,6 +169,9 @@
 	<string name="sort_play_count">ဖွင့်သည့်အကြိမ်</string>
 	<string name="sort_last_opened_date">နောက်ဆုံးဖွင့်သည့်ရက်</string>
 	<string name="sort_download_date">ဒေါင်းလုဒ်ရက်စွဲ</string>
+	<string name="sort_order">စီစဉ်မှုအစဉ်</string>
+	<string name="sort_ascending">ငယ်စဉ်ကြီးလိုက်</string>
+	<string name="sort_descending">ကြီးစဉ်ငယ်လိုက်</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad အရွယ်အစား</string>
@@ -276,8 +279,22 @@
 	<string name="backup_recovery_later">နောက်မှ</string>
 	<string name="settings_play">တီးခတ်ခြင်း</string>
 	<string name="trace_log_classic">ပက်ပေါ်တွင် အစဉ်နံပါတ် ပြပါ</string>
-	<string name="trace_log_classic_desc">တီးခတ်စဉ် ခြေရာခံမှတ်တမ်း ဖွင့်ထားလျှင် ထိထားသည့် အစဉ်ကို မျဉ်းနှင့် အစက်များအစား ပက်တစ်ခုစီပေါ်တွင် ဂဏန်းဖြင့် ပြပါ</string>
+	<string name="trace_log_classic_desc">တီးခတ်စဉ် ခြေရာ မှတ်တမ်းတင်ခြင်းကို ဖွင့်ထားလျှင် ထိထားသည့် အစဉ်ကို မျဉ်းနှင့် အစက်များအစား ပက်တစ်ခုစီပေါ်တွင် ဂဏန်းဖြင့် ပြပါ</string>
 	<string name="slide_mode">ပက်များပေါ် ပွတ်ဆွဲခြင်း</string>
 	<string name="slide_mode_desc">လက်ချောင်းကို ပက်တစ်ခုပေါ် ဆွဲတင်လျှင် ထိုပက် မြည်ပြီး ထွက်ခွာလာသော ပက် ရပ်သွားပါသည်</string>
 	<string name="no_app_for_link">ဤစက်ပစ္စည်းတွင် ဤလင့်ခ်ကို ဖွင့်နိုင်သော အက်ပ် မရှိပါ။</string>
+	<string name="trace_display_style">ခြေရာ ပြသမှုပုံစံ</string>
+	<string name="trace_numbers">နံပါတ်များ</string>
+	<string name="trace_lines">မျဉ်းနှင့် အစက်များ</string>
+	<string name="trace_clear_all">ခြေရာအားလုံး ရှင်းရန်</string>
+	<string name="autoMappingConfirm">အလိုအလျောက်တီးခတ်မှုကို ချိန်ညှိမလား။ စောင့်ချိန်ကို အသံအရှည်ဖြင့် အစားထိုးပါမည်။ လက်ရှိတီးခတ်မှုကို အရန်သိမ်းပါမည်။ တစ်ပြိုင်တည်းနှိပ်ထားသော ပက်ဒ်များသည် တစ်ပြိုင်တည်းရှိနေပါမည်။</string>
+	<string name="autoMappingApply">ချိန်ညှိရန်</string>
+	<string name="autoMappingSaved">အလိုအလျောက်တီးခတ်မှုကို သိမ်းပြီးပါပြီ။ မီနူးမှ ယခင်ဗားရှင်းကို ပြန်ယူနိုင်ပါသည်။</string>
+	<string name="autoMappingFailed">မသိမ်းနိုင်ပါ။ ရှိပြီးသားတီးခတ်မှု မပြောင်းလဲပါ။</string>
+	<string name="autoPlayRestore">ယခင်အလိုအလျောက်တီးခတ်မှု ပြန်ယူရန်</string>
+	<string name="autoPlayNoBackup">သိမ်းထားသော အရန်မရှိပါ</string>
+	<string name="autoPlayRestoreConfirm">ယခင်အရန်ကို ပြန်ယူမလား။ လက်ရှိတီးခတ်မှုနှင့် နေရာလဲပါမည်။ ပြန်ယူပြီးနောက် ထပ်လဲနိုင်ပါသည်။</string>
+	<string name="autoPlayRestoreApply">ပြန်ယူရန်</string>
+	<string name="autoPlayRestored">ယခင်တီးခတ်မှုကို ပြန်ယူပြီးပါပြီ။ မီနူးမှ ထပ်လဲနိုင်ပါသည်။</string>
+	<string name="autoPlayRestoreFailed">ပြန်မယူနိုင်ပါ။ လက်ရှိတီးခတ်မှုနှင့် အရန် မပြောင်းလဲပါ။</string>
 </resources>

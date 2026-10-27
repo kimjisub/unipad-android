@@ -88,8 +88,8 @@
 	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu maklum balas</string>
-	<string name="traceLog">Log Jejak</string>
-	<string name="traceLogClear">Log Jejak telah direset.</string>
+	<string name="traceLog">Rakaman jejak</string>
+	<string name="traceLogClear">Semua jejak telah dipadam.</string>
 	<string name="record">Rakam</string>
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tera Air</string>
@@ -177,6 +177,9 @@
 	<string name="sort_play_count">Bilangan Main</string>
 	<string name="sort_last_opened_date">Terakhir Dibuka</string>
 	<string name="sort_download_date">Tarikh Muat Turun</string>
+	<string name="sort_order">Tertib isihan</string>
+	<string name="sort_ascending">Menaik</string>
+	<string name="sort_descending">Menurun</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Saiz Pad</string>
@@ -284,8 +287,22 @@
 	<string name="backup_recovery_later">Kemudian</string>
 	<string name="settings_play">Permainan</string>
 	<string name="trace_log_classic">Tunjukkan nombor urutan pada pad</string>
-	<string name="trace_log_classic_desc">Apabila Log Jejak dihidupkan semasa bermain, tunjukkan urutan ketikan sebagai nombor pada setiap pad, bukan garis dan titik</string>
+	<string name="trace_log_classic_desc">Apabila rakaman jejak dihidupkan semasa bermain, tunjukkan urutan ketikan sebagai nombor pada setiap pad, bukan garis dan titik</string>
 	<string name="slide_mode">Luncur pada pad</string>
 	<string name="slide_mode_desc">Menyeret jari ke sebuah pad akan membunyikannya dan menghentikan pad yang ditinggalkan</string>
 	<string name="no_app_for_link">Tiada aplikasi pada peranti ini yang boleh membuka pautan ini.</string>
+	<string name="trace_display_style">Gaya paparan jejak</string>
+	<string name="trace_numbers">Nombor</string>
+	<string name="trace_lines">Garisan dan titik</string>
+	<string name="trace_clear_all">Padam semua jejak</string>
+	<string name="autoMappingConfirm">Laraskan main automatik? Masa menunggu akan mengikut panjang bunyi. Main automatik semasa akan disandarkan. Pad yang ditekan serentak kekal serentak.</string>
+	<string name="autoMappingApply">Laraskan</string>
+	<string name="autoMappingSaved">Main automatik disimpan. Versi sebelumnya boleh dipulihkan melalui menu.</string>
+	<string name="autoMappingFailed">Tidak dapat menyimpan. Main automatik sedia ada tidak berubah.</string>
+	<string name="autoPlayRestore">Pulihkan main automatik sebelumnya</string>
+	<string name="autoPlayNoBackup">Tiada sandaran tersimpan</string>
+	<string name="autoPlayRestoreConfirm">Pulihkan sandaran sebelumnya? Sandaran akan ditukar dengan main automatik semasa. Kedua-duanya boleh ditukar semula.</string>
+	<string name="autoPlayRestoreApply">Pulihkan</string>
+	<string name="autoPlayRestored">Main automatik sebelumnya dipulihkan. Kedua-duanya boleh ditukar semula melalui menu.</string>
+	<string name="autoPlayRestoreFailed">Tidak dapat memulihkan. Main automatik semasa dan sandaran tidak berubah.</string>
 </resources>

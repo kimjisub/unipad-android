@@ -75,7 +75,6 @@ names its `operationAdapter`; the independent checker refuses operations passed
 through the ordinary parser. Neither adapter reads an expected result.
 
 The mapper adapter invokes `UniPackAutoMapper.run`, then reopens its actual output
-through the app parser. Only integer duration fixtures can enter the current
-`SoundDurationReader` unchanged. Fractional duration fixtures remain unverified;
-the harness never rounds an input to manufacture a pass. Any observed mapper
+through the app parser. Integer and fractional duration fixtures enter the app's
+`SoundDurationReader` unchanged; rounding is performed by the real mapper. Any observed mapper
 difference still fails the suite, even if `expectedFailing` did not predict it.

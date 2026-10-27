@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.viewmodel
 
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.arch.core.executor.TaskExecutor
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
@@ -67,11 +66,12 @@ class PlayActivityViewModelManualChainTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        scheduler.runCurrent()
-        unmockkObject(MidiConnection)
-        Dispatchers.resetMain()
-        ArchTaskExecutor.getInstance().setDelegate(null)
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { scheduler.runCurrent() }) {
+            scheduler.runCurrent()
+            unmockkObject(MidiConnection)
+            Dispatchers.resetMain()
+            ArchTaskExecutor.getInstance().setDelegate(null)
+        }
     }
 
     private fun press() {

@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
+import android.media.AudioManager
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -38,6 +38,7 @@ class PlayActivityViewModelGuideResumeTest {
     private lateinit var vm: PlayActivityViewModel
     private lateinit var packFolder: File
     private var controlledScope: CoroutineScope? = null
+    private var controlledScheduler: TestCoroutineScheduler? = null
     private var runDuringGuideRemoval: (() -> Unit)? = null
     private val hardware = mutableMapOf<Pair<Int, Int>, Int>()
     private val animationTargets = mutableMapOf<Pair<Int, Int>, Long>()
@@ -74,11 +75,12 @@ class PlayActivityViewModelGuideResumeTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        main.runAll()
-        controlledScope?.cancel()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { controlledScheduler?.runCurrent(); main.runAll() }) {
+            main.runAll()
+            controlledScope?.cancel()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     private fun await(check: () -> Boolean) {
@@ -89,6 +91,67 @@ class PlayActivityViewModelGuideResumeTest {
         }
         main.runAll()
         assertTrue("Guide state: targets=$animationTargets hardware=$hardware progress=${vm.autoPlayRunner?.progress}", check())
+    }
+
+    @Test fun interruptionKeepsGuideModeAndPositionWithoutRelighting() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        clock.set(100)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+        val progress = vm.autoPlayRunner!!.progress
+        main.runAll()
+        assertEquals("Interruption must preserve the selected guide mode", PlayMode.GuidePlay, vm.playMode)
+        assertTrue("Interruption removes visible guides", animationTargets.isEmpty())
+        clock.set(10100)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        main.runAll()
+        assertTrue("Permission alone must not start playback", !vm.isAutoPlayPlaying)
+        assertEquals(progress, vm.autoPlayRunner!!.progress)
+        assertTrue(animationTargets.isEmpty())
+        vm.autoPlayResume()
+        clock.set(10150)
+        await { animationTargets[0 to 0] == 10500L }
+        assertEquals(PlayMode.GuidePlay, vm.playMode)
+        assertTrue(vm.isAutoPlayPlaying)
+    }
+
+    @Test fun interruptionSuspendsStepPracticeWithoutConsumingInput() {
+        vm.switchPlayMode(PlayMode.StepPractice)
+        await { animationTargets[0 to 0] == 0L }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+        main.runAll()
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue("A covered screen must not keep a step guide lit", animationTargets.isEmpty())
+        val progress = vm.autoPlayRunner!!.progress
+        clock.set(10000)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        main.runAll()
+        assertEquals("Input before manual resume cannot consume the pending step", progress, vm.autoPlayRunner!!.progress)
+        vm.autoPlayResume()
+        await { animationTargets[0 to 0] == 0L }
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        await { animationTargets[1 to 1] == 0L }
+    }
+
+    @Test fun resumingAnInterruptedChainWaitRestoresItsChainHint() {
+        File(packFolder, "autoPlay").writeText("chain 2\ndelay 500\non 1 1\ndelay 60000\n")
+        vm.unipack = UniPackFolder(packFolder).load().loadDetail()
+        vm.initAutoPlayRunner()
+        main.runAll()
+        val chainKey = PlayActivityViewModel.CHAIN_INDEX_OFFSET + 1
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { vm.channelManager.get(-1, chainKey)?.channel == Channel.GUIDE }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+        main.runAll()
+        assertTrue(vm.channelManager.get(-1, chainKey)?.channel != Channel.GUIDE)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        main.runAll()
+        assertEquals("The chain the user must select must be visible again", Channel.GUIDE, vm.channelManager.get(-1, chainKey)?.channel)
     }
 
     @Test fun resumingPracticeKeepsScreenAndControllerGuidesTogether() {
@@ -158,6 +221,7 @@ class PlayActivityViewModelGuideResumeTest {
         val scheduler = TestCoroutineScheduler()
         val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(scheduler))
         controlledScope = scope
+        controlledScheduler = scheduler
         val runner = checkNotNull(vm.autoPlayRunner)
         runner.javaClass.getDeclaredField("scope").apply { isAccessible = true }.set(runner, scope)
         fun drainCallbacks() { repeat(3) { scheduler.runCurrent(); main.runAll() } }
@@ -211,6 +275,7 @@ class PlayActivityViewModelGuideResumeTest {
         val scheduler = TestCoroutineScheduler()
         val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(scheduler))
         controlledScope = scope
+        controlledScheduler = scheduler
         val runner = checkNotNull(vm.autoPlayRunner)
         runner.javaClass.getDeclaredField("scope").apply { isAccessible = true }.set(runner, scope)
         fun drainCallbacks() { repeat(3) { scheduler.runCurrent(); main.runAll() } }

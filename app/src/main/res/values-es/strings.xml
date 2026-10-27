@@ -88,8 +88,8 @@
 	<string name="stepPractice">Paso</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Luz de retroalimentación</string>
-	<string name="traceLog">Registro de Secuencia</string>
-	<string name="traceLogClear">El registro de secuencia se ha restablecido.</string>
+	<string name="traceLog">Registro de trazos</string>
+	<string name="traceLogClear">Se han borrado todos los trazos.</string>
 	<string name="record">Grabar</string>
 	<string name="hideUI">Ocultar UI</string>
 	<string name="watermark">Marca de agua</string>
@@ -185,6 +185,9 @@
 	<string name="sort_play_count">Veces Jugado</string>
 	<string name="sort_last_opened_date">Última Apertura</string>
 	<string name="sort_download_date">Fecha de Descarga</string>
+	<string name="sort_order">Orden de clasificación</string>
+	<string name="sort_ascending">Ascendente</string>
+	<string name="sort_descending">Descendente</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Tamaño del Pad</string>
@@ -292,8 +295,22 @@
 	<string name="backup_recovery_later">Después</string>
 	<string name="settings_play">Interpretación</string>
 	<string name="trace_log_classic">Mostrar números de orden en los pads</string>
-	<string name="trace_log_classic_desc">Con el Registro de Secuencia activado al tocar, muestra el orden de los toques como números en cada pad en lugar de líneas y puntos</string>
+	<string name="trace_log_classic_desc">Con el registro de trazos activado al tocar, muestra el orden de los toques como números en cada pad en lugar de líneas y puntos</string>
 	<string name="slide_mode">Deslizar por los pads</string>
 	<string name="slide_mode_desc">Al arrastrar el dedo hasta un pad, este suena y el pad que se abandona se detiene</string>
 	<string name="no_app_for_link">Ninguna app de este dispositivo puede abrir este enlace.</string>
+	<string name="trace_display_style">Estilo de los trazos</string>
+	<string name="trace_numbers">Números</string>
+	<string name="trace_lines">Líneas y puntos</string>
+	<string name="trace_clear_all">Borrar todos los trazos</string>
+	<string name="autoMappingConfirm">¿Ajustar la reproducción automática? Las esperas se sustituirán por la duración de los sonidos. Se guardará una copia de la reproducción actual. Los pads simultáneos seguirán juntos.</string>
+	<string name="autoMappingApply">Ajustar</string>
+	<string name="autoMappingSaved">Reproducción automática guardada. Puedes restaurar la anterior desde el menú.</string>
+	<string name="autoMappingFailed">No se pudo guardar. La reproducción automática existente no ha cambiado.</string>
+	<string name="autoPlayRestore">Restaurar reproducción automática anterior</string>
+	<string name="autoPlayNoBackup">No hay copia guardada</string>
+	<string name="autoPlayRestoreConfirm">¿Restaurar la copia anterior? Se intercambiará con la reproducción automática actual. Puedes volver a intercambiarlas.</string>
+	<string name="autoPlayRestoreApply">Restaurar</string>
+	<string name="autoPlayRestored">Reproducción anterior restaurada. Puedes volver a intercambiarlas desde el menú.</string>
+	<string name="autoPlayRestoreFailed">No se pudo restaurar. La reproducción actual y la copia no han cambiado.</string>
 </resources>

@@ -17,6 +17,9 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
+The real Store list and one real download are checked on the release candidate instead, by
+`scripts/release_store_check.py`.
+
 For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -136,6 +139,27 @@ credentials. Release signing still requires a real local key and is outside this
 (`cp .github/fixtures/google-services.json app/google-services.json`) locally. Run debug assembly,
 all debug/release Kotlin compiles, `lint`, and both modules' available unit tests locally.
 
+## Practice mode transitions
+
+`basefeatures.PracticeTransitionTest` checks step practice → autoplay → step practice,
+including a chain wait, and compares recovered pad lights with ordinary autoplay. It identifies
+each decoded sound request separately and checks the pad view's rendered colour. Four lock/unlock
+cases cover 1 s and 10 s interruptions before a partial chord, including the final chord. The fixtures
+keep lights and later notes far enough apart for screen automation; exact 5000 ms note spacing and
+the 800 ms timed-guide boundary are checked with a controlled clock in
+`PlayActivityViewModelPracticeTransitionsTest`. `PlayActivityViewModelStepToAutoPlayTest` also checks
+pack-light requests and guide removal across its 72 transition cases.
+
+Run the screen checks with their neighbouring playback regressions:
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.basefeatures.PracticeTransitionTest \
+  com.kimjisub.launchpad.basefeatures.StepToAutoPlayTest \
+  com.kimjisub.launchpad.basefeatures.AutoPlayChainWaitTest \
+  com.kimjisub.launchpad.basefeatures.PlaybackInterruptionTest
+```
+
 ## How controls and data are located
 
 - Launch helpers await the requested activity's completed `onCreate` lifecycle event before
@@ -193,6 +217,8 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer, totals, pack history/properties and scrollable footer text remain readable and Theme opens. Fixed dates and short-metadata captures support pixel comparisons. |
 | `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: logo/version do not overlap, multi-digit capacity and pack dates/properties remain readable, footer actions are reachable and Theme opens. |
 | `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: the same line-bound and scroll checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
+| `SearchKeyboardLayoutTest.importButtonIsFullyReachableAboveKeyboardAtDefaultFont` / `importButtonIsFullyReachableAboveKeyboardAtLargestFont` | Types a matching search at font scales 1.0 and 2.0, keeps the keyboard open, and injects physical drags to reveal the import action. Requires the full measured button height and width to remain visible above the actual keyboard inset; clipped bounds alone cannot pass. Keeps the search-close, Store and import controls available while typing, verifies search-close works with the keyboard open, and restores an unset font scale by deleting the setting. Saves before/after screenshots and drag coordinates. |
+| `SearchKeyboardLayoutTest.unsetFontScaleIsRestoredAfterSearch` | Prepares an unset font scale inside the running test, runs the large-text search scenario, and requires the setting to be absent afterward. The previous cleanup command leaves scale 2.0 behind and fails this check. |
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
@@ -283,6 +309,7 @@ claimed here as audio or hardware proof.
 
 | Class | Tests / purpose |
 |---|---|
+| `basefeatures.PlaybackInterruptionTest` | Home and lock for 1/10 seconds preserve guide/step mode and wait for manual Play; the in-screen menu keeps playing while device selection and the notification shade interrupt; repeated focus gains do not resume; disabling lights preserves sound and song time and discards finite animations. Free-play screen/controller pad input requests audio after permanent focus loss. Audio-focus changes and controller input are simulated; these checks record audio-engine requests and screen/lifecycle state, not real calls, audible speaker output or physical Launchpad delivery. |
 | `PlayOptionPanelContrastTest` | `defaultSkinPanelUsesDarkReadableText`, `fallbackDarkPanelKeepsWhiteText`, `skinPanelColoursStayReadable`: panel text contrast. `defaultSkinKeepsItsAccentAndDarkensOnlyQuit`, `darkSkinLiftsDefaultAccentAndKeepsQuit`, `midGreySkinMarksStayReadable`: accent/arrow/Quit contrast. `readableSkinsKeepTheirTextColours`, `midGreyCardFillsThinJustEnoughForBodyContrast`, `midGreySkinTextReachesBodyContrast`, `knownLimitsGetTheMostReadableColour`, `readableSkinAccentIsPreserved`: text/fill contrast limits and preserved readable colours. |
 | `AppUpdateNoticeTest.downloadAndInstallAreSeparateChoices` | Compact offer, download progress and ready notice; installation starts only after an explicit choice. |
 | `AppUpdateNoticeTest.downloadFinishingDuringPlayWaitsForTheList` | Completing a download while playing keeps Play in front; the ready notice waits for return to the list. |
@@ -307,10 +334,12 @@ claimed here as audio or hardware proof.
 | `basefeatures.KeyLedDirectoryTest.subdirectoriesDoNotShowWarningsOrPreventPlayback` | Direct `keyLED` files still light the pad and the pack exits without warnings when the directory also contains subfolders; nested files stay ignored. Not in `BaseFeaturesSuite`. |
 | `UniPackLegacyArchiveDeviceTest` | `theDeviceReadsCp949`, `aKoreanWindowsArchiveWithAReadmeBesideThePackImports`: the device offers CP949 (not only EUC-KR), and the real importer opens an archive zipped on Korean Windows (CP949 entry names without the UTF-8 flag, CP949 text files) with two wrapper folders, adjacent readmes, dot files and `__MACOSX`; both Korean sound paths and installed bytes are checked. |
 | `basefeatures.AutoPlayTouchChainTest` | `seekingPastTheEndSkipsThePressWaitingForMain`: seeking past the end while command delivery waits for the main thread prevents that press from playing. `chainCommandBeforeAPressChangesTheChainOnce`: a chain command followed by a press changes the chain once even when the main thread is briefly busy; the press plays the selected chain's sound. `autoplayTouchOnAPadThatMovesTheChainStaysOnTheNewChain`: autoplay `touch` on a pad whose sound moves the chain stays on the new chain and plays its sounds. Not in `BaseFeaturesSuite`. |
+| `basefeatures.AutoPlayChainWaitTest` | Switching from guide play while it waits for the second chain preserves the remaining delay instead of playing the first note immediately. Captures the chain hint and sound request count after switching; the recording engine opens no speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.AutoPlayTimingTest` | A sound's parsed chain move does not run a second time after the next chain command. Pausing past the next sound's original deadline preserves its unfinished delay on resume. Captures include the chain changes and the sound request count after resume; the recording engine decodes audio but opens no speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.ManualChainSelectionTest` | A screen chain button, keyboard selection and the controller callback preserve a manual choice made within a pad's pending 100 ms chain move. Captures record selection timing and the final chain. Controller callbacks do not verify physical hardware. Not in `BaseFeaturesSuite`. |
-| `basefeatures.PadInputOwnershipTest` | Six checks: two real pointers holding one pad retain its current endless sound request and pack light until both release, in either order. A player's release preserves a newer autoplay loop, and autoplay releases its own loop while an older finger remains. In both mixed-input orders, feedback stays after the current loop ends and clears when the last input releases. Captures include request counts, stopped voices, pack light and feedback values. The recording engine decodes audio but opens no speaker. Not in `BaseFeaturesSuite`. |
+| `basefeatures.PadInputOwnershipTest` | Seven checks: releasing the input that started the current endless sound request and pack light ends both, even while an earlier input remains pressed. This is checked with two real pointers and a finger followed by a controller press. Releasing the earlier finger preserves the later finger's output. A player's release preserves a newer autoplay loop, and autoplay releases its own loop while an older finger remains. In both mixed-input orders, feedback stays after the current loop ends and clears when the last input releases. Captures include request counts, stopped voices, pack light and feedback values. The recording engine decodes audio but opens no speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.SoundAvailabilityTest` | Four checks using the real Android decoder, Oboe engine and controller callback: a press while decoding is gated consumes its sound/light turn and follows its chain move; the same rules hold with the output stream closed and after reopening it. Captures show loading, chain, next mapping, light and requested filenames. Only the decoding gate and request recorder are in the test APK. These checks do not record external PCM or inject physical MIDI. Not in `BaseFeaturesSuite`. |
+| `basefeatures.PracticeTransitionTest` | Six checks: partial-chord replay matches normal autoplay lights; returning to steps across a chain wait preserves each input and a fresh run's sound and rendered lights after explicitly clearing old animations; 1 s and 10 s lock interruptions restore only the pending pad, including the final group. Uses decoded sound identities and real pad colours without opening a speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.PracticeProgressTest` | Step practice waits for its final pad and clears its guide when stopped. Seeking in guide practice shows the upcoming pad at the new position. Pausing guide play enters step practice: a real pad tap advances the guide, and resuming restores the timed screen hint. Resume assertions precede screenshots so image capture does not consume the assertion window. Screenshots and observed guide state accompany each case. The recording engine opens no speaker. Not in `BaseFeaturesSuite`. |
 | `audio.MultichannelDecodeDeviceTest` | Four-channel and 5.1 PCM WAV and AAC files decode to stereo with their frame counts intact. Each speaker is isolated and every output sample is compared with the stereo mix, including negative WAV values and the omitted LFE channel. AAC checks compare the isolated speaker signal level with a lossy decoding tolerance. Source and decoded WAVs are retained; these checks do not claim external audio output. |
 | `basefeatures.AutoPlayChordTest` | `chordsPlayInOneMainMessageWhileMainIsIdle`, `chordsPlayInOneMainMessageWhileFramesKeepMainBusy`: the eight sounds autoplay presses at the same time are requested within one main-thread message, with the main thread idle and with every frame holding it for 8 ms; each chord's spread is logged under `AutoPlayChord`. Not in `BaseFeaturesSuite`. |
@@ -324,6 +353,7 @@ claimed here as audio or hardware proof.
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiSelectScreenTest` | `confirmationStaysVisibleWithoutHelp`, `selectedModelSurvivesRecreationAndBackground`, `koreanSettingsAreReadable`: OK remains fully visible, help is absent, model choice survives recreation/background and reselecting the same model retains its driver; three Korean device settings remain readable by scrolling. No USB device is connected. |
 | `AppUpdateLayoutTest` | `englishDefault`, `koreanDefault`, `englishLarge`, `koreanLarge`, `offlineLookupCanRetryWithoutClaimingUpToDate`, `unsupportedPlayKeepsTheStoreFallbackBehindATap`, `backgroundStatusesKeepSearchSelectionSettingsAndImportInFront`, `automaticStatusKeepsKeyboardFocusOnTheUpdateControl`, `largeTextInformationStaysAboveTheUpdateControl`: the information scroll area stays above the fixed update control; background responses preserve search focus, pack selection, Settings and the import picker; offline query failure/retry and unsupported Play keep the pack accessible; the same pack at default/200% text; no update, offer, downloading, ready and failed states; the logo, settings and first pack retain their bounds. Automatic responses open no choices; tapping the small notice opens the existing choices, with a full accessibility name and a 48 dp target. |
+| `MainScreenReaderOrderTest` | `english`, `korean`: the items a screen reader steps through on the pack list and what it says for each, read from the accessibility tree by TalkBack's rules (`ScreenReaderOrder`): logo, version, play count, pack count and size with their values, the small update notice, Settings, sort method, sort order with its direction, Search, Store, Import, then the pack rows (title first, no hidden Play label) and the guide actions. The notice is named once in each of its states (check, offer, downloading with its percentage, ready, failed); no control is unnamed; a selected row's Play flag is the next item. It does not drive TalkBack itself or hear its speech. |
 | `AudioFormatDecodeDeviceTest` | `decodesPcmWav`, `decodesMp3`, `decodesOggVorbis`, `decodesAacInM4a`, `decodesMp3NamedWavByItsContent`, `decodesTaggedMp3NamedWavByItsContent`: `OboeAudioEngine` decodes a 0.3 s 440 Hz tone in each format packs use (an MP3 under a `.wav` name, bare as official packs ship it and with an ID3v2 tag) with the device's codecs, to the right rate, length, level and pitch. No sound is played. |
 
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
@@ -422,3 +452,10 @@ exported source, test hash, APK hashes, raw output, and exit codes. Do not switc
 touches. With a host session it coordinates external emulator recording; only
 the host WAV verdict counts as an audio pass. See [the capture commands, stable
 result names and evidence contract](../../../scripts/AUDIO_OUTPUT.md).
+
+### Upgrade over the published build
+
+Not an instrumented test: release builds are not debuggable, so `scripts/upgrade_check.py`
+installs the published build and the candidate over each other on a rooted emulator and
+compares packs, database rows and settings before and after. See [its usage, scenarios and
+evidence](../../../scripts/UPGRADE_CHECK.md).

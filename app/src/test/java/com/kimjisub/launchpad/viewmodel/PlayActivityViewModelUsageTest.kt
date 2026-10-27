@@ -89,10 +89,11 @@ class PlayActivityViewModelUsageTest {
 
 	@After
 	fun tearDown() {
-		created.forEach { runCatching { leave(it) } }
-		unmockkStatic(SystemClock::class)
-		unmockkConstructor(UniPackFolder::class)
-		Dispatchers.resetMain()
+		stopPlayViewModels(created, drain = { main.runAll() }, restore = {
+			unmockkStatic(SystemClock::class)
+			unmockkConstructor(UniPackFolder::class)
+			Dispatchers.resetMain()
+		}) { runCatching { leave(it) } }
 	}
 
 	/** Runs what reaches the main thread, as the looper would, until [done] or the timeout. */

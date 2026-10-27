@@ -88,8 +88,8 @@
 	<string name="stepPractice">Adım</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Geri bildirim ışığı</string>
-	<string name="traceLog">İzleme Günlüğü</string>
-	<string name="traceLogClear">İzleme günlüğü sıfırlandı.</string>
+	<string name="traceLog">İz kaydı</string>
+	<string name="traceLogClear">Tüm izler temizlendi.</string>
 	<string name="record">Kaydet</string>
 	<string name="hideUI">Arayüzü Gizle</string>
 	<string name="watermark">Filigran</string>
@@ -178,6 +178,9 @@
 	<string name="sort_play_count">Oynatma Sayısı</string>
 	<string name="sort_last_opened_date">Son Açılma</string>
 	<string name="sort_download_date">İndirme Tarihi</string>
+	<string name="sort_order">Sıralama düzeni</string>
+	<string name="sort_ascending">Artan</string>
+	<string name="sort_descending">Azalan</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Boyutu</string>
@@ -285,8 +288,22 @@
 	<string name="backup_recovery_later">Daha Sonra</string>
 	<string name="settings_play">Çalma</string>
 	<string name="trace_log_classic">Dokunma sırasını padlerde numarala</string>
-	<string name="trace_log_classic_desc">Çalarken İzleme Günlüğü açıksa, dokunma sırasını çizgi ve nokta yerine her pad üzerinde sayı olarak gösterir</string>
+	<string name="trace_log_classic_desc">Çalarken İz kaydı açıksa, dokunma sırasını çizgi ve nokta yerine her pad üzerinde sayı olarak gösterir</string>
 	<string name="slide_mode">Padler arasında kaydırma</string>
 	<string name="slide_mode_desc">Parmağı bir pad üzerine sürüklemek onu çalar ve ayrılan pad durur</string>
 	<string name="no_app_for_link">Bu cihazda bu bağlantıyı açabilecek bir uygulama yok.</string>
+	<string name="trace_display_style">İz gösterim biçimi</string>
+	<string name="trace_numbers">Sayılar</string>
+	<string name="trace_lines">Çizgiler ve noktalar</string>
+	<string name="trace_clear_all">Tüm izleri temizle</string>
+	<string name="autoMappingConfirm">Otomatik çalma ayarlansın mı? Beklemeler ses uzunluklarıyla değiştirilecek. Mevcut otomatik çalma yedeklenecek. Aynı anda basılan padler birlikte kalacak.</string>
+	<string name="autoMappingApply">Ayarla</string>
+	<string name="autoMappingSaved">Otomatik çalma kaydedildi. Önceki sürümü menüden geri yükleyebilirsiniz.</string>
+	<string name="autoMappingFailed">Kaydedilemedi. Mevcut otomatik çalma değişmedi.</string>
+	<string name="autoPlayRestore">Önceki otomatik çalmayı geri yükle</string>
+	<string name="autoPlayNoBackup">Kayıtlı yedek yok</string>
+	<string name="autoPlayRestoreConfirm">Önceki yedek geri yüklensin mi? Mevcut otomatik çalmayla yer değiştirecek. Daha sonra yeniden değiştirebilirsiniz.</string>
+	<string name="autoPlayRestoreApply">Geri yükle</string>
+	<string name="autoPlayRestored">Önceki otomatik çalma geri yüklendi. Menüden yeniden değiştirebilirsiniz.</string>
+	<string name="autoPlayRestoreFailed">Geri yüklenemedi. Mevcut otomatik çalma ve yedek değişmedi.</string>
 </resources>

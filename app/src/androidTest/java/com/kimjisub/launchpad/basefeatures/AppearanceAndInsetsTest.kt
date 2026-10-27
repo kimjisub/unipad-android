@@ -131,8 +131,8 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     @Test fun mainScreenButtonsStayClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
-        // takes the opposite side; both are emulated through the system's own overlays. From API 35 the
-        // window spans the display and reports both as insets; below it the window is laid out between them.
+        // takes the opposite side; both are emulated through the system's own overlays. The main
+        // screen opts into edge-to-edge on older versions too and receives both as insets.
         DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
             screen.launch(MainActivity::class.java)
             screen.node(By.text(FeatureScreen.TITLE))
@@ -274,7 +274,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val panel = By.res("main_left_panel")
@@ -285,7 +284,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenSearchResultsScrollAboveKeyboard() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val keyboardTop = openSearchKeyboard()
@@ -294,7 +292,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenNoSearchResultsScrollAboveKeyboard() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val keyboardTop = openSearchKeyboard()
@@ -305,7 +302,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun transferScreenSearchResultsScrollAboveKeyboardOnTablet() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // On a landscape phone the keyboard reaches up to the search field and leaves none of the list
         // in view, so this is checked where some rows stay above it.
         withTransferSource { source ->
@@ -327,25 +323,13 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     private fun openSearchKeyboard(open: () -> Unit = { screen.clickDescription(R.string.transfer_search) }): Int {
         open()
-        var keyboard = -1 to 0L
-        screen.await("Search keyboard did not finish opening") {
-            val height = screen.onMain { keyboardHeight(screen.resumed().window.decorView) }
-            val now = android.os.SystemClock.elapsedRealtime()
-            if (height != keyboard.first) keyboard = height to now
-            height > 0 && now - keyboard.second >= KEYBOARD_SETTLE_MS
-        }
-        screen.instrumentation.waitForIdleSync()
-        return screen.onMain {
-            val decor = screen.resumed().window.decorView
-            screen.bounds(decor).bottom - keyboardHeight(decor)
-        }
+        return screen.awaitKeyboardTopOnScreen()
     }
 
     /**
      * Drags the results up, as a finger would, in the strip left between the search field and the
-     * keyboard until [target] shows and stops moving, and checks it then sits above the keyboard.
-     * Below API 35 the system leaves what the keyboard covers out of the screen's node tree, so
-     * [target] may only appear once dragged into view.
+     * keyboard until [target] fits above it or stops moving, then checks its bottom clears the keyboard.
+     * A target outside the list's viewport may only appear in the node tree once dragged into view.
      */
     private fun assertScrollsAboveKeyboard(name: String, target: BySelector, keyboardTop: Int) {
         val field = screen.node(By.focused(true)).visibleBounds
@@ -354,13 +338,15 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             screen.device.swipe(field.centerX(), keyboardTop - DRAG_MARGIN_PX, field.centerX(), field.bottom + DRAG_MARGIN_PX, DRAG_STEPS)
             screen.instrumentation.waitForIdleSync()
             val moved = screen.device.findObject(target)?.visibleBounds
+            // A target can precede other actions; keep it in view instead of dragging past it.
+            if (moved != null && moved.top >= field.bottom && moved.bottom <= keyboardTop) {
+                bounds = moved
+                break
+            }
             if (moved != null && moved == bounds) break
             bounds = moved
         }
         screen.capture("$name-keyboard")
-        // Below API 35 the main window is not edge-to-edge, so its content is never told the keyboard's
-        // height and the keyboard still covers the list's end there (see the README).
-        if (android.os.Build.VERSION.SDK_INT < 35) return
         assertNotNull("$target never came into view above the keyboard from $keyboardTop", bounds)
         assertTrue("$target $bounds stays under the keyboard from $keyboardTop", bounds!!.bottom <= keyboardTop)
     }
@@ -385,9 +371,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             rows = moved
         }
     }
-
-    private fun keyboardHeight(decor: android.view.View) =
-        ViewCompat.getRootWindowInsets(decor)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
 
     /**
      * Turns the resumed screen to each landscape rotation, waits until the side navigation bar and the
@@ -514,7 +497,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     private companion object {
-        const val KEYBOARD_SETTLE_MS = 500L
         const val NO_MATCH = "zz-no-pack-matches"
         const val LARGEST_FONT_SCALE = "2.0"
         const val MAX_DRAGS = 20

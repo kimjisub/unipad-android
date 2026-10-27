@@ -20233,30 +20233,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G602",
@@ -20324,30 +20301,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G603",
@@ -20415,30 +20369,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G604",
@@ -20506,30 +20437,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G620",
@@ -20736,42 +20644,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "archiveEntry": "sounds/소리.wav",
-                    "sha256": "18f9569dd586b62f518dd58070c1c925154d169ec3b4b3bfd8054b7c0672b2a3",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Observed with the parser at a6b99791: canonical fallback chooses the composed archive entry and its different contents instead of the first original archive path in UTF-16 order. Original entry and selected content hash are both observed; this remains a failure."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G623",
@@ -20978,42 +20851,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "archiveEntry": "sounds/café.wav",
-                    "sha256": "18f9569dd586b62f518dd58070c1c925154d169ec3b4b3bfd8054b7c0672b2a3",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Observed with the parser at a6b99791: canonical fallback chooses the composed archive entry and its different contents instead of the first original archive path in UTF-16 order. Original entry and selected content hash are both observed; this remains a failure."
-        }
-      }
+      "known": {}
     },
     {
       "id": "INF-G601",
@@ -21944,31 +21782,7 @@
       "expected": {
         "loaded": false
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 0,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: a missing size key refuses the pack rather than making a grid with no pads. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "INF-G605",
@@ -22017,31 +21831,7 @@
       "expected": {
         "loaded": false
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 0,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: a missing size key refuses the pack rather than making a grid with no pads. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G612",
@@ -22108,30 +21898,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G613",
@@ -22197,30 +21964,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G614",
@@ -22286,30 +22030,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G615",
@@ -22375,30 +22096,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G616",
@@ -22464,30 +22162,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:missing-file"
-            ]
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G617",
@@ -22561,41 +22236,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "end.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: case-insensitive candidates use UTF-16 full-path order, not archive order. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KS-G618",
@@ -22916,40 +22557,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": []
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: wrong column count warns before checking round-light range. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "KL-G606",
@@ -23029,40 +22637,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": []
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Observed with the parser and play hook at 184c1e4b: wrong column count warns before checking round-light range. The G6 expectation stays unchanged; remove this observation when the app implements it."
-        }
-      }
+      "known": {}
     },
     {
       "id": "RUN-G601",
@@ -24024,20 +23599,18 @@
         "RS-05",
         "RL-03"
       ],
-      "title": "releasing the later player input first still waits for the last held input",
+      "title": "releasing the later player input stops the sound and light it started",
       "area": "G6",
       "layer": "run",
       "basis": [
         {
           "type": "decision",
           "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
-          "note": "releasing the later player input first still waits for the last held input"
+          "note": "releasing the later player input stops the sound and light it started"
         }
       ],
       "expectedFailing": [
-        "android",
-        "ios",
-        "web"
+        "android"
       ],
       "scenario": [
         {
@@ -24173,7 +23746,6 @@
               4
             ]
           ],
-          [],
           [
             [
               "soundStop",
@@ -24187,8 +23759,80 @@
               0,
               0
             ]
-          ]
+          ],
+          []
         ]
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "note": "Observed at application commit 208afb9e5be3bebef9fd50c5e1b77dcb40e29330 after unipad-android#304, using a local test-only adapter through PadTouchTracker and controllerPadTouch. Source corpus SHA256 fe37e7731224b51218d94a351e9513beab3f60206100511f90d238612b1069c8; original RUN-G617.json SHA256 90aa9083125a706bba3da30cc62d48c01090256cd6b05fad84fd70d12f09a330 (investigations/android-input-release-observations/). Releasing the later input leaves its sound and pack light running until the last finger releases. The separately observed pressed indicator follows the last-input rule. This JVM observation does not measure USB transport, screen rendering or audible output."
+        }
       }
     },
     {
@@ -24197,20 +23841,18 @@
         "RS-05",
         "RL-03"
       ],
-      "title": "releasing the later player input first still waits for the last held input",
+      "title": "releasing the later player input stops the sound and light it started",
       "area": "G6",
       "layer": "run",
       "basis": [
         {
           "type": "decision",
           "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
-          "note": "releasing the later player input first still waits for the last held input"
+          "note": "releasing the later player input stops the sound and light it started"
         }
       ],
       "expectedFailing": [
-        "android",
-        "ios",
-        "web"
+        "android"
       ],
       "scenario": [
         {
@@ -24346,7 +23988,6 @@
               4
             ]
           ],
-          [],
           [
             [
               "soundStop",
@@ -24360,8 +24001,80 @@
               0,
               0
             ]
-          ]
+          ],
+          []
         ]
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "note": "Observed at application commit 208afb9e5be3bebef9fd50c5e1b77dcb40e29330 after unipad-android#304, using a local test-only adapter through PadTouchTracker and controllerPadTouch. Source corpus SHA256 fe37e7731224b51218d94a351e9513beab3f60206100511f90d238612b1069c8; original RUN-G618.json SHA256 5866b8aa01d14c230421c6a94dd322705378ac404a19d0dbe246a34ca2b2dde0 (investigations/android-input-release-observations/). Releasing the later input leaves its sound and pack light running until the last finger releases. The separately observed pressed indicator follows the last-input rule. This JVM observation does not measure USB transport, screen rendering or audible output."
+        }
       }
     },
     {
@@ -25243,41 +24956,7 @@
           []
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "autoOn",
-                  0,
-                  0
-                ],
-                [
-                  "sound",
-                  0,
-                  0,
-                  0,
-                  "a.wav",
-                  0
-                ],
-                [
-                  "autoChain",
-                  1
-                ]
-              ],
-              [
-                [
-                  "chain",
-                  1
-                ]
-              ]
-            ]
-          },
-          "note": "Observed on unipad-ios e8ac34d11373b3ed071535e365ddc382c1929496 with the 9-case partial G6 run (corpus 7ac226a82324ba278859443772c67be864387809138b1884fe57cbc187bc4180, result SHA256 c4b39c69a4611761a0e011a1c20266a6845a1f76c89f55e137c47a7e348ffdf2). Turning autoPlay off leaves its delayed sound wormhole pending; the real chain observer records chain 1 afterward. The case input, fingerprint and expectation are unchanged. This is a request-level difference, not an audible-output or screen-press observation. See investigations/ios-playback-observations/README.md."
-        }
-      }
+      "known": {}
     },
     {
       "id": "SAFE-C001",
@@ -28686,44 +28365,6 @@
             0
           ]
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "events": [
-              [
-                "on",
-                80,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                480,
-                0,
-                1,
-                0,
-                0
-              ],
-              [
-                "on",
-                931,
-                0,
-                0,
-                0,
-                1
-              ],
-              [
-                "trailingDelay",
-                2330
-              ]
-            ]
-          },
-          "note": "Observed on the real web mapper or runner before product behavior corrections: missing paired releases, added sound-length waits or early completion before the final delay. This remains a failure, not a compatibility pass."
-        }
       }
     },
     {
@@ -28811,36 +28452,6 @@
             0
           ]
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "events": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                70,
-                0,
-                1,
-                0,
-                0
-              ],
-              [
-                "trailingDelay",
-                1969
-              ]
-            ]
-          },
-          "note": "Observed on the real web mapper or runner before product behavior corrections: missing paired releases, added sound-length waits or early completion before the final delay. This remains a failure, not a compatibility pass."
-        }
       }
     },
     {
@@ -28928,36 +28539,6 @@
             0
           ]
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "events": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                480,
-                0,
-                1,
-                0,
-                0
-              ],
-              [
-                "trailingDelay",
-                1380
-              ]
-            ]
-          },
-          "note": "Observed on the real web mapper or runner before product behavior corrections: missing paired releases, added sound-length waits or early completion before the final delay. This remains a failure, not a compatibility pass."
-        }
       }
     },
     {
@@ -29045,36 +28626,6 @@
             0
           ]
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "events": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                481,
-                0,
-                1,
-                0,
-                0
-              ],
-              [
-                "trailingDelay",
-                1381
-              ]
-            ]
-          },
-          "note": "Observed on the real web mapper or runner before product behavior corrections: missing paired releases, added sound-length waits or early completion before the final delay. This remains a failure, not a compatibility pass."
-        }
       }
     },
     {
@@ -29182,49 +28733,6 @@
             0
           ]
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "events": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "chain",
-                350,
-                1
-              ],
-              [
-                "on",
-                350,
-                1,
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                900,
-                1,
-                0,
-                0,
-                1
-              ],
-              [
-                "trailingDelay",
-                1400
-              ]
-            ]
-          },
-          "note": "Observed on the real web mapper or runner before product behavior corrections: missing paired releases, added sound-length waits or early completion before the final delay. This remains a failure, not a compatibility pass."
-        }
       }
     },
     {

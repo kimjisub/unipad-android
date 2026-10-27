@@ -23,16 +23,41 @@ if ! counted="$(python3 scripts/check_connected_results.py \
   exit 2
 fi
 expected="${counted#suite_expected=}"
-./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
+results="${CI_RESULTS_DIR:-.ci-results/base-features}"
+mkdir -p "$results"
+for output in gradle-ui.txt instrumentation.txt device-settings-app.txt; do
+  : > "$results/$output"
+done
+device_settings() {
+  python3 scripts/prepare_device_settings.py "$1" --adb "$adb_bin" --serial "$serial" --results "$results"
+}
+SECONDS=0
+finish() {
+  result=$?
+  trap - EXIT
+  if ! device_settings finish; then
+    if [[ "$result" -eq 0 ]]; then result=1; fi
+  fi
+  cat "$results/device-settings-summary.txt" > "$results/ui-status.txt"
+  printf 'exit_code=%s\nelapsed_seconds=%s\n' "$result" "$SECONDS" >> "$results/ui-status.txt"
+  cat "$results/ui-status.txt"
+  exit "$result"
+}
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+device_settings prepare
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain 2>&1 | tee "$results/gradle-ui.txt"
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+device_settings verify
 # Match the merged debug-test preparation before the target process starts.
 # Direct am instrument bypasses Gradle's force-aot-compilation setup.
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test; do
   "$adb_bin" -s "$serial" shell cmd package compile -f -m speed "$package"
 done
-output="$(mktemp "${TMPDIR:-/tmp}/basefeatures.XXXXXX")"
-trap 'rm -f "$output"' EXIT
+output="$results/instrumentation.txt"
+: > "$output"
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"

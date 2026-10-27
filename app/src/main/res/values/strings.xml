@@ -88,8 +88,8 @@
 	<string name="stepPractice">Step</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback light</string>
-	<string name="traceLog">Trace Log</string>
-	<string name="traceLogClear">Trace Log has been reset.</string>
+	<string name="traceLog">Trace recording</string>
+	<string name="traceLogClear">All traces cleared.</string>
 	<string name="record">Record</string>
 	<string name="hideUI">Hide UI</string>
 	<string name="watermark">Watermark</string>
@@ -150,6 +150,7 @@
 
 	<string name="outOfMemory">Out of memory..\nFree some memory and retry.</string>
 	<string name="audio_output_unavailable">Couldn\'t open audio output.\nTry opening the pack again.</string>
+	<string name="playback_audio_unavailable">Audio is unavailable. Tap a pad or Play to try again.</string>
 	<string name="outOfCPU">Couldn\'t start pack\nbecause of phone specifications…\nTry again.</string>
 
 	<!--Launchpad Connection-->
@@ -198,7 +199,7 @@
 	<string name="settings_device">Device</string>
 	<string name="settings_play">Play</string>
 	<string name="trace_log_classic">Show tap order numbers on pads</string>
-	<string name="trace_log_classic_desc">While Trace Log is on in play, show the tap order as numbers on each pad instead of lines and dots</string>
+	<string name="trace_log_classic_desc">When trace recording is on during a performance, show the tap order as numbers on each pad instead of lines and dots</string>
 	<string name="slide_mode">Slide across pads</string>
 	<string name="slide_mode_desc">Dragging a finger onto a pad plays it and stops the pad it left</string>
 	<string name="settings_info">Information</string>
@@ -222,6 +223,9 @@
 	<string name="sort_play_count">Play Count</string>
 	<string name="sort_last_opened_date">Last Opened Date</string>
 	<string name="sort_download_date">Download Date</string>
+	<string name="sort_order">Sort order</string>
+	<string name="sort_ascending">Ascending</string>
+	<string name="sort_descending">Descending</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Size</string>
@@ -334,4 +338,18 @@
 	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
 	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
 	<string name="pack_no_playable_sounds">This pack has no playable sounds. Its sound files may be damaged or unsupported.</string>
+	<string name="trace_display_style">Trace display style</string>
+	<string name="trace_numbers">Numbers</string>
+	<string name="trace_lines">Lines and dots</string>
+	<string name="trace_clear_all">Clear all traces</string>
+	<string name="autoMappingConfirm">Fit the autoplay? Waits will match sound lengths. Your current autoplay will be backed up. Simultaneous pads stay together.</string>
+	<string name="autoMappingApply">Fit</string>
+	<string name="autoMappingSaved">Autoplay saved. You can restore the previous version from the menu.</string>
+	<string name="autoMappingFailed">Could not save. Your existing autoplay is unchanged.</string>
+	<string name="autoPlayRestore">Restore previous autoplay</string>
+	<string name="autoPlayNoBackup">No saved backup</string>
+	<string name="autoPlayRestoreConfirm">Restore the previous backup? It will swap with the current autoplay. You can swap them again after restoring.</string>
+	<string name="autoPlayRestoreApply">Restore</string>
+	<string name="autoPlayRestored">Previous autoplay restored. You can swap back from the menu.</string>
+	<string name="autoPlayRestoreFailed">Could not restore. Your current autoplay and backup are unchanged.</string>
 </resources>

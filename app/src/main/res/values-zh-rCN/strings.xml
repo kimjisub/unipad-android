@@ -88,8 +88,8 @@
 	<string name="guidePlay">引导</string>
 	<string name="stepPractice">分步</string>
 	<string name="feedbackLight">反馈灯光</string>
-	<string name="traceLog">记录按键</string>
-	<string name="traceLogClear">按键记录已重置。</string>
+	<string name="traceLog">记录轨迹</string>
+	<string name="traceLogClear">已清除所有轨迹。</string>
 	<string name="record">录制</string>
 	<string name="hideUI">隐藏UI</string>
 	<string name="watermark">UI灯光</string>
@@ -177,6 +177,9 @@
 	<string name="sort_play_count">演奏次数</string>
 	<string name="sort_last_opened_date">上次打开日期</string>
 	<string name="sort_download_date">下载日期</string>
+	<string name="sort_order">排序顺序</string>
+	<string name="sort_ascending">升序</string>
+	<string name="sort_descending">降序</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">按键矩阵大小</string>
@@ -286,8 +289,22 @@
 	<string name="backup_recovery_later">稍后</string>
 	<string name="settings_play">演奏</string>
 	<string name="trace_log_classic">在打击垫上显示顺序数字</string>
-	<string name="trace_log_classic_desc">演奏时开启“记录按键”后，在每个打击垫上用数字显示点击顺序，而不是线条和圆点</string>
+	<string name="trace_log_classic_desc">演奏时开启“记录轨迹”后，在每个打击垫上用数字显示点击顺序，而不是线条和圆点</string>
 	<string name="slide_mode">滑过打击垫</string>
 	<string name="slide_mode_desc">手指滑到某个打击垫时该垫发声，离开的垫则停止</string>
 	<string name="no_app_for_link">此设备上没有可以打开该链接的应用。</string>
+	<string name="trace_display_style">轨迹显示方式</string>
+	<string name="trace_numbers">数字</string>
+	<string name="trace_lines">线和点</string>
+	<string name="trace_clear_all">清除全部轨迹</string>
+	<string name="autoMappingConfirm">调整自动演奏吗？等待时间将替换为声音长度。当前自动演奏将备份。同时按下的打击垫仍将同时演奏。</string>
+	<string name="autoMappingApply">调整</string>
+	<string name="autoMappingSaved">已保存自动演奏。可从菜单恢复之前的版本。</string>
+	<string name="autoMappingFailed">无法保存。现有自动演奏保持不变。</string>
+	<string name="autoPlayRestore">恢复之前的自动演奏</string>
+	<string name="autoPlayNoBackup">没有已保存的备份</string>
+	<string name="autoPlayRestoreConfirm">恢复上次备份吗？它将与当前自动演奏交换。恢复后仍可再次交换。</string>
+	<string name="autoPlayRestoreApply">恢复</string>
+	<string name="autoPlayRestored">已恢复之前的自动演奏。可从菜单再次交换。</string>
+	<string name="autoPlayRestoreFailed">无法恢复。当前自动演奏和备份均保持不变。</string>
 </resources>

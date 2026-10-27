@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
@@ -84,10 +83,11 @@ class PlayActivityViewModelInputOwnershipTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        main.runAll()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     private fun advance() {
@@ -115,14 +115,46 @@ class PlayActivityViewModelInputOwnershipTest {
         assertEquals(listOf(1, 4, true), state())
         screen.up(firstReleased)
         advance()
-        assertEquals("One finger remains: sound, pack light and feedback must remain", listOf(1, 4, true), state())
+        val outputRemains = firstReleased == 10L
+        assertEquals("Only the input that started the current output may end it",
+            listOf(if (outputRemains) 1 else 0, if (outputRemains) 4 else null, true), state())
         screen.up(if (firstReleased == 10L) 20 else 10)
         advance()
         assertEquals(listOf(0, null, false), state())
     }
 
     @Test fun firstFingerReleaseKeepsTheCurrentLoopAndBothLights() = twoFingers(10)
-    @Test fun laterFingerReleaseStillWaitsForTheFirstFinger() = twoFingers(20)
+    @Test fun laterFingerReleaseEndsItsOutputWhileTheFirstFingerRemains() = twoFingers(20)
+
+    private fun fingerAndController(controllerFirst: Boolean, laterFirst: Boolean) {
+        if (controllerFirst) vm.controllerPadTouch(0, 0, true) else fingerDown(10)
+        if (controllerFirst) fingerDown(10) else vm.controllerPadTouch(0, 0, true)
+        advance()
+        assertEquals(listOf(1, 4, true), state())
+        val releaseController = controllerFirst != laterFirst
+        if (releaseController) vm.controllerPadTouch(0, 0, false) else screen.up(10)
+        advance()
+        assertEquals(listOf(if (laterFirst) 0 else 1, if (laterFirst) null else 4, true), state())
+        if (releaseController) screen.up(10) else vm.controllerPadTouch(0, 0, false)
+        advance()
+        assertEquals(listOf(0, null, false), state())
+    }
+
+    @Test fun laterControllerReleaseEndsItsOutputWhileTheFingerRemains() = fingerAndController(false, true)
+    @Test fun earlierFingerReleaseKeepsTheControllersOutput() = fingerAndController(false, false)
+    @Test fun laterFingerReleaseEndsItsOutputWhileTheControllerRemains() = fingerAndController(true, true)
+    @Test fun earlierControllerReleaseKeepsTheFingersOutput() = fingerAndController(true, false)
+
+    @Test fun unmatchedReleasesCannotEndAnotherFingersOutput() {
+        fingerDown(10)
+        vm.padTouch(0, 0, false, 20)
+        vm.controllerPadTouch(0, 0, false)
+        auto(false)
+        assertEquals(listOf(1, 4, true), state())
+        screen.up(10)
+        advance()
+        assertEquals(listOf(0, null, false), state())
+    }
 
     @Test fun screenReleaseDoesNotEndTheNewerAutoplayLoop() {
         fingerDown(10)

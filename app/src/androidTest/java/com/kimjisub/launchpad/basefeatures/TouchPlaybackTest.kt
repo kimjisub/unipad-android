@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.animation.ValueAnimator
 import android.graphics.Point
 import android.os.SystemClock
 import android.view.InputDevice
@@ -11,6 +12,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
 import com.kimjisub.launchpad.chainrelease.ChainReleaseLights
@@ -66,6 +69,12 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             assertTrue("The press came after the fade had ended", SystemClock.elapsedRealtime() - closed < 3000)
             screen.await("A pad pressed while the options window faded out did not play") { audio.plays.size == 1 }
         } finally {
+            if (previous == "null") {
+                // Deleting the setting alone leaves WindowManager using the slowed animation scale.
+                screen.device.executeShellCommand("settings put global $scale 1")
+                // Wait for WindowManager to apply 1 before removing the setting it reads asynchronously.
+                screen.await("The animation scale did not return to 1") { ValueAnimator.getDurationScale() == 1f }
+            }
             screen.device.executeShellCommand(
                 if (previous == "null") "settings delete global $scale" else "settings put global $scale $previous"
             )
@@ -75,6 +84,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     @Test fun twoSimultaneousFingersPlayBothPadsAndReleaseBoth() {
         screen.openPlay()
         screen.options()
+        screen.scrollTo(By.text(screen.text(R.string.feedbackLight)), Direction.DOWN)
         screen.clickText(R.string.feedbackLight)
         screen.device.pressBack()
         screen.await("Options remained open") { screen.onMain { !screen.vm().isOptionWindowVisible } }

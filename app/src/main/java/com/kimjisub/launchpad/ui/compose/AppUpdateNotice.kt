@@ -25,7 +25,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.heading
@@ -66,15 +65,16 @@ fun AppUpdateBadge(card: Card?, enabled: Boolean, onClick: () -> Unit, checking:
 			.heightIn(min = 48.dp)
 			.focusRing()
 			.testTag("app_update_notice")
+			// The text alone names the notice; only download progress adds a state.
 			.semantics {
-				contentDescription = title
 				if (card is Card.Downloading && card.fraction != null) {
 					stateDescription = "${(card.fraction * 100).toInt()}%"
 				}
 			},
 	) {
-		Text(title, modifier = Modifier.weight(1f, fill = false), fontSize = 11.sp,
-			maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+		// Keep two lines within the existing 48dp touch target.
+		Text(title, modifier = Modifier.weight(1f, fill = false), fontSize = 11.sp, lineHeight = 14.sp,
+			maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
 		if (checking) {
 			Spacer(Modifier.width(6.dp))
 			CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)

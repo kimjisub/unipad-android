@@ -88,8 +88,8 @@
 	<string name="stepPractice">Шаг</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Подсветка отклика</string>
-	<string name="traceLog">Журнал действий</string>
-	<string name="traceLogClear">Журнал действий сброшен.</string>
+	<string name="traceLog">Запись следов</string>
+	<string name="traceLogClear">Все следы удалены.</string>
 	<string name="record">Запись</string>
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
@@ -180,6 +180,9 @@
 	<string name="sort_play_count">Количество игр</string>
 	<string name="sort_last_opened_date">Последнее открытие</string>
 	<string name="sort_download_date">Дата загрузки</string>
+	<string name="sort_order">Порядок сортировки</string>
+	<string name="sort_ascending">По возрастанию</string>
+	<string name="sort_descending">По убыванию</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Размер пэда</string>
@@ -287,8 +290,22 @@
 	<string name="backup_recovery_later">Позже</string>
 	<string name="settings_play">Игра</string>
 	<string name="trace_log_classic">Номера порядка нажатий на пэдах</string>
-	<string name="trace_log_classic_desc">Когда во время игры включён журнал действий, показывает порядок нажатий цифрами на пэдах вместо линий и точек</string>
+	<string name="trace_log_classic_desc">Когда во время игры включена запись следов, порядок нажатий отображается на пэдах цифрами, а не линиями и точками</string>
 	<string name="slide_mode">Скольжение по пэдам</string>
 	<string name="slide_mode_desc">Если провести пальцем на другой пэд, он зазвучит, а покинутый остановится</string>
 	<string name="no_app_for_link">На этом устройстве нет приложения, способного открыть эту ссылку.</string>
+	<string name="trace_display_style">Вид следов</string>
+	<string name="trace_numbers">Числа</string>
+	<string name="trace_lines">Линии и точки</string>
+	<string name="trace_clear_all">Очистить все следы</string>
+	<string name="autoMappingConfirm">Настроить автовоспроизведение? Паузы будут заменены длительностью звуков. Текущий вариант будет сохранён в резервной копии. Одновременные нажатия останутся одновременными.</string>
+	<string name="autoMappingApply">Настроить</string>
+	<string name="autoMappingSaved">Автовоспроизведение сохранено. Предыдущий вариант можно восстановить через меню.</string>
+	<string name="autoMappingFailed">Не удалось сохранить. Исходное автовоспроизведение не изменено.</string>
+	<string name="autoPlayRestore">Восстановить предыдущее автовоспроизведение</string>
+	<string name="autoPlayNoBackup">Сохранённой копии нет</string>
+	<string name="autoPlayRestoreConfirm">Восстановить предыдущую копию? Она поменяется местами с текущим автовоспроизведением. Их можно будет поменять снова.</string>
+	<string name="autoPlayRestoreApply">Восстановить</string>
+	<string name="autoPlayRestored">Предыдущее автовоспроизведение восстановлено. В меню можно поменять их снова.</string>
+	<string name="autoPlayRestoreFailed">Не удалось восстановить. Текущее автовоспроизведение и резервная копия не изменены.</string>
 </resources>

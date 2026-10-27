@@ -88,8 +88,8 @@
 	<string name="stepPractice">Từng bước</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Đèn phản hồi</string>
-	<string name="traceLog">Nhật ký Truy vết</string>
-	<string name="traceLogClear">Nhật ký truy vết đã được đặt lại.</string>
+	<string name="traceLog">Ghi dấu vết</string>
+	<string name="traceLogClear">Đã xóa tất cả dấu vết.</string>
 	<string name="record">Ghi âm</string>
 	<string name="hideUI">Ẩn UI</string>
 	<string name="watermark">Hình mờ</string>
@@ -177,6 +177,9 @@
 	<string name="sort_play_count">Số lần Chơi</string>
 	<string name="sort_last_opened_date">Mở Lần cuối</string>
 	<string name="sort_download_date">Ngày Tải xuống</string>
+	<string name="sort_order">Thứ tự sắp xếp</string>
+	<string name="sort_ascending">Tăng dần</string>
+	<string name="sort_descending">Giảm dần</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Kích thước Pad</string>
@@ -284,8 +287,22 @@
 	<string name="backup_recovery_later">Để sau</string>
 	<string name="settings_play">Chơi nhạc</string>
 	<string name="trace_log_classic">Hiện số thứ tự trên pad</string>
-	<string name="trace_log_classic_desc">Khi bật Nhật ký Truy vết lúc chơi, hiển thị thứ tự chạm bằng số trên từng pad thay vì đường kẻ và chấm</string>
+	<string name="trace_log_classic_desc">Khi bật Ghi dấu vết lúc chơi, hiển thị thứ tự chạm bằng số trên từng pad thay vì đường kẻ và chấm</string>
 	<string name="slide_mode">Trượt qua các pad</string>
 	<string name="slide_mode_desc">Kéo ngón tay sang một pad sẽ phát pad đó và dừng pad vừa rời khỏi</string>
 	<string name="no_app_for_link">Không có ứng dụng nào trên thiết bị này mở được liên kết này.</string>
+	<string name="trace_display_style">Kiểu hiển thị dấu vết</string>
+	<string name="trace_numbers">Số</string>
+	<string name="trace_lines">Đường và chấm</string>
+	<string name="trace_clear_all">Xóa mọi dấu vết</string>
+	<string name="autoMappingConfirm">Căn chỉnh tự động phát? Thời gian chờ sẽ thay bằng độ dài âm thanh. Bản tự động phát hiện tại sẽ được sao lưu. Các pad nhấn đồng thời vẫn cùng lúc.</string>
+	<string name="autoMappingApply">Căn chỉnh</string>
+	<string name="autoMappingSaved">Đã lưu tự động phát. Bạn có thể khôi phục bản trước từ menu.</string>
+	<string name="autoMappingFailed">Không thể lưu. Bản tự động phát hiện có không thay đổi.</string>
+	<string name="autoPlayRestore">Khôi phục tự động phát trước đó</string>
+	<string name="autoPlayNoBackup">Chưa có bản sao lưu</string>
+	<string name="autoPlayRestoreConfirm">Khôi phục bản sao lưu trước? Bản này sẽ đổi chỗ với tự động phát hiện tại. Bạn có thể đổi lại sau khi khôi phục.</string>
+	<string name="autoPlayRestoreApply">Khôi phục</string>
+	<string name="autoPlayRestored">Đã khôi phục tự động phát trước đó. Bạn có thể đổi lại từ menu.</string>
+	<string name="autoPlayRestoreFailed">Không thể khôi phục. Tự động phát hiện tại và bản sao lưu không thay đổi.</string>
 </resources>

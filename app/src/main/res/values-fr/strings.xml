@@ -88,8 +88,8 @@
 	<string name="stepPractice">Étape</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lumière de retour</string>
-	<string name="traceLog">Journal de suivi</string>
-	<string name="traceLogClear">Le journal de suivi a été réinitialisé.</string>
+	<string name="traceLog">Enregistrement des traces</string>
+	<string name="traceLogClear">Toutes les traces ont été effacées.</string>
 	<string name="record">Enregistrer</string>
 	<string name="hideUI">Masquer l\'interface</string>
 	<string name="watermark">Filigrane</string>
@@ -179,6 +179,9 @@
 	<string name="sort_play_count">Nombre de lectures</string>
 	<string name="sort_last_opened_date">Dernière ouverture</string>
 	<string name="sort_download_date">Date de téléchargement</string>
+	<string name="sort_order">Ordre de tri</string>
+	<string name="sort_ascending">Croissant</string>
+	<string name="sort_descending">Décroissant</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Taille du Pad</string>
@@ -286,8 +289,22 @@
 	<string name="backup_recovery_later">Plus tard</string>
 	<string name="settings_play">Jeu</string>
 	<string name="trace_log_classic">Numéros d\'ordre sur les pads</string>
-	<string name="trace_log_classic_desc">Quand le Journal de suivi est activé pendant le jeu, affiche l\'ordre des appuis sous forme de chiffres sur chaque pad au lieu de lignes et de points</string>
+	<string name="trace_log_classic_desc">Lorsque l\'enregistrement des traces est activé pendant le jeu, l\'ordre des appuis s\'affiche sous forme de chiffres sur chaque pad plutôt que de lignes et de points</string>
 	<string name="slide_mode">Glisser sur les pads</string>
 	<string name="slide_mode_desc">Faire glisser un doigt sur un pad le déclenche et arrête celui que l\'on quitte</string>
 	<string name="no_app_for_link">Aucune application de cet appareil ne peut ouvrir ce lien.</string>
+	<string name="trace_display_style">Affichage des traces</string>
+	<string name="trace_numbers">Nombres</string>
+	<string name="trace_lines">Lignes et points</string>
+	<string name="trace_clear_all">Effacer toutes les traces</string>
+	<string name="autoMappingConfirm">Ajuster la lecture automatique ? Les attentes suivront la durée des sons. La lecture actuelle sera sauvegardée. Les pads simultanés resteront ensemble.</string>
+	<string name="autoMappingApply">Ajuster</string>
+	<string name="autoMappingSaved">Lecture automatique enregistrée. Le menu permet de restaurer la précédente.</string>
+	<string name="autoMappingFailed">Enregistrement impossible. La lecture automatique existante reste inchangée.</string>
+	<string name="autoPlayRestore">Restaurer la lecture automatique précédente</string>
+	<string name="autoPlayNoBackup">Aucune sauvegarde enregistrée</string>
+	<string name="autoPlayRestoreConfirm">Restaurer la sauvegarde précédente ? Elle sera échangée avec la lecture actuelle. Vous pourrez les échanger à nouveau.</string>
+	<string name="autoPlayRestoreApply">Restaurer</string>
+	<string name="autoPlayRestored">Lecture précédente restaurée. Le menu permet de les échanger à nouveau.</string>
+	<string name="autoPlayRestoreFailed">Restauration impossible. La lecture actuelle et sa sauvegarde restent inchangées.</string>
 </resources>

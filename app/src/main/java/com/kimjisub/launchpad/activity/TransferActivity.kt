@@ -77,6 +77,7 @@ import com.kimjisub.launchpad.tool.SafMigrationHelper
 import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.ui.theme.Red
@@ -120,6 +121,7 @@ class TransferActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		configureSearchWindowInsets(window)
 
 		setContent {
 			UniPadTheme {

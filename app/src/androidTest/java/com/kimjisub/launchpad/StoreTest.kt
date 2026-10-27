@@ -191,10 +191,10 @@ class StoreTest : BaseUITest() {
     }
 
     private fun assertDetailOf(index: Int) {
-        composeTestRule.onNodeWithTag("store_detail").assertIsDisplayed()
+        assertDisplayed(composeTestRule, composeTestRule.onNodeWithTag("store_detail"), "store_detail")
         for (text in listOf(requireNotNull(packs[index].title), requireNotNull(packs[index].producerName), str(R.string.download))) {
-            composeTestRule.onNode(hasText(text) and hasAnyAncestor(hasTestTag("store_detail")), useUnmergedTree = true)
-                .assertIsDisplayed()
+            val node = composeTestRule.onNode(hasText(text) and hasAnyAncestor(hasTestTag("store_detail")), useUnmergedTree = true)
+            assertDisplayed(composeTestRule, node, "store_detail")
         }
     }
 

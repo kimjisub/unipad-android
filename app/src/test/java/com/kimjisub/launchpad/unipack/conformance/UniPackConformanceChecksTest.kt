@@ -106,12 +106,14 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
-	fun fractionalMapperInputsAreNotSilentlyRoundedByTheHarness() {
+	fun fractionalMapperInputsReachTheAppAndItsSavedOutput() {
+		val neverParse = Deps(loadPack = { error("mapper operation reached the generic parser") })
 		for (id in listOf("MAP-P001", "MAP-P003", "MAP-P004")) {
-			val result = resultFor(byId(id), corpus)
-			assertEquals("unverified", result.outcome.status)
-			assertEquals(JsonNull, result.actual)
-			assertTrue(result.outcome.detail.contains("integer milliseconds"))
+			val c = byId(id)
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(id, "auto-map", result.outcome.operationAdapter)
+			assertEquals(id, c.expected, result.actual)
+			assertEquals(id, "pass", result.outcome.status)
 		}
 	}
 

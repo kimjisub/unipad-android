@@ -87,8 +87,8 @@
 	<string name="guidePlay">가이드</string>
 	<string name="stepPractice">스텝</string>
 	<string name="feedbackLight">피드백 표시</string>
-	<string name="traceLog">순서 기록</string>
-	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
+	<string name="traceLog">흔적 기록</string>
+	<string name="traceLogClear">흔적을 모두 지웠습니다.</string>
 	<string name="record">녹음</string>
 	<string name="hideUI">UI 숨기기</string>
 	<string name="watermark">워터마크</string>
@@ -97,8 +97,8 @@
 	<string name="play_section_performance">효과</string>
 	<string name="play_section_display">화면</string>
 	<string name="play_section_tools">도구</string>
-	<string name="autoMapping">자동 매핑</string>
-	<string name="autoMappingRunning">자동 매핑…</string>
+	<string name="autoMapping">자동 맞춤</string>
+	<string name="autoMappingRunning">자동 맞춤…</string>
 	<string name="play_info_untitled">제목 없음</string>
 	<plurals name="play_info_size_chains">
 		<item quantity="other">"%1$d×%2$d  ·  체인 %3$d개"</item>
@@ -148,6 +148,7 @@
 
 	<string name="outOfMemory">메모리 공간이 부족합니다.\n메모리 확보 후 다시 시도해주세요.</string>
 	<string name="audio_output_unavailable">소리 출력을 시작하지 못했습니다.\n팩을 다시 열어 주세요.</string>
+	<string name="playback_audio_unavailable">소리를 낼 수 없습니다. 패드나 재생을 눌러 다시 시도해 주세요.</string>
 	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
 
 	<!--Launchpad Connection-->
@@ -185,7 +186,7 @@
 	<string name="settings_device">기기</string>
 	<string name="settings_play">연주</string>
 	<string name="trace_log_classic">패드에 누른 순서 숫자 표시</string>
-	<string name="trace_log_classic_desc">연주 중 순서 기록을 켜면 선과 점 대신 각 패드에 누른 순서를 숫자로 표시합니다</string>
+	<string name="trace_log_classic_desc">연주 중 흔적 기록을 켜면 선과 점 대신 각 패드에 누른 순서를 숫자로 표시합니다</string>
 	<string name="slide_mode">패드 슬라이드</string>
 	<string name="slide_mode_desc">손가락을 끌어 다른 패드에 들어가면 그 패드가 울리고 벗어난 패드는 멈춥니다</string>
 	<string name="settings_info">정보</string>
@@ -209,6 +210,9 @@
 	<string name="sort_play_count">플레이 횟수</string>
 	<string name="sort_last_opened_date">최근 연 날짜</string>
 	<string name="sort_download_date">다운로드 날짜</string>
+	<string name="sort_order">정렬 순서</string>
+	<string name="sort_ascending">오름차순</string>
+	<string name="sort_descending">내림차순</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>
@@ -321,4 +325,18 @@
 	<string name="midi_reflected">둘째 장치 좌우 반전</string>
 	<string name="midi_swap_sides">좌우 바꾸기</string>
 	<string name="pack_no_playable_sounds">이 팩에서 재생할 수 있는 소리를 찾지 못했습니다. 소리 파일이 손상되었거나 지원하지 않는 형식일 수 있습니다.</string>
+	<string name="trace_display_style">흔적 표시 방식</string>
+	<string name="trace_numbers">숫자</string>
+	<string name="trace_lines">선과 점</string>
+	<string name="trace_clear_all">흔적 모두 지우기</string>
+	<string name="autoMappingConfirm">자동 연주를 맞출까요? 기다림을 소리 길이로 바꿉니다. 지금의 자동 연주는 백업합니다. 동시에 누른 패드는 함께 둡니다</string>
+	<string name="autoMappingApply">맞추기</string>
+	<string name="autoMappingSaved">자동 연주를 저장했습니다. 메뉴에서 이전 것으로 복원할 수 있어요</string>
+	<string name="autoMappingFailed">저장하지 못했습니다. 기존 자동 연주는 그대로입니다</string>
+	<string name="autoPlayRestore">이전 자동 연주로 복원</string>
+	<string name="autoPlayNoBackup">저장된 백업이 없습니다</string>
+	<string name="autoPlayRestoreConfirm">직전 백업으로 되돌릴까요? 현재 자동 연주와 자리를 바꿉니다. 복원 후에도 다시 되돌릴 수 있어요</string>
+	<string name="autoPlayRestoreApply">복원하기</string>
+	<string name="autoPlayRestored">이전 자동 연주로 복원했습니다. 메뉴에서 다시 되돌릴 수 있어요</string>
+	<string name="autoPlayRestoreFailed">복원하지 못했습니다. 현재 자동 연주와 백업은 그대로입니다</string>
 </resources>

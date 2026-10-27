@@ -88,8 +88,8 @@
 	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu umpan balik</string>
-	<string name="traceLog">Log Jejak</string>
-	<string name="traceLogClear">Log Jejak telah direset.</string>
+	<string name="traceLog">Perekaman jejak</string>
+	<string name="traceLogClear">Semua jejak telah dihapus.</string>
 	<string name="record">Rekam</string>
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tanda air</string>
@@ -177,6 +177,9 @@
 	<string name="sort_play_count">Jumlah Main</string>
 	<string name="sort_last_opened_date">Terakhir Dibuka</string>
 	<string name="sort_download_date">Tanggal Unduh</string>
+	<string name="sort_order">Urutan sortir</string>
+	<string name="sort_ascending">Menaik</string>
+	<string name="sort_descending">Menurun</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Ukuran Pad</string>
@@ -284,8 +287,22 @@
 	<string name="backup_recovery_later">Nanti</string>
 	<string name="settings_play">Permainan</string>
 	<string name="trace_log_classic">Tampilkan nomor urutan di pad</string>
-	<string name="trace_log_classic_desc">Saat Log Jejak aktif ketika bermain, tampilkan urutan ketukan sebagai angka di setiap pad, bukan garis dan titik</string>
+	<string name="trace_log_classic_desc">Saat perekaman jejak aktif ketika bermain, tampilkan urutan ketukan sebagai angka di setiap pad, bukan garis dan titik</string>
 	<string name="slide_mode">Geser antar pad</string>
 	<string name="slide_mode_desc">Menggeser jari ke sebuah pad akan membunyikannya dan menghentikan pad yang ditinggalkan</string>
 	<string name="no_app_for_link">Tidak ada aplikasi di perangkat ini yang dapat membuka tautan ini.</string>
+	<string name="trace_display_style">Gaya tampilan jejak</string>
+	<string name="trace_numbers">Angka</string>
+	<string name="trace_lines">Garis dan titik</string>
+	<string name="trace_clear_all">Hapus semua jejak</string>
+	<string name="autoMappingConfirm">Sesuaikan putar otomatis? Jeda akan mengikuti durasi suara. Putar otomatis saat ini akan dicadangkan. Pad yang ditekan bersamaan tetap bersamaan.</string>
+	<string name="autoMappingApply">Sesuaikan</string>
+	<string name="autoMappingSaved">Putar otomatis disimpan. Versi sebelumnya dapat dipulihkan dari menu.</string>
+	<string name="autoMappingFailed">Gagal menyimpan. Putar otomatis yang ada tidak berubah.</string>
+	<string name="autoPlayRestore">Pulihkan putar otomatis sebelumnya</string>
+	<string name="autoPlayNoBackup">Tidak ada cadangan tersimpan</string>
+	<string name="autoPlayRestoreConfirm">Pulihkan cadangan sebelumnya? Cadangan akan ditukar dengan putar otomatis saat ini. Keduanya dapat ditukar lagi.</string>
+	<string name="autoPlayRestoreApply">Pulihkan</string>
+	<string name="autoPlayRestored">Putar otomatis sebelumnya dipulihkan. Keduanya dapat ditukar lagi dari menu.</string>
+	<string name="autoPlayRestoreFailed">Gagal memulihkan. Putar otomatis saat ini dan cadangan tidak berubah.</string>
 </resources>

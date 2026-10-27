@@ -18,11 +18,13 @@ import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
+import com.kimjisub.launchpad.tool.AutoPlayFileReplacer
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
@@ -33,6 +35,7 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,6 +53,7 @@ class PlayActivityViewModel(
 	usage: UsageAnalytics,
 	private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 	private val autoMapper: (UniPackFolder) -> UniPackAutoMapper = ::UniPackAutoMapper,
+	private val autoPlayFiles: AutoPlayFileReplacer = AutoPlayFileReplacer(),
 ) : ViewModel() {
 
 	companion object {
@@ -125,6 +129,14 @@ class PlayActivityViewModel(
 	}
 
 	var uiCallback: UiCallback? = null
+	private var preferences: PreferenceManager? = null
+
+	/** Read once before input is enabled; recreation must not overwrite an in-session choice. */
+	fun bindPreferences(preferences: PreferenceManager) {
+		if (this.preferences != null) return
+		this.preferences = preferences
+		scbWatermark.setCheckedSilently(preferences.watermark)
+	}
 
 	// State
 	lateinit var unipack: UniPack
@@ -148,8 +160,9 @@ class PlayActivityViewModel(
 	var autoPlayProgressMax by mutableIntStateOf(0)
 	var isAutoPlayPlaying by mutableStateOf(false)
 	var isPracticeMode by mutableStateOf(false)
+	private var interruptedMode by mutableStateOf<PlayMode?>(null)
 	val playMode: PlayMode
-		get() = when {
+		get() = interruptedMode ?: when {
 			!scbAutoPlay.checked -> PlayMode.None
 			!isPracticeMode -> PlayMode.AutoPlay
 			isAutoPlayPlaying -> PlayMode.GuidePlay
@@ -173,6 +186,8 @@ class PlayActivityViewModel(
 	var autoMappingActive by mutableStateOf(false)
 	var autoMappingProgress by mutableIntStateOf(0)
 	var autoMappingMax by mutableIntStateOf(0)
+	var autoPlayBackupAvailable by mutableStateOf(false)
+		private set
 
 	// Core
 	lateinit var channelManager: ChannelManager
@@ -181,6 +196,12 @@ class PlayActivityViewModel(
 	// Runners
 	var ledRunner: LedRunner? = null
 	var autoPlayRunner: AutoPlayRunner? = null
+	// Parent of the runs of every runner this screen creates, replaced ones included.
+	private val autoPlayRuns = SupervisorJob()
+
+	/** True until every auto-play run this screen started, stopped or replaced, has sent its last callbacks. */
+	internal val autoPlayRunning: Boolean
+		get() = autoPlayRuns.children.any { !it.isCompleted }
 	var soundRunner: SoundRunner? = null
 
 	// The runner hands each tick's changes over outside its lock. While playing they are applied on the
@@ -252,16 +273,28 @@ class PlayActivityViewModel(
 		if (screenVisible && scbLed.isChecked()) ledRunner?.launch() else ledRunner?.stop()
 	}
 
+	// The activity supplies a fresh system request for each explicit start/resume.
+	var requestAudioFocus: (() -> Boolean)? = null
+
 	val audioFocusPolicy = AudioFocusPolicy(object : AudioFocusPolicy.Target {
-		override val isAutoPlayPlaying
-			get() = playMode != PlayMode.None && autoPlayRunner?.playmode == true
-		override fun silence() { soundRunner?.stopAll() }
-		override fun pauseAutoPlay() = autoPlayPause()
-		override fun resumeAutoPlay() {
-			// The user may have turned autoplay off while focus was away.
-			if (playMode != PlayMode.None) autoPlayResume()
+		override fun pauseAutoPlay() {
+			if (interruptedMode == null && playMode != PlayMode.None) interruptedMode = playMode
+			autoPlayRunner?.suspendPlayback()
+			isAutoPlayPlaying = false
 		}
+		override fun silence() = silenceAllInputs()
 	})
+
+	fun interruptPlayback() = audioFocusPolicy.onFocusChange(android.media.AudioManager.AUDIOFOCUS_LOSS)
+
+	private fun acquirePlaybackAudio(): Boolean {
+		val allowed = requestAudioFocus?.invoke() ?: audioFocusPolicy.hasFocus
+		if (!allowed) {
+			interruptPlayback()
+			uiCallback?.showToast(string.playback_audio_unavailable)
+		}
+		return allowed
+	}
 
 	// Recording
 	private var recPrevEventMs: Long = 0
@@ -304,6 +337,10 @@ class PlayActivityViewModel(
 		loadingPhaseIndex = 0
 		loadingPhaseTotal = 4 // info, keySound, keyLed, autoPlay
 		val pack = UniPackFolder(File(path)).load()
+		(pack as? UniPackFolder)?.autoPlayFile?.let { file ->
+			autoPlayFiles.recover(file)
+			autoPlayBackupAvailable = autoPlayFiles.hasBackup(file)
+		}
 		loadingPhaseIndex = 1
 		pack.loadDetailWithProgress { phase, index, _ ->
 			loadingPhase = phase
@@ -389,7 +426,8 @@ class PlayActivityViewModel(
 			optionViewVisible = !bool
 			refreshWatermark()
 		}
-		scbWatermark.onCheckedChange = {
+		scbWatermark.onCheckedChange = { checked ->
+			preferences?.watermark = checked
 			refreshWatermark()
 		}
 		scbProLightMode.onCheckedChange = { bool ->
@@ -506,8 +544,20 @@ class PlayActivityViewModel(
 	// only a release from its current owner may end that loop.
 	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?, val pointerId: Long = 0)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
-	private val padLoopOwner = mutableMapOf<Pair<Int, Int>, PlayTrigger>()
+	private val padOutputOwner = mutableMapOf<Pair<Int, Int>, PadInput>()
 	@Volatile private var autoPlayInputGeneration = 0L
+
+	private fun silenceAllInputs() {
+		autoPlayInputGeneration++
+		for ((pad, inputs) in heldPads.toMap()) {
+			for (input in inputs.toList())
+				padEvent(pad.first, pad.second, false, input.trigger, input.source, pointerId = input.pointerId)
+		}
+		controllerHeldPads.clear()
+		soundRunner?.stopAll()
+		if (isChannelManagerInitialized) ledInit()
+		autoPlayRemoveGuide()
+	}
 
 	private fun releaseAutoPlayPads() {
 		autoPlayInputGeneration++
@@ -583,6 +633,7 @@ class PlayActivityViewModel(
 		atMs: Long = SystemClock.elapsedRealtime(),
 		pointerId: Long = 0,
 	) {
+		if (autoMappingActive && upDown) return
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -591,11 +642,15 @@ class PlayActivityViewModel(
 		}
 		if (!isChannelManagerInitialized) return
 		try {
+			val input = PadInput(pressedBy, source, pointerId)
 			if (upDown) {
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source, pointerId))
-				padLoopOwner[x to y] = pressedBy
+				// A person's new press can request output; automatic input must stay suspended.
+				if (!audioFocusPolicy.hasFocus &&
+					(pressedBy != PlayTrigger.PAD || !acquirePlaybackAudio())) return
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(input)
+				padOutputOwner[x to y] = input
 				playSession.playTriggered(pressedBy, source)
-				if (autoPlayRunner?.stepMode == true) {
+				if (autoPlayRunner?.stepMode == true && interruptedMode == null) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
 				soundRunner?.soundOn(x, y, followWormhole = pressedBy != PlayTrigger.AUTOPLAY)
@@ -615,17 +670,17 @@ class PlayActivityViewModel(
 			} else {
 				val pad = x to y
 				val sources = heldPads[pad] ?: return
-				if (!sources.remove(PadInput(pressedBy, source, pointerId))) return
-				// All fingers/controllers share the player's current re-press. Auto play is its
-				// own owner, so releasing an older input must not end the newer owner's loop.
-				if (sources.none { it.trigger == pressedBy } && padLoopOwner[pad] == pressedBy) {
-					padLoopOwner.remove(pad)
+				if (!sources.remove(input)) return
+				// Sound and pack lights belong to the input that started them. Press feedback
+				// stays on independently until every input holding this pad has released it.
+				if (padOutputOwner[pad] == input) {
+					padOutputOwner.remove(pad)
 					soundRunner?.soundOff(x, y)
 					ledRunner?.eventOff(x, y, atMs)
 				}
 				if (sources.isEmpty()) {
 					heldPads.remove(pad)
-					padLoopOwner.remove(pad)
+					padOutputOwner.remove(pad)
 					channelManager.remove(x, y, Channel.PRESSED)
 				}
 				uiCallback?.setLedPad(x, y)
@@ -771,7 +826,7 @@ class PlayActivityViewModel(
 			val runner = ledRunner ?: return
 			if (dropWaiting) {
 				val lastChainChange = runner.afterDelivery {
-					stopLoopingLeds(runner)
+					runner.clear()
 					ledChanges.discard()
 				}
 				// The chain picks the sounds of the next press, so the one the dropped changes ended on still applies.
@@ -815,9 +870,11 @@ class PlayActivityViewModel(
 	// autoPlay
 
 	fun switchPlayMode(mode: PlayMode) {
+		if (autoMappingActive && mode != PlayMode.None) return
 		log("switchPlayMode: $mode")
 		val runner = autoPlayRunner ?: return
 		val currentMode = playMode
+		if (mode != PlayMode.None && mode != currentMode && !acquirePlaybackAudio()) return
 
 		if (mode == currentMode && mode != PlayMode.None) {
 			switchPlayMode(PlayMode.None)
@@ -825,6 +882,7 @@ class PlayActivityViewModel(
 		}
 
 		if (mode == PlayMode.None) {
+			interruptedMode = null
 			runner.practiceGuide = false
 			runner.stepMode = false
 			runner.resetStepState()
@@ -841,6 +899,8 @@ class PlayActivityViewModel(
 			return
 		}
 
+		interruptedMode = null
+		runner.resumeAfterInterruption()
 		if (currentMode == PlayMode.None) {
 			restorePlaybackLights()
 			// None → Active: runner 시작 필요
@@ -859,14 +919,10 @@ class PlayActivityViewModel(
 		if (mode != PlayMode.AutoPlay) releaseAutoPlayPads()
 		when (mode) {
 			PlayMode.AutoPlay -> {
-				runner.practiceGuide = false
-				runner.stepMode = false
-				runner.resetStepState()
 				autoPlayRemoveGuide()
-				runner.playmode = true
 				isPracticeMode = false
 				isAutoPlayPlaying = true
-				runner.beforeStartPlaying = true
+				runner.startAutoPlay()
 			}
 			PlayMode.GuidePlay -> {
 				runner.practiceGuide = true
@@ -900,12 +956,23 @@ class PlayActivityViewModel(
 	}
 
 	fun autoPlayResume() {
+		if (autoMappingActive) return
 		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
-		resetPadsAfterAutoPlay()
-		isAutoPlayPlaying = true
-		restorePlaybackLights()
-		runner.resume()
+		if (!acquirePlaybackAudio()) return
+		val interrupted = interruptedMode
+		if (interrupted != null) {
+			interruptedMode = null
+			isPracticeMode = interrupted != PlayMode.AutoPlay
+			isAutoPlayPlaying = interrupted != PlayMode.StepPractice
+			runner.resumeAfterInterruption()
+			if (interrupted != PlayMode.StepPractice) runner.resume()
+		} else {
+			resetPadsAfterAutoPlay()
+			isAutoPlayPlaying = true
+			restorePlaybackLights()
+			runner.resume()
+		}
 	}
 
 	fun autoPlayPause() {
@@ -986,14 +1053,24 @@ class PlayActivityViewModel(
 	fun initAutoPlayRunner() {
 		if (!unipack.autoPlayExist) return
 		autoPlayRunner?.stop()
+		interruptedMode = null
 		releaseAutoPlayPads()
 		// onEnd of a stopped runner arrives asynchronously; by then autoPlayRunner may already be
 		// its replacement, whose flags the old one must not reset.
 		var created: AutoPlayRunner? = null
+		fun guideEvent(action: () -> Unit) {
+			val runner = created ?: return
+			val generation = autoPlayInputGeneration
+			if (runner.suspended) return
+			viewModelScope.launch {
+				if (runner === autoPlayRunner && !runner.suspended && generation == autoPlayInputGeneration) action()
+			}
+		}
 		autoPlayRunner = AutoPlayRunner(
 			unipack = unipack,
 			chain = chain,
 			eventDispatcher = Dispatchers.Main.immediate,
+			runs = autoPlayRuns,
 			listener = object : AutoPlayRunner.Listener {
 				override fun onStart() {
 					viewModelScope.launch {
@@ -1025,35 +1102,26 @@ class PlayActivityViewModel(
 				}
 
 				override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {
-					viewModelScope.launch {
-						if (created === autoPlayRunner) autoPlayGuidePad(x, y, true, targetWallTimeMs)
-					}
+					guideEvent { autoPlayGuidePad(x, y, true, targetWallTimeMs) }
 				}
 
 				override fun onGuidePadOff(x: Int, y: Int) {
-					viewModelScope.launch {
-						if (created === autoPlayRunner) autoPlayGuidePad(x, y, false)
-					}
+					guideEvent { autoPlayGuidePad(x, y, false) }
 				}
 
 				override fun onGuideLedUpdate(x: Int, y: Int, velocity: Int) {
-					viewModelScope.launch {
-						if (created === autoPlayRunner) uiCallback?.sendGuideLedToLaunchpad(x, y, velocity)
-					}
+					guideEvent { uiCallback?.sendGuideLedToLaunchpad(x, y, velocity) }
 				}
 
 				override fun onGuideChainOn(c: Int) {
-					viewModelScope.launch {
-						if (created !== autoPlayRunner) return@launch
+					guideEvent {
 						channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, ChannelManager.NO_COLOR, LED_ORANGE)
 						uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
 					}
 				}
 
 				override fun onRemoveGuide() {
-					viewModelScope.launch {
-						if (created === autoPlayRunner) autoPlayRemoveGuide()
-					}
+					guideEvent { autoPlayRemoveGuide() }
 				}
 
 				override fun chainButsRefresh() {
@@ -1068,6 +1136,7 @@ class PlayActivityViewModel(
 					viewModelScope.launch {
 						if (created != null && created !== autoPlayRunner) return@launch
 						releaseAutoPlayPads()
+						interruptedMode = null
 						isAutoPlayPlaying = false
 						autoPlayRunner?.practiceGuide = false
 						autoPlayRunner?.stepMode = false
@@ -1084,42 +1153,52 @@ class PlayActivityViewModel(
 		created = autoPlayRunner
 	}
 
-	fun autoMapping() {
-		val folder = unipack as? UniPackFolder ?: return
-		if (!folder.autoPlayExist || autoMappingActive) return
+	fun autoMapping() = changeAutoPlay(restore = false)
 
-		autoPlayRunner?.stop()
-		releaseAutoPlayPads()
-		scbAutoPlay.setCheckedSilently(false)
-		autoPlayControlVisible = false
+	fun restoreAutoPlay() = changeAutoPlay(restore = true)
+
+	private fun changeAutoPlay(restore: Boolean) {
+		val folder = unipack as? UniPackFolder ?: return
+		val file = folder.autoPlayFile ?: return
+		if (autoMappingActive || (restore && !autoPlayBackupAvailable)) return
 
 		autoMappingActive = true
 		autoMappingProgress = 0
-		// Leaving the play screen cancels it; left before the writing starts, the pack's autoPlay stays as it was.
+		switchPlayMode(PlayMode.None)
+		autoPlayRunner?.stop()
+		silenceAllInputs()
+		interruptedMode = null
+		isAutoPlayPlaying = false
+		isPracticeMode = false
+		scbAutoPlay.setCheckedSilently(false)
+		autoPlayControlVisible = false
+
+		val previousTable = folder.autoPlayTable
 		viewModelScope.launch {
 			try {
-				autoMapper(folder).run(object : UniPackAutoMapper.Listener {
-					override fun onGetWorkSize(size: Int) {
-						autoMappingMax = size
+				if (restore) {
+					withContext(Dispatchers.IO) {
+						autoPlayFiles.restore(file) { folder.reloadAutoPlay() }
 					}
-
-					override fun onProgress(progress: Int) {
-						autoMappingProgress = progress
-					}
-				})
-				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
-				withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
-				autoMappingActive = false
-				initAutoPlayRunner()
-				log("AutoMapping complete")
+				} else {
+					autoMapper(folder).run(object : UniPackAutoMapper.Listener {
+						override fun onGetWorkSize(size: Int) { autoMappingMax = size }
+						override fun onProgress(progress: Int) { autoMappingProgress = progress }
+					}) { folder.reloadAutoPlay() }
+				}
 			} catch (e: CancellationException) {
 				throw e
 			} catch (e: Exception) {
-				Log.err("AutoMapping failed", e)
-				uiCallback?.showToast(string.failed)
+				folder.autoPlayTable = previousTable
+				Log.err("Autoplay save failed", e)
+				uiCallback?.showToast(if (restore) string.autoPlayRestoreFailed else string.autoMappingFailed)
+				return@launch
 			} finally {
 				autoMappingActive = false
 			}
+			autoPlayBackupAvailable = true
+			initAutoPlayRunner()
+			uiCallback?.showToast(if (restore) string.autoPlayRestored else string.autoMappingSaved)
 		}
 	}
 

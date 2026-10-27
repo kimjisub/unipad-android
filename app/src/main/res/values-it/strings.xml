@@ -88,8 +88,8 @@
 	<string name="stepPractice">Passo</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Luce di feedback</string>
-	<string name="traceLog">Registro Traccia</string>
-	<string name="traceLogClear">Il registro traccia è stato reimpostato.</string>
+	<string name="traceLog">Registrazione delle tracce</string>
+	<string name="traceLogClear">Tutte le tracce sono state cancellate.</string>
 	<string name="record">Registra</string>
 	<string name="hideUI">Nascondi UI</string>
 	<string name="watermark">Filigrana</string>
@@ -179,6 +179,9 @@
 	<string name="sort_play_count">Volte Giocato</string>
 	<string name="sort_last_opened_date">Ultima Apertura</string>
 	<string name="sort_download_date">Data Download</string>
+	<string name="sort_order">Ordinamento</string>
+	<string name="sort_ascending">Crescente</string>
+	<string name="sort_descending">Decrescente</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Dimensione Pad</string>
@@ -286,8 +289,22 @@
 	<string name="backup_recovery_later">Più tardi</string>
 	<string name="settings_play">Esecuzione</string>
 	<string name="trace_log_classic">Numeri dell\'ordine sui pad</string>
-	<string name="trace_log_classic_desc">Con il Registro Traccia attivo durante l\'esecuzione, mostra l\'ordine dei tocchi come numeri su ogni pad invece che con linee e punti</string>
+	<string name="trace_log_classic_desc">Con la registrazione delle tracce attiva durante l\'esecuzione, mostra l\'ordine dei tocchi come numeri su ogni pad invece che con linee e punti</string>
 	<string name="slide_mode">Scorri sui pad</string>
 	<string name="slide_mode_desc">Trascinando un dito su un pad, questo suona e quello che si lascia si ferma</string>
 	<string name="no_app_for_link">Nessuna app su questo dispositivo può aprire questo link.</string>
+	<string name="trace_display_style">Stile delle tracce</string>
+	<string name="trace_numbers">Numeri</string>
+	<string name="trace_lines">Linee e punti</string>
+	<string name="trace_clear_all">Cancella tutte le tracce</string>
+	<string name="autoMappingConfirm">Adattare la riproduzione automatica? Le attese seguiranno la durata dei suoni. La riproduzione attuale verrà salvata come copia. I pad simultanei resteranno insieme.</string>
+	<string name="autoMappingApply">Adatta</string>
+	<string name="autoMappingSaved">Riproduzione automatica salvata. Puoi ripristinare la precedente dal menu.</string>
+	<string name="autoMappingFailed">Salvataggio non riuscito. La riproduzione automatica esistente è invariata.</string>
+	<string name="autoPlayRestore">Ripristina riproduzione automatica precedente</string>
+	<string name="autoPlayNoBackup">Nessuna copia salvata</string>
+	<string name="autoPlayRestoreConfirm">Ripristinare la copia precedente? Verrà scambiata con la riproduzione attuale. Potrai scambiarle di nuovo.</string>
+	<string name="autoPlayRestoreApply">Ripristina</string>
+	<string name="autoPlayRestored">Riproduzione precedente ripristinata. Puoi scambiarle di nuovo dal menu.</string>
+	<string name="autoPlayRestoreFailed">Ripristino non riuscito. La riproduzione attuale e la copia sono invariate.</string>
 </resources>

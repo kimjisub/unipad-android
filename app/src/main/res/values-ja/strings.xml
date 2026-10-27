@@ -88,8 +88,8 @@
 	<string name="stepPractice">ステップ</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">フィードバックライト</string>
-	<string name="traceLog">トレースログ</string>
-	<string name="traceLogClear">トレースログがリセットされました。</string>
+	<string name="traceLog">軌跡の記録</string>
+	<string name="traceLogClear">すべての軌跡を消去しました。</string>
 	<string name="record">録音</string>
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
@@ -177,6 +177,9 @@
 	<string name="sort_play_count">再生回数</string>
 	<string name="sort_last_opened_date">最終オープン日</string>
 	<string name="sort_download_date">ダウンロード日</string>
+	<string name="sort_order">並べ替えの順序</string>
+	<string name="sort_ascending">昇順</string>
+	<string name="sort_descending">降順</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">パッドサイズ</string>
@@ -284,8 +287,22 @@
 	<string name="backup_recovery_later">後で</string>
 	<string name="settings_play">演奏</string>
 	<string name="trace_log_classic">パッドに順番の数字を表示</string>
-	<string name="trace_log_classic_desc">演奏中にトレースログをオンにすると、線と点の代わりに各パッドにタップした順番を数字で表示します</string>
+	<string name="trace_log_classic_desc">演奏中に軌跡の記録をオンにすると、線と点の代わりに各パッドにタップした順番を数字で表示します</string>
 	<string name="slide_mode">パッドをなぞる</string>
 	<string name="slide_mode_desc">指をなぞって別のパッドに入るとそのパッドが鳴り、離れたパッドは止まります</string>
 	<string name="no_app_for_link">この端末にはこのリンクを開けるアプリがありません。</string>
+	<string name="trace_display_style">軌跡の表示方法</string>
+	<string name="trace_numbers">数字</string>
+	<string name="trace_lines">線と点</string>
+	<string name="trace_clear_all">軌跡をすべて消去</string>
+	<string name="autoMappingConfirm">自動演奏を調整しますか？待ち時間を音の長さに置き換えます。現在の自動演奏をバックアップします。同時に押したパッドは同時のままです。</string>
+	<string name="autoMappingApply">調整する</string>
+	<string name="autoMappingSaved">自動演奏を保存しました。メニューから以前のものに復元できます。</string>
+	<string name="autoMappingFailed">保存できませんでした。既存の自動演奏は変更されていません。</string>
+	<string name="autoPlayRestore">以前の自動演奏に復元</string>
+	<string name="autoPlayNoBackup">保存されたバックアップはありません</string>
+	<string name="autoPlayRestoreConfirm">直前のバックアップに戻しますか？現在の自動演奏と入れ替えます。復元後も再び入れ替えられます。</string>
+	<string name="autoPlayRestoreApply">復元する</string>
+	<string name="autoPlayRestored">以前の自動演奏に復元しました。メニューから再び入れ替えられます。</string>
+	<string name="autoPlayRestoreFailed">復元できませんでした。現在の自動演奏とバックアップは変更されていません。</string>
 </resources>

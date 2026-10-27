@@ -7,6 +7,65 @@ import org.junit.Test
 class PadTouchTrackerTest {
 
 	@Test
+	fun leavingAndReenteringTheGridKeepsIndependentFingersInBothModes() {
+		for (sliding in listOf(false, true)) {
+			events.clear()
+			val t = tracker(slide = sliding)
+			t.down(0, 1, 2)
+			t.down(1, 3, 4)
+			t.move(0, -1, 0)
+			t.move(0, 1, 3)
+			t.up(1)
+			t.up(0)
+			val expected = mutableListOf(Event(1, 2, true), Event(3, 4, true))
+			if (sliding) expected += listOf(Event(1, 2, false), Event(1, 3, true))
+			expected += listOf(Event(3, 4, false), Event(1, if (sliding) 3 else 2, false))
+			assertEquals(expected, events)
+		}
+	}
+
+	@Test
+	fun layoutChangeSuppressesHeldFingersUntilLiftInSlideMode() {
+		val t = tracker(slide = true)
+		t.down(0, 1, 2)
+		t.setGrid(8, 8)
+		events.clear()
+		t.move(0, 1, 3)
+		assertEquals(emptyList<Event>(), events)
+		t.up(0)
+		t.down(0, 1, 3)
+		t.up(0)
+		assertEquals(listOf(Event(1, 3, true), Event(1, 3, false)), events)
+	}
+
+	@Test
+	fun changingSlideModeReleasesAndSuppressesEveryCurrentFinger() {
+		for (initial in listOf(false, true)) {
+			events.clear()
+			val t = tracker(slide = initial)
+			t.down(0, 1, 2)
+			t.down(1, 3, 4)
+			events.clear()
+			t.slide = !initial
+			assertEquals(setOf(Event(1, 2, false), Event(3, 4, false)), events.toSet())
+			events.clear()
+			t.move(0, 1, 3)
+			t.move(1, 3, 5)
+			t.up(0)
+			t.up(1)
+			assertEquals(emptyList<Event>(), events)
+		}
+	}
+
+	@Test
+	fun aMoveWithoutADownCannotStartAPress() {
+		val t = tracker(slide = true)
+		t.move(9, 1, 2)
+		t.up(9)
+		assertEquals(emptyList<Event>(), events)
+	}
+
+	@Test
 	fun twoPointersOnOneCellKeepTheirIdsWhenReleasedInEitherOrder() {
 		for (first in listOf(7L, 11L)) {
 			val delivered = mutableListOf<Pair<Long, Boolean>>()

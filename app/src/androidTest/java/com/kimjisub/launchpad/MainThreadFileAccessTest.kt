@@ -138,6 +138,7 @@ class MainThreadFileAccessTest : BaseUITest() {
 
         watchMainThread()
         row!!.click()
+        assertTrue("Auto Mapping confirmation missing", clickFresh { device.findObject(By.text(str(R.string.autoMappingApply))) })
         assertTrue("Auto Mapping did not start", device.wait(Until.hasObject(running), LAUNCH_TIMEOUT))
         assertTrue("Auto Mapping did not finish", device.wait(Until.gone(running), AUTO_MAPPING_TIMEOUT))
 

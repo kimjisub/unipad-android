@@ -4,7 +4,6 @@ import android.graphics.Rect
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MainActivity
-import com.kimjisub.launchpad.manager.AppUpdateSource
 import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.UpdateStatus
 import org.junit.Assert.assertEquals
@@ -66,19 +65,26 @@ class AppUpdateLayoutTest : BaseUITest() {
             assertNotNull("search field missing", field)
             field.text = TestUniPack.TITLE
             findTestPackRow()
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertTrue("search lost focus", device.findObject(By.clazz("android.widget.EditText")).isFocused)
             assertEquals(TestUniPack.TITLE, device.findObject(By.clazz("android.widget.EditText")).text)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             takeScreenshot("update_ready_during_search")
             device.findObject(By.desc(str(R.string.transfer_search))).click()
             selectTestPack()
-            emit(source, UpdateStatus.Failed)
-            assertTrue("selection was lost", device.hasObject(By.res("main_detail_${TestUniPack.FOLDER_NAME}")))
+            source.emit(UpdateStatus.Failed)
+            val selectionKept = device.hasObject(By.res("main_detail_${TestUniPack.FOLDER_NAME}"))
+            if (!selectionKept) {
+                takeScreenshot("update-selection-failure")
+                ActivityReadiness.captureState(context, device, "update-selection-failure", "state")
+                TestCaptures.save(device, "update-selection-failure/input.txt") { it.writeText(device.executeShellCommand("dumpsys input")); true }
+                TestCaptures.save(device, "update-selection-failure/windows.txt") { it.writeText(device.executeShellCommand("dumpsys window windows")); true }
+            }
+            assertTrue("selection was lost", selectionKept)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             device.pressBack()
             openSettings()
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertTrue("settings were left", device.hasObject(By.text(str(R.string.settings_storage))))
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             device.pressBack()
@@ -86,12 +92,12 @@ class AppUpdateLayoutTest : BaseUITest() {
             device.findObject(By.desc(str(R.string.import_unipack))).click()
             assertTrue("file picker did not open", waitUntil(10000L) { device.currentPackageName != PACKAGE_NAME })
             val picker = device.currentPackageName
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertEquals("file picker was left", picker, device.currentPackageName)
             device.pressBack()
             assertTrue(waitForMainScreen())
             assertFalse(device.hasObject(By.res("app_update_dialog")))
-            assertTrue(device.wait(Until.hasObject(By.desc(str(R.string.update_ready_title))), 5000L))
+            assertTrue(device.wait(Until.hasObject(noticeSaying(R.string.update_ready_title)), 5000L))
         } finally { MainActivity.appUpdateSourceForTest = null }
     }
 
@@ -106,8 +112,8 @@ class AppUpdateLayoutTest : BaseUITest() {
                 if (control()?.isFocused != true) device.pressKeyCode(android.view.KeyEvent.KEYCODE_TAB)
             }
             assertTrue("could not focus the update control", control()?.isFocused == true)
-            emit(source, UpdateStatus.Downloaded)
-            assertTrue(device.wait(Until.hasObject(By.desc(str(R.string.update_ready_title))), 5000L))
+            source.emit(UpdateStatus.Downloaded)
+            assertTrue(device.wait(Until.hasObject(noticeSaying(R.string.update_ready_title)), 5000L))
             assertTrue("an automatic result moved keyboard focus", control()?.isFocused == true)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
         } finally { MainActivity.appUpdateSourceForTest = null }
@@ -137,13 +143,6 @@ class AppUpdateLayoutTest : BaseUITest() {
         }
     }
 
-    private fun emit(source: ControlledSource, status: UpdateStatus) {
-        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            source.answer = status
-            source.listener!!(status)
-        }
-    }
-
     private fun checkLayout(language: String, scale: Float) {
         val originalLanguage = AppLanguage.get()
         val originalScale = device.executeShellCommand("settings get system font_scale").trim()
@@ -165,15 +164,12 @@ class AppUpdateLayoutTest : BaseUITest() {
             val automaticChoices = device.hasObject(By.res("app_update_card"))
             val statePositions = mutableListOf(positions())
             takeScreenshot("update_${language}_${scale}_offer")
-            val notice = device.findObject(By.desc(str(R.string.update_offer_title)))
+            val notice = device.findObject(noticeSaying(R.string.update_offer_title))
             if (notice != null) {
-                // Compose exposes the name as a child of the actual action node.
-                val action = clickableAncestor(notice)
-                assertEquals("app_update_notice", action.resourceName?.substringAfterLast('/'))
                 assertTrue("notice must become enabled", waitUntil(5000L) {
                     device.findObject(By.res("app_update_notice"))?.isEnabled == true
                 })
-                assertTrue("notice target is too small", action.visibleBounds.height() >= 48 * context.resources.displayMetrics.density - 2)
+                assertTrue("notice target is too small", notice.visibleBounds.height() >= 48 * context.resources.displayMetrics.density - 2)
                 TestCaptures.save(device, "notice-${language}-${scale}.xml") { file -> device.dumpWindowHierarchy(file); true }
                 assertTrue("notice could not be tapped", clickFresh(5000L) {
                     device.findObject(By.res("app_update_notice"))?.takeIf { it.isEnabled }
@@ -192,7 +188,7 @@ class AppUpdateLayoutTest : BaseUITest() {
                 Triple(UpdateStatus.Downloaded, R.string.update_ready_title, "ready"),
                 Triple(UpdateStatus.Failed, R.string.update_failed, "failed"),
             )) {
-                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync { source.listener!!(status) }
+                source.push(status)
                 assertTrue("state missing: $suffix", waitForState(title))
                 statePositions += positions()
                 takeScreenshot("update_${language}_${scale}_$suffix")
@@ -208,9 +204,10 @@ class AppUpdateLayoutTest : BaseUITest() {
         }
     }
 
-    private fun waitForState(title: Int): Boolean = waitUntil(10000L) {
-        device.hasObject(By.desc(str(title))) || device.hasObject(By.text(str(title)))
-    }
+    private fun waitForState(title: Int): Boolean = waitUntil(10000L) { device.hasObject(By.text(str(title))) }
+
+    /** The small update notice itself, not the update choices' title that shares its text. */
+    private fun noticeSaying(title: Int) = By.res("app_update_notice").hasDescendant(By.text(str(title)))
 
     private fun positions(): List<Rect> = listOf(
         By.desc(str(R.string.cd_logo)), By.desc(str(R.string.setting)),
@@ -219,19 +216,5 @@ class AppUpdateLayoutTest : BaseUITest() {
         val node = device.wait(Until.findObject(selector), 5000L)
         assertNotNull("main content missing: $selector", node)
         Rect(node.visibleBounds)
-    }
-
-    private class ControlledSource : AppUpdateSource {
-        var answer: UpdateStatus = UpdateStatus.None
-        var listener: ((UpdateStatus) -> Unit)? = null
-        var error: Exception? = null
-        override suspend fun status(): UpdateStatus {
-            error?.let { throw it }
-            return answer
-        }
-        override fun startDownload() = false
-        override suspend fun install() = error("must not install automatically")
-        override fun observe(onChange: (UpdateStatus) -> Unit) { listener = onChange }
-        override fun close() { listener = null }
     }
 }

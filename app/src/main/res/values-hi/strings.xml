@@ -88,8 +88,8 @@
 	<string name="stepPractice">चरण</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">फीडबैक लाइट</string>
-	<string name="traceLog">ट्रेस लॉग</string>
-	<string name="traceLogClear">ट्रेस लॉग रीसेट हो गया है।</string>
+	<string name="traceLog">टैप के निशानों की रिकॉर्डिंग</string>
+	<string name="traceLogClear">टैप के सभी निशान मिटा दिए गए हैं।</string>
 	<string name="record">रिकॉर्ड</string>
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
@@ -178,6 +178,9 @@
 	<string name="sort_play_count">प्ले गिनती</string>
 	<string name="sort_last_opened_date">अंतिम खोला</string>
 	<string name="sort_download_date">डाउनलोड तिथि</string>
+	<string name="sort_order">क्रमबद्ध करने का क्रम</string>
+	<string name="sort_ascending">आरोही</string>
+	<string name="sort_descending">अवरोही</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">पैड आकार</string>
@@ -285,8 +288,22 @@
 	<string name="backup_recovery_later">बाद में</string>
 	<string name="settings_play">बजाना</string>
 	<string name="trace_log_classic">पैड पर टैप क्रम की संख्या दिखाएँ</string>
-	<string name="trace_log_classic_desc">बजाते समय ट्रेस लॉग चालू होने पर, टैप का क्रम रेखाओं और बिंदुओं के बजाय हर पैड पर संख्याओं में दिखाएँ</string>
+	<string name="trace_log_classic_desc">बजाते समय टैप के निशानों की रिकॉर्डिंग चालू होने पर, टैप का क्रम रेखाओं और बिंदुओं के बजाय हर पैड पर संख्याओं में दिखाएँ</string>
 	<string name="slide_mode">पैड पर स्लाइड करें</string>
 	<string name="slide_mode_desc">उँगली खींचकर किसी पैड पर लाने से वह बजता है और छोड़ा गया पैड रुक जाता है</string>
 	<string name="no_app_for_link">इस डिवाइस पर कोई भी ऐप यह लिंक नहीं खोल सकता।</string>
+	<string name="trace_display_style">निशान दिखाने का तरीका</string>
+	<string name="trace_numbers">संख्याएँ</string>
+	<string name="trace_lines">रेखाएँ और बिंदु</string>
+	<string name="trace_clear_all">सभी निशान मिटाएँ</string>
+	<string name="autoMappingConfirm">अपने आप बजाने को समायोजित करें? प्रतीक्षा की जगह ध्वनि की अवधि लगेगी। वर्तमान क्रम का बैकअप बनेगा। साथ दबाए गए पैड साथ ही रहेंगे।</string>
+	<string name="autoMappingApply">समायोजित करें</string>
+	<string name="autoMappingSaved">अपने आप बजाने का क्रम सहेजा गया। मेन्यू से पिछला क्रम बहाल कर सकते हैं।</string>
+	<string name="autoMappingFailed">सहेज नहीं सके। मौजूदा क्रम बदला नहीं है।</string>
+	<string name="autoPlayRestore">पिछला क्रम बहाल करें</string>
+	<string name="autoPlayNoBackup">कोई बैकअप नहीं है</string>
+	<string name="autoPlayRestoreConfirm">पिछला बैकअप बहाल करें? यह वर्तमान क्रम से बदल जाएगा। बहाल करने के बाद फिर बदल सकते हैं।</string>
+	<string name="autoPlayRestoreApply">बहाल करें</string>
+	<string name="autoPlayRestored">पिछला क्रम बहाल हुआ। मेन्यू से फिर बदल सकते हैं।</string>
+	<string name="autoPlayRestoreFailed">बहाल नहीं कर सके। वर्तमान क्रम और बैकअप बदले नहीं हैं।</string>
 </resources>

@@ -28,6 +28,15 @@ class TraceLogClassicStringsTest {
 	}
 
 	@Test
+	fun everyLocaleSeparatesTraceRecordingStyleAndClear() {
+		val required = listOf("traceLog", "trace_display_style", "trace_numbers", "trace_lines", "trace_clear_all")
+		val missing = localeStrings().filter { (_, strings) -> required.any { strings[it].isNullOrBlank() } }.keys
+		assertTrue("Missing trace menu labels in $missing", missing.isEmpty())
+		val repeated = localeStrings().filter { (_, strings) -> required.map { strings[it] }.toSet().size != required.size }.keys
+		assertTrue("Trace controls must have distinct labels in $repeated", repeated.isEmpty())
+	}
+
+	@Test
 	fun everyLocaleDefinesTitleAndDescription() {
 		val missing = localeStrings().filter { (_, s) ->
 			s["trace_log_classic"].isNullOrBlank() || s["trace_log_classic_desc"].isNullOrBlank()
