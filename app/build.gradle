@@ -327,6 +327,11 @@ dependencies {
 	// Native crashes (Android's drawing thread, the Oboe audio engine) with the same keys and logs.
 	implementation 'com.google.firebase:firebase-crashlytics-ndk'
 	implementation 'com.google.firebase:firebase-analytics'
+	constraints {
+		implementation('com.google.guava:guava:33.7.2-android') {
+			because 'Firestore and Analytics bring 32.1.3, affected by GHSA-xxph-c9ww-hj94 (fixed in 33.7.2)'
+		}
+	}
 
 	// Retrofit 2
 	implementation 'com.squareup.retrofit2:retrofit:3.0.0'
