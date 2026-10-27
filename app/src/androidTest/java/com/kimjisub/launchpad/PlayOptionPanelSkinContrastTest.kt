@@ -10,6 +10,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -125,13 +127,14 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         val quitInk = Color(panel.single { it.label == "Quit" }.ink)
         assertTrue("[$name] Quit is no longer red: $quitInk", quitInk.red > quitInk.green + 0.2f && quitInk.red > quitInk.blue + 0.2f)
 
-        device.findObject(By.text(TestUniPack.TITLE)).click()
+        requireNotNull(panelItem(By.text(TestUniPack.TITLE)).first).click()
         assertNotNull("[$name] pack info did not expand", device.wait(Until.findObject(By.text(TestUniPack.PRODUCER)), 3000L))
         Thread.sleep(PANEL_SETTLE_MS)
         takeScreenshot("option_panel_${name}_info")
         val info = measureAll(name, screenshot(), knownLimits, Triple(INFO_CARD_PRODUCER, By.text(TestUniPack.PRODUCER), text))
 
-        device.findObject(By.text(str(R.string.autoMapping))).click()
+        requireNotNull(panelItem(By.text(str(R.string.autoMapping))).first).click()
+        assertTrue("[$name] confirmation missing", clickFresh { device.findObject(By.text(str(R.string.autoMappingApply))) })
         assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(autoMappingBusy)), 5000L))
         val busyShot = screenshot()
         takeScreenshot("option_panel_${name}_automapping")
@@ -166,14 +169,35 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
      * Contrast of the strongest ink pixel against the background inside each node. The background is
      * the most common colour there; glyph edges are anti-aliased, so the ink is the pixel that differs most.
      */
-    private fun measureAll(name: String, shot: Bitmap, knownLimits: Map<String, Float>, vararg items: Triple<String, BySelector, Float>): List<Contrast> =
-        items.map { (label, selector, min) ->
-            val node = device.wait(Until.findObject(selector), 3000L)
+
+    /** Find the same user-visible label by scrolling the existing option list, in either direction. */
+    private fun panelItem(selector: BySelector): Pair<UiObject2?, Boolean> {
+        val visible = device.wait(Until.findObject(selector), 3000L)
+        if (visible != null && !visible.visibleBounds.isEmpty) return visible to false
+        for (direction in listOf(Direction.UP, Direction.DOWN)) {
+            val panel = device.findObject(By.res("play_options")) ?: break
+            val found = panel.scrollUntil(direction, Until.findObject(selector))
+            if (found != null && !found.visibleBounds.isEmpty) {
+                Thread.sleep(PANEL_SETTLE_MS)
+                return device.wait(Until.findObject(selector), 3000L) to true
+            }
+        }
+        return null to true
+    }
+
+    private fun measureAll(name: String, shot: Bitmap, knownLimits: Map<String, Float>, vararg items: Triple<String, BySelector, Float>): List<Contrast> {
+        var frame = shot
+        return items.mapIndexed { index, (label, selector, min) ->
+            val (node, scrolled) = panelItem(selector)
             assertNotNull("[$name] $label not found in the option panel", node)
+            if (scrolled) {
+                frame = screenshot()
+                takeScreenshot("option_panel_${name}_scrolled_$index")
+            }
             val area = Rect(node!!.visibleBounds)
-            assertTrue("[$name] $label is outside the screenshot", area.intersect(0, 0, shot.width, shot.height))
+            assertTrue("[$name] $label is outside the screenshot", area.intersect(0, 0, frame.width, frame.height))
             val pixels = IntArray(area.width() * area.height())
-            shot.getPixels(pixels, 0, area.width(), area.left, area.top, area.width(), area.height())
+            frame.getPixels(pixels, 0, area.width(), area.left, area.top, area.width(), area.height())
             val background = Color(pixels.toList().groupingBy { it }.eachCount().maxBy { it.value }.key)
             val ink = pixels.maxBy { PlayPalette.contrastRatio(Color(it), background) }
             val ratio = PlayPalette.contrastRatio(Color(ink), background)
@@ -186,6 +210,7 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
             )
             Contrast(label, ratio, ink, required)
         }
+    }
 
     companion object {
         private const val PREF_NAME = "data"

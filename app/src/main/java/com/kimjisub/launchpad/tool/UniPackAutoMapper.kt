@@ -2,10 +2,12 @@ package com.kimjisub.launchpad.tool
 
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.launchpad.unipack.struct.Sound
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.math.roundToInt
 
 /**
  * Rewrites a pack's autoPlay so each wait matches the length of the sound pressed before it.
@@ -24,7 +26,7 @@ class UniPackAutoMapper(
 	}
 
 	/** Calls [listener] in the caller's context; throws when the pack cannot be read or written. */
-	suspend fun run(listener: Listener) {
+	suspend fun run(listener: Listener, validate: () -> Unit = {}) {
 		val autoPlayFile = unipack.autoPlayFile ?: throw FileNotFoundException("autoPlay")
 		val autoPlay = unipack.autoPlayTable ?: throw IllegalStateException("autoPlay is not loaded")
 		val elements = mergeDelays(autoPlay.elements)
@@ -34,48 +36,72 @@ class UniPackAutoMapper(
 		openDurationReader().use { reader ->
 			// null: the sound's length is unknown, so the pack's own wait is kept.
 			var nextDuration: Int? = FIRST_DELAY_MS
+			var waitReplaced = false
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it) } }
+						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt() } }
+						waitReplaced = false
 						result.add(e)
 					}
 					is AutoPlay.Element.Chain -> result.add(e)
-					is AutoPlay.Element.Delay ->
-						result.add(AutoPlay.Element.Delay(nextDuration?.plus(AUTOMAPPING_DELAY_OFFSET_MS) ?: e.delay))
+					is AutoPlay.Element.Delay -> {
+						// Chain changes split the original waits, but the interval between two
+						// presses must receive the previous sound's length only once. Unknown
+						// lengths keep every original wait on its own side of each chain change.
+						if (nextDuration == null) result.add(e)
+						else if (!waitReplaced) {
+							result.add(AutoPlay.Element.Delay(nextDuration + AUTOMAPPING_DELAY_OFFSET_MS))
+							waitReplaced = true
+						}
+					}
 					is AutoPlay.Element.Off -> {}
 				}
 				listener.onProgress(i)
 			}
 		}
 
-		val content = render(result)
+		val content = render(result) { sound(it)?.wormhole?.takeIf { chain -> chain != Sound.NO_WORMHOLE } }
 		// withContext checks for cancellation before writing; the replacement itself is not interrupted.
-		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content) }
+		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content, validate) }
 	}
 
-	private fun soundFile(e: AutoPlay.Element.On): File? {
+	private fun soundFile(e: AutoPlay.Element.On): File? = sound(e)?.file
+
+	private fun sound(e: AutoPlay.Element.On): Sound? {
 		val sounds = unipack.soundTable?.getOrNull(e.currChain)?.getOrNull(e.x)?.getOrNull(e.y)
 		if (sounds.isNullOrEmpty()) return null
-		return sounds.elementAt(e.num % sounds.size).file
+		return sounds.elementAt(e.num % sounds.size)
 	}
 
 	companion object {
 		private const val FIRST_DELAY_MS = 1000
 		private const val AUTOMAPPING_DELAY_OFFSET_MS = 0
 
-		/** Drops pad releases and joins consecutive waits into one, placed before each press. */
+		/** Joins waits without moving an intervening chain change ahead of its wait. */
 		internal fun mergeDelays(elements: List<AutoPlay.Element>): List<AutoPlay.Element> {
 			val merged = ArrayList<AutoPlay.Element>()
 			var pendingDelay: Int? = 0
-			for (e in elements) {
+			var hasPress = false
+			val lastPress = elements.indexOfLast { it is AutoPlay.Element.On }
+			fun flushDelay() {
+				pendingDelay?.let { merged.add(AutoPlay.Element.Delay(it)) }
+				pendingDelay = null
+			}
+			for ((index, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						pendingDelay?.let { merged.add(AutoPlay.Element.Delay(it)) }
-						pendingDelay = null
+						flushDelay()
+						hasPress = true
 						merged.add(e)
 					}
-					is AutoPlay.Element.Chain -> merged.add(e)
+					is AutoPlay.Element.Chain -> {
+						// Leading chain selection stays before the first one-second wait. After a
+						// press, a chain following a wait must move at that wait's replacement time.
+						// A wait after the final press is still discarded.
+						if (hasPress && index < lastPress) flushDelay()
+						merged.add(e)
+					}
 					is AutoPlay.Element.Delay -> pendingDelay = (pendingDelay ?: 0) + e.delay
 					is AutoPlay.Element.Off -> {}
 				}
@@ -83,12 +109,27 @@ class UniPackAutoMapper(
 			return merged
 		}
 
-		internal fun render(elements: List<AutoPlay.Element>): String = buildString {
+		internal fun render(
+			elements: List<AutoPlay.Element>,
+			chainAfter: (AutoPlay.Element.On) -> Int? = { null },
+		): String = buildString {
+			var inferredChain: Int? = null
 			for (e in elements) {
 				when (e) {
-					is AutoPlay.Element.On -> append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
-					is AutoPlay.Element.Chain -> append("c ").append(e.c + 1).append('\n')
-					is AutoPlay.Element.Delay -> append("d ").append(e.delay).append('\n')
+					is AutoPlay.Element.On -> {
+						append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
+						inferredChain = chainAfter(e)
+					}
+					is AutoPlay.Element.Chain -> {
+						// Re-reading `t` already follows the sound's wormhole. Keep any following
+						// explicit chain commands, but do not emit that inferred change twice.
+						if (inferredChain != e.c) append("c ").append(e.c + 1).append('\n')
+						inferredChain = null
+					}
+					is AutoPlay.Element.Delay -> {
+						append("d ").append(e.delay).append('\n')
+						inferredChain = null
+					}
 					is AutoPlay.Element.Off -> {}
 				}
 			}

@@ -285,4 +285,14 @@
 	<string name="trace_numbers">Mga numero</string>
 	<string name="trace_lines">Mga linya at tuldok</string>
 	<string name="trace_clear_all">Burahin ang lahat ng bakas</string>
+	<string name="autoMappingConfirm">Iangkop ang awtomatikong pagtugtog? Papalitan ang paghihintay ng haba ng tunog. Iba-backup ang kasalukuyang pagtugtog. Mananatiling sabay ang mga pad na sabay na pinindot.</string>
+	<string name="autoMappingApply">Iangkop</string>
+	<string name="autoMappingSaved">Na-save ang awtomatikong pagtugtog. Maibabalik ang nauna mula sa menu.</string>
+	<string name="autoMappingFailed">Hindi na-save. Hindi nagbago ang dating awtomatikong pagtugtog.</string>
+	<string name="autoPlayRestore">Ibalik ang naunang awtomatikong pagtugtog</string>
+	<string name="autoPlayNoBackup">Walang naka-save na backup</string>
+	<string name="autoPlayRestoreConfirm">Ibalik ang naunang backup? Magpapalit ito ng puwesto sa kasalukuyang pagtugtog. Maaari silang ipagpalit muli.</string>
+	<string name="autoPlayRestoreApply">Ibalik</string>
+	<string name="autoPlayRestored">Naibalik ang naunang pagtugtog. Maaari silang ipagpalit muli sa menu.</string>
+	<string name="autoPlayRestoreFailed">Hindi naibalik. Hindi nagbago ang kasalukuyang pagtugtog at backup.</string>
 </resources>

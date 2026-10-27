@@ -297,4 +297,14 @@
 	<string name="trace_numbers">Nombres</string>
 	<string name="trace_lines">Lignes et points</string>
 	<string name="trace_clear_all">Effacer toutes les traces</string>
+	<string name="autoMappingConfirm">Ajuster la lecture automatique ? Les attentes suivront la durée des sons. La lecture actuelle sera sauvegardée. Les pads simultanés resteront ensemble.</string>
+	<string name="autoMappingApply">Ajuster</string>
+	<string name="autoMappingSaved">Lecture automatique enregistrée. Le menu permet de restaurer la précédente.</string>
+	<string name="autoMappingFailed">Enregistrement impossible. La lecture automatique existante reste inchangée.</string>
+	<string name="autoPlayRestore">Restaurer la lecture automatique précédente</string>
+	<string name="autoPlayNoBackup">Aucune sauvegarde enregistrée</string>
+	<string name="autoPlayRestoreConfirm">Restaurer la sauvegarde précédente ? Elle sera échangée avec la lecture actuelle. Vous pourrez les échanger à nouveau.</string>
+	<string name="autoPlayRestoreApply">Restaurer</string>
+	<string name="autoPlayRestored">Lecture précédente restaurée. Le menu permet de les échanger à nouveau.</string>
+	<string name="autoPlayRestoreFailed">Restauration impossible. La lecture actuelle et sa sauvegarde restent inchangées.</string>
 </resources>

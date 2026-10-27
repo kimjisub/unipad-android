@@ -298,4 +298,14 @@
 	<string name="trace_numbers">Числа</string>
 	<string name="trace_lines">Линии и точки</string>
 	<string name="trace_clear_all">Очистить все следы</string>
+	<string name="autoMappingConfirm">Настроить автовоспроизведение? Паузы будут заменены длительностью звуков. Текущий вариант будет сохранён в резервной копии. Одновременные нажатия останутся одновременными.</string>
+	<string name="autoMappingApply">Настроить</string>
+	<string name="autoMappingSaved">Автовоспроизведение сохранено. Предыдущий вариант можно восстановить через меню.</string>
+	<string name="autoMappingFailed">Не удалось сохранить. Исходное автовоспроизведение не изменено.</string>
+	<string name="autoPlayRestore">Восстановить предыдущее автовоспроизведение</string>
+	<string name="autoPlayNoBackup">Сохранённой копии нет</string>
+	<string name="autoPlayRestoreConfirm">Восстановить предыдущую копию? Она поменяется местами с текущим автовоспроизведением. Их можно будет поменять снова.</string>
+	<string name="autoPlayRestoreApply">Восстановить</string>
+	<string name="autoPlayRestored">Предыдущее автовоспроизведение восстановлено. В меню можно поменять их снова.</string>
+	<string name="autoPlayRestoreFailed">Не удалось восстановить. Текущее автовоспроизведение и резервная копия не изменены.</string>
 </resources>

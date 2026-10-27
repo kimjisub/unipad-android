@@ -297,4 +297,14 @@
 	<string name="trace_numbers">Numeri</string>
 	<string name="trace_lines">Linee e punti</string>
 	<string name="trace_clear_all">Cancella tutte le tracce</string>
+	<string name="autoMappingConfirm">Adattare la riproduzione automatica? Le attese seguiranno la durata dei suoni. La riproduzione attuale verrà salvata come copia. I pad simultanei resteranno insieme.</string>
+	<string name="autoMappingApply">Adatta</string>
+	<string name="autoMappingSaved">Riproduzione automatica salvata. Puoi ripristinare la precedente dal menu.</string>
+	<string name="autoMappingFailed">Salvataggio non riuscito. La riproduzione automatica esistente è invariata.</string>
+	<string name="autoPlayRestore">Ripristina riproduzione automatica precedente</string>
+	<string name="autoPlayNoBackup">Nessuna copia salvata</string>
+	<string name="autoPlayRestoreConfirm">Ripristinare la copia precedente? Verrà scambiata con la riproduzione attuale. Potrai scambiarle di nuovo.</string>
+	<string name="autoPlayRestoreApply">Ripristina</string>
+	<string name="autoPlayRestored">Riproduzione precedente ripristinata. Puoi scambiarle di nuovo dal menu.</string>
+	<string name="autoPlayRestoreFailed">Ripristino non riuscito. La riproduzione attuale e la copia sono invariate.</string>
 </resources>

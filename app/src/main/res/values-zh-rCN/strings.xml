@@ -297,4 +297,14 @@
 	<string name="trace_numbers">数字</string>
 	<string name="trace_lines">线和点</string>
 	<string name="trace_clear_all">清除全部轨迹</string>
+	<string name="autoMappingConfirm">调整自动演奏吗？等待时间将替换为声音长度。当前自动演奏将备份。同时按下的打击垫仍将同时演奏。</string>
+	<string name="autoMappingApply">调整</string>
+	<string name="autoMappingSaved">已保存自动演奏。可从菜单恢复之前的版本。</string>
+	<string name="autoMappingFailed">无法保存。现有自动演奏保持不变。</string>
+	<string name="autoPlayRestore">恢复之前的自动演奏</string>
+	<string name="autoPlayNoBackup">没有已保存的备份</string>
+	<string name="autoPlayRestoreConfirm">恢复上次备份吗？它将与当前自动演奏交换。恢复后仍可再次交换。</string>
+	<string name="autoPlayRestoreApply">恢复</string>
+	<string name="autoPlayRestored">已恢复之前的自动演奏。可从菜单再次交换。</string>
+	<string name="autoPlayRestoreFailed">无法恢复。当前自动演奏和备份均保持不变。</string>
 </resources>

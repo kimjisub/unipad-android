@@ -90,6 +90,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
@@ -176,6 +177,7 @@ class PlayActivity : BaseActivity() {
 	private var unipackErrorDialog by mutableStateOf<Pair<String, String>?>(null) // title, message
 	private var unipackErrorIsCritical by mutableStateOf(false)
 	private var showRestartDialog by mutableStateOf(false)
+	private var autoPlayChangeDialog by mutableStateOf<Boolean?>(null)
 
 	// UI - Theme
 	private var theme by mutableStateOf<IThemeResources?>(null)
@@ -335,6 +337,22 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				PlayScreen()
+				autoPlayChangeDialog?.let { restore ->
+					AppAlertDialog(
+						onDismissRequest = { autoPlayChangeDialog = null },
+						text = { Text(stringResource(if (restore) string.autoPlayRestoreConfirm else string.autoMappingConfirm)) },
+						confirmButton = {
+							TextButton(enabled = !vm.autoMappingActive, onClick = {
+								autoPlayChangeDialog = null
+								if (restore) vm.restoreAutoPlay() else vm.autoMapping()
+							}) { Text(stringResource(if (restore) string.autoPlayRestoreApply else string.autoMappingApply)) }
+						},
+						dismissButton = {
+							TextButton(onClick = { autoPlayChangeDialog = null }) { Text(stringResource(string.cancel)) }
+						},
+					)
+				}
+
 
 				unipackErrorDialog?.let { (title, message) ->
 					AppAlertDialog(
@@ -1041,7 +1059,7 @@ class PlayActivity : BaseActivity() {
 				modifier = Modifier
 					.fillMaxWidth()
 					.focusRing()
-					.clickable { vm.autoMapping() }
+					.clickable { autoPlayChangeDialog = false }
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
@@ -1049,6 +1067,22 @@ class PlayActivity : BaseActivity() {
 				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
+		Column(
+			modifier = Modifier.fillMaxWidth()
+				.clickable(enabled = !vm.autoMappingActive && vm.autoPlayBackupAvailable) { autoPlayChangeDialog = true }
+				.padding(horizontal = 24.dp, vertical = 10.dp),
+		) {
+			Text(
+				stringResource(string.autoPlayRestore), color = textColor, fontSize = 13.sp,
+				modifier = Modifier.semantics {
+					if (vm.autoMappingActive || !vm.autoPlayBackupAvailable) disabled()
+				},
+			)
+			if (!vm.autoPlayBackupAvailable) {
+				Text(stringResource(string.autoPlayNoBackup), color = textColor, fontSize = 11.sp)
+			}
+		}
+
 	}
 
 	@Composable

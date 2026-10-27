@@ -295,4 +295,14 @@
 	<string name="trace_numbers">数字</string>
 	<string name="trace_lines">線と点</string>
 	<string name="trace_clear_all">軌跡をすべて消去</string>
+	<string name="autoMappingConfirm">自動演奏を調整しますか？待ち時間を音の長さに置き換えます。現在の自動演奏をバックアップします。同時に押したパッドは同時のままです。</string>
+	<string name="autoMappingApply">調整する</string>
+	<string name="autoMappingSaved">自動演奏を保存しました。メニューから以前のものに復元できます。</string>
+	<string name="autoMappingFailed">保存できませんでした。既存の自動演奏は変更されていません。</string>
+	<string name="autoPlayRestore">以前の自動演奏に復元</string>
+	<string name="autoPlayNoBackup">保存されたバックアップはありません</string>
+	<string name="autoPlayRestoreConfirm">直前のバックアップに戻しますか？現在の自動演奏と入れ替えます。復元後も再び入れ替えられます。</string>
+	<string name="autoPlayRestoreApply">復元する</string>
+	<string name="autoPlayRestored">以前の自動演奏に復元しました。メニューから再び入れ替えられます。</string>
+	<string name="autoPlayRestoreFailed">復元できませんでした。現在の自動演奏とバックアップは変更されていません。</string>
 </resources>

@@ -3,63 +3,128 @@ package com.kimjisub.launchpad.tool
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
- * Replaces a pack's autoPlay file so that it is never missing or half written: the new content is
- * written in full to a file beside it and renamed over it, and the old content is kept as
- * `autoPlay_<time>`. When the replacement fails the folder is left as it was.
+ * Saves the current autoplay and its single previous version as one recoverable transaction.
+ * Until the journal is committed, reopening rolls both files back. All originals and replacement
+ * files are flushed before either public file changes. Call only from a background dispatcher.
  */
 class AutoPlayFileReplacer(
-	private val now: () -> Date = ::Date,
 	private val write: (File, String) -> Unit = ::writeToDisk,
 	private val copy: (File, File) -> Unit = ::copyToDisk,
+	private val move: (File, File) -> Unit = ::rename,
 ) {
-	fun replace(autoPlayFile: File, content: String) {
-		val folder = autoPlayFile.absoluteFile.parentFile
-			?: throw IOException("${autoPlayFile.path} has no folder")
-		val temp = File(folder, autoPlayFile.name + TEMP_SUFFIX)
-		// The name is free, so a backup found here after a failure is this run's own, possibly partial.
-		val backup = freeBackupFile(folder)
+	fun replace(autoPlayFile: File, content: String, validate: () -> Unit = {}) = synchronized(lock) {
+		recover(autoPlayFile)
+		transact(autoPlayFile, { next -> write(next, content) }, validate)
+	}
+
+	fun restore(autoPlayFile: File) = restore(autoPlayFile) {}
+
+	fun restore(autoPlayFile: File, validate: () -> Unit) = synchronized(lock) {
+		recover(autoPlayFile)
+		val backup = backupFile(autoPlayFile)
+		if (!backup.isFile) throw IOException("No previous autoplay")
+		transact(autoPlayFile, { next -> copy(backup, next) }, validate)
+	}
+
+	fun hasBackup(autoPlayFile: File): Boolean = synchronized(lock) {
+		recover(autoPlayFile)
+		backupFile(autoPlayFile).isFile
+	}
+
+	/** Must run before parsing a pack after an interrupted save or restore. Safe to repeat. */
+	fun recover(autoPlayFile: File) = synchronized(lock) {
+		val journal = sibling(autoPlayFile, JOURNAL)
+		if (journal.exists()) rollback(autoPlayFile, journal)
+		clean(sibling(autoPlayFile, PREPARING))
+		clean(sibling(autoPlayFile, COMMITTED))
+	}
+
+	private fun transact(autoPlay: File, newContent: (File) -> Unit, validate: () -> Unit) {
+		val preparing = sibling(autoPlay, PREPARING)
+		val journal = sibling(autoPlay, JOURNAL)
+		val committed = sibling(autoPlay, COMMITTED)
+		val backup = backupFile(autoPlay)
+		if (!preparing.mkdir()) throw IOException("Cannot prepare autoplay save")
 		try {
-			write(temp, content)
-			copy(autoPlayFile, backup)
-			// rename(2) swaps the file in one step, replacing the old one.
-			if (!temp.renameTo(autoPlayFile)) throw IOException("Could not replace ${autoPlayFile.path}")
+			write(File(preparing, "version"), "1")
+			copy(autoPlay, File(preparing, "original"))
+			if (backup.exists()) {
+				copy(backup, File(preparing, "previous"))
+				write(File(preparing, "had-previous"), "1")
+			}
+			newContent(File(preparing, "next"))
+			copy(autoPlay, File(preparing, "next-previous"))
+			move(preparing, journal)
+			move(File(journal, "next-previous"), backup)
+			move(File(journal, "next"), autoPlay)
+			// Re-read the saved file before committing. A failure also restores the old backup.
+			validate()
+			move(journal, committed)
 		} catch (e: Exception) {
-			temp.delete()
-			backup.delete()
+			try {
+				if (journal.exists()) rollback(autoPlay, journal)
+				clean(preparing)
+			} catch (recovery: Exception) {
+				e.addSuppressed(recovery) // Keep the journal for recovery on the next open.
+			}
 			throw e
+		}
+		// Once committed, cleanup failure must not turn a successful save into a failure.
+		runCatching { committed.deleteRecursively() }
+	}
+
+	private fun rollback(autoPlay: File, journal: File) {
+		checkJournal(journal)
+		val backup = backupFile(autoPlay)
+		if (File(journal, "had-previous").exists()) {
+			val previous = File(journal, "previous")
+			if (previous.exists()) rename(previous, backup)
+		} else if (backup.exists() && !backup.delete()) {
+			throw IOException("Cannot recover previous autoplay")
+		}
+		val original = File(journal, "original")
+		// Rename consumes the rollback file. A restart midway through recovery skips files already
+		// restored and resumes the remaining renames, without allocating more disk space.
+		if (original.exists()) rename(original, autoPlay)
+		rename(journal, sibling(autoPlay, COMMITTED))
+		clean(sibling(autoPlay, COMMITTED))
+	}
+
+	private fun clean(folder: File) {
+		if (!folder.exists()) return
+		if (!folder.isDirectory) throw IOException("Invalid autoplay staging directory")
+		if (!folder.deleteRecursively()) throw IOException("Cannot clear autoplay transaction")
+	}
+
+	private fun checkJournal(folder: File) {
+		if (!folder.isDirectory || File(folder, "version").readText() != "1") {
+			throw IOException("Invalid autoplay transaction")
 		}
 	}
 
-	/** `autoPlay_<time>`, or `autoPlay_<time>-2`, `-3`… when mappings finish within the same second. */
-	private fun freeBackupFile(folder: File): File {
-		val base = BACKUP_PREFIX + SimpleDateFormat(BACKUP_TIME_FORMAT, Locale.US).format(now())
-		return generateSequence(1) { it + 1 }
-			.map { File(folder, if (it == 1) base else "$base-$it") }
-			.first { !it.exists() }
-	}
-
 	companion object {
+		private val lock = Any()
 		const val TEMP_SUFFIX = ".tmp"
-		private const val BACKUP_PREFIX = "autoPlay_"
-		private const val BACKUP_TIME_FORMAT = "yyyy_MM_dd-HH_mm_ss"
+		private const val PREPARING = ".preparing"
+		private const val JOURNAL = ".transaction"
+		private const val COMMITTED = ".committed"
 
-		/** Writes and flushes to the storage, so a power loss after the rename cannot leave it empty. */
+		private fun sibling(file: File, suffix: String) = File(file.absoluteFile.parentFile, ".${file.name}$suffix")
+		private fun backupFile(file: File) = File(file.absoluteFile.parentFile, file.name + "_previous")
+
+		private fun rename(from: File, to: File) {
+			if (!from.renameTo(to)) throw IOException("Cannot replace ${to.name}")
+		}
+
 		private fun writeToDisk(file: File, content: String) {
 			FileOutputStream(file).use {
-				it.write(content.toByteArray())
+				it.write(content.toByteArray(Charsets.UTF_8))
 				it.fd.sync()
 			}
 		}
 
-		/**
-		 * Copies [from] to [to] through a flushed file beside it, so [to] only ever appears whole and
-		 * stays whole after a power loss right after autoPlay is replaced.
-		 */
 		internal fun copyToDisk(from: File, to: File) {
 			val partial = File(to.path + TEMP_SUFFIX)
 			try {
@@ -69,7 +134,7 @@ class AutoPlayFileReplacer(
 						it.fd.sync()
 					}
 				}
-				if (!partial.renameTo(to)) throw IOException("Could not create ${to.path}")
+				rename(partial, to)
 			} catch (e: Exception) {
 				partial.delete()
 				throw e

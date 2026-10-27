@@ -295,4 +295,14 @@
 	<string name="trace_numbers">Số</string>
 	<string name="trace_lines">Đường và chấm</string>
 	<string name="trace_clear_all">Xóa mọi dấu vết</string>
+	<string name="autoMappingConfirm">Căn chỉnh tự động phát? Thời gian chờ sẽ thay bằng độ dài âm thanh. Bản tự động phát hiện tại sẽ được sao lưu. Các pad nhấn đồng thời vẫn cùng lúc.</string>
+	<string name="autoMappingApply">Căn chỉnh</string>
+	<string name="autoMappingSaved">Đã lưu tự động phát. Bạn có thể khôi phục bản trước từ menu.</string>
+	<string name="autoMappingFailed">Không thể lưu. Bản tự động phát hiện có không thay đổi.</string>
+	<string name="autoPlayRestore">Khôi phục tự động phát trước đó</string>
+	<string name="autoPlayNoBackup">Chưa có bản sao lưu</string>
+	<string name="autoPlayRestoreConfirm">Khôi phục bản sao lưu trước? Bản này sẽ đổi chỗ với tự động phát hiện tại. Bạn có thể đổi lại sau khi khôi phục.</string>
+	<string name="autoPlayRestoreApply">Khôi phục</string>
+	<string name="autoPlayRestored">Đã khôi phục tự động phát trước đó. Bạn có thể đổi lại từ menu.</string>
+	<string name="autoPlayRestoreFailed">Không thể khôi phục. Tự động phát hiện tại và bản sao lưu không thay đổi.</string>
 </resources>

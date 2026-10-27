@@ -296,4 +296,14 @@
 	<string name="trace_numbers">Zahlen</string>
 	<string name="trace_lines">Linien und Punkte</string>
 	<string name="trace_clear_all">Alle Spuren löschen</string>
+	<string name="autoMappingConfirm">Autoplay anpassen? Wartezeiten werden durch Klanglängen ersetzt. Das aktuelle Autoplay wird gesichert. Gleichzeitig gedrückte Pads bleiben gleichzeitig.</string>
+	<string name="autoMappingApply">Anpassen</string>
+	<string name="autoMappingSaved">Autoplay gespeichert. Die vorherige Version kann im Menü wiederhergestellt werden.</string>
+	<string name="autoMappingFailed">Speichern fehlgeschlagen. Das bisherige Autoplay bleibt unverändert.</string>
+	<string name="autoPlayRestore">Vorheriges Autoplay wiederherstellen</string>
+	<string name="autoPlayNoBackup">Keine gespeicherte Sicherung</string>
+	<string name="autoPlayRestoreConfirm">Vorherige Sicherung wiederherstellen? Sie wird mit dem aktuellen Autoplay getauscht. Der Tausch lässt sich wiederholen.</string>
+	<string name="autoPlayRestoreApply">Wiederherstellen</string>
+	<string name="autoPlayRestored">Vorheriges Autoplay wiederhergestellt. Im Menü kann erneut getauscht werden.</string>
+	<string name="autoPlayRestoreFailed">Wiederherstellung fehlgeschlagen. Autoplay und Sicherung bleiben unverändert.</string>
 </resources>

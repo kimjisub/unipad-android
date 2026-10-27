@@ -97,8 +97,8 @@
 	<string name="play_section_performance">효과</string>
 	<string name="play_section_display">화면</string>
 	<string name="play_section_tools">도구</string>
-	<string name="autoMapping">자동 매핑</string>
-	<string name="autoMappingRunning">자동 매핑…</string>
+	<string name="autoMapping">자동 맞춤</string>
+	<string name="autoMappingRunning">자동 맞춤…</string>
 	<string name="play_info_untitled">제목 없음</string>
 	<plurals name="play_info_size_chains">
 		<item quantity="other">"%1$d×%2$d  ·  체인 %3$d개"</item>
@@ -329,4 +329,14 @@
 	<string name="trace_numbers">숫자</string>
 	<string name="trace_lines">선과 점</string>
 	<string name="trace_clear_all">흔적 모두 지우기</string>
+	<string name="autoMappingConfirm">자동 연주를 맞출까요? 기다림을 소리 길이로 바꿉니다. 지금의 자동 연주는 백업합니다. 동시에 누른 패드는 함께 둡니다</string>
+	<string name="autoMappingApply">맞추기</string>
+	<string name="autoMappingSaved">자동 연주를 저장했습니다. 메뉴에서 이전 것으로 복원할 수 있어요</string>
+	<string name="autoMappingFailed">저장하지 못했습니다. 기존 자동 연주는 그대로입니다</string>
+	<string name="autoPlayRestore">이전 자동 연주로 복원</string>
+	<string name="autoPlayNoBackup">저장된 백업이 없습니다</string>
+	<string name="autoPlayRestoreConfirm">직전 백업으로 되돌릴까요? 현재 자동 연주와 자리를 바꿉니다. 복원 후에도 다시 되돌릴 수 있어요</string>
+	<string name="autoPlayRestoreApply">복원하기</string>
+	<string name="autoPlayRestored">이전 자동 연주로 복원했습니다. 메뉴에서 다시 되돌릴 수 있어요</string>
+	<string name="autoPlayRestoreFailed">복원하지 못했습니다. 현재 자동 연주와 백업은 그대로입니다</string>
 </resources>
