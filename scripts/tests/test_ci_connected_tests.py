@@ -223,10 +223,16 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertFalse((root / ".ci-results/ui-status.txt").exists())
 
     def test_missing_device_id_fails_before_driving_any_device(self):
-        root, result = self.run_runner(serial=None)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root / "adb-calls.txt").exists())
-        self.assertFalse((root / "gradle-args.txt").exists())
+        earlier = {"ui-status.txt": "exit_code=0\nverdict=pass\n", "ui-check.txt": "verdict=pass\n",
+                   "logcat.txt": "earlier-run-logcat\n"}
+        for serial in (None, ""):
+            with self.subTest(serial=serial):
+                root, result = self.run_runner(serial=serial, earlier=earlier)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((root / "adb-calls.txt").exists())
+                self.assertFalse((root / "gradle-args.txt").exists())
+                for name in earlier:
+                    self.assertFalse((root / ".ci-results" / name).exists(), f"{name} from the earlier run remains")
 
     def test_successful_gradle_without_app_results_fails(self):
         root, result = self.run_runner(results={"design": passed(1)})

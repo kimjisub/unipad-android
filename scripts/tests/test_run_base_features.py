@@ -31,7 +31,7 @@ def instrumentation(tests, footer=None, status_codes=()):
 
 class BaseFeaturesRunnerTest(unittest.TestCase):
     def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n",
-                   earlier=None, kill_during_suite=False):
+                   earlier=None, kill_during_suite=False, serial="emulator-5678"):
         """Run the script against fake adb/Gradle; `am instrument` prints `output`.
 
         `earlier` maps result file names to contents a previous run left behind. With
@@ -71,7 +71,8 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         gradle.write_text("#!/bin/bash\ntouch gradle-ran\n")
         gradle.chmod(0o755)
         env = dict(os.environ, ANDROID_HOME=str(root / "sdk"))
-        command = ["bash", "scripts/run-base-features.sh", "emulator-5678"]
+        env.pop("ANDROID_SERIAL", None)
+        command = ["bash", "scripts/run-base-features.sh", *([] if serial is None else [serial])]
         if kill_during_suite:
             env["HANG"] = "1"
             return root, kill_once_started(command, root, env, "suite-ran")
@@ -93,6 +94,16 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
                                           kill_during_suite=True)
         self.assertEqual(exit_code, -9)
         self.assertFalse((root / ".ci-results/base-features/ui-status.txt").exists())
+
+    def test_missing_device_id_leaves_no_earlier_summary(self):
+        for serial in (None, ""):
+            with self.subTest(serial=serial):
+                root, result = self.run_runner(instrumentation(5), serial=serial,
+                                               earlier={"ui-status.txt": "exit_code=0\n"})
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertFalse((root / ".ci-results/base-features/ui-status.txt").exists())
+                self.assertFalse((root / "suite-ran").exists())
+                self.assertFalse((root / "gradle-ran").exists())
 
     def test_refused_suite_leaves_no_earlier_summary(self):
         root, result = self.run_runner(instrumentation(2), classes={"FirstTest": 2},
