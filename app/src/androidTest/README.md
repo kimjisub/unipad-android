@@ -24,7 +24,7 @@ For the deterministic release subset, coverage inventory, and signed-candidate l
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 For shared-corpus observations, see [UniPack conformance](../test/resources/unipack-conformance/README.md).
-The device checks include eight screen recorders and seven file parser checks on internal storage.
+The device checks include eight screen recorders and thirteen file parser checks on internal storage.
 A completed screen recorder remains an unverified corpus case; it is not a conformance pass.
 
 ## Run on an API 35 emulator
