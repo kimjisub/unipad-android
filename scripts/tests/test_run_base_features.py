@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 import unittest
 
+from forced_stop import kill_once_started
+
 SCRIPTS = Path(__file__).resolve().parents[1]
 SUITE_DIR = "app/src/androidTest/java/com/kimjisub/launchpad/basefeatures"
 SUITE = """@RunWith(Suite::class)
@@ -28,8 +30,13 @@ def instrumentation(tests, footer=None, status_codes=()):
 
 
 class BaseFeaturesRunnerTest(unittest.TestCase):
-    def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n"):
-        """Run the script against fake adb/Gradle; `am instrument` prints `output`."""
+    def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n",
+                   earlier=None, kill_during_suite=False, serial="emulator-5678"):
+        """Run the script against fake adb/Gradle; `am instrument` prints `output`.
+
+        `earlier` maps result file names to contents a previous run left behind. With
+        `kill_during_suite` the suite hangs and the runner is SIGKILLed; the exit code is returned.
+        """
         classes = {"FirstTest": 2, "SecondTest": 3} if classes is None else classes
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
@@ -46,6 +53,10 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             (suite_dir / f"{name}.kt").write_text(test_class(name, tests))
         (root / "instrumentation.txt").write_text(output)
         (root / "probe.txt").write_text(probe_output)
+        for name, content in (earlier or {}).items():
+            path = root / ".ci-results/base-features" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
         adb = root / "sdk/platform-tools/adb"
         adb.parent.mkdir(parents=True)
         adb.write_text("#!/bin/bash\n"
@@ -53,15 +64,19 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
                        "  *getprop*) echo 34 ;;\n"
                        "  *airplane_mode_on*) echo 1 ;;\n"
                        "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
-                       "  *'am instrument'*) touch suite-ran; cat instrumentation.txt ;;\n"
+                       "  *'am instrument'*) touch suite-ran; [[ -n \"${HANG:-}\" ]] && sleep 60; cat instrumentation.txt ;;\n"
                        "esac\n")
         adb.chmod(0o755)
         gradle = root / "gradlew"
         gradle.write_text("#!/bin/bash\ntouch gradle-ran\n")
         gradle.chmod(0o755)
         env = dict(os.environ, ANDROID_HOME=str(root / "sdk"))
-        result = subprocess.run(["bash", "scripts/run-base-features.sh", "emulator-5678"], cwd=root,
-                                env=env, capture_output=True, text=True)
+        env.pop("ANDROID_SERIAL", None)
+        command = ["bash", "scripts/run-base-features.sh", *([] if serial is None else [serial])]
+        if kill_during_suite:
+            env["HANG"] = "1"
+            return root, kill_once_started(command, root, env, "suite-ran")
+        result = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True)
         return root, result
 
     def test_unconfirmed_app_settings_stop_before_running_the_suite(self):
@@ -73,6 +88,28 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         root, result = self.run_runner(instrumentation(5))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((root / ".ci-results/base-features/device-settings.json").exists())
+
+    def test_run_stopped_during_suite_leaves_no_earlier_summary(self):
+        root, exit_code = self.run_runner(instrumentation(5), earlier={"ui-status.txt": "exit_code=0\n"},
+                                          kill_during_suite=True)
+        self.assertEqual(exit_code, -9)
+        self.assertFalse((root / ".ci-results/base-features/ui-status.txt").exists())
+
+    def test_missing_device_id_leaves_no_earlier_summary(self):
+        for serial in (None, ""):
+            with self.subTest(serial=serial):
+                root, result = self.run_runner(instrumentation(5), serial=serial,
+                                               earlier={"ui-status.txt": "exit_code=0\n"})
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertFalse((root / ".ci-results/base-features/ui-status.txt").exists())
+                self.assertFalse((root / "suite-ran").exists())
+                self.assertFalse((root / "gradle-ran").exists())
+
+    def test_refused_suite_leaves_no_earlier_summary(self):
+        root, result = self.run_runner(instrumentation(2), classes={"FirstTest": 2},
+                                       earlier={"ui-status.txt": "exit_code=0\n"})
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertFalse((root / ".ci-results/base-features/ui-status.txt").exists())
 
     def test_passes_when_footer_counts_every_declared_test(self):
         _, result = self.run_runner(instrumentation(5))

@@ -22,6 +22,9 @@ Results default to `.ci-results` for connected tests and
 `.ci-results/base-features` for the base feature suite. Set `CI_RESULTS_DIR` to a
 persistent output folder to keep them elsewhere. Each invocation replaces the
 previous invocation's files, so archive a round before reusing that folder.
+Each invocation deletes `ui-status.txt` when it starts and writes it again only in
+its exit handler: a folder without `ui-status.txt` holds a run that never finished
+(killed, disconnected or still running), never a pass.
 
 - `device-settings.json`: timestamped `before`, normalized `after`, and `final`
   snapshots, the keys reset, app verification time, and any preparation/read error.
