@@ -121,7 +121,7 @@ class UniPackConformanceChecksTest {
 	fun audioOperationsUseTheRealAppOperationWithoutParsingAPack() {
 		val neverParse = Deps(loadPack = { error("operation reached the pack parser") })
 		val cases = corpus.cases.filter { it.observation in setOf("audio-cost", "audio-file", "audio-wave", "audio-selection") }
-		assertEquals(106, cases.size)
+		assertEquals(115, cases.size)
 		for (c in cases) {
 			val result = resultFor(c, corpus, neverParse)
 			assertEquals(c.id, c.expected, result.actual)

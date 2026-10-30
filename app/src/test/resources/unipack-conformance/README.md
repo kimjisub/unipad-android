@@ -69,7 +69,7 @@ they do not change the generic host
 report or the restrictions in the canonical corpus.
 
 The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
-and `AudioSelector.select` for 106 cases. Physical WAV fixtures use real PCM
+and `AudioSelector.select` for 115 cases. Physical WAV fixtures use real PCM
 headers and data lengths, rather than the input's claimed duration. Each result
 names its `operationAdapter`; the independent checker refuses operations passed
 through the ordinary parser. Neither adapter reads an expected result.
