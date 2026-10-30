@@ -101,7 +101,7 @@ class ConformanceReportTest(unittest.TestCase):
     def test_every_registered_g6_case_rejects_missing_wrong_and_unknown_results(self):
         corpus_path = Path(__file__).resolve().parents[2] / "app/src/test/resources/unipack-conformance/corpus.json"
         added = json.loads(corpus_path.read_bytes())["cases"]
-        self.assertEqual(382, len(added))
+        self.assertEqual(391, len(added))
         for case in added:
             with self.subTest(case=case["id"]):
                 # Fabricated validator fixtures, never runtime observations of the app.
