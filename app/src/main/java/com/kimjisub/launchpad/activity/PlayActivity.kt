@@ -310,7 +310,7 @@ class PlayActivity : BaseActivity() {
 
 		vm = ViewModelProvider(
 			this,
-			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
+			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, playCrashKeys, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
 		vm.bindPreferences(p)
 		vm.requestAudioFocus = { audioFocus.request() }

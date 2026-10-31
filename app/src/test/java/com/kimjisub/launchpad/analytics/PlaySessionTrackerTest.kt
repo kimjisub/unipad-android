@@ -11,6 +11,22 @@ class PlaySessionTrackerTest {
 	private var nanos = 5_000_000_000L
 	private val session = sink.analytics.newPlaySession { nanos }
 
+	private val mediumLandscape = arrayOf(
+		UsageParam.ORIENTATION to "landscape",
+		UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
+		UsageParam.WINDOW_MODE to "full_screen",
+	)
+	private val portraitSplitScreen = arrayOf(
+		UsageParam.ORIENTATION to "portrait",
+		UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
+		UsageParam.WINDOW_MODE to "multi_window",
+	)
+	private val expandedPortrait = arrayOf(
+		UsageParam.ORIENTATION to "portrait",
+		UsageParam.SCREEN_SHORT_SIDE to "840dp_plus",
+		UsageParam.WINDOW_MODE to "full_screen",
+	)
+
 	private fun advanceSeconds(seconds: Double) {
 		nanos += (seconds * 1_000_000_000L).toLong()
 	}
@@ -198,28 +214,48 @@ class PlaySessionTrackerTest {
 	}
 
 	@Test
-	fun playStartCarriesTheLatestScreenLayoutAndNothingElseDoes() {
+	fun eachEventCarriesTheScreenLayoutOfItsOwnMomentExceptTheFirstInput() {
 		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
 		session.loadStarted()
+		advanceSeconds(2.0)
 		session.loadSucceeded()
 		session.screenLayoutChanged(ScreenLayout.of(700, 1_000, true))
 		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
-		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		session.screenLayoutChanged(ScreenLayout.of(1_000, 1_100, false))
+		advanceSeconds(45.0)
 		session.ended()
 
 		assertEquals(
-			sink.pack(
-				UsageEvent.PLAY_START,
-				UsageParam.TRIGGER to "pad",
-				UsageParam.ORIENTATION to "portrait",
-				UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
-				UsageParam.WINDOW_MODE to "multi_window",
+			listOf(
+				packLoad(UsageParam.RESULT to "success", UsageParam.DURATION_BUCKET to "1s_3s", *mediumLandscape),
+				sink.pack(UsageEvent.PLAY_START, UsageParam.TRIGGER to "pad", *portraitSplitScreen),
+				firstInput("screen"),
+				sink.pack(UsageEvent.PLAY_END, UsageParam.DURATION_BUCKET to "30s_2m", *expandedPortrait),
 			),
-			sink.named(UsageEvent.PLAY_START).single(),
+			sink.events,
 		)
-		assertEquals(listOf(UsageParam.TRIGGER, UsageParam.INPUT_SOURCE), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters.keys.toList())
-		assertEquals(listOf(UsageParam.DURATION_BUCKET), sink.named(UsageEvent.PLAY_END).single().parameters.keys.toList())
-		assertEquals(4, sink.events.size)
+	}
+
+	@Test
+	fun everyLoadResultCarriesTheScreenLayout() {
+		val failed = RecordingUsageSink()
+		failed.analytics.newPlaySession { nanos }.run {
+			screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+			loadStarted()
+			loadFailed(UsageErrorType.SOUND_ENGINE, canPlay = true)
+		}
+		val cancelled = RecordingUsageSink()
+		cancelled.analytics.newPlaySession { nanos }.run {
+			screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+			loadStarted()
+			ended()
+		}
+
+		assertEquals(
+			listOf(packLoad(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine", *mediumLandscape)),
+			failed.events,
+		)
+		assertEquals(listOf(packLoad(UsageParam.RESULT to "cancelled", *mediumLandscape)), cancelled.events)
 	}
 
 	@Test
@@ -231,24 +267,26 @@ class PlaySessionTrackerTest {
 		session.playTriggered(PlayTrigger.AUTOPLAY)
 
 		assertEquals(
-			sink.pack(
-				UsageEvent.PLAY_START,
-				UsageParam.TRIGGER to "autoplay",
-				UsageParam.ORIENTATION to "landscape",
-				UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
-				UsageParam.WINDOW_MODE to "full_screen",
-			),
+			sink.pack(UsageEvent.PLAY_START, UsageParam.TRIGGER to "autoplay", *mediumLandscape),
 			sink.named(UsageEvent.PLAY_START).single(),
 		)
 	}
 
 	@Test
-	fun playStartWithoutAKnownLayoutCarriesOnlyItsTrigger() {
+	fun withoutAKnownLayoutEventsCarryOnlyTheirOwnValues() {
 		session.screenLayoutChanged(null)
 		session.loadStarted()
 		session.loadSucceeded()
 		session.playTriggered(PlayTrigger.AUTOPLAY)
+		session.ended()
 
-		assertEquals(playStart("autoplay"), sink.named(UsageEvent.PLAY_START).single())
+		assertEquals(
+			listOf(
+				packLoad(UsageParam.RESULT to "success", UsageParam.DURATION_BUCKET to "lt_1s"),
+				playStart("autoplay"),
+				playEnd("lt_1s"),
+			),
+			sink.events,
+		)
 	}
 }

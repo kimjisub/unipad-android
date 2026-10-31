@@ -10,6 +10,8 @@ import com.kimjisub.launchpad.audio.AudioFileFacts
 import com.kimjisub.launchpad.audio.AudioInspection
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
+import com.kimjisub.launchpad.tool.CrashContext
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import io.mockk.every
@@ -55,6 +57,11 @@ class PlayActivityViewModelUsageTest {
 	private val main = FakeMainDispatcher()
 	private val sink = RecordingUsageSink()
 	private val created = mutableListOf<PlayActivityViewModel>()
+	private val crashKeyValues = mutableMapOf<String, String>()
+	private val crashKeys = PlayCrashKeys(object : CrashContext {
+		override fun setKey(key: String, value: String) { crashKeyValues[key] = value }
+		override fun log(message: String) = Unit
+	})
 
 	/** Loads without the native audio library; [startOk] false makes the engine fail to start. */
 	private class FakeEngine(private val startOk: Boolean = true) : SoundRunner.Engine {
@@ -127,7 +134,7 @@ class PlayActivityViewModelUsageTest {
 	}
 
 	private fun newVm(engine: SoundRunner.Engine = FakeEngine()): PlayActivityViewModel {
-		val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), sink.analytics, engine)
+		val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), sink.analytics, engine, crashKeys = crashKeys)
 		created += vm
 		return vm
 	}
@@ -248,6 +255,20 @@ class PlayActivityViewModelUsageTest {
 			),
 			sink.named(UsageEvent.PLAY_START).single().parameters,
 		)
+	}
+
+	@Test
+	fun crashReportsCarryTheWindowWhileThePlayScreenIsOpenAndNotAfter() {
+		val vm = newVm()
+		vm.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		assertEquals(
+			mapOf("play_orientation" to "landscape", "play_screen_short_side" to "600dp_839dp", "play_window_mode" to "full_screen"),
+			crashKeyValues,
+		)
+
+		leave(vm)
+
+		assertEquals(setOf(""), crashKeyValues.values.toSet())
 	}
 
 	@Test
