@@ -331,6 +331,49 @@ class SoundRunnerTest {
 	}
 
 	@Test
+	fun hiddenScreen_holdsLoadingUntilItReturns() {
+		val unipack = pack(fileCount = 5)
+		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
+		val listener = RecordingListener()
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(engine.decodeEntered.await(5, TimeUnit.SECONDS))
+
+		runner.pauseStream()
+		engine.decodeGate!!.countDown()
+		awaitDecodesDrained(engine)
+		Thread.sleep(200)
+
+		assertEquals("the file in progress finishes; no other may start", 1, engine.loadCalls.get())
+		assertEquals(1L, listener.ended.count)
+
+		runner.resumeStream()
+
+		assertTrue("loading must finish after the screen returns", listener.ended.await(5, TimeUnit.SECONDS))
+		assertEquals(5, engine.loadCalls.get())
+		assertEquals(null, listener.failure)
+	}
+
+	@Test
+	fun leavingWhileLoadingIsHeld_endsTheLoadWithoutAFailure() {
+		val unipack = pack(fileCount = 5)
+		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
+		val listener = RecordingListener()
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(engine.decodeEntered.await(5, TimeUnit.SECONDS))
+		runner.pauseStream()
+		engine.decodeGate!!.countDown()
+		awaitDecodesDrained(engine)
+
+		runner.destroy()
+
+		runBlocking { withTimeout(5_000) { scopeJob.children.toList().joinAll() } }
+		assertEquals(0, listener.failureCount.get())
+		assertEquals(1L, listener.ended.count)
+		assertTrue(engine.liveIds.isEmpty())
+		assertTrue(uncaught.isEmpty())
+	}
+
+	@Test
 	fun reopenAfterDestroy_loadsThePackAgain() {
 		val unipack = pack(fileCount = 20)
 		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
@@ -433,7 +476,7 @@ class SoundRunnerTest {
 	}
 
 	@Test
-	fun pausedBeforeLoading_loadsEverySoundWithTheStreamClosed() {
+	fun pausedBeforeLoading_keepsTheStreamClosedAndFinishesOnReturn() {
 		val unipack = pack(fileCount = 10)
 		val engine = FakeEngine()
 		val listener = RecordingListener(engine)
@@ -441,12 +484,14 @@ class SoundRunnerTest {
 		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
 		runner.pauseStream()
 
-		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		Thread.sleep(200)
 		assertFalse("stream opened while the screen was hidden", engine.streamOpen)
-		assertTrue(unipack.sounds().all { it.id >= 0 })
+		assertEquals("the whole pack loaded while the screen was hidden", 1L, listener.ended.count)
 
 		runner.resumeStream()
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
 		assertTrue(engine.streamOpen)
+		assertTrue(unipack.sounds().all { it.id >= 0 })
 		runner.destroy()
 	}
 

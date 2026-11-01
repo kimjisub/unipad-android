@@ -241,6 +241,7 @@ class PlayActivityViewModelAutoMappingTest {
 		val vm = openPack(lengths, engine)
 		vm.initState()
 		vm.initPlayback()
+		vm.soundRunner?.resumeStream() // Sounds load only while the screen shows; these steps run before it opens.
 		vm.requestAudioFocus = { true }
 		runUntil { vm.unipack.soundGet(0, 0, 0)?.id == 1 }
 		vm.padTouch(0, 0, true)

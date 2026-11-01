@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -43,7 +45,7 @@ class SoundRunner(
 	// loaded and no id is freed twice.
 	private val engineLock = Any()
 	private var destroyed = false // guarded by engineLock
-	private var streamPaused = false // guarded by engineLock
+	private val streamPaused = MutableStateFlow(false) // written under engineLock
 	private val loadJob: Job
 
 	class NoPlayableSoundsException(val report: LoadReport? = null) : IllegalStateException("This pack has no playable sound files")
@@ -138,7 +140,7 @@ class SoundRunner(
 					// the screen was hidden first; the stream is then closed again until resumeStream().
 					engine.start().also {
 						engineStarted = it
-						if (it && streamPaused) engine.stop()
+						if (it && streamPaused.value) engine.stop()
 					}
 				}
 				if (!started) {
@@ -158,6 +160,9 @@ class SoundRunner(
 				// One decoder at a time keeps PCM growth, down-mixing and the native copy from overlapping
 				// across files. Real-device peak-memory verification remains necessary.
 				for (selection in plan.files) {
+					// A decoder keeps the process in system calls without a pause, so Android cannot freeze
+					// it once it is cached and kills it within seconds. The load waits for the screen instead.
+					streamPaused.first { !it }
 					ensureActive()
 					val file = File(selection.identity)
 					val sounds = uniqueFiles.getValue(selection.identity)
@@ -272,21 +277,22 @@ class SoundRunner(
 	/**
 	 * Closes the output stream while the screen is hidden. Android 17 mutes an open stream of an app
 	 * nobody can see, and with strict audio hardening aborts the process from the stream's callback
-	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading.
+	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading. A
+	 * load still running finishes its current file and continues from the next one on [resumeStream].
 	 */
 	fun pauseStream() {
 		cancelPendingWormholes()
 		synchronized(engineLock) {
-			if (destroyed || streamPaused) return
-			streamPaused = true
+			if (destroyed || streamPaused.value) return
+			streamPaused.value = true
 			if (engineStarted) engine.stop()
 		}
 	}
 
 	fun resumeStream() {
 		synchronized(engineLock) {
-			if (destroyed || !streamPaused) return
-			streamPaused = false
+			if (destroyed || !streamPaused.value) return
+			streamPaused.value = false
 			if (engineStarted && !engine.start()) Log.err("Failed to reopen the audio stream")
 		}
 	}

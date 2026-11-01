@@ -416,6 +416,7 @@ private class ScenarioRun(
 			} else if (tag.isNotEmpty()) events.add(event(tag, curr))
 		}
 		vm.initPlayback()
+		vm.soundRunner?.resumeStream() // Sounds load only while the screen shows; these steps run before it opens.
 		// Touch feedback off, which initPlayback turns on for a pack without a keyLED file: the cases report
 		// the pack's own lights only.
 		vm.scbFeedbackLight.setChecked(false)
