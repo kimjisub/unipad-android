@@ -147,6 +147,7 @@ class PlayActivityViewModelUsageTest {
 	private fun startPlayback(vm: PlayActivityViewModel) {
 		vm.initState()
 		vm.initPlayback()
+		vm.showScreenForLoading()
 	}
 
 	private fun leave(vm: PlayActivityViewModel) {

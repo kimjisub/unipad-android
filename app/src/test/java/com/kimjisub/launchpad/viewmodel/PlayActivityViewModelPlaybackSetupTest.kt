@@ -81,6 +81,7 @@ class PlayActivityViewModelPlaybackSetupTest {
         vm.setupCheckBoxVisibility()
         vm.setupCheckBoxListeners()
         vm.initPlayback()
+        vm.showScreenForLoading()
     }
 
     @Test fun roundPadsWithKeyLedKeepAnimationEnabled() {

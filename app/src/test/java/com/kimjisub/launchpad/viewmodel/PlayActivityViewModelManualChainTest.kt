@@ -55,6 +55,7 @@ class PlayActivityViewModelManualChainTest {
         vm.unipack = UniPackFolder(root).load().loadDetail()
         vm.initState()
         vm.initPlayback()
+        vm.showScreenForLoading()
         val deadline = System.nanoTime() + 5_000_000_000L
         while (true) {
             scheduler.runCurrent()

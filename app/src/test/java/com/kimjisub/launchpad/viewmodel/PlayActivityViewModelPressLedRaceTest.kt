@@ -161,6 +161,7 @@ class PlayActivityViewModelPressLedRaceTest {
 		vm.channelManager = ChannelManager(8, 8)
 		vm.uiCallback = FakeActivity()
 		vm.initPlayback()
+		vm.showScreenForLoading()
 		// No audio engine in unit tests; presses only need the LED path.
 		vm.soundRunner = null
 		runner = vm.ledRunner!!

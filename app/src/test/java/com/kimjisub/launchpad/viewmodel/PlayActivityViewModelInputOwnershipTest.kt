@@ -71,6 +71,7 @@ class PlayActivityViewModelInputOwnershipTest {
         vm.initState()
         vm.setupCheckBoxListeners()
         vm.initPlayback()
+        vm.showScreenForLoading()
         val deadline = System.nanoTime() + 5_000_000_000L
         while (vm.unipack.soundGet(0, 0, 0)?.id != 1 && System.nanoTime() < deadline) {
             main.runAll()

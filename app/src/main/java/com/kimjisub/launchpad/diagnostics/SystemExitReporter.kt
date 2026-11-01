@@ -13,7 +13,7 @@ import com.kimjisub.launchpad.BuildConfig
 
 @RequiresApi(Build.VERSION_CODES.R)
 internal object SystemExitReporter {
-	private const val PREFS = "system_exit_diagnostics"
+	const val PREFS = "system_exit_diagnostics"
 	private const val CHECKPOINT = "last_processed_timestamp"
 	private const val TAG = "SystemExitReporter"
 
@@ -26,11 +26,13 @@ internal object SystemExitReporter {
 		val manager = context.getSystemService(ActivityManager::class.java) ?: return
 		val lmkSupported = ActivityManager.isLowMemoryKillReportSupported()
 		val history = manager.getHistoricalProcessExitReasons(context.packageName, 0, 0).map {
-			SystemExit(it.reason, it.status, it.description, it.importance, it.timestamp, it.pss, it.rss)
+			SystemExit(it.reason, it.status, it.description, it.importance, it.timestamp, it.pss, it.rss, it.pid)
 		}
 		val batch = SystemExitPolicy.select(history, lastProcessed, now, lmkSupported)
+		val background = BackgroundScreenRecorder.read(preferences)
 		for (exit in batch.reports) {
-			FirebaseCrashlytics.getInstance().recordException(exceptionFor(exit), keysFor(exit, lmkSupported))
+			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background))
+			FirebaseCrashlytics.getInstance().recordException(exceptionFor(exit), keys)
 			Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}")
 		}
 		preferences.edit(commit = true) {
@@ -38,7 +40,7 @@ internal object SystemExitReporter {
 		}
 	}
 
-	private fun keysFor(exit: SystemExit, lmkSupported: Boolean) = CustomKeysAndValues.Builder()
+	private fun keysFor(exit: SystemExit, lmkSupported: Boolean, background: BackgroundScreen?) = CustomKeysAndValues.Builder()
 		.putInt("exit_reason", exit.reason)
 		.putString("exit_description", exit.description.orEmpty().take(1024))
 		.putInt("exit_status", exit.status)
@@ -50,6 +52,11 @@ internal object SystemExitReporter {
 		.apply {
 			// Explicit server checks from debug builds must stay out of production crash counts.
 			if (BuildConfig.DEBUG) putBoolean("harness_test", true)
+			background?.let {
+				putString("exit_last_screen", it.screen)
+				putBoolean("exit_pack_open", it.packOpen)
+				putLong("exit_background_ms", exit.timestamp - it.since)
+			}
 		}
 		.build()
 

@@ -10,10 +10,12 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -30,6 +32,7 @@ class SystemExitReporterTest {
 	private var checkpoint: Long? = null
 	private var pendingCheckpoint = 0L
 	private var history = emptyList<ApplicationExitInfo>()
+	private var backgroundScreen: String? = null
 
 	@Before fun setUp() {
 		mockkStatic(ActivityManager::class, FirebaseCrashlytics::class)
@@ -41,6 +44,10 @@ class SystemExitReporterTest {
 		every { manager.getHistoricalProcessExitReasons("com.example.app", 0, 0) } answers { history }
 		every { preferences.contains("last_processed_timestamp") } answers { checkpoint != null }
 		every { preferences.getLong("last_processed_timestamp", 0) } answers { checkpoint ?: 0 }
+		every { preferences.getString("background_screen", null) } answers { backgroundScreen }
+		every { preferences.getBoolean("background_pack_open", false) } returns true
+		every { preferences.getLong("background_since", 0) } returns 12
+		every { preferences.getInt("background_pid", 0) } returns EXIT_PID
 		every { preferences.edit() } returns editor
 		every { editor.putLong("last_processed_timestamp", any()) } answers {
 			pendingCheckpoint = secondArg()
@@ -85,6 +92,29 @@ class SystemExitReporterTest {
 		assertEquals(16L, checkpoint)
 	}
 
+	@Test fun backgroundExitCarriesTheScreenTheAppLeft() {
+		checkpoint = 10
+		backgroundScreen = "PlayActivity"
+		history = listOf(exit(14, 20, importance = 400))
+		val keys = slot<CustomKeysAndValues>()
+		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context)
+		val values = keys.captured.values()
+		assertEquals("PlayActivity", values["exit_last_screen"])
+		assertEquals("true", values["exit_pack_open"])
+		assertEquals("8", values["exit_background_ms"])
+	}
+
+	@Test fun exitInFrontCarriesNoLeftScreen() {
+		checkpoint = 10
+		backgroundScreen = "PlayActivity"
+		history = listOf(exit(14, 20))
+		val keys = slot<CustomKeysAndValues>()
+		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context)
+		assertFalse("exit_last_screen" in keys.captured.values())
+	}
+
 	@Test fun unavailableHistoryLeavesCheckpointForTheNextLaunch() {
 		checkpoint = 10
 		every { manager.getHistoricalProcessExitReasons(any(), any(), any()) } throws SecurityException()
@@ -93,15 +123,24 @@ class SystemExitReporterTest {
 		verify(exactly = 0) { editor.commit() }
 	}
 
-	private fun exit(reason: Int, timestamp: Long, description: String? = null): ApplicationExitInfo {
+	@Suppress("UNCHECKED_CAST")
+	private fun CustomKeysAndValues.values() = CustomKeysAndValues::class.java
+		.getDeclaredField("keysAndValues").apply { isAccessible = true }.get(this) as Map<String, String>
+
+	private fun exit(reason: Int, timestamp: Long, description: String? = null, importance: Int = 100): ApplicationExitInfo {
 		val info = mockk<ApplicationExitInfo>()
 		every { info.reason } returns reason
 		every { info.status } returns 0
 		every { info.description } returns description
-		every { info.importance } returns 100
+		every { info.importance } returns importance
 		every { info.timestamp } returns timestamp
 		every { info.pss } returns 4096
 		every { info.rss } returns 8192
+		every { info.pid } returns EXIT_PID
 		return info
+	}
+
+	private companion object {
+		const val EXIT_PID = 7
 	}
 }
