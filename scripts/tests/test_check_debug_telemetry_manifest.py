@@ -12,7 +12,7 @@ spec.loader.exec_module(checker)
 
 def manifest(permission='', values=None):
     entries = ''.join(f'<meta-data android:name="{name}" android:value="{value}" />'
-                      for name, value in (values or {}).items())
+                      for name, value in {'google_analytics_adid_collection_enabled': 'false', **(values or {})}.items())
     return ('<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
             f'{permission}<application>{entries}</application></manifest>')
 
@@ -59,6 +59,28 @@ class DebugTelemetryManifestTest(unittest.TestCase):
         self.release.write_text(manifest())
         self.assertEqual(checker.problems(self.debug, self.release),
                          ['release: android.permission.INTERNET is missing'])
+
+    def test_rejects_release_advertising_permissions(self):
+        for permission in ('com.google.android.gms.permission.AD_ID',
+                           'android.permission.ACCESS_ADSERVICES_AD_ID',
+                           'android.permission.ACCESS_ADSERVICES_ATTRIBUTION'):
+            for tag in ('uses-permission', 'uses-permission-sdk-23'):
+                with self.subTest(permission=permission, tag=tag):
+                    self.release.write_text(manifest(INTERNET + f'<{tag} android:name="{permission}" />'))
+                    self.assertTrue(any(permission in error for error in checker.problems(self.debug, self.release)))
+
+    def test_rejects_release_ad_id_collection_enabled_or_missing(self):
+        for value in ('true', '${unresolved}', None):
+            with self.subTest(value=value):
+                root = checker.ET.fromstring(manifest(INTERNET))
+                setting = root.find('application/meta-data')
+                if value is None:
+                    root.find('application').remove(setting)
+                else:
+                    setting.set(checker.ANDROID + 'value', value)
+                self.release.write_text(checker.ET.tostring(root, encoding='unicode'))
+                self.assertTrue(any('google_analytics_adid_collection_enabled' in error
+                                    for error in checker.problems(self.debug, self.release)))
 
     def test_rejects_any_debug_value_in_release(self):
         for name, value in checker.DEBUG_COLLECTION_OFF.items():

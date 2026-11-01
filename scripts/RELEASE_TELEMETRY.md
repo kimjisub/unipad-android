@@ -1,5 +1,23 @@
 # Release telemetry observation
 
+The main manifest disables advertising ID collection with
+`google_analytics_adid_collection_enabled=false`. The release manifest removes `AD_ID`,
+`ACCESS_ADSERVICES_AD_ID` and `ACCESS_ADSERVICES_ATTRIBUTION` permissions added
+by libraries. Analytics events and Crashlytics collection remain enabled in
+release builds. Advertising ID based advertising measurement and attribution
+are unavailable; Analytics uses its separate app-instance ID for user metrics.
+See [Firebase collection settings](https://firebase.google.com/docs/analytics/android/configure-data-collection)
+and [Analytics identifiers](https://support.google.com/analytics/answer/11593727?hl=en).
+
+The CI manifest check rejects release builds that restore these permissions or
+omit the advertising ID opt-out. It also checks debug collection stays off:
+
+```sh
+python3 scripts/check_debug_telemetry_manifest.py \
+  app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml \
+  app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
+```
+
 `observe_release_telemetry.py` observes an APK built in release mode on an
 explicitly rented, rooted Android emulator. It records the first screen press's
 Analytics event and the current Crashlytics session's screen context. It never

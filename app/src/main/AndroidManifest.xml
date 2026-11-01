@@ -38,6 +38,8 @@
 		android:requestLegacyExternalStorage="true"
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme">
+		<!-- Keep usage and crash reporting, without collecting advertising IDs. -->
+		<meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_icon"
 			android:resource="@mipmap/ic_launcher" />
