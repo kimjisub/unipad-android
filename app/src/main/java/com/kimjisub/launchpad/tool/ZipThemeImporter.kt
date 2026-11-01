@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.manager.FileManager
 import net.lingala.zip4j.ZipFile
+import net.lingala.zip4j.model.UnzipParameters
 import java.io.File
 
 object ZipThemeImporter {
@@ -34,7 +35,7 @@ object ZipThemeImporter {
 					}
 				}
 				ZipFile(tempZip).use { zip ->
-					zip.extractAll(targetDir.path)
+					zip.extractAll(targetDir.path, UnzipParameters().apply { isExtractSymbolicLinks = false })
 				}
 			} finally {
 				tempZip.delete()

@@ -22,7 +22,7 @@ object FileManager {
 	/** Throws [IOException] when a file cannot be moved up, so the pack is not kept with it missing. */
 	fun removeDoubleFolder(path: String) {
 		val rootFolder = File(path)
-		if (!rootFolder.isDirectory) return
+		if (!isDirectoryWithoutLinks(rootFolder)) return
 
 		// Repeats like iOS (Pack/Pack/Pack/info used to stay broken here), and Finder's
 		// __MACOSX sibling does not count as content (every Mac-zipped pack was rejected).
@@ -31,7 +31,7 @@ object FileManager {
 		repeat(MAX_UNWRAP_DEPTH) {
 			val children = rootFolder.listFiles() ?: return
 			val content = children.filter { !isHiddenEntry(it) }
-			val packFolder = content.singleOrNull()?.takeIf { it.isDirectory }
+			val packFolder = content.singleOrNull()?.takeIf { isDirectoryWithoutLinks(it) }
 				?: soleFolderHoldingInfo(rootFolder, content)
 				?: return
 			children.filter { it.name == MACOSX_FOLDER || (it in content && it != packFolder) }
@@ -42,15 +42,29 @@ object FileManager {
 
 	private fun isHiddenEntry(file: File) = file.name.startsWith(".") || file.name == MACOSX_FOLDER
 
-	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any { it.isFile && it.name.equals("info", ignoreCase = true) }
+	/** Resolve the parent first: an alias in a parent is not a link at this entry (API 24 too). */
+	private fun isSymbolicLink(file: File): Boolean {
+		val absolute = file.absoluteFile
+		val parent = absolute.parentFile ?: return false
+		val entry = File(parent.canonicalFile, absolute.name)
+		return entry.canonicalFile != entry ||
+			// Canonical paths do not resolve dangling links, but those still have a directory entry.
+			(!entry.exists() && parent.list()?.contains(absolute.name) == true)
+	}
+
+	private fun isDirectoryWithoutLinks(file: File) = file.isDirectory && !isSymbolicLink(file)
+
+	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any {
+		it.isFile && it.name.equals("info", ignoreCase = true) && !isSymbolicLink(it)
+	}
 
 	private fun holdsInfo(dir: File, depth: Int): Boolean =
 		hasInfoFile(dir) || depth > 0 && dir.listFiles().orEmpty()
-			.any { it.isDirectory && !isHiddenEntry(it) && holdsInfo(it, depth - 1) }
+			.any { isDirectoryWithoutLinks(it) && !isHiddenEntry(it) && holdsInfo(it, depth - 1) }
 
 	private fun soleFolderHoldingInfo(rootFolder: File, content: List<File>): File? {
 		if (hasInfoFile(rootFolder)) return null
-		return content.filter { it.isDirectory && holdsInfo(it, MAX_UNWRAP_DEPTH) }.singleOrNull()
+		return content.filter { isDirectoryWithoutLinks(it) && holdsInfo(it, MAX_UNWRAP_DEPTH) }.singleOrNull()
 	}
 
 	/**
@@ -125,10 +139,20 @@ object FileManager {
 	 * the file was lost while the import reported success.
 	 */
 	fun moveDirectory(sourceDir: File, targetDir: File) {
+		if (isSymbolicLink(sourceDir)) {
+			sourceDir.delete()
+			return
+		}
+		if (isSymbolicLink(targetDir)) throw IOException("Cannot move into a symbolic link: ${targetDir.path}")
 		if (!targetDir.isDirectory) targetDir.mkdir()
+		val targetNames = targetDir.list().orEmpty().toSet()
 		val sourceList = sourceDir.listFiles() ?: throw IOException("Could not list ${sourceDir.path}")
 		for (source in sourceList) {
+			if (isSymbolicLink(source)) continue
 			val target = File(targetDir, source.name)
+			if (source.name in targetNames && isSymbolicLink(target)) {
+				throw IOException("Cannot move onto a symbolic link: ${target.path}")
+			}
 			if (source.isDirectory) {
 				target.mkdir()
 				moveDirectory(source, target)
@@ -151,12 +175,14 @@ object FileManager {
 
 	fun deleteDirectory(file: File) {
 		try {
-			if (file.isDirectory) {
+			if (isDirectoryWithoutLinks(file)) {
 				val childFileList = file.listFiles() ?: return
 				for (childFile in childFileList) deleteDirectory(childFile)
 				file.delete()
 			} else file.delete()
 		} catch (e: SecurityException) {
+			Log.err("deleteDirectory failed", e)
+		} catch (e: IOException) {
 			Log.err("deleteDirectory failed", e)
 		}
 	}
