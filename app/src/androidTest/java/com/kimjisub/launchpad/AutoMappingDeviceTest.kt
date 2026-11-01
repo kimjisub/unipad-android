@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad
 
+import android.content.pm.ActivityInfo
 import android.os.SystemClock
 import android.view.Surface
 import android.view.accessibility.AccessibilityEvent
@@ -81,6 +82,8 @@ class AutoMappingDeviceTest : BaseUITest() {
             screen.onMain { vm.autoMappingActive && vm.autoMappingProgress > 0 }
         })
         takeScreenshot("automapping_before_lock")
+        val activity = screen.resumed()
+        val orientation = screen.onMain { activity.requestedOrientation }
         try {
             device.sleep()
             assertTrue("Lock did not hide the play screen", waitUntil(10_000L) {
@@ -104,8 +107,11 @@ class AutoMappingDeviceTest : BaseUITest() {
                     })
                     takeScreenshot("automapping_after_unlock")
                     val rotation = device.displayRotation
-                    if (rotation == Surface.ROTATION_270) device.setOrientationLeft()
-                    else device.setOrientationRight()
+                    screen.onMain {
+                        activity.requestedOrientation = if (rotation == Surface.ROTATION_270)
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                    }
                     assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
                         device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
                     })
@@ -129,7 +135,7 @@ class AutoMappingDeviceTest : BaseUITest() {
         } finally {
             device.wakeUp()
             device.executeShellCommand("wm dismiss-keyguard")
-            device.unfreezeRotation()
+            screen.onMain { activity.requestedOrientation = orientation }
         }
     }
 
