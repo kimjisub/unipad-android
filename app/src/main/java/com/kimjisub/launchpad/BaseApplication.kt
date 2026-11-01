@@ -7,7 +7,9 @@ import android.os.StrictMode
 import androidx.core.content.edit
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.di.appModule
+import com.kimjisub.launchpad.diagnostics.BackgroundScreenRecorder
 import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
@@ -46,6 +48,7 @@ class BaseApplication : Application() {
 		recordInstallSplits()
 		registerActivityLifecycleCallbacks(ScreenCrashTrail(FirebaseCrashContext))
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			registerActivityLifecycleCallbacks(BackgroundScreenRecorder(this, PlayActivity::class.java))
 			ioScope.launch {
 				try {
 					SystemExitReporter.collect(this@BaseApplication)

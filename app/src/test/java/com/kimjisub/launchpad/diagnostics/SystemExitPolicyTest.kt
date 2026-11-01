@@ -64,4 +64,16 @@ class SystemExitPolicyTest {
 	@Test fun emptyHistoryDoesNotMoveExistingCheckpoint() {
 		assertEquals(10L, SystemExitPolicy.select(emptyList(), 10, 100, true).checkpoint)
 	}
+
+	@Test fun leftScreenAppliesOnlyToABackgroundExitAfterLeaving() {
+		val record = BackgroundScreen("PlayActivity", true, since = 50)
+		fun at(timestamp: Long, importance: Int) =
+			SystemExitPolicy.backgroundScreenAt(SystemExit(14, timestamp = timestamp, importance = importance), record)
+
+		assertEquals(record, at(50, 400))
+		assertEquals(record, at(60, 300))
+		assertNull("the app was killed before this record was made", at(49, 400))
+		assertNull("the app came back and was killed in front", at(60, 100))
+		assertNull(SystemExitPolicy.backgroundScreenAt(SystemExit(14, timestamp = 60, importance = 400), null))
+	}
 }
