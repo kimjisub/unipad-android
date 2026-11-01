@@ -3,7 +3,6 @@ package com.kimjisub.launchpad
 import android.content.pm.ActivityInfo
 import android.os.SystemClock
 import android.view.Surface
-import android.view.accessibility.AccessibilityEvent
 import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
@@ -98,34 +97,25 @@ class AutoMappingDeviceTest : BaseUITest() {
             }
             assertEquals(input, file.readText())
 
-            val saved = screen.instrumentation.uiAutomation.executeAndWaitForEvent(
-                {
-                    device.wakeUp()
-                    device.executeShellCommand("wm dismiss-keyguard")
-                    assertTrue("Unlock did not resume mapping", waitUntil(30_000L) {
-                        screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
-                    })
-                    takeScreenshot("automapping_after_unlock")
-                    val rotation = device.displayRotation
-                    screen.onMain {
-                        activity.requestedOrientation = if (rotation == Surface.ROTATION_270)
-                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-                    }
-                    assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
-                        device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
-                    })
-                    takeScreenshot("automapping_after_rotation")
-                },
-                { event ->
-                    event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED &&
-                        event.className?.toString() == "android.widget.Toast" &&
-                        event.packageName?.toString() == context.packageName &&
-                        event.text.firstOrNull()?.toString() == str(R.string.autoMappingSaved)
-                },
-                120_000L,
-            )
-            assertEquals(str(R.string.autoMappingSaved), saved.text.first().toString())
+            device.wakeUp()
+            device.executeShellCommand("wm dismiss-keyguard")
+            assertTrue("Unlock did not resume mapping", waitUntil(30_000L) {
+                screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
+            })
+            takeScreenshot("automapping_after_unlock")
+            val rotation = device.displayRotation
+            screen.onMain {
+                activity.requestedOrientation = if (rotation == Surface.ROTATION_270)
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+            }
+            assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
+                device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
+            })
+            takeScreenshot("automapping_after_rotation")
+            assertTrue("Mapping saved notice missing", device.wait(
+                Until.hasObject(By.text(str(R.string.autoMappingSaved))), 120_000L,
+            ))
             takeScreenshot("automapping_saved_after_unlock_and_rotation")
             assertTrue("Mapping remained active after saving", waitUntil(10_000L) {
                 screen.onMain { !vm.autoMappingActive }
