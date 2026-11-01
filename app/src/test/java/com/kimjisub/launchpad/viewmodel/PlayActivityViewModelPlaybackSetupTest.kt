@@ -81,7 +81,7 @@ class PlayActivityViewModelPlaybackSetupTest {
         vm.setupCheckBoxVisibility()
         vm.setupCheckBoxListeners()
         vm.initPlayback()
-        vm.soundRunner?.resumeStream() // Sounds load only while the screen shows; these steps run before it opens.
+        vm.showScreenForLoading()
     }
 
     @Test fun roundPadsWithKeyLedKeepAnimationEnabled() {

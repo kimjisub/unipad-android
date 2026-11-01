@@ -478,11 +478,13 @@ class SoundRunnerTest {
 	@Test
 	fun pausedBeforeLoading_keepsTheStreamClosedAndFinishesOnReturn() {
 		val unipack = pack(fileCount = 10)
-		val engine = FakeEngine()
+		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
 		val listener = RecordingListener(engine)
 		// The screen can be hidden before or after the loader opens the stream; both end closed.
 		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
 		runner.pauseStream()
+		engine.decodeGate!!.countDown()
+		awaitDecodesDrained(engine)
 
 		Thread.sleep(200)
 		assertFalse("stream opened while the screen was hidden", engine.streamOpen)

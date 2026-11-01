@@ -26,7 +26,7 @@ internal object SystemExitReporter {
 		val manager = context.getSystemService(ActivityManager::class.java) ?: return
 		val lmkSupported = ActivityManager.isLowMemoryKillReportSupported()
 		val history = manager.getHistoricalProcessExitReasons(context.packageName, 0, 0).map {
-			SystemExit(it.reason, it.status, it.description, it.importance, it.timestamp, it.pss, it.rss)
+			SystemExit(it.reason, it.status, it.description, it.importance, it.timestamp, it.pss, it.rss, it.pid)
 		}
 		val batch = SystemExitPolicy.select(history, lastProcessed, now, lmkSupported)
 		val background = BackgroundScreenRecorder.read(preferences)

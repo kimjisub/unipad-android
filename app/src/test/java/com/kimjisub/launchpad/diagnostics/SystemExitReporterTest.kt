@@ -47,6 +47,7 @@ class SystemExitReporterTest {
 		every { preferences.getString("background_screen", null) } answers { backgroundScreen }
 		every { preferences.getBoolean("background_pack_open", false) } returns true
 		every { preferences.getLong("background_since", 0) } returns 12
+		every { preferences.getInt("background_pid", 0) } returns EXIT_PID
 		every { preferences.edit() } returns editor
 		every { editor.putLong("last_processed_timestamp", any()) } answers {
 			pendingCheckpoint = secondArg()
@@ -135,6 +136,11 @@ class SystemExitReporterTest {
 		every { info.timestamp } returns timestamp
 		every { info.pss } returns 4096
 		every { info.rss } returns 8192
+		every { info.pid } returns EXIT_PID
 		return info
+	}
+
+	private companion object {
+		const val EXIT_PID = 7
 	}
 }

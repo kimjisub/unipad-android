@@ -8,12 +8,13 @@ internal data class SystemExit(
 	val timestamp: Long = 0,
 	val pssKb: Long = 0,
 	val rssKb: Long = 0,
+	val pid: Int = 0,
 )
 
 internal data class SystemExitBatch(val reports: List<SystemExit>, val checkpoint: Long)
 
 /** The screen the app left when it last went to the background; see [BackgroundScreenRecorder]. */
-internal data class BackgroundScreen(val screen: String, val packOpen: Boolean, val since: Long)
+internal data class BackgroundScreen(val screen: String, val packOpen: Boolean, val since: Long, val pid: Int)
 
 internal object SystemExitPolicy {
 	// ApplicationExitInfo values, kept independent of Android for JVM tests.
@@ -36,9 +37,12 @@ internal object SystemExitPolicy {
 		else -> false
 	}
 
-	/** An app killed in front, or before it last left, says nothing about the [record]ed screen. */
+	/**
+	 * Only the process that left the [record]ed screen can be described by it: a later process started
+	 * without a screen, such as for an incoming message, has none. Neither can an app killed in front.
+	 */
 	fun backgroundScreenAt(exit: SystemExit, record: BackgroundScreen?): BackgroundScreen? =
-		record?.takeIf { exit.importance > IMPORTANCE_PERCEPTIBLE && exit.timestamp >= it.since }
+		record?.takeIf { exit.pid == it.pid && exit.importance > IMPORTANCE_PERCEPTIBLE && exit.timestamp >= it.since }
 
 	fun select(history: List<SystemExit>, lastProcessed: Long?, now: Long, lmkSupported: Boolean): SystemExitBatch {
 		// Establish a baseline on upgrade rather than reporting old exits retroactively.

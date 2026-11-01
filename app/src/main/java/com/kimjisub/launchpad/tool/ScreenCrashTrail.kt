@@ -16,6 +16,9 @@ object FirebaseCrashContext : CrashContext {
 	override fun log(message: String) = FirebaseCrashlytics.getInstance().log(message)
 }
 
+// Activities keep their names in release builds because the manifest declares them.
+internal fun Activity.screenName(): String = javaClass.simpleName
+
 /**
  * Records the screen in front and the recent screen changes in crash reports. A crash without
  * any app frame, such as one inside Android's drawing thread or the native audio engine, then
@@ -40,7 +43,4 @@ class ScreenCrashTrail(private val crashContext: CrashContext) : Application.Act
 	override fun onActivityStarted(activity: Activity) {}
 	override fun onActivityStopped(activity: Activity) {}
 	override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-
-	// Activities keep their names in release builds because the manifest declares them.
-	private fun Activity.screenName(): String = javaClass.simpleName
 }

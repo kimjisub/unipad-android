@@ -160,8 +160,8 @@ class SoundRunner(
 				// One decoder at a time keeps PCM growth, down-mixing and the native copy from overlapping
 				// across files. Real-device peak-memory verification remains necessary.
 				for (selection in plan.files) {
-					// A decoder keeps the process in system calls without a pause, so Android cannot freeze
-					// it once it is cached and kills it within seconds. The load waits for the screen instead.
+					// A decoder keeps the process in binder calls without a pause, so Android cannot freeze it
+					// once it is cached and kills it within seconds. The load waits for the screen instead.
 					streamPaused.first { !it }
 					ensureActive()
 					val file = File(selection.identity)

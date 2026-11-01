@@ -88,7 +88,7 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		vm.unipack = UniPackFolder(folder).load().loadDetail()
 		vm.initState()
 		vm.initPlayback()
-		vm.soundRunner?.resumeStream() // Sounds load only while the screen shows; these steps run before it opens.
+		vm.showScreenForLoading()
 		await { !vm.soundLoadingActive && vm.unipack.soundGet(0, 0, 0)?.id == 1 }
 		if (autoplay) {
 			vm.switchPlayMode(PlayMode.AutoPlay)

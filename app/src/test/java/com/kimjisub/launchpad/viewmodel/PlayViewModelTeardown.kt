@@ -2,6 +2,11 @@ package com.kimjisub.launchpad.viewmodel
 
 import androidx.lifecycle.ViewModelStore
 
+/** Lets sounds load, which they do only while the screen shows; test steps run before it opens. */
+fun PlayActivityViewModel.showScreenForLoading() {
+	soundRunner?.resumeStream()
+}
+
 /** Clears [vm] as its screen would; see [stopPlayViewModels]. */
 fun clearPlayViewModel(vm: PlayActivityViewModel?, drain: () -> Unit, restore: () -> Unit) =
 	stopPlayViewModels(listOfNotNull(vm), drain, restore) { ViewModelStore().apply { put("play", it); clear() } }

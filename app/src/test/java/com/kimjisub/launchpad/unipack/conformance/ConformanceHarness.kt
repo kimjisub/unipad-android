@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
+import com.kimjisub.launchpad.viewmodel.showScreenForLoading
 import com.kimjisub.launchpad.viewmodel.stopPlayViewModels
 import io.mockk.every
 import io.mockk.mockk
@@ -416,7 +417,7 @@ private class ScenarioRun(
 			} else if (tag.isNotEmpty()) events.add(event(tag, curr))
 		}
 		vm.initPlayback()
-		vm.soundRunner?.resumeStream() // Sounds load only while the screen shows; these steps run before it opens.
+		vm.showScreenForLoading()
 		// Touch feedback off, which initPlayback turns on for a pack without a keyLED file: the cases report
 		// the pack's own lights only.
 		vm.scbFeedbackLight.setChecked(false)

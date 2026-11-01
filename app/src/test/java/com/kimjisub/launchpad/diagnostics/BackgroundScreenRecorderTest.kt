@@ -23,7 +23,7 @@ class BackgroundScreenRecorderTest {
 	private val editor = mockk<SharedPreferences.Editor>()
 	private val context = mockk<Context>()
 	private var clock = 100L
-	private val recorder = BackgroundScreenRecorder(context, PackScreen::class.java) { clock }
+	private val recorder = BackgroundScreenRecorder(context, PackScreen::class.java, pid = 7) { clock }
 
 	@Before fun setUp() {
 		every { context.getSharedPreferences(SystemExitReporter.PREFS, Context.MODE_PRIVATE) } returns preferences
@@ -31,10 +31,12 @@ class BackgroundScreenRecorderTest {
 		every { editor.putString(any(), any()) } answers { saved[firstArg()] = secondArg<String>(); editor }
 		every { editor.putBoolean(any(), any()) } answers { saved[firstArg()] = secondArg<Boolean>(); editor }
 		every { editor.putLong(any(), any()) } answers { saved[firstArg()] = secondArg<Long>(); editor }
+		every { editor.putInt(any(), any()) } answers { saved[firstArg()] = secondArg<Int>(); editor }
 		every { editor.apply() } returns Unit
 		every { preferences.getString(any(), any()) } answers { saved[firstArg()] as String? ?: secondArg() }
 		every { preferences.getBoolean(any(), any()) } answers { saved[firstArg()] as Boolean? ?: secondArg() }
 		every { preferences.getLong(any(), any()) } answers { saved[firstArg()] as Long? ?: secondArg() }
+		every { preferences.getInt(any(), any()) } answers { saved[firstArg()] as Int? ?: secondArg() }
 	}
 
 	private fun screen() = mockk<Screen>().also { every { it.isChangingConfigurations } returns false }
@@ -55,6 +57,7 @@ class BackgroundScreenRecorderTest {
 		assertTrue(record.screen, "Screen" in record.screen)
 		assertFalse(record.packOpen)
 		assertEquals(250L, record.since)
+		assertEquals(7, record.pid)
 	}
 
 	@Test fun aPackScreenStillAliveBehindAnotherCounts() {
@@ -82,6 +85,34 @@ class BackgroundScreenRecorderTest {
 		recorder.onActivityStopped(list)
 
 		assertFalse(BackgroundScreenRecorder.read(preferences)!!.packOpen)
+	}
+
+	@Test fun aPackScreenClosedAfterTheAppLeftStopsCounting() {
+		val pack = packScreen()
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityStarted(pack)
+		clock = 250
+		recorder.onActivityStopped(pack)
+		assertTrue(BackgroundScreenRecorder.read(preferences)!!.packOpen)
+
+		clock = 900
+		recorder.onActivityDestroyed(pack)
+
+		val record = BackgroundScreenRecorder.read(preferences)!!
+		assertFalse(record.packOpen)
+		assertEquals("the app left at the same moment", 250L, record.since)
+	}
+
+	@Test fun aPackScreenRebuildingAfterTheAppLeftStillCounts() {
+		val pack = packScreen()
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityStarted(pack)
+		recorder.onActivityStopped(pack)
+
+		every { pack.isChangingConfigurations } returns true
+		recorder.onActivityDestroyed(pack)
+
+		assertTrue(BackgroundScreenRecorder.read(preferences)!!.packOpen)
 	}
 
 	@Test fun movingBetweenScreensAndRotatingRecordNothing() {
