@@ -35,14 +35,7 @@ class ArchiveSymlinkDeviceTest {
             } catch (_: ErrnoException) { false }
             println("Archive storage=${storage.path} supportsSymlinks=$supportsLinks")
             if (supportsLinks) {
-                FileManager.deleteDirectory(probe)
-                assertEquals("keep", sound.readText())
-                val wrapper = File(root, "existing/Pack").apply { check(mkdirs()) }
-                File(wrapper, "info").writeText("title=Pack")
-                Os.symlink(victim.path, File(wrapper, "sub").path)
-                FileManager.removeDoubleFolder(wrapper.parentFile!!.path)
-                FileManager.deleteDirectory(wrapper.parentFile!!)
-                assertEquals("keep", sound.readText())
+                Os.unlink(probe.path)
             }
             for ((index, entries) in listOf(
                 mapOf("sub" to victim.path),
@@ -53,9 +46,19 @@ class ArchiveSymlinkDeviceTest {
                 val archive = SymlinkArchive.write(File(root, "pack-$index.zip"), entries, setOf(link))
                 val destination = File(root, "import-$index").apply { check(mkdir()) }
                 PackArchive.extract(archive, destination)
-                assertFalse(File(destination, link).exists())
+                val linkCreated = File(destination, link).exists()
+                println("Archive case=$index linkCreated=$linkCreated")
                 FileManager.removeDoubleFolder(destination.path)
                 FileManager.deleteDirectory(destination)
+                assertEquals("keep", sound.readText())
+                assertFalse("archive link must not be created", linkCreated)
+            }
+            if (supportsLinks) {
+                val wrapper = File(root, "existing/Pack").apply { check(mkdirs()) }
+                File(wrapper, "info").writeText("title=Pack")
+                Os.symlink(victim.path, File(wrapper, "sub").path)
+                FileManager.removeDoubleFolder(wrapper.parentFile!!.path)
+                FileManager.deleteDirectory(wrapper.parentFile!!)
                 assertEquals("keep", sound.readText())
             }
             val isolatedContext = object : ContextWrapper(context) {
