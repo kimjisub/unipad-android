@@ -17,9 +17,11 @@ import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
+import com.kimjisub.launchpad.tool.FirebaseCrashContext
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.PlayLayout
@@ -54,6 +56,7 @@ class PlayActivityViewModel(
 	private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 	private val autoMapper: (UniPackFolder) -> UniPackAutoMapper = ::UniPackAutoMapper,
 	private val autoPlayFiles: AutoPlayFileReplacer = AutoPlayFileReplacer(),
+	private val crashKeys: PlayCrashKeys = PlayCrashKeys(FirebaseCrashContext),
 ) : ViewModel() {
 
 	companion object {
@@ -323,8 +326,11 @@ class PlayActivityViewModel(
 
 	private val playSession = usage.newPlaySession()
 
-	/** PlayActivity reports its window when it is created and each time it is rotated or resized; `play_start` carries the latest. */
-	fun screenLayoutChanged(layout: ScreenLayout?) = playSession.screenLayoutChanged(layout)
+	/** PlayActivity reports its window when it is created and each time it is rotated or resized; crash reports and the next `pack_load`, `play_start` or `play_end` carry the latest. */
+	fun screenLayoutChanged(layout: ScreenLayout?) {
+		playSession.screenLayoutChanged(layout)
+		crashKeys.screenLayoutChanged(this, layout)
+	}
 
 	// This ViewModel outlives a recreated PlayActivity (e.g. a display size change). The pack, its
 	// runners and the open count belong to it and are set up once; the new activity only rebuilds views.
@@ -1245,16 +1251,19 @@ class PlayActivityViewModel(
 		ledRunner?.stop()
 		soundRunner?.destroy()
 		chain.clearObserver()
+		// Last, so a crash in the teardown above still reports the play window.
+		crashKeys.screenClosed(this)
 	}
 
 	class Factory(
 		private val unipackRepo: UnipackRepository,
 		private val usage: UsageAnalytics,
+		private val crashKeys: PlayCrashKeys,
 		private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 	) : ViewModelProvider.Factory {
 		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			return PlayActivityViewModel(unipackRepo, usage, soundEngine) as T
+			return PlayActivityViewModel(unipackRepo, usage, soundEngine, crashKeys = crashKeys) as T
 		}
 	}
 }

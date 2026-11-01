@@ -12,7 +12,9 @@ package com.kimjisub.launchpad.analytics
  * Going to the background and coming back stays in the same session; only leaving the screen for
  * good ends it, so the `play_end` duration includes time spent in the background.
  *
- * `play_start` also carries the last known [ScreenLayout] from [screenLayoutChanged], when there is one.
+ * `pack_load`, `play_start` and `play_end` also carry the last known [ScreenLayout] from
+ * [screenLayoutChanged], when there is one, so a visit that loaded, started or ended in a large
+ * window can be told apart.
  *
  * Durations come from [nanoTime], which must be monotonic.
  */
@@ -51,7 +53,7 @@ class PlaySessionTracker internal constructor(
 		state = State.Loaded
 		Event(
 			UsageEvent.PACK_LOAD,
-			mapOf(
+			withScreenLayout(
 				UsageParam.RESULT to UsageResult.SUCCESS.value,
 				UsageParam.DURATION_BUCKET to DurationBucket.label(nanoTime() - loading.startedAt),
 			),
@@ -64,7 +66,7 @@ class PlaySessionTracker internal constructor(
 		state = if (canPlay) State.Loaded else State.Finished
 		Event(
 			UsageEvent.PACK_LOAD,
-			mapOf(
+			withScreenLayout(
 				UsageParam.RESULT to UsageResult.FAILURE.value,
 				UsageParam.ERROR_TYPE to errorType.value,
 			),
@@ -79,7 +81,7 @@ class PlaySessionTracker internal constructor(
 			buildList {
 				if (state is State.Loaded) {
 					state = State.Playing(nanoTime())
-					add(Event(UsageEvent.PLAY_START, mapOf(UsageParam.TRIGGER to trigger.value) + screenLayout?.parameters.orEmpty()))
+					add(Event(UsageEvent.PLAY_START, withScreenLayout(UsageParam.TRIGGER to trigger.value)))
 				}
 				if (trigger == PlayTrigger.PAD && !humanInputRecorded) {
 					humanInputRecorded = true
@@ -96,16 +98,18 @@ class PlaySessionTracker internal constructor(
 	/** The person left the play screen for good. */
 	fun ended() = transition {
 		val event = when (val current = state) {
-			is State.Loading -> Event(UsageEvent.PACK_LOAD, mapOf(UsageParam.RESULT to UsageResult.CANCELLED.value))
+			is State.Loading -> Event(UsageEvent.PACK_LOAD, withScreenLayout(UsageParam.RESULT to UsageResult.CANCELLED.value))
 			is State.Playing -> Event(
 				UsageEvent.PLAY_END,
-				mapOf(UsageParam.DURATION_BUCKET to DurationBucket.label(nanoTime() - current.startedAt)),
+				withScreenLayout(UsageParam.DURATION_BUCKET to DurationBucket.label(nanoTime() - current.startedAt)),
 			)
 			else -> null
 		}
 		state = State.Finished
 		event
 	}
+
+	private fun withScreenLayout(vararg parameters: Pair<String, String>) = mapOf(*parameters) + screenLayout?.parameters.orEmpty()
 
 	/** Callbacks arrive from the main, IO and MIDI threads; the event is sent after the lock is released. */
 	private inline fun transition(change: () -> Event?) {

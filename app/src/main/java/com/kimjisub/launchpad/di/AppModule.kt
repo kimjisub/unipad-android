@@ -6,10 +6,13 @@ import com.kimjisub.launchpad.analytics.UsageEventRouting
 import com.kimjisub.launchpad.analytics.UsageEventSink
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.network.FirebaseStoreCatalog
 import com.kimjisub.launchpad.network.StoreCatalog
+import com.kimjisub.launchpad.tool.CrashContext
+import com.kimjisub.launchpad.tool.FirebaseCrashContext
 import org.koin.dsl.module
 
 val appModule = module {
@@ -34,5 +37,13 @@ val appModule = module {
 
 	single {
 		UsageAnalytics(get())
+	}
+
+	single<CrashContext> {
+		FirebaseCrashContext
+	}
+
+	single {
+		PlayCrashKeys(get())
 	}
 }
