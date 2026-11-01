@@ -1,5 +1,8 @@
 package com.kimjisub.launchpad
 
+import android.os.SystemClock
+import android.view.accessibility.AccessibilityEvent
+import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -59,6 +62,72 @@ class AutoMappingDeviceTest : BaseUITest() {
         clickRow("Restore")
         assertTrue("Second restore did not swap back", waitUntil(30_000L) { file.readText() == mapped })
         takeScreenshot("automapping_restored_again")
+    }
+
+    @Test
+    fun lockingAndRotatingDuringMapping_resumesAndSavesAfterUnlock() {
+        launchToMainScreen()
+        val file = File(TestUniPack.folder(context), "autoPlay")
+        val input = "t 1 1\nd 50\n".repeat(1000)
+        file.writeText(input)
+        openTestPackInPlay()
+        openPlayOptions()
+        val screen = FeatureScreen()
+        val vm = screen.vm()
+        clickRow(str(R.string.autoMapping))
+        clickRow("Fit")
+        assertTrue("Mapping did not start", waitUntil(30_000L) {
+            screen.onMain { vm.autoMappingActive && vm.autoMappingProgress > 0 }
+        })
+        takeScreenshot("automapping_before_lock")
+        try {
+            device.sleep()
+            assertTrue("Lock did not hide the play screen", waitUntil(10_000L) {
+                screen.onMain { !vm.screenVisible }
+            })
+            // The duration read already in flight may finish before the next read waits.
+            val paused = screen.onMain { vm.autoMappingProgress }
+            SystemClock.sleep(1000)
+            screen.onMain {
+                assertTrue("Mapping must remain pending while locked", vm.autoMappingActive)
+                assertTrue("Only the in-flight read may finish behind the lock screen", vm.autoMappingProgress <= paused + 2)
+            }
+            assertEquals(input, file.readText())
+
+            val saved = screen.instrumentation.uiAutomation.executeAndWaitForEvent(
+                {
+                    device.wakeUp()
+                    device.executeShellCommand("wm dismiss-keyguard")
+                    assertTrue("Unlock did not resume mapping", waitUntil(30_000L) {
+                        screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
+                    })
+                    takeScreenshot("automapping_after_unlock")
+                    device.setOrientationRight()
+                    assertTrue("Rotation lost the play screen", waitUntil(10_000L) {
+                        screen.onMain { vm.screenVisible && vm.autoMappingActive }
+                    })
+                    takeScreenshot("automapping_after_rotation")
+                },
+                { event ->
+                    event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED &&
+                        event.className?.toString() == "android.widget.Toast" &&
+                        event.packageName?.toString() == context.packageName &&
+                        event.text.firstOrNull()?.toString() == str(R.string.autoMappingSaved)
+                },
+                120_000L,
+            )
+            assertEquals(str(R.string.autoMappingSaved), saved.text.first().toString())
+            takeScreenshot("automapping_saved_after_unlock_and_rotation")
+            assertTrue("Mapping remained active after saving", waitUntil(10_000L) {
+                screen.onMain { !vm.autoMappingActive }
+            })
+            assertEquals("d 1000\n" + "t 1 1\nd 100\n".repeat(999) + "t 1 1\n", file.readText())
+            assertEquals(input, File(file.parentFile, "autoPlay_previous").readText())
+        } finally {
+            device.wakeUp()
+            device.executeShellCommand("wm dismiss-keyguard")
+            device.unfreezeRotation()
+        }
     }
 
     @Test

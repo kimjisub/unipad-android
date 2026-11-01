@@ -39,6 +39,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -277,9 +279,12 @@ class PlayActivityViewModel(
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
 	// screen is in the background; the LED runner must not start until the screen is back. The audio
 	// stream is open only while the screen is visible, including beside another app in split screen.
+	// Loading without an activity remains possible until the first visibility event.
+	private val autoMappingPaused = MutableStateFlow(false)
 	var screenVisible = false
 		set(value) {
 			field = value
+			autoMappingPaused.value = !value
 			if (!value) soundRunner?.cancelPendingWormholes()
 			syncLedRunner()
 			syncSoundStream()
@@ -1227,7 +1232,7 @@ class PlayActivityViewModel(
 					autoMapper(folder).run(object : UniPackAutoMapper.Listener {
 						override fun onGetWorkSize(size: Int) { autoMappingMax = size }
 						override fun onProgress(progress: Int) { autoMappingProgress = progress }
-					}) { folder.reloadAutoPlay() }
+					}, awaitScreenVisible = { autoMappingPaused.first { !it } }) { folder.reloadAutoPlay() }
 				}
 			} catch (e: CancellationException) {
 				throw e
