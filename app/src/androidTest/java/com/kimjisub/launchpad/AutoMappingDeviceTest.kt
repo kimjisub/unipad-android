@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.os.SystemClock
+import android.view.Surface
 import android.view.accessibility.AccessibilityEvent
 import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -102,9 +103,11 @@ class AutoMappingDeviceTest : BaseUITest() {
                         screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
                     })
                     takeScreenshot("automapping_after_unlock")
-                    device.setOrientationRight()
-                    assertTrue("Rotation lost the play screen", waitUntil(10_000L) {
-                        screen.onMain { vm.screenVisible && vm.autoMappingActive }
+                    val rotation = device.displayRotation
+                    if (rotation == Surface.ROTATION_270) device.setOrientationLeft()
+                    else device.setOrientationRight()
+                    assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
+                        device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
                     })
                     takeScreenshot("automapping_after_rotation")
                 },
