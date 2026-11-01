@@ -35,7 +35,7 @@ class ArchiveSymlinkDeviceTest {
             } catch (_: ErrnoException) { false }
             println("Archive storage=${storage.path} supportsSymlinks=$supportsLinks")
             if (supportsLinks) {
-                Os.unlink(probe.path)
+                check(probe.delete())
             }
             for ((index, entries) in listOf(
                 mapOf("sub" to victim.path),
