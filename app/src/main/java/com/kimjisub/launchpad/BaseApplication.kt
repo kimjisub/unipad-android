@@ -10,6 +10,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.di.appModule
 import com.kimjisub.launchpad.diagnostics.BackgroundScreenRecorder
+import com.kimjisub.launchpad.diagnostics.InstallSource
 import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
@@ -37,6 +38,7 @@ class BaseApplication : Application() {
 		private const val PREF_NAME = "data"
 		private const val KEY_SELECTED_THEME = "SelectedTheme"
 		private const val CRASH_KEY_INSTALL_SPLITS = "install_splits"
+		private const val CRASH_KEY_INSTALL_SOURCE = "install_source"
 	}
 
 	private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -46,6 +48,7 @@ class BaseApplication : Application() {
 
 		setupStrictMode()
 		recordInstallSplits()
+		recordInstallSource()
 		registerActivityLifecycleCallbacks(ScreenCrashTrail(FirebaseCrashContext))
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			registerActivityLifecycleCallbacks(BackgroundScreenRecorder(this, PlayActivity::class.java))
@@ -110,6 +113,24 @@ class BaseApplication : Application() {
 		val splits = names?.joinToString(",") ?: "none"
 		FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SPLITS, splits)
 		Log.log("Install splits: $splits")
+	}
+
+	@Suppress("DEPRECATION") // API 24–29 have no InstallSourceInfo.
+	private fun recordInstallSource() {
+		val source = InstallSource.read {
+			// Use the installer of record on both API paths. The initiating app can instead be
+			// the shell or a system installer, and need not identify the current store.
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+				packageManager.getInstallSourceInfo(packageName).installingPackageName
+			} else {
+				packageManager.getInstallerPackageName(packageName)
+			}
+		}
+		try {
+			FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SOURCE, source)
+		} catch (_: Exception) {
+			// Optional diagnostics must not prevent launch or expose install information in logs.
+		}
 	}
 
 	// Debug builds log file access on the main thread (`adb logcat -s StrictMode`), where a slow
