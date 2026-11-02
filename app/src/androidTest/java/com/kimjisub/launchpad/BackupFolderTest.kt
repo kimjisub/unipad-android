@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.content.Intent
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -16,6 +17,7 @@ import com.kimjisub.launchpad.activity.TransferActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -41,7 +43,7 @@ class BackupFolderTest : BaseUITest() {
     fun startWithoutBackupFolder() {
         forgetBackupFolder()
         device.executeShellCommand("rm -rf $BACKUP_DIR")
-        device.executeShellCommand("mkdir -p $BACKUP_DIR")
+        device.executeShellCommand("mkdir -p $BACKUP_DIR/$BACKED_UP_PACK")
     }
 
     @After
@@ -74,7 +76,7 @@ class BackupFolderTest : BaseUITest() {
         pickInFolderPicker(BACKUP_FOLDER_NAME)
 
         assertNotNull("Documents/Unipad was not connected", scrollToText(str(R.string.backup_revoke)))
-        assertTrue("Connected folder was not saved: ${prefs.backupSafUri}", prefs.backupSafUri.orEmpty().endsWith("%2F$BACKUP_FOLDER_NAME"))
+        assertConnectedBackupFolder()
         takeScreenshot("backup_settings_connected")
 
         deleteBackupFolderLikeAFilesApp()
@@ -125,14 +127,13 @@ class BackupFolderTest : BaseUITest() {
     /** The restore screen accepts Documents/Unipad and lists what is in it. */
     @Test
     fun restoreAcceptsTheUnipadFolder() {
-        device.executeShellCommand("mkdir -p $BACKUP_DIR/$BACKED_UP_PACK")
         ActivityScenario.launch<TransferActivity>(restoreIntent()).use {
             clickWhenShown(device.wait(Until.findObject(grantAccessButton()), WAIT_MS))
             pickInFolderPicker(BACKUP_FOLDER_NAME)
 
             // The picker listed the same name, so only UniPad's own screen counts.
             assertNotNull("Backed-up pack is not listed", device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(BACKED_UP_PACK)), WAIT_MS))
-            assertTrue("Connected folder was not saved: ${prefs.backupSafUri}", prefs.backupSafUri.orEmpty().endsWith("%2F$BACKUP_FOLDER_NAME"))
+            assertConnectedBackupFolder()
             takeScreenshot("backup_restore_connected")
         }
     }
@@ -210,11 +211,16 @@ class BackupFolderTest : BaseUITest() {
     private fun pickInFolderPicker(folder: String?) {
         assertTrue("Folder picker did not open", device.wait(Until.hasObject(By.pkg(DOCUMENTS_UI)), FILE_PICKER_TIMEOUT))
         if (folder != null) {
+            val contents = By.pkg(DOCUMENTS_UI).text(BACKED_UP_PACK)
+            assertFalse("Backup contents must not be in the parent folder", device.hasObject(contents))
             clickInPicker(By.pkg(DOCUMENTS_UI).text(folder))
+            // Android 10 uses a toolbar title instead of breadcrumb_text. The known child,
+            // absent in Documents above, proves the picker actually entered our folder.
             assertTrue(
                 "Picker did not open $folder",
-                device.wait(Until.hasObject(By.pkg(DOCUMENTS_UI).res(BREADCRUMB).text(folder)), WAIT_MS),
+                device.wait(Until.hasObject(contents), WAIT_MS),
             )
+            takeScreenshot("backup_picker_inside_unipad")
         }
         // "Use this folder", then "Allow" in the confirmation that follows.
         clickInPicker(confirmButton())
@@ -222,6 +228,24 @@ class BackupFolderTest : BaseUITest() {
         clickInPicker(confirmButton())
         assertTrue("Folder picker did not close", device.wait(Until.gone(By.pkg(DOCUMENTS_UI)), WAIT_MS))
         assertTrue("UniPad did not come back from the picker", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), WAIT_MS))
+    }
+
+    private fun assertConnectedBackupFolder() {
+        val saved = prefs.backupSafUri
+        assertNotNull("Connected folder was not saved", saved)
+        val uri = saved!!.toUri()
+        assertEquals("com.android.externalstorage.documents", uri.authority)
+        // Documents is exposed as the home root on Android 10 and under primary on newer OSes.
+        val documentId = DocumentsContract.getTreeDocumentId(uri)
+        assertTrue("Unexpected backup folder: $uri", documentId in setOf("home:Unipad", "primary:Documents/Unipad"))
+        val permission = context.contentResolver.persistedUriPermissions.singleOrNull { it.uri == uri }
+        assertNotNull("No lasting permission on $uri", permission)
+        assertTrue("Read/write permission was not granted", permission!!.isReadPermission && permission.isWritePermission)
+        val directory = DocumentFile.fromTreeUri(context, uri)
+        assertNotNull("Connected folder cannot be opened", directory)
+        assertEquals(BACKUP_FOLDER_NAME, directory!!.name)
+        assertTrue("Connected folder is not readable and writable", directory.isDirectory && directory.canRead() && directory.canWrite())
+        assertTrue("Connected folder does not contain the backup", directory.findFile(BACKED_UP_PACK)?.isDirectory == true)
     }
 
     /** The picker reloads its list after opening a folder, so a button found a moment ago can be replaced. */
@@ -290,6 +314,5 @@ class BackupFolderTest : BaseUITest() {
         const val UNIPAD_TREE = "content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FUnipad"
         const val PERMISSION_FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         val DOCUMENTS_UI: Pattern = Pattern.compile(".*documentsui")
-        val BREADCRUMB: Pattern = Pattern.compile(".*:id/breadcrumb_text")
     }
 }

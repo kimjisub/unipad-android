@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.app.Activity
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
@@ -189,25 +188,35 @@ class FeatureScreen {
         node(By.desc(text(R.string.menu)))
         return scenario
     }
-    /**
-     * Presses Home and waits for the launcher. pressHome() waits only 1 second for an accessibility
-     * event, even if Home succeeded, so this requires the key injection and the launcher in front
-     * under the usual deadline, together with [left]: what leaving must have done to the app. The
-     * launcher is resolved through the device shell: target package visibility can hide it and make
-     * UiDevice.launcherPackageName return Settings' fallback home.
-     */
-    fun goHome(left: () -> Boolean) {
+    /** Package visibility can hide Home from the target app and make UiDevice resolve Settings instead. */
+    private fun launcherPackage(): String {
         val launcher = device.executeShellCommand(
             "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
         ).lineSequence().map(String::trim).lastOrNull { it.contains('/') }?.substringBefore('/')
         assertNotNull("Default launcher missing", launcher)
+        return launcher!!
+    }
+    /**
+     * Presses Home and waits for the launcher and [left]: what leaving must have done to the app.
+     * pressHome() waits only 1 second for an accessibility event, even when Home succeeds, so use
+     * key injection and check the resulting state under the usual deadline.
+     */
+    fun goHome(left: () -> Boolean) {
+        val launcher = launcherPackage()
         assertTrue("Home key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
         await("Home did not show the launcher and leave the app") { device.currentPackageName == launcher && left() }
     }
-    /** Brings [activity]'s task back in front, as choosing it in recent apps does. */
+    /** Selects the app's card in the system's recent-apps UI; a background app cannot move its own task. */
     fun bringToFront(activity: Activity) {
-        context.getSystemService(ActivityManager::class.java).appTasks
-            .single { it.taskInfo?.taskId == activity.taskId }.moveToFront()
+        val launcher = launcherPackage()
+        val label = context.packageManager.getApplicationLabel(activity.applicationInfo).toString()
+        assertTrue("Recent apps key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_APP_SWITCH))
+        val card = By.pkg(launcher).desc(label).clickable(true)
+        node(card)
+        capture("recent-apps-before-return-${SystemClock.uptimeMillis()}")
+        click(card)
+        awaitActivity(activity.javaClass)
+        assertSame("Recent apps must return to the same activity", activity, resumed())
     }
     fun padBounds(): List<Rect> = onMain {
         views(resumed().window.decorView).filterIsInstance<PadView>().map(::bounds)

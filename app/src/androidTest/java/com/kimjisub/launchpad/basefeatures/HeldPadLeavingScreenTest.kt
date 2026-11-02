@@ -6,6 +6,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -55,7 +57,10 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
     ) {
         startHeld(slide)
         val mode = if (slide) "Slide Mode" else "pad mode"
+        val activity = screen.resumed() as PlayActivity
         val vm = screen.vm()
+        val playMode = screen.onMain { vm.playMode }
+        val chain = screen.onMain { vm.chain.value }
         val held = Cell(3, 3)
         val finger = fingers.down(center(held))
         awaitHeld("Held pad did not play, light and loop before $context in $mode", setOf(held))
@@ -76,8 +81,16 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
 
         back()
         screen.awaitActivity(PlayActivity::class.java)
+        assertSame("Returning must keep the same play activity", activity, screen.resumed())
+        assertSame("Returning must keep the same pack state", vm, screen.vm())
+        screen.onMain {
+            assertEquals("Returning must keep the input mode", slide, activity.padTouch.slide)
+            assertEquals("Returning must keep the play mode", playMode, vm.playMode)
+            assertEquals("Returning must keep the chain", chain, vm.chain.value)
+        }
         if (cancelled) forgetCancelledFingers("After $context in $mode") else fingers.up(finger)
         assertHeldStill("After $context in $mode and lifting the finger", listOf(held), emptySet())
+        screen.capture("held-pad-return-after-${context.replace(' ', '-')}${if (slide) "-slide" else ""}")
 
         val again = fingers.down(center(held))
         awaitHeld("Pressing the same pad after $context in $mode did not play, light and loop it", setOf(held))

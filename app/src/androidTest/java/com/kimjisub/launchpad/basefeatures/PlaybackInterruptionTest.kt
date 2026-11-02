@@ -49,19 +49,31 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         screen.openPlay()
         val activity = screen.resumed()
         val vm = screen.vm()
+        val loadedSounds = audio.loaded.toMap()
         screen.onMain { vm.switchPlayMode(PlayMode.GuidePlay) }
         screen.capture("interruption-guide-before-home")
         for (away in listOf(1000L, 10000L)) {
             screen.goHome { screen.onMain { !vm.screenVisible } }
             val progress = screen.onMain { vm.autoPlayRunner!!.progress }
+            val plays = audio.plays.size
             SystemClock.sleep(away)
             screen.bringToFront(activity)
             screen.awaitActivity(activity.javaClass)
+            assertSame("Returning must keep the same play activity", activity, screen.resumed())
+            assertSame("Returning must keep the same pack state", vm, screen.vm())
+            assertEquals("Returning must not reload sounds", loadedSounds, audio.loaded.toMap())
             screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_play)))
             screen.capture("interruption-guide-return-$away")
             screen.onMain {
                 assertEquals("Keep the chosen guide mode", PlayMode.GuidePlay, vm.playMode)
                 assertFalse("Coming back must wait for Play", vm.isAutoPlayPlaying)
+                assertEquals(progress, vm.autoPlayRunner!!.progress)
+            }
+            assertEquals("Returning must not replay pads", plays, audio.plays.size)
+            pressPad(0)
+            screen.onMain {
+                assertEquals("A new pad press must not resume the guide", PlayMode.GuidePlay, vm.playMode)
+                assertFalse(vm.isAutoPlayPlaying)
                 assertEquals(progress, vm.autoPlayRunner!!.progress)
             }
         }
