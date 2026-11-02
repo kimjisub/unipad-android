@@ -52,6 +52,18 @@ object FileManager {
 			(!entry.exists() && parent.list()?.contains(absolute.name) == true)
 	}
 
+	/** Without an exact entry, refuse an alias if any canonical match is a link. */
+	private fun isLinkedDestination(
+		file: File,
+		entries: Map<String, File> = file.absoluteFile.parentFile?.listFiles()?.associateBy { it.name }
+			?: throw IOException("Could not list parent of ${file.path}"),
+	): Boolean {
+		entries[file.name]?.let { return isSymbolicLink(it) }
+		if (!file.exists()) return false
+		val canonical = file.canonicalFile
+		return entries.values.any { it.canonicalFile == canonical && isSymbolicLink(it) }
+	}
+
 	private fun isDirectoryWithoutLinks(file: File) = file.isDirectory && !isSymbolicLink(file)
 
 	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any {
@@ -143,14 +155,15 @@ object FileManager {
 			sourceDir.delete()
 			return
 		}
-		if (isSymbolicLink(targetDir)) throw IOException("Cannot move into a symbolic link: ${targetDir.path}")
-		if (!targetDir.isDirectory) targetDir.mkdir()
-		val targetNames = targetDir.list().orEmpty().toSet()
+		if (isLinkedDestination(targetDir)) throw IOException("Cannot move into a symbolic link: ${targetDir.path}")
+		if (!targetDir.isDirectory && !targetDir.mkdir()) throw IOException("Could not create ${targetDir.path}")
+		val targetEntries = targetDir.listFiles()?.associateBy { it.name }
+			?: throw IOException("Could not list ${targetDir.path}")
 		val sourceList = sourceDir.listFiles() ?: throw IOException("Could not list ${sourceDir.path}")
 		for (source in sourceList) {
 			if (isSymbolicLink(source)) continue
 			val target = File(targetDir, source.name)
-			if (source.name in targetNames && isSymbolicLink(target)) {
+			if (isLinkedDestination(target, targetEntries)) {
 				throw IOException("Cannot move onto a symbolic link: ${target.path}")
 			}
 			if (source.isDirectory) {
@@ -158,6 +171,10 @@ object FileManager {
 				moveDirectory(source, target)
 			} else {
 				FileInputStream(source).use { fis ->
+					// Exclusive creation sees dangling links even when exists() follows them to nothing.
+					if (!target.createNewFile() && !target.exists()) {
+						throw IOException("Cannot move onto a dangling symbolic link: ${target.path}")
+					}
 					FileOutputStream(target).use { fos ->
 						val b = ByteArray(COPY_BUFFER_SIZE)
 						var cnt = 0

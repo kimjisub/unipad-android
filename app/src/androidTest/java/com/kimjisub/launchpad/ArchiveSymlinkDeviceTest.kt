@@ -23,6 +23,28 @@ class ArchiveSymlinkDeviceTest {
     @Test fun internalStoragePreservesOtherPacksAndThemes() = checkStorage(context.filesDir)
     @Test fun externalStoragePreservesOtherPacksAndThemes() = checkStorage(requireNotNull(context.getExternalFilesDir(null)))
 
+    @Test fun caseSensitiveStorageKeepsDifferentlyCasedEntriesSeparate() {
+        val root = File(context.filesDir, "case-move-safety-${UUID.randomUUID()}").apply { check(mkdirs()) }
+        try {
+            val sound = File(root, "other-sound.wav").apply { writeText("keep") }
+            val source = File(root, "source").apply { check(mkdir()) }
+            File(source, "SOUND.WAV").writeText("replacement")
+            val target = File(root, "target").apply { check(mkdir()) }
+            val link = File(target, "sound.wav")
+            Os.symlink(sound.path, link.path)
+            assertFalse("the fixture requires case-sensitive internal storage", File(target, "SOUND.WAV").exists())
+
+            FileManager.moveDirectory(source, target)
+
+            assertEquals("keep", sound.readText())
+            assertEquals("replacement", File(target, "SOUND.WAV").readText())
+            assertEquals(sound.path, Os.readlink(link.path))
+            assertFalse(source.exists())
+        } finally {
+            FileManager.deleteDirectory(root)
+        }
+    }
+
     private fun checkStorage(storage: File) {
         val root = File(storage, "archive-safety-${UUID.randomUUID()}").apply { check(mkdirs()) }
         try {
