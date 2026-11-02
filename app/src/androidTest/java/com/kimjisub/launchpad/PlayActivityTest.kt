@@ -31,7 +31,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.math.abs
 
 /**
  * PlayActivity Tests
@@ -86,7 +85,7 @@ class PlayActivityTest : BaseUITest() {
     }
 
     /** Play screen geometry read from the view tree: [padArea] of the helper reads the same actual native bounds. */
-    private data class PlayGeometry(val window: Rect, val safe: Rect, val pads: Rect, val chains: List<Rect>)
+    private data class PlayGeometry(val window: Rect, val safe: Rect, val content: Rect, val pads: Rect, val chains: List<Rect>)
 
     /**
      * Pad grid and chain buttons on screen, and the area not covered by system bars or the display
@@ -115,7 +114,8 @@ class PlayActivityTest : BaseUITest() {
             collect(decor)
             val pads = shown.filterIsInstance<PadView>().map(::screenBounds)
                 .reduceOrNull { acc, r -> Rect(acc).apply { union(r) } } ?: Rect()
-            geometry = PlayGeometry(window, safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
+            val content = screenBounds(activity.findViewById(android.R.id.content))
+            geometry = PlayGeometry(window, safe, content, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
         }
         return geometry!!
     }
@@ -124,6 +124,8 @@ class PlayActivityTest : BaseUITest() {
         val origin = IntArray(2).also { view.getLocationOnScreen(it) }
         return Rect(origin[0], origin[1], origin[0] + view.width, origin[1] + view.height)
     }
+
+    private fun Rect.layoutRect() = PlayLayoutRect(left, top, right, bottom)
 
     private fun safeAreaProblem(safe: Rect, name: String, bounds: Rect): String? =
         if (safe.contains(bounds)) null else "$name $bounds reaches outside the safe area $safe"
@@ -993,6 +995,22 @@ class PlayActivityTest : BaseUITest() {
     }
 
     @Test
+    fun testContentCentreAcceptsSystemInsetsButRejectsAppInsetsAndDisplacedPads() {
+        val window = PlayLayoutRect(0, 0, 2460, 1080)
+        val content = PlayLayoutRect(0, 0, 2334, 1080)
+        val pads = PlayLayoutRect(651, 24, 1683, 1056)
+        fun problem(area: PlayLayoutRect, grid: PlayLayoutRect = pads) =
+            padCentreProblem(window, content, area, grid, 2.625f, CENTRE_TOLERANCE_DP)
+        assertNull("System navigation bar inset must be accepted", problem(content))
+        assertNull("Edge-to-edge content must be accepted",
+            problem(window, pads.copy(left = 714, right = 1746)))
+        assertNotNull("App padding cannot redefine the centre",
+            problem(content.copy(left = 20, right = 2314)))
+        assertNotNull("Pads more than 2dp away from the content centre must fail",
+            problem(content, pads.copy(left = 657, right = 1689)))
+    }
+
+    @Test
     fun testRotationMismatchRetriesTheWholeLayoutObservation() {
         enterPlay()
         try {
@@ -1009,6 +1027,16 @@ class PlayActivityTest : BaseUITest() {
             })
             assertTrue("A persistently wrong rotation must still fail: $persistent",
                 persistent.any { it.contains("display rotation is 1, not 0") })
+
+            var unsupportedReadings = 0
+            // Inject unsupported forcing and an unstable actual rotation independently of this OS.
+            val unsupported = playLayoutProblems("synthetic_rotation_unavailable", Surface.ROTATION_0,
+                orientationOverrideSupported = false, readRotation = {
+                    unsupportedReadings++
+                    if (unsupportedReadings == 1) Surface.ROTATION_270 else Surface.ROTATION_90
+                })
+            assertTrue("Unsupported forcing must still check the actual layout: $unsupported", unsupported.isEmpty())
+            assertTrue("Even unsupported forcing must retry an unstable actual rotation", unsupportedReadings > 2)
         } finally {
             device.unfreezeRotation()
         }
@@ -1097,14 +1125,16 @@ class PlayActivityTest : BaseUITest() {
         problems += playLayoutProblems("${prefix}initial")
         DisplayOverlays.with(device, DisplayOverlays.HOLE_CUTOUT) {
             try {
-                device.executeShellCommand("wm set-ignore-orientation-request true")
+                val response = device.executeShellCommand("wm set-ignore-orientation-request true")
+                val supported = orientationOverrideSupported(response)
+                println("Orientation override supported=$supported; response=${response.trim().ifEmpty { "<empty>" }}")
                 for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
                     device.executeShellCommand("wm size $size")
-                    problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
-                    problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
+                    problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90, orientationOverrideSupported = supported)
+                    problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270, orientationOverrideSupported = supported)
                 }
                 device.executeShellCommand("wm size 1600x2560")
-                problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
+                problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0, orientationOverrideSupported = supported)
             } finally {
                 device.executeShellCommand("wm size reset")
                 device.unfreezeRotation()
@@ -1172,7 +1202,7 @@ class PlayActivityTest : BaseUITest() {
     }
 
     /**
-     * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
+     * What is wrong with the play screen's layout now: the pad grid off the app content's centre line,
      * anything outside the safe area, or chains, menu, pads and logo covering each other.
      */
     private fun playLayoutProblems(
@@ -1180,22 +1210,25 @@ class PlayActivityTest : BaseUITest() {
         rotation: Int? = null,
         layoutTimeoutMs: Long = 10000L,
         attemptsRemaining: Int = 3,
+        orientationOverrideSupported: Boolean = true,
         readRotation: () -> Int = { device.displayRotation },
     ): List<String> {
         // A resize can override a rotation that was briefly reported as complete.
         if (rotation != null) rotateTo(rotation)
         Thread.sleep(500)
-        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270, timeoutMs = layoutTimeoutMs)
+        val geometry = settledGeometry(landscape = orientationOverrideSupported && (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270), timeoutMs = layoutTimeoutMs)
         val problems = mutableListOf<String>()
         fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
         val initialRotation = readRotation()
-        if (rotation != null) check(initialRotation == rotation) { "display rotation is $initialRotation, not $rotation" }
+        if (rotation != null && orientationOverrideSupported) check(initialRotation == rotation) { "display rotation is $initialRotation, not $rotation" }
         fun checkInside(what: String, bounds: Rect) {
             safeAreaProblem(geometry.safe, what, bounds)?.let { problem -> check(false) { problem } }
         }
 
-        val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / context.resources.displayMetrics.density
-        check(offCentreDp <= CENTRE_TOLERANCE_DP) { "pad grid is ${offCentreDp}dp off the window's centre line" }
+        println("$name geometry: $geometry")
+        padCentreProblem(geometry.window.layoutRect(), geometry.safe.layoutRect(), geometry.content.layoutRect(),
+            geometry.pads.layoutRect(), context.resources.displayMetrics.density, CENTRE_TOLERANCE_DP)
+            ?.let { problem -> check(false) { problem } }
         checkInside("pad grid", geometry.pads)
         check(geometry.chains.isNotEmpty()) { "chain buttons not found" }
         geometry.chains.forEachIndexed { i, chain ->
@@ -1217,12 +1250,16 @@ class PlayActivityTest : BaseUITest() {
         // observation instead of keeping a failure from a transient layout.
         val latest = playGeometry()
         val finalRotation = readRotation()
-        val rotationMatches = initialRotation == finalRotation && (rotation == null || initialRotation == rotation)
+        val rotationMatches = initialRotation == finalRotation && (!orientationOverrideSupported || rotation == null || initialRotation == rotation)
         if (latest != geometry || !rotationMatches) {
             if (attemptsRemaining > 1) {
-                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1, readRotation)
+                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1, orientationOverrideSupported, readRotation)
             }
             check(false) { "layout or rotation kept changing while reading controls; last: $latest, rotation: $finalRotation" }
+        }
+        if (!orientationOverrideSupported && rotation != null && initialRotation != rotation && rotationMatches) {
+            println("$name UNVERIFIED_OS_CONSTRAINT: requested rotation=$rotation, actual rotation=$initialRotation; " +
+                "orientation override is unsupported; layout checked at the actual rotation")
         }
         // Taken last: the display can still be drawing the rotation when the view tree has settled.
         takeScreenshot("pad_grid_$name")
