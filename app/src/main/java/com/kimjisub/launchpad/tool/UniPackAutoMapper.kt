@@ -26,7 +26,11 @@ class UniPackAutoMapper(
 	}
 
 	/** Calls [listener] in the caller's context; throws when the pack cannot be read or written. */
-	suspend fun run(listener: Listener, validate: () -> Unit = {}) {
+	suspend fun run(
+		listener: Listener,
+		awaitScreenVisible: suspend () -> Unit = {},
+		validate: () -> Unit = {},
+	) {
 		val autoPlayFile = unipack.autoPlayFile ?: throw FileNotFoundException("autoPlay")
 		val autoPlay = unipack.autoPlayTable ?: throw IllegalStateException("autoPlay is not loaded")
 		val elements = mergeDelays(autoPlay.elements)
@@ -40,7 +44,14 @@ class UniPackAutoMapper(
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt() } }
+						nextDuration = soundFile(e)?.let { file ->
+							// Repeated media calls prevent Android from freezing a cached process.
+							// Finish the current read, then wait for the caller before starting another.
+							awaitScreenVisible()
+							withContext(Dispatchers.IO) {
+								reader.durationMs(file)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt()
+							}
+						}
 						waitReplaced = false
 						result.add(e)
 					}

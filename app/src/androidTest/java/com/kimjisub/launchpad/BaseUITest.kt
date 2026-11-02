@@ -95,8 +95,8 @@ abstract class BaseUITest {
     /**
      * Launch the app
      */
-    protected fun launchApp() {
-        val intent = context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME)?.apply {
+    protected fun launchApp(launchIntent: Intent? = null) {
+        val intent = (launchIntent ?: context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME))?.apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         assertNotNull("Could not find launch intent for the app", intent)
@@ -259,13 +259,13 @@ abstract class BaseUITest {
      * Below Android 11 Splash first asks for storage access, which is granted while waiting unless
      * [answerStoragePermission] is false (a test that must see no permission dialog at all).
      */
-    protected fun launchToMainActivity(answerStoragePermission: Boolean = true) {
+    protected fun launchToMainActivity(answerStoragePermission: Boolean = true, launchIntent: Intent? = null) {
         val mainResumed = CountDownLatch(1)
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (stage == Stage.RESUMED && activity is MainActivity) mainResumed.countDown()
         }
         withLifecycleCallback(callback) {
-            launchApp()
+            launchApp(launchIntent)
             val deadline = SystemClock.uptimeMillis() + ACTIVITY_START_TIMEOUT
             while (!mainResumed.await(500, TimeUnit.MILLISECONDS)) {
                 assertTrue("Main screen activity did not resume", SystemClock.uptimeMillis() < deadline)
@@ -280,8 +280,8 @@ abstract class BaseUITest {
      * The main screen has no view ids since the Compose rewrite, so it is recognised by the
      * store / settings content descriptions and the guide chip text.
      */
-    protected fun launchToMainScreen() {
-        launchToMainActivity()
+    protected fun launchToMainScreen(launchIntent: Intent? = null) {
+        launchToMainActivity(launchIntent = launchIntent)
         handlePermissionDialogs()
         assertTrue("Main screen did not appear", waitForMainScreen())
     }

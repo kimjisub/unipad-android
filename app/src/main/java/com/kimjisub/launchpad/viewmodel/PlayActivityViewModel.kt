@@ -19,6 +19,7 @@ import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
 import com.kimjisub.launchpad.manager.ChannelManager
+import com.kimjisub.launchpad.manager.AppVisibility
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.tool.FirebaseCrashContext
@@ -39,6 +40,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -57,6 +60,7 @@ class PlayActivityViewModel(
 	private val autoMapper: (UniPackFolder) -> UniPackAutoMapper = ::UniPackAutoMapper,
 	private val autoPlayFiles: AutoPlayFileReplacer = AutoPlayFileReplacer(),
 	private val crashKeys: PlayCrashKeys = PlayCrashKeys(FirebaseCrashContext),
+	private val appVisible: StateFlow<Boolean> = AppVisibility.process.visible,
 ) : ViewModel() {
 
 	companion object {
@@ -1224,10 +1228,12 @@ class PlayActivityViewModel(
 						autoPlayFiles.restore(file) { folder.reloadAutoPlay() }
 					}
 				} else {
+					// A launcher return may cover PlayActivity with the pack list. Only pause media
+					// reads when the whole app is hidden, so that return can still finish saving.
 					autoMapper(folder).run(object : UniPackAutoMapper.Listener {
 						override fun onGetWorkSize(size: Int) { autoMappingMax = size }
 						override fun onProgress(progress: Int) { autoMappingProgress = progress }
-					}) { folder.reloadAutoPlay() }
+					}, awaitScreenVisible = { appVisible.first { it } }) { folder.reloadAutoPlay() }
 				}
 			} catch (e: CancellationException) {
 				throw e
