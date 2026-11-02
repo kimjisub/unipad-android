@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.diagnostics.BackgroundScreenRecorder
 import com.kimjisub.launchpad.diagnostics.InstallSource
 import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.AppVisibility
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -45,6 +46,7 @@ class BaseApplication : Application() {
 
 	override fun onCreate() {
 		super.onCreate()
+		registerActivityLifecycleCallbacks(AppVisibility.process)
 
 		setupStrictMode()
 		recordInstallSplits()

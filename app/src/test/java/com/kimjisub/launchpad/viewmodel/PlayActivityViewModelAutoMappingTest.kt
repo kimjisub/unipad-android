@@ -19,6 +19,7 @@ import io.mockk.unmockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -51,6 +52,7 @@ class PlayActivityViewModelAutoMappingTest {
 	private val main = FakeMainDispatcher()
 	private val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
 	private val store = ViewModelStore()
+	private val appVisible = MutableStateFlow(true)
 	private val original = "t 1 1\nd 100\nt 1 1\nd 100\n"
 	private lateinit var root: File
 
@@ -107,6 +109,7 @@ class PlayActivityViewModelAutoMappingTest {
 			UsageAnalytics { _, _ -> },
 			autoMapper = { UniPackAutoMapper(it, { lengths }) },
 			soundEngine = engine,
+			appVisible = appVisible,
 		)
 		store.put("play", vm)
 		vm.uiCallback = ui
@@ -196,7 +199,29 @@ class PlayActivityViewModelAutoMappingTest {
 		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
 	}
 	@Test
-	fun hidingTheScreen_pausesBeforeTheNextSoundAndResumesSaving() {
+	fun coveringThePlayScreenWithAnotherAppScreen_doesNotStopMapping() {
+		val lengths = HeldLengths()
+		val vm = openPack(lengths)
+		vm.screenVisible = true
+		vm.autoMapping()
+		try {
+			assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
+			// A list opened from the launcher covers PlayActivity while the app stays visible.
+			vm.screenVisible = false
+			lengths.release.countDown()
+			runUntil { !vm.autoMappingActive }
+
+			assertFalse("Mapping must finish behind another screen of this app", vm.autoMappingActive)
+			assertEquals(2, lengths.reads.get())
+			assertEquals("d 1000\nt 1 1\nd 400\nt 1 1\n", File(root, "autoPlay").readText())
+			assertEquals(original, File(root, "autoPlay_previous").readText())
+		} finally {
+			lengths.release.countDown()
+		}
+	}
+
+	@Test
+	fun returningToAnotherAppScreen_resumesSavingWhilePlayRemainsHidden() {
 		val lengths = HeldLengths()
 		val vm = openPack(lengths)
 		vm.screenVisible = true
@@ -204,6 +229,33 @@ class PlayActivityViewModelAutoMappingTest {
 		try {
 			assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
 			vm.screenVisible = false
+			appVisible.value = false
+			lengths.release.countDown()
+			runUntil { vm.autoMappingProgress >= 2 }
+			assertTrue(vm.autoMappingActive)
+			assertEquals(1, lengths.reads.get())
+
+			appVisible.value = true
+			runUntil { !vm.autoMappingActive }
+			assertFalse(vm.screenVisible)
+			assertFalse(vm.autoMappingActive)
+			assertEquals(2, lengths.reads.get())
+			assertEquals(original, File(root, "autoPlay_previous").readText())
+		} finally {
+			lengths.release.countDown()
+		}
+	}
+
+	@Test
+	fun hidingTheApp_pausesBeforeTheNextSoundAndResumesSaving() {
+		val lengths = HeldLengths()
+		val vm = openPack(lengths)
+		vm.screenVisible = true
+		vm.autoMapping()
+		try {
+			assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
+			vm.screenVisible = false
+			appVisible.value = false
 			lengths.release.countDown()
 			runUntil { vm.autoMappingProgress >= 2 }
 
@@ -213,6 +265,7 @@ class PlayActivityViewModelAutoMappingTest {
 			verify(exactly = 0) { ui.showToast(any()) }
 
 			vm.screenVisible = true
+			appVisible.value = true
 			runUntil { !vm.autoMappingActive }
 			assertFalse(vm.autoMappingActive)
 			assertEquals(2, lengths.reads.get())
@@ -233,6 +286,7 @@ class PlayActivityViewModelAutoMappingTest {
 		try {
 			assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
 			vm.screenVisible = false
+			appVisible.value = false
 			lengths.release.countDown()
 			runUntil { vm.autoMappingProgress >= 2 }
 			assertTrue("Mapping must still be waiting for the screen", vm.autoMappingActive)
