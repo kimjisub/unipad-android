@@ -81,8 +81,19 @@ class BackupFolderTest : BaseUITest() {
             clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
             pickInFolderPicker(BACKUP_FOLDER_NAME)
 
-            assertNotNull("Documents/Unipad was not connected", scrollToText(str(R.string.backup_revoke)))
             assertConnectedBackupFolder()
+            // The known child used to verify picker entry also triggers the recovery offer.
+            val recoveryTitle = By.pkg(PACKAGE_NAME).text(str(R.string.backup_recovery_title))
+            assertNotNull("Recovery offer is not shown", device.wait(Until.findObject(recoveryTitle), WAIT_MS))
+            assertTrue(
+                "Recovery offer does not count the backed-up pack",
+                device.hasObject(By.pkg(PACKAGE_NAME).text(AppLanguage.localized(context).getString(R.string.backup_recovery_message, 1))),
+            )
+            takeScreenshot("backup_settings_recovery_notice")
+            clickWhenShown(device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_recovery_later))), WAIT_MS))
+            assertTrue("Recovery offer did not close", device.wait(Until.gone(recoveryTitle), WAIT_MS))
+
+            assertNotNull("Documents/Unipad was not connected", scrollToText(str(R.string.backup_revoke)))
             takeScreenshot("backup_settings_connected")
 
             deleteBackupFolderLikeAFilesApp()

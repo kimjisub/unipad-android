@@ -215,8 +215,10 @@ class FeatureScreen {
         val componentLabel = "${activity.application.javaClass.name} ${activity.javaClass.name}"
         val cardLabel = Pattern.compile(listOf(label, componentLabel).joinToString("|") { Pattern.quote(it) })
         assertTrue("Recent apps key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_APP_SWITCH))
-        val card = By.pkg(launcher).desc(cardLabel).clickable(true)
-        node(card)
+        val identity = By.pkg(launcher).desc(cardLabel)
+        // Newer launchers label the snapshot inside the clickable task card.
+        val card = if (node(identity).isClickable) identity.clickable(true)
+        else By.pkg(launcher).clickable(true).hasDescendant(identity)
         capture("recent-apps-before-return-${SystemClock.uptimeMillis()}")
         click(card)
         awaitActivity(activity.javaClass)
