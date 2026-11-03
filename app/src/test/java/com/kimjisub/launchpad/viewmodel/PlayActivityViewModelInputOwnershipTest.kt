@@ -46,7 +46,7 @@ class PlayActivityViewModelInputOwnershipTest {
         override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
         override fun start() = true
         override fun stop() = Unit
-        override fun decode(file: File) = OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44100)
+        override fun decode(file: File, interrupted: () -> Boolean) = OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44100)
         override fun load(decoded: OboeAudioEngine.DecodedAudio) = 1
         override fun unloadSound(soundId: Int) = Unit
         override fun unloadAll() = Unit

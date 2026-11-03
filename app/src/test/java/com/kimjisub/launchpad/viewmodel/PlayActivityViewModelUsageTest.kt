@@ -68,7 +68,7 @@ class PlayActivityViewModelUsageTest {
 		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start() = startOk
 		override fun stop() {}
-		override fun decode(file: JFile) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100)
+		override fun decode(file: JFile, interrupted: () -> Boolean) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100)
 		override fun load(decoded: OboeAudioEngine.DecodedAudio) = 1
 		override fun unloadSound(soundId: Int) {}
 		override fun unloadAll() {}
@@ -83,7 +83,7 @@ class PlayActivityViewModelUsageTest {
 
 		fun finishDecoding() = mayFinish.countDown()
 
-		override fun decode(file: JFile): OboeAudioEngine.DecodedAudio {
+		override fun decode(file: JFile, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio {
 			mayFinish.await(10, TimeUnit.SECONDS)
 			return OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100)
 		}
@@ -392,7 +392,7 @@ class PlayActivityViewModelUsageTest {
 
     @Test fun aPartialDecodeFailureIsNotRecordedAsSuccessfulCompatibility() {
         val engine = object : SoundRunner.Engine by FakeEngine() {
-            override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? =
+            override fun decode(file: JFile, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? =
                 if (file.name == "a.wav") null else OboeAudioEngine.DecodedAudio(shortArrayOf(1), 1, 1, 44_100)
         }
         val vm = newVm(engine)
@@ -418,7 +418,7 @@ class PlayActivityViewModelUsageTest {
 
 	private fun assertPartialFailureRecordsPlay(memoryFailure: Boolean) {
 		val engine = object : SoundRunner.Engine by FakeEngine() {
-			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? {
+			override fun decode(file: JFile, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
 				if (file.name == "a.wav") {
 					if (memoryFailure) throw OutOfMemoryError("simulated decode failure")
 					return null
@@ -455,7 +455,7 @@ class PlayActivityViewModelUsageTest {
 	@Test
 	fun aPackWhoseSoundsAllFailNeverRecordsPlay() {
 		val engine = object : SoundRunner.Engine by FakeEngine() {
-			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio? = null
+			override fun decode(file: JFile, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = null
 		}
 		val vm = newVm(engine)
 		load(vm, createPack())
@@ -476,7 +476,7 @@ class PlayActivityViewModelUsageTest {
 	@Test
 	fun decodingMemoryFailureKeepsTheMemoryReasonAndRetryOnScreen() {
 		val engine = object : SoundRunner.Engine by FakeEngine() {
-			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio = throw OutOfMemoryError("simulated decode failure")
+			override fun decode(file: JFile, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio = throw OutOfMemoryError("simulated decode failure")
 		}
 		val vm = newVm(engine)
 		val notices = mutableListOf<Int>()

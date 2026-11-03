@@ -15,10 +15,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -82,7 +84,11 @@ class SoundRunner(
 		fun start(): Boolean
 		fun stop()
 		fun inspect(file: File): AudioInspection = AudioFileInspector.inspect(file)
-		fun decode(file: File): OboeAudioEngine.DecodedAudio?
+		/**
+		 * Decodes [file], releasing the decoder and throwing [OboeAudioEngine.DecodeInterruptedException]
+		 * as soon as [interrupted] answers true.
+		 */
+		fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio?
 		fun load(decoded: OboeAudioEngine.DecodedAudio): Int
 		fun unloadSound(soundId: Int)
 		fun unloadAll()
@@ -94,7 +100,7 @@ class SoundRunner(
 	internal object OboeEngine : Engine {
 		override fun start() = OboeAudioEngine.start()
 		override fun stop() = OboeAudioEngine.stop()
-		override fun decode(file: File) = OboeAudioEngine.decodeOnly(file)
+		override fun decode(file: File, interrupted: () -> Boolean) = OboeAudioEngine.decodeOnly(file, interrupted)
 		override fun load(decoded: OboeAudioEngine.DecodedAudio) = OboeAudioEngine.loadDecoded(decoded)
 		override fun unloadSound(soundId: Int) = OboeAudioEngine.unloadSound(soundId)
 		override fun unloadAll() = OboeAudioEngine.unloadAll()
@@ -161,7 +167,8 @@ class SoundRunner(
 				// across files. Real-device peak-memory verification remains necessary.
 				for (selection in plan.files) {
 					// A decoder keeps the process in binder calls without a pause, so Android cannot freeze it
-					// once it is cached and kills it within seconds. The load waits for the screen instead.
+					// once it is cached and kills it within seconds. The load waits for the screen instead;
+					// see decodeWhileVisible for the file in progress when the screen is hidden.
 					streamPaused.first { !it }
 					ensureActive()
 					val file = File(selection.identity)
@@ -176,7 +183,7 @@ class SoundRunner(
 					if (reason == null) {
 						try {
 							val decoded = try {
-								engine.decode(file)
+								decodeWhileVisible(file)
 							} catch (e: CancellationException) {
 								throw e
 							} catch (e: Exception) {
@@ -215,6 +222,25 @@ class SoundRunner(
 				// used to take the process down instead of reaching onException.
 				Log.err("[08] doInBackground", e)
 				loadingListener.onException(e)
+			}
+		}
+	}
+
+	/**
+	 * Decodes [file] while the screen is visible. Hiding the screen releases the decoder at once
+	 * and drops the partial result, and the same file starts over when the screen returns: the
+	 * media service still calls into the app while it closes a decoder, and Android kills an app
+	 * frozen in the middle of such a call when it thaws it.
+	 */
+	private suspend fun decodeWhileVisible(file: File): OboeAudioEngine.DecodedAudio? {
+		val job = currentCoroutineContext().job
+		while (true) {
+			try {
+				return engine.decode(file) { streamPaused.value || !job.isActive }
+			} catch (_: OboeAudioEngine.DecodeInterruptedException) {
+				Log.play("Sound decode stopped while hidden: ${file.name}")
+				streamPaused.first { !it }
+				job.ensureActive()
 			}
 		}
 	}
@@ -280,7 +306,7 @@ class SoundRunner(
 	 * Closes the output stream while the screen is hidden. Android 17 mutes an open stream of an app
 	 * nobody can see, and with strict audio hardening aborts the process from the stream's callback
 	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading. A
-	 * load still running finishes its current file and continues from the next one on [resumeStream].
+	 * load still running stops decoding its current file and starts that file over on [resumeStream].
 	 */
 	fun pauseStream() {
 		cancelPendingWormholes()

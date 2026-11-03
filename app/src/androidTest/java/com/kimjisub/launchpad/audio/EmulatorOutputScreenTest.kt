@@ -37,9 +37,9 @@ class EmulatorOutputScreenTest {
         // Deliberate fault for the detector's negative run: keep the real output stream
         // and decoder, but suppress play requests. This exists only in the test APK.
         val engine = object : SoundRunner.Engine by SoundRunner.OboeEngine {
-            override fun decode(file: File): DecodedAudio? {
+            override fun decode(file: File, interrupted: () -> Boolean): DecodedAudio? {
                 check(decodeGate.await(90, TimeUnit.SECONDS)) { "Host did not release the loading gate" }
-                return SoundRunner.OboeEngine.decode(file)
+                return SoundRunner.OboeEngine.decode(file, interrupted)
             }
             override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int =
                 if (blocked) 0 else SoundRunner.OboeEngine.play(soundId, volumeL, volumeR, loop)

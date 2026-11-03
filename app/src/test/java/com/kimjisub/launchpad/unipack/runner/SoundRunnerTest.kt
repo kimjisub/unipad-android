@@ -69,6 +69,10 @@ class SoundRunnerTest {
 		var decodeGate: CountDownLatch? = null
 		val decodeEntered = CountDownLatch(1)
 
+		/** Names of the files in the order their decoders opened, and of those released before finishing. */
+		val decodesOpened = CopyOnWriteArrayList<String>()
+		val decodesInterrupted = CopyOnWriteArrayList<String>()
+
 		/** Whether the output stream is open; Android 17 mutes an open stream while the app is hidden. */
 		@Volatile
 		var streamOpen = false
@@ -83,12 +87,21 @@ class SoundRunnerTest {
 			streamOpen = false
 		}
 
-		override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+		override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
 			decodesInFlight.incrementAndGet()
 			callsInFlight.incrementAndGet()
 			try {
+				decodesOpened.add(file.name)
 				decodeEntered.countDown()
-				decodeGate?.await(5, TimeUnit.SECONDS)
+				// A closed gate stands for a long file still being decoded, step by step as the real decoder does.
+				val deadline = System.currentTimeMillis() + 5_000
+				while (decodeGate?.count?.let { it > 0 } == true && System.currentTimeMillis() < deadline) {
+					if (interrupted()) {
+						decodesInterrupted.add(file.name)
+						throw OboeAudioEngine.DecodeInterruptedException()
+					}
+					Thread.sleep(2)
+				}
 				throwingDecodes[file.name]?.let { throw it }
 				if (file.name in failingFiles) return null
 				synchronized(lock) {
@@ -331,26 +344,53 @@ class SoundRunnerTest {
 	}
 
 	@Test
-	fun hiddenScreen_holdsLoadingUntilItReturns() {
+	fun hiddenScreen_closesTheDecoderInProgressAndRestartsThatFileOnReturn() {
 		val unipack = pack(fileCount = 5)
 		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
 		val listener = RecordingListener()
 		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
 		assertTrue(engine.decodeEntered.await(5, TimeUnit.SECONDS))
+		val first = engine.decodesOpened.single()
 
 		runner.pauseStream()
-		engine.decodeGate!!.countDown()
 		awaitDecodesDrained(engine)
+		assertEquals("the decoder in progress must close while the screen is hidden", listOf(first), engine.decodesInterrupted)
+		engine.decodeGate!!.countDown()
 		Thread.sleep(200)
 
-		assertEquals("the file in progress finishes; no other may start", 1, engine.loadCalls.get())
+		assertEquals("no decoder may open while the screen is hidden", listOf(first), engine.decodesOpened)
+		assertEquals("a stopped decode must not be loaded", 0, engine.loadCalls.get())
 		assertEquals(1L, listener.ended.count)
 
 		runner.resumeStream()
 
 		assertTrue("loading must finish after the screen returns", listener.ended.await(5, TimeUnit.SECONDS))
+		assertEquals("the stopped file must be decoded again first", listOf(first, first), engine.decodesOpened.take(2))
+		assertEquals(6, engine.decodesOpened.size)
 		assertEquals(5, engine.loadCalls.get())
 		assertEquals(null, listener.failure)
+		assertEquals("a stopped decode is not a failed file", 5, listener.report!!.loadedFiles)
+		assertTrue(listener.report!!.failures.isEmpty())
+		assertTrue(unipack.sounds().all { it.id >= 0 })
+		runner.destroy()
+	}
+
+	@Test
+	fun destroyWhileDecoding_closesTheDecoderWithoutWaitingForTheFile() {
+		val unipack = pack(fileCount = 5)
+		val engine = FakeEngine().apply { decodeGate = CountDownLatch(1) }
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(engine.decodeEntered.await(5, TimeUnit.SECONDS))
+
+		runner.destroy()
+		awaitLoadJobsFinished()
+
+		assertEquals(engine.decodesOpened, engine.decodesInterrupted)
+		assertEquals(0, engine.loadCalls.get())
+		assertEquals(0, listener.failureCount.get())
+		assertTrue(uncaught.isEmpty())
+		engine.decodeGate!!.countDown()
 	}
 
 	@Test

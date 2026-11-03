@@ -24,7 +24,7 @@ class RecordingAudio : SoundRunner.Engine {
         return true
     }
     override fun stop() { stops.incrementAndGet() }
-    override fun decode(file: File): OboeAudioEngine.DecodedAudio? = OboeAudioEngine.decodeOnly(file)?.also {
+    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = OboeAudioEngine.decodeOnly(file, interrupted)?.also {
         decodedFiles[it] = file.name
     }
     override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = nextId.incrementAndGet().also {

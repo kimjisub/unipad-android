@@ -26,7 +26,7 @@ internal class RecordingSoundEngine(
 	override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 	override fun start() = true
 	override fun stop() {}
-	override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+	override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
 		decodeGate?.await(10, TimeUnit.SECONDS)
 		if (file.name in undecodable) return null
 		return OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file.name } }

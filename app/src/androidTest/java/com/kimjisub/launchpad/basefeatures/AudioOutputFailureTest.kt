@@ -50,9 +50,9 @@ class AudioOutputFailureTest {
                 return failDuringDecode
             }
 
-            override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+            override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
                 check(!failDuringDecode) { "Deliberate sound decoding failure" }
-                return recording.decode(file)
+                return recording.decode(file, interrupted)
             }
         }
         doubles = module { single<SoundRunner.Engine> { engine } }

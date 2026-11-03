@@ -152,7 +152,7 @@ private class IdentityEngine(
     private var next = 0
     override fun start() = true
     override fun stop() = Unit
-    override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
         val identity = probe.identity(file)
         return decodeAudio(file)?.also { synchronized(this) { decoded[it] = identity } }
     }

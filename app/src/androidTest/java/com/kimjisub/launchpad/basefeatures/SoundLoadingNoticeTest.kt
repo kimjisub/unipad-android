@@ -94,12 +94,12 @@ class SoundLoadingNoticeTest {
         val original = com.kimjisub.launchpad.AppLanguage.get()
         val decoded = java.util.concurrent.CopyOnWriteArrayList<String>()
         val engine = object : com.kimjisub.launchpad.unipack.runner.SoundRunner.Engine by com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine {
-            override fun decode(file: File): com.kimjisub.launchpad.audio.OboeAudioEngine.DecodedAudio? {
+            override fun decode(file: File, interrupted: () -> Boolean): com.kimjisub.launchpad.audio.OboeAudioEngine.DecodedAudio? {
                 decoded += file.name
                 // This verifies cause reporting. It does not reproduce physical device memory pressure.
                 if (file.name == "memory.wav") throw OutOfMemoryError("injected allocation failure")
                 if (file.name == "decode.wav") return null
-                return com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine.decode(file)
+                return com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine.decode(file, interrupted)
             }
         }
         val binding = org.koin.dsl.module { single<com.kimjisub.launchpad.unipack.runner.SoundRunner.Engine> { engine } }
@@ -153,7 +153,7 @@ class SoundLoadingNoticeTest {
         File(screen.pack(), "keySound").writeText("1 1 1 claimed-700.wav\n1 1 2 claimed-60.wav\n")
         val decoded = java.util.concurrent.CopyOnWriteArrayList<Pair<String, Int>>()
         val engine = object : com.kimjisub.launchpad.unipack.runner.SoundRunner.Engine by com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine {
-            override fun decode(file: File) = com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine.decode(file)?.also {
+            override fun decode(file: File, interrupted: () -> Boolean) = com.kimjisub.launchpad.unipack.runner.SoundRunner.OboeEngine.decode(file, interrupted)?.also {
                 decoded += file.name to it.numFrames
             }
         }

@@ -80,9 +80,9 @@ class AudioFormatPadDeviceTest {
         var soundId = -1
         var voice = 0
         val played = mutableListOf<Int>()
-        override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+        override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
             this.file = file
-            return SoundRunner.OboeEngine.decode(file).also { decoded = it }
+            return SoundRunner.OboeEngine.decode(file, interrupted).also { decoded = it }
         }
         override fun load(decoded: OboeAudioEngine.DecodedAudio): Int {
             loaded = decoded

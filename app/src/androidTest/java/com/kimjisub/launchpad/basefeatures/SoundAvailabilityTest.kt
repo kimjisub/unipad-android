@@ -38,9 +38,9 @@ class SoundAvailabilityTest {
         screen.cleanPacks()
         screen.install()
         val engine = object : SoundRunner.Engine by SoundRunner.OboeEngine {
-            override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+            override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
                 if (holdDecode) check(decodeGate.await(10, TimeUnit.SECONDS)) { "Decode gate was not released" }
-                return SoundRunner.OboeEngine.decode(file)?.also { decodedNames[it] = file.name }
+                return SoundRunner.OboeEngine.decode(file, interrupted)?.also { decodedNames[it] = file.name }
             }
             override fun load(decoded: OboeAudioEngine.DecodedAudio): Int =
                 SoundRunner.OboeEngine.load(decoded).also { loadedNames[it] = decodedNames.getValue(decoded) }
