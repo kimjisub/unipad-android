@@ -14,8 +14,8 @@ import org.junit.runner.RunWith
 /**
  * A pad held by a finger while the play screen leaves the front: paused behind another activity
  * that keeps it visible, or stopped by Home. With the finger still down, the held pad's endless
- * loop must stop and its press light go off; after the screen comes back and the finger lifts,
- * nothing plays or lights, and pressing the same pad again plays it. Runs in both pad input modes.
+ * loop must stop and its press light go off. A touch the system cancels must end before the next
+ * launcher gesture; after returning, nothing restarts and a new pad press plays it. Runs in both modes.
  */
 @RunWith(AndroidJUnit4::class)
 class HeldPadLeavingScreenTest : HeldPadTest() {
@@ -46,8 +46,8 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
 
     /**
      * [leave] gets the play screen's state, which [FeatureScreen.vm] cannot reach while the screen
-     * is not resumed. After [back], the play window must be resumed and focused again before the
-     * finger lifts, so the lift reaches it.
+     * is not resumed. A system-cancelled gesture ends before [back] needs to tap the launcher.
+     * Otherwise the finger lifts only after the play window is resumed and focused again.
      */
     private fun holdWhileLeaving(
         context: String,
@@ -78,6 +78,9 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
         settle()
         val cancelled = received.events.drop(receivedBefore).any { it.action == MotionEvent.ACTION_CANCEL }
         Log.i(ReceivedInput.TAG, "$context in $mode with a pad held: system ${if (cancelled) "cancelled" else "did not cancel"} the touch")
+        // Android 17 still tracks the injected pointer after the window's cancel. End it before
+        // UiAutomator starts a fresh gesture to select the app's card in the launcher.
+        if (cancelled) forgetCancelledFingers("After $context in $mode")
 
         back()
         screen.awaitActivity(PlayActivity::class.java)
@@ -88,7 +91,7 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
             assertEquals("Returning must keep the play mode", playMode, vm.playMode)
             assertEquals("Returning must keep the chain", chain, vm.chain.value)
         }
-        if (cancelled) forgetCancelledFingers("After $context in $mode") else fingers.up(finger)
+        if (!cancelled) fingers.up(finger)
         assertHeldStill("After $context in $mode and lifting the finger", listOf(held), emptySet())
         screen.capture("held-pad-return-after-${context.replace(' ', '-')}${if (slide) "-slide" else ""}")
 
