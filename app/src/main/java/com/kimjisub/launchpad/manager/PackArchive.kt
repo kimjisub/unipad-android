@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.manager
 import com.kimjisub.launchpad.unipack.LegacyText
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.FileHeader
+import net.lingala.zip4j.model.UnzipParameters
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.CharacterCodingException
@@ -25,6 +26,7 @@ object PackArchive {
 		val root = destination.canonicalFile
 		ZipFile(archive).use { zip ->
 			zip.charset = Charsets.ISO_8859_1
+			val parameters = UnzipParameters().apply { isExtractSymbolicLinks = false }
 			for (header in zip.fileHeaders) {
 				val rawName = header.fileName.toByteArray(Charsets.ISO_8859_1)
 				val name = unicodePath(header, rawName) ?: LegacyText.decode(rawName)
@@ -33,7 +35,7 @@ object PackArchive {
 					if (!dir.startsWith(root)) throw IOException("Entry outside the destination: $name")
 					dir.mkdirs()
 				} else {
-					zip.extractFile(header, root.path, name)
+					zip.extractFile(header, root.path, name, parameters)
 				}
 			}
 		}
