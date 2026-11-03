@@ -27,6 +27,8 @@ For shared-corpus observations, see [UniPack conformance](../test/resources/unip
 The device checks include eight screen recorders and thirteen file parser checks on internal storage.
 A completed screen recorder remains an unverified corpus case; it is not a conformance pass.
 
+`SafMigrationDeletionDeviceTest` runs the three file-source move routes on internal and app-specific external storage, including moves from internal to external storage. It checks source removal, copied pack contents, and preservation of a linked sibling pack where the filesystem supports symbolic links. It uses file-backed `DocumentFile` destinations, so system document-provider permission handling is outside this check.
+
 ## Run on an API 35 emulator
 
 Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using

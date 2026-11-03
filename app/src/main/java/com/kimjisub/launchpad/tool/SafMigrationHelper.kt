@@ -108,7 +108,7 @@ class SafMigrationHelper(
 						throw e
 					}
 					transferred++
-					if (deleteSource) folder.deleteRecursively()
+					if (deleteSource) FileManager.deleteDirectory(folder)
 				}
 			} catch (e: Exception) {
 				failed++
@@ -159,7 +159,7 @@ class SafMigrationHelper(
 								throw e
 							}
 							transferred++
-							if (deleteSource) folder.deleteRecursively()
+							if (deleteSource) FileManager.deleteDirectory(folder)
 						} else {
 							failed++
 							errors.add("${folder.name}: Failed to create ZIP in SAF")
@@ -258,7 +258,7 @@ class SafMigrationHelper(
 				} else {
 					copyThroughStaging(targetDir, dest) { FileManager.copyDirectory(folder, it) }
 					transferred++
-					if (deleteSource) folder.deleteRecursively()
+					if (deleteSource) FileManager.deleteDirectory(folder)
 				}
 			} catch (e: Exception) {
 				failed++
