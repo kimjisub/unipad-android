@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.content.Intent
+import android.os.Build
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -29,6 +30,8 @@ import java.util.regex.Pattern
 /**
  * The backup folder (Documents/Unipad) in Settings > Storage and on the restore screen, chosen
  * through the real system folder picker, and the file pickers on devices that have none.
+ * Settings exposes SAF backup controls from Android 11; on Android 10 those cases check the
+ * legacy workspace screen and the absence of those controls instead.
  *
  * Tests that run without a picker disable the apps that handle it and enable them again after.
  * A crash kills this process before that happens; enable them by hand then
@@ -59,9 +62,11 @@ class BackupFolderTest : BaseUITest() {
         launchToMainScreen()
         openStorageSettings()
 
-        assertNotNull("Connect row is not offered", scrollToText(str(R.string.backup_grant_access)))
-        assertNull("Disconnect is offered for a folder UniPad cannot open", device.findObject(By.text(str(R.string.backup_revoke))))
-        takeScreenshot("backup_settings_permission_gone")
+        checkBackupSettings {
+            assertNotNull("Connect row is not offered", scrollToText(str(R.string.backup_grant_access)))
+            assertNull("Disconnect is offered for a folder UniPad cannot open", device.findObject(By.text(str(R.string.backup_revoke))))
+            takeScreenshot("backup_settings_permission_gone")
+        }
     }
 
     /**
@@ -72,27 +77,29 @@ class BackupFolderTest : BaseUITest() {
     fun disconnectAfterThePermissionIsGoneKeepsSettingsOpen() {
         launchToMainScreen()
         openStorageSettings()
-        clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
-        pickInFolderPicker(BACKUP_FOLDER_NAME)
+        checkBackupSettings {
+            clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
+            pickInFolderPicker(BACKUP_FOLDER_NAME)
 
-        assertNotNull("Documents/Unipad was not connected", scrollToText(str(R.string.backup_revoke)))
-        assertConnectedBackupFolder()
-        takeScreenshot("backup_settings_connected")
+            assertNotNull("Documents/Unipad was not connected", scrollToText(str(R.string.backup_revoke)))
+            assertConnectedBackupFolder()
+            takeScreenshot("backup_settings_connected")
 
-        deleteBackupFolderLikeAFilesApp()
-        assertTrue("Deleting the folder left its permission", context.contentResolver.persistedUriPermissions.isEmpty())
-        // Found while the content was still scrolling; tap where it came to rest.
-        device.waitForIdle()
-        clickWhenShown(device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_revoke))), WAIT_MS))
+            deleteBackupFolderLikeAFilesApp()
+            assertTrue("Deleting the folder left its permission", context.contentResolver.persistedUriPermissions.isEmpty())
+            // Found while the content was still scrolling; tap where it came to rest.
+            device.waitForIdle()
+            clickWhenShown(device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_revoke))), WAIT_MS))
 
-        assertTrue("Saved folder was not forgotten", waitUntil(WAIT_MS) { prefs.backupSafUri == null })
-        // The backup card shrinks to this one row, which takes the place of the rows above it.
-        assertTrue(
-            "Connect row did not come back",
-            device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_grant_access))), WAIT_MS),
-        )
-        assertTrue("Settings did not stay open", device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))))
-        takeScreenshot("backup_settings_disconnected")
+            assertTrue("Saved folder was not forgotten", waitUntil(WAIT_MS) { prefs.backupSafUri == null })
+            // The backup card shrinks to this one row, which takes the place of the rows above it.
+            assertTrue(
+                "Connect row did not come back",
+                device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_grant_access))), WAIT_MS),
+            )
+            assertTrue("Settings did not stay open", device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))))
+            takeScreenshot("backup_settings_disconnected")
+        }
     }
 
     /** Restore asks for the folder again when the saved one can no longer be opened, instead of listing nothing. */
@@ -142,14 +149,16 @@ class BackupFolderTest : BaseUITest() {
     fun settingsWithoutFolderPickerReportsIt() = withoutFolderPicker {
         launchToMainScreen()
         openStorageSettings()
-        clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
+        checkBackupSettings {
+            clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
 
-        assertTrue(
-            "No message that the device has no picker",
-            device.wait(Until.hasObject(By.text(str(R.string.picker_unavailable))), WAIT_MS),
-        )
-        assertTrue("Settings did not stay open", device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))))
-        takeScreenshot("backup_settings_no_picker")
+            assertTrue(
+                "No message that the device has no picker",
+                device.wait(Until.hasObject(By.text(str(R.string.picker_unavailable))), WAIT_MS),
+            )
+            assertTrue("Settings did not stay open", device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))))
+            takeScreenshot("backup_settings_no_picker")
+        }
     }
 
     @Test
@@ -192,10 +201,26 @@ class BackupFolderTest : BaseUITest() {
     }
 
     /** Scrolls the open settings content until [text] is shown. */
-    private fun scrollToText(text: String): UiObject2? {
-        device.wait(Until.findObject(By.text(text)), SHORT_WAIT_MS)?.let { return it }
+    private fun scrollToText(text: String): UiObject2? = scrollTo(By.pkg(PACKAGE_NAME).text(text))
+
+    private fun scrollTo(selector: BySelector): UiObject2? {
+        device.wait(Until.findObject(selector), SHORT_WAIT_MS)?.let { return it }
         val content = device.wait(Until.findObject(By.scrollable(true).pkg(PACKAGE_NAME)), WAIT_MS) ?: return null
-        return content.scrollUntil(Direction.DOWN, Until.findObject(By.text(text)))
+        return content.scrollUntil(Direction.DOWN, Until.findObject(selector))
+    }
+
+    /** SAF backup settings start at Android 11; Android 10 must keep its legacy workspace UI. */
+    private fun checkBackupSettings(check: () -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            check()
+        } else {
+            assertNotNull("App Storage workspace is not shown", scrollToText(str(R.string.workspace_app_storage)))
+            val backupControls = Pattern.compile(listOf(R.string.backup_grant_access, R.string.backup_revoke)
+                .joinToString("|") { Pattern.quote(str(it)) })
+            assertNull("Android 10 must not offer SAF backup settings", scrollTo(By.pkg(PACKAGE_NAME).text(backupControls)))
+            assertTrue("Settings did not stay open", device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))))
+            takeScreenshot("backup_settings_legacy_storage")
+        }
     }
 
     private fun clickWhenShown(target: UiObject2?) {
