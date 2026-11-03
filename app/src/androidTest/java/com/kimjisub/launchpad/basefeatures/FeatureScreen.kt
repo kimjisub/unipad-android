@@ -32,6 +32,7 @@ import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.Assert.*
 import org.koin.core.context.GlobalContext
 import java.io.File
+import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -210,8 +211,11 @@ class FeatureScreen {
     fun bringToFront(activity: Activity) {
         val launcher = launcherPackage()
         val label = context.packageManager.getApplicationLabel(activity.applicationInfo).toString()
+        // Instrumented tasks can be described by their application/activity classes instead.
+        val componentLabel = "${activity.application.javaClass.name} ${activity.javaClass.name}"
+        val cardLabel = Pattern.compile(listOf(label, componentLabel).joinToString("|") { Pattern.quote(it) })
         assertTrue("Recent apps key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_APP_SWITCH))
-        val card = By.pkg(launcher).desc(label).clickable(true)
+        val card = By.pkg(launcher).desc(cardLabel).clickable(true)
         node(card)
         capture("recent-apps-before-return-${SystemClock.uptimeMillis()}")
         click(card)
