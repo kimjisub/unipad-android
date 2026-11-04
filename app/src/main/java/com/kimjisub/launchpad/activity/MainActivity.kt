@@ -111,9 +111,11 @@ import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.ZipFolderDialog
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import com.kimjisub.launchpad.ui.compose.focusRing
+import com.kimjisub.launchpad.ui.compose.rememberZipPicker
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -132,7 +134,6 @@ import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.tool.splitties.openPlayStorePage
-import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.Red
 import com.kimjisub.launchpad.ui.theme.SkyBlue
@@ -155,6 +156,9 @@ class MainActivity : BaseActivity() {
 
 		/** The released app. The test build has its own id, no store page and no in-app update. */
 		private const val STORE_APP_ID = "com.kimjisub.launchpad"
+
+		/** Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j. */
+		private val PACK_ZIP_TYPES = arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")
 
 		/** Device tests put Play's fake update manager here before the list opens. */
 		@VisibleForTesting
@@ -263,10 +267,6 @@ class MainActivity : BaseActivity() {
 			if (resumed) update()
 		}
 
-		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-			uri?.let { importUniPack(it) }
-		}
-
 		otherScreens = OtherScreens.install(application, MainActivity::class.java)
 		val updateConsent = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
 			appUpdate?.onConsentResult(it.resultCode)
@@ -283,6 +283,8 @@ class MainActivity : BaseActivity() {
 
 		setContent {
 			UniPadTheme {
+				val packPicker = rememberZipPicker(ActivityResultContracts.OpenDocument(), PACK_ZIP_TYPES, ::importUniPack)
+				ZipFolderDialog(packPicker)
 				MainScreen(
 					onSettingsClick = {
 						startActivity(Intent(applicationContext, SettingsActivity::class.java))
@@ -290,10 +292,8 @@ class MainActivity : BaseActivity() {
 					onStoreClick = {
 						startActivity(Intent(applicationContext, FBStoreActivity::class.java))
 					},
-					// Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j.
 					onLoadUniPackClick = {
-						val zipTypes = arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")
-						if (!filePick.tryLaunch(zipTypes)) {
+						if (!packPicker.launch()) {
 							Toast.makeText(this@MainActivity, string.picker_unavailable, Toast.LENGTH_LONG).show()
 						}
 					},

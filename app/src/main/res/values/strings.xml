@@ -307,6 +307,11 @@
 	<string name="migration_same_as_source">Same as source</string>
 	<string name="migration_result">Result</string>
 	<string name="picker_unavailable">No app on this device can pick files or folders.</string>
+	<string name="zip_folder_pick_hint">Choose the folder that holds your .zip files, such as Download, then tap Select.</string>
+	<string name="zip_folder_title">Choose a .zip file</string>
+	<string name="zip_folder_empty">There are no .zip files in this folder.</string>
+	<string name="zip_folder_failed">UniPad could not read this folder. Choose it again.</string>
+	<string name="zip_folder_other">Choose another folder</string>
 
 	<!--Backup-->
 	<string name="backup_section">Backup</string>

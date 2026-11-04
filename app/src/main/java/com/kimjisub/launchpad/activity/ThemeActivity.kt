@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
@@ -86,9 +85,10 @@ import com.kimjisub.launchpad.adapter.ThemeType
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
-import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.AppAlertDialog
+import com.kimjisub.launchpad.ui.compose.ZipFolderDialog
+import com.kimjisub.launchpad.ui.compose.rememberZipPicker
 import com.kimjisub.launchpad.ui.theme.Orange
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -194,11 +194,8 @@ private fun ThemeScreen(
 		isFullscreen = false
 	}
 
-	val filePickerLauncher = rememberLauncherForActivityResult(
-		ActivityResultContracts.GetContent()
-	) { uri: Uri? ->
-		if (uri != null) onImport(uri)
-	}
+	val themePicker = rememberZipPicker(ActivityResultContracts.GetContent(), "application/zip", onImport)
+	ZipFolderDialog(themePicker)
 
 	LaunchedEffect(selectedIndex, themes) {
 		if (selectedIndex < themes.size) {
@@ -353,7 +350,7 @@ private fun ThemeScreen(
 					AddThemePanel(
 						onCreateGuide = onCreateGuide,
 						onImportZip = {
-							if (!filePickerLauncher.tryLaunch("application/zip")) {
+							if (!themePicker.launch()) {
 								Toast.makeText(context, pickerUnavailableMessage, Toast.LENGTH_LONG).show()
 							}
 						},

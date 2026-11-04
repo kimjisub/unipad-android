@@ -293,6 +293,11 @@
 	<string name="migration_same_as_source">원본과 동일</string>
 	<string name="migration_result">결과</string>
 	<string name="picker_unavailable">이 기기에는 파일이나 폴더를 고를 수 있는 앱이 없습니다.</string>
+	<string name="zip_folder_pick_hint">zip 파일이 있는 폴더(예: Download)를 연 다음 \'선택\'을 누르세요.</string>
+	<string name="zip_folder_title">불러올 zip 파일 고르기</string>
+	<string name="zip_folder_empty">이 폴더에는 zip 파일이 없습니다.</string>
+	<string name="zip_folder_failed">이 폴더를 읽지 못했습니다. 폴더를 다시 골라 주세요.</string>
+	<string name="zip_folder_other">다른 폴더 고르기</string>
 
 	<!--Backup-->
 	<string name="backup_section">백업</string>
