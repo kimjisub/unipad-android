@@ -72,8 +72,10 @@ class SystemExitPolicyTest {
 
 		assertEquals(record, at(50, 400))
 		assertEquals(record, at(60, 300))
+		assertEquals("a perceptible app has left the screen", record, at(60, 230))
 		assertNull("the app was killed before this record was made", at(49, 400))
 		assertNull("the app came back and was killed in front", at(60, 100))
+		assertNull("the app came back and was killed while visible", at(60, 200))
 		assertNull(SystemExitPolicy.backgroundScreenAt(SystemExit(14, timestamp = 60, importance = 400, pid = 7), null))
 	}
 
