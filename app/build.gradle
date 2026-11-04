@@ -329,9 +329,10 @@ dependencies {
 	implementation 'com.google.firebase:firebase-analytics'
 	constraints {
 		// Firestore's gRPC and the Analytics measurement libraries still bring Guava 32.1.3,
-		// which is affected by GHSA-xxph-c9ww-hj94 (fixed in 33.7.2).
-		implementation('com.google.guava:guava:33.7.2-android') {
-			because 'GHSA-xxph-c9ww-hj94: unbounded memory use while deserializing some Guava collections'
+		// which is affected by GHSA-xxph-c9ww-hj94 (fixed in 33.7.2) and GHSA-v5x9-67m3-7m56 (fixed in 33.8.0).
+		implementation('com.google.guava:guava:33.8.0-android') {
+			because 'GHSA-xxph-c9ww-hj94: unbounded memory use while deserializing some Guava collections; ' +
+				'GHSA-v5x9-67m3-7m56: hash flooding makes HashBiMap and LinkedHashMultimap construction quadratic'
 		}
 	}
 
