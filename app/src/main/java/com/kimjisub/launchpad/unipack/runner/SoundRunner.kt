@@ -221,7 +221,9 @@ class SoundRunner(
 
 	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true) {
 		val restarted = stopKey[chain.value][x][y]
-		engine.stopVoice(restarted)
+		// Until the engine has started nothing can be playing, and when its native library failed
+		// to load, any call into it throws and would take the app down.
+		if (engineStarted) engine.stopVoice(restarted)
 		// A press made on another chain while the pad is still held replaces its key below; stop
 		// that earlier loop now, as a press on the same chain does, or nothing could stop it.
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
