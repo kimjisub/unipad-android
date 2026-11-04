@@ -105,6 +105,21 @@ class SystemExitReporterTest {
 		assertEquals("8", values["exit_background_ms"])
 	}
 
+	@Test fun perceptibleLowMemoryExitIsReportedWithTheScreenTheAppLeft() {
+		checkpoint = 10
+		backgroundScreen = "PlayActivity"
+		history = listOf(exit(3, 20, importance = 230))
+		val error = slot<Throwable>()
+		val keys = slot<CustomKeysAndValues>()
+		every { crashlytics.recordException(capture(error), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context)
+		assertEquals("LowMemoryExit", error.captured.javaClass.simpleName)
+		val values = keys.captured.values()
+		assertEquals("PlayActivity", values["exit_last_screen"])
+		assertEquals("true", values["exit_pack_open"])
+		assertEquals("8", values["exit_background_ms"])
+	}
+
 	@Test fun exitInFrontCarriesNoLeftScreen() {
 		checkpoint = 10
 		backgroundScreen = "PlayActivity"
