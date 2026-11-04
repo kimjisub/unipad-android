@@ -1163,7 +1163,7 @@ class MainActivity : BaseActivity() {
 		val isBookmarked = unipackEnt?.bookmark == true
 
 		com.kimjisub.launchpad.ui.compose.UnipackListItem(
-			title = if (isError) stringResource(string.errOccur) else item.unipack.title,
+			title = if (isError) stringResource(string.errOccur) else item.unipack.displayTitle,
 			subtitle = if (isError) item.unipack.getPathString() else item.unipack.producerName,
 			hasLed = item.unipack.keyLedExist,
 			hasAutoPlay = item.unipack.autoPlayExist,

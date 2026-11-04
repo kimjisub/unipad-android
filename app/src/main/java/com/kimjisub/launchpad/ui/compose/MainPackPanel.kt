@@ -73,7 +73,7 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 
 			// Title (marquee)
 			Text(
-				text = unipack.title,
+				text = unipack.displayTitle,
 				fontSize = 16.sp,
 				maxLines = 1,
 				overflow = TextOverflow.Clip,

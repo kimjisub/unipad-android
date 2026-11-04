@@ -289,6 +289,7 @@ ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
 | `PlayActivityTest.testMenuOutsideTheWindowIsReportedAsALayoutFailure` | Move the real menu's parent outside the window after Play opens and require a layout failure, then restore the parent. |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `PlayInfoCardLanguageTest.koreanCardNamesAnUntitledPackAndItsChains`, `englishCardNamesAnUntitledPackAndItsChains` | In Korean and English, the option panel's pack info card names a pack without a title and, expanded, its pad grid and chain count in the app language. |
+| `UntitledPackNameTest.listRowAndDetailShowTheFolderName` | A pack without a title shows its folder name in its list row and in the detail panel heading. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
 The expected number of tests is the count of `@Test` annotations in each module's

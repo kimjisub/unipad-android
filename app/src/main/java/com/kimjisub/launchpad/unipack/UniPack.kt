@@ -23,6 +23,11 @@ abstract class UniPack {
 
 	var title: String = ""
 		internal set
+
+	/** The name shown for the pack: its folder name when the info file gives no title. */
+	val displayTitle: String
+		get() = title.ifBlank { id }
+
 	var producerName: String = ""
 		internal set
 	var buttonX = 0
