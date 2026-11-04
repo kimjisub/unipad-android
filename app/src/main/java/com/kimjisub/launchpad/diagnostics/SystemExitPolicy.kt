@@ -25,6 +25,7 @@ internal object SystemExitPolicy {
 	const val OTHER = 13
 	const val FREEZER = 14
 	private const val SIGKILL = 9
+	private const val IMPORTANCE_VISIBLE = 200
 	private const val IMPORTANCE_PERCEPTIBLE = 230
 	private const val MAX_REPORTS = 5
 
@@ -39,10 +40,11 @@ internal object SystemExitPolicy {
 
 	/**
 	 * Only the process that left the [record]ed screen can be described by it: a later process started
-	 * without a screen, such as for an incoming message, has none. Neither can an app killed in front.
+	 * without a screen, such as for an incoming message, has none. Neither can an app killed while on screen;
+	 * a perceptible app is no longer on screen, so it keeps the screen it left.
 	 */
 	fun backgroundScreenAt(exit: SystemExit, record: BackgroundScreen?): BackgroundScreen? =
-		record?.takeIf { exit.pid == it.pid && exit.importance > IMPORTANCE_PERCEPTIBLE && exit.timestamp >= it.since }
+		record?.takeIf { exit.pid == it.pid && exit.importance > IMPORTANCE_VISIBLE && exit.timestamp >= it.since }
 
 	fun select(history: List<SystemExit>, lastProcessed: Long?, now: Long, lmkSupported: Boolean): SystemExitBatch {
 		// Establish a baseline on upgrade rather than reporting old exits retroactively.
