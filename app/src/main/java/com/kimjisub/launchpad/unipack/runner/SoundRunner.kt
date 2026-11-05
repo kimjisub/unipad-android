@@ -281,9 +281,14 @@ class SoundRunner(
 	 * nobody can see, and with strict audio hardening aborts the process from the stream's callback
 	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading. A
 	 * load still running finishes its current file and continues from the next one on [resumeStream].
+	 *
+	 * The screen calls [pauseStream] and [resumeStream] from its main thread, the only writer of
+	 * [streamPaused]. A call that changes nothing returns before taking [engineLock]: the loader holds
+	 * that lock for the whole output start, which can take seconds on a slow device.
 	 */
 	fun pauseStream() {
 		cancelPendingWormholes()
+		if (streamPaused.value) return
 		synchronized(engineLock) {
 			if (destroyed || streamPaused.value) return
 			streamPaused.value = true
@@ -292,6 +297,7 @@ class SoundRunner(
 	}
 
 	fun resumeStream() {
+		if (!streamPaused.value) return
 		synchronized(engineLock) {
 			if (destroyed || !streamPaused.value) return
 			streamPaused.value = false

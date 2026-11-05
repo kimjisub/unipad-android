@@ -74,8 +74,15 @@ class SoundRunnerTest {
 		var streamOpen = false
 			private set
 
+		/** Holds the loader inside start(), as a slow output device does, until counted down. */
+		@Volatile
+		var startGate: CountDownLatch? = null
+		val startEntered = CountDownLatch(1)
+
 		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start(): Boolean {
+			startEntered.countDown()
+			startGate?.await(5, TimeUnit.SECONDS)
 			streamOpen = true
 			return true
 		}
@@ -509,5 +516,49 @@ class SoundRunnerTest {
 		runner.destroy()
 		runner.resumeStream()
 		assertFalse("a destroyed runner reopened the stream", engine.streamOpen)
+	}
+
+	@Test
+	fun slowOutputStart_doesNotHoldTheScreenWhenNothingChanges() {
+		val unipack = pack(fileCount = 3)
+		val engine = FakeEngine().apply { startGate = CountDownLatch(1) }
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(engine.startEntered.await(5, TimeUnit.SECONDS))
+
+		// The screen reports itself visible right after creating the runner, while the loader still
+		// opens the output. Waiting for that open would freeze the screen for as long as it takes.
+		val screen = Thread { runner.resumeStream() }.apply { start() }
+		screen.join(1_000)
+		val heldScreen = screen.isAlive
+		engine.startGate!!.countDown()
+		screen.join(5_000)
+		assertFalse("resumeStream waited for the output to open", heldScreen)
+
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		assertTrue(engine.streamOpen)
+		assertEquals(1L, listener.failed.count)
+		runner.destroy()
+	}
+
+	@Test
+	fun hiddenDuringSlowOutputStart_endsClosedAndReopensOnReturn() {
+		val unipack = pack(fileCount = 3)
+		val engine = FakeEngine().apply { startGate = CountDownLatch(1) }
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(engine.startEntered.await(5, TimeUnit.SECONDS))
+
+		val screen = Thread { runner.pauseStream() }.apply { start() }
+		engine.startGate!!.countDown()
+		screen.join(5_000)
+		assertFalse(screen.isAlive)
+		awaitDecodesDrained(engine)
+		assertFalse("stream left open after the screen was hidden during start", engine.streamOpen)
+
+		runner.resumeStream()
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		assertTrue(engine.streamOpen)
+		runner.destroy()
 	}
 }
