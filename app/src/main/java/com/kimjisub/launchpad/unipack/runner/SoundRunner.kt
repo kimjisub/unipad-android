@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import androidx.annotation.MainThread
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.audio.AudioFileInspector
 import com.kimjisub.launchpad.audio.AudioInspection
@@ -286,6 +287,7 @@ class SoundRunner(
 	 * [streamPaused]. A call that changes nothing returns before taking [engineLock]: the loader holds
 	 * that lock for the whole output start, which can take seconds on a slow device.
 	 */
+	@MainThread
 	fun pauseStream() {
 		cancelPendingWormholes()
 		if (streamPaused.value) return
@@ -296,6 +298,7 @@ class SoundRunner(
 		}
 	}
 
+	@MainThread
 	fun resumeStream() {
 		if (!streamPaused.value) return
 		synchronized(engineLock) {

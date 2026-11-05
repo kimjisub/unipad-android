@@ -197,6 +197,17 @@ class SoundRunnerTest {
 		Thread.sleep(100)
 	}
 
+	/** Waits until [thread] is in one of [states] and returns that state; fails after 5 s. */
+	private fun awaitThreadState(thread: Thread, vararg states: Thread.State): Thread.State {
+		val deadline = System.currentTimeMillis() + 5_000
+		while (System.currentTimeMillis() < deadline) {
+			val state = thread.state
+			if (state in states) return state
+			Thread.sleep(5)
+		}
+		throw AssertionError("thread stayed ${thread.state}, expected one of ${states.toList()}")
+	}
+
 	private fun awaitLoadJobsFinished() = runBlocking {
 		withTimeout(5_000) { scopeJob.children.toList().joinAll() }
 	}
@@ -529,11 +540,10 @@ class SoundRunnerTest {
 		// The screen reports itself visible right after creating the runner, while the loader still
 		// opens the output. Waiting for that open would freeze the screen for as long as it takes.
 		val screen = Thread { runner.resumeStream() }.apply { start() }
-		screen.join(1_000)
-		val heldScreen = screen.isAlive
+		val reached = awaitThreadState(screen, Thread.State.TERMINATED, Thread.State.BLOCKED)
 		engine.startGate!!.countDown()
 		screen.join(5_000)
-		assertFalse("resumeStream waited for the output to open", heldScreen)
+		assertEquals("resumeStream waited for the output to open", Thread.State.TERMINATED, reached)
 
 		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
 		assertTrue(engine.streamOpen)
@@ -550,6 +560,9 @@ class SoundRunnerTest {
 		assertTrue(engine.startEntered.await(5, TimeUnit.SECONDS))
 
 		val screen = Thread { runner.pauseStream() }.apply { start() }
+		// Release the start only once the hide is really waiting on it, not after it has finished.
+		assertEquals(Thread.State.BLOCKED, awaitThreadState(screen, Thread.State.BLOCKED, Thread.State.TERMINATED))
+		assertFalse("the output opened before the screen was hidden", engine.streamOpen)
 		engine.startGate!!.countDown()
 		screen.join(5_000)
 		assertFalse(screen.isAlive)
