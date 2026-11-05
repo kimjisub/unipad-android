@@ -122,6 +122,35 @@ class CaptureWindowTest(unittest.TestCase):
             with wave.open(str(target),'rb') as recorded:
                 self.assertEqual(pcm[58224*4:250224*4],recorded.readframes(192000))
 
+    def extract_with_packet_spacing(self, temp, spacing_us):
+        source,target = Path(temp)/'stream.wav',Path(temp)/'case.wav'
+        pcm = bytes(range(256))*6000
+        with wave.open(str(source),'wb') as out:
+            out.setnchannels(2);out.setsampwidth(2);out.setframerate(48000);out.writeframes(pcm)
+        log=PacketTimelineTest().timeline()
+        for i,packet in enumerate(log['packets']): packet['timestamp_us']=1_000_000+i*spacing_us
+        result=runner.extract_case(source,target,log,{'pressed_epoch_ms':3000,'pressed_end_epoch_ms':3000,'released_epoch_ms':3100,'released_end_epoch_ms':3100,'finished_epoch_ms':3101,
+            'clock':ClockAndControlTest.clock(offset=0,rtt=2)})
+        with wave.open(str(target),'rb') as recorded:
+            start=result['source_frame_offset']
+            self.assertEqual(pcm[start*4:(start+192000)*4],recorded.readframes(192000))
+        return result
+
+    def test_stream_that_discards_output_marks_case_unconfirmed(self):
+        # 480 frames (10 ms) every 12.1 ms: the 82.6% the Android 11 emulator delivered.
+        with tempfile.TemporaryDirectory() as temp:
+            result=self.extract_with_packet_spacing(temp,12_100)
+        self.assertIn('did not stream',result['environment_error'])
+        self.assertGreater(result['stream']['missing_seconds'],.8)
+        self.assertEqual([],result['gaps'])
+
+    def test_usual_stream_drift_is_not_reported(self):
+        # The emulator's usual drift: about 0.7% fewer samples than its timestamps advance.
+        with tempfile.TemporaryDirectory() as temp:
+            result=self.extract_with_packet_spacing(temp,10_070)
+        self.assertNotIn('environment_error',result)
+        self.assertLess(result['stream']['missing_seconds'],runner.MAX_STREAM_SHORTFALL_S)
+
     def test_refuses_missing_pre_input_postroll_and_zero_timestamp(self):
         with tempfile.TemporaryDirectory() as temp:
             source,target = Path(temp)/'stream.wav',Path(temp)/'case.wav'
@@ -242,6 +271,14 @@ class PacketTimelineTest(unittest.TestCase):
         log=self.timeline()
         for event in [500,10000]:
             with self.assertRaises(ValueError):runner.event_frame(log,event)
+
+    def test_stream_shortfall_counts_stream_time_without_samples(self):
+        log=self.timeline()
+        self.assertEqual(0,runner.stream_shortfall(log,0,192000)['missing_seconds'])
+        # One 50 ms break inside the window, below the recorder's gap tolerance.
+        for packet in log['packets'][200:]: packet['timestamp_us'] += 50_000
+        self.assertAlmostEqual(.05,runner.stream_shortfall(log,0,192000)['missing_seconds'])
+        with self.assertRaises(ValueError): runner.stream_shortfall(log,0,480)
 
     def test_any_inserted_gap_overlapping_case_is_unconfirmed_even_when_quiet(self):
         log=self.timeline()

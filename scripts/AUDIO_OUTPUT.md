@@ -132,6 +132,12 @@ errors; the connection closes during cleanup on success and failure.
   quiet baseline or postroll, is environment unconfirmed (exit 3). The original
   samples are retained without removing or joining gaps. Missing/invalid timing or incomplete baseline/postroll
   means environment unconfirmed. A missing packet stream is never silence.
+  Inside each case window the packet timestamps must advance by the samples
+  delivered after the window's first packet, within 0.1 seconds (the recorder's
+  own break tolerance). An emulator that discards output keeps its timestamps on
+  time but streams fewer samples, in breaks too short to be reported as gaps; the
+  window is then environment unconfirmed and `capture.stream` records its stream,
+  delivered and missing seconds. Usual windows miss under 0.03 seconds.
 - After two seconds of quiet preparation, the stream gets nine seconds to
   establish its packet connection, then screen commands run 2.5 seconds apart
   after each completed gesture. The manager captures at most 120 seconds;
@@ -197,6 +203,14 @@ and hold duration as JSON; it does not infer test semantics from action strings.
 This proves digital output of this emulator and test pack. It does not prove
 physical speaker/headphone/Bluetooth delivery, sound quality, playing latency,
 the pre-API-29 path, all packs, or worldwide device coverage.
+
+The Android 11 (API 30) arm64 emulator image `RSR1.240422.006` on emulator 37.1.11
+cannot be judged: its stream delivered about 82% of its stream time, steadily,
+silence included, and played a one-second reference as 0.8 seconds of unchanged
+pitch with roughly 20 ms pieces missing. Every case on it is environment
+unconfirmed. The Android 14 image delivered over 99% and reproduced the reference
+sample for sample. Android 11 output needs an image or device whose stream keeps
+pace; run the same command there.
 
 
 ### Host and guest clock alignment (verdict version 3)
