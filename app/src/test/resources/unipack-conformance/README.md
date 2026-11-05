@@ -46,6 +46,11 @@ ANDROID_SERIAL=<leased-device-id> bash scripts/ci-connected-tests.sh \
 It injects distinct pointers, uses a virtual Launchpad transport with the real
 driver, taps chain buttons, and starts/stops auto play with the screen option. It retains input timestamps, chain, lights, sound requests, stop keys and
 currently looping sounds in `/data/local/tmp/unipad_tests/conformance-screen`.
+It also keeps every play and stop request and every change of a pad's pack
+light and press light in the order the app made them; each snapshot holds how
+many of each had happened by then. The corpus reports pack lights with press
+feedback off, so RUN-G617 and RUN-G618 are recorded a second time with it on
+(`<id>-press-light.json`) to show when each pad's press light ends.
 Its audio recorder uses the native decoder but does not open a speaker.
 
 These are raw real-time observations, not normalized conformance results. Every
