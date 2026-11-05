@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import androidx.annotation.MainThread
+import androidx.annotation.VisibleForTesting
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.audio.AudioFileInspector
 import com.kimjisub.launchpad.audio.AudioInspection
@@ -14,6 +16,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -22,7 +25,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 
 class SoundRunner(
 	private val unipack: UniPack,
@@ -30,6 +37,8 @@ class SoundRunner(
 	private val loadingListener: LoadingListener,
 	private val scope: CoroutineScope,
 	private val engine: Engine = OboeEngine,
+	// Every runner of the process must share one, so a pack's teardown runs before the next pack opens.
+	private val streamThread: Executor = AudioStreamThread,
 ) {
 
 	private data class PendingSound(val sound: Sound, val chain: Int, val x: Int, val y: Int, val line: Int)
@@ -42,12 +51,16 @@ class SoundRunner(
 	@Volatile
 	private var engineStarted = false
 
-	// The loader thread and destroy() both change the process-wide engine. Every engine start,
-	// sound load and release happens under this lock, so once destroy() has run nothing more is
-	// loaded and no id is freed twice.
+	// The loader thread and the stream thread both change the process-wide engine. Every engine
+	// start and stop, sound load and release happens under this lock, so once the sounds are released
+	// nothing more is loaded and no id is freed twice. The main thread never takes it: opening and
+	// closing the output run on [streamThread], which applies whatever the screen asked for last.
 	private val engineLock = Any()
 	private var destroyed = false // guarded by engineLock
-	private val streamPaused = MutableStateFlow(false) // written under engineLock
+	private var streamOpen = false // guarded by engineLock
+	private val streamPaused = MutableStateFlow(false) // written by pauseStream/resumeStream only
+	@Volatile
+	private var closing = false
 	private val loadJob: Job
 
 	class NoPlayableSoundsException(val report: LoadReport? = null) : IllegalStateException("This pack has no playable sound files")
@@ -140,15 +153,18 @@ class SoundRunner(
 
 		loadJob = scope.launch(Dispatchers.IO) {
 			try {
-				val started = synchronized(engineLock) {
-					if (destroyed) return@launch
-					// start() also creates the native engine the sounds load into, so it runs even when
-					// the screen was hidden first; the stream is then closed again until resumeStream().
-					engine.start().also {
-						engineStarted = it
-						if (it && streamPaused.value) engine.stop()
+				val started = withContext(streamThread.asCoroutineDispatcher()) {
+					synchronized(engineLock) {
+						if (destroyed) return@withContext null
+						// start() also creates the native engine the sounds load into, so it runs even when
+						// the screen was hidden first; the stream is then closed again until resumeStream().
+						engine.start().also {
+							engineStarted = it
+							streamOpen = it
+							applyStreamState()
+						}
 					}
-				}
+				} ?: return@launch
 				if (!started) {
 					throw AudioOutputUnavailableException()
 				}
@@ -307,22 +323,58 @@ class SoundRunner(
 	 * nobody can see, and with strict audio hardening aborts the process from the stream's callback
 	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading. A
 	 * load still running stops decoding its current file and starts that file over on [resumeStream].
+	 * Both only record the request; the output is closed and reopened on [streamThread].
 	 */
+	@MainThread
 	fun pauseStream() {
 		cancelPendingWormholes()
-		synchronized(engineLock) {
-			if (destroyed || streamPaused.value) return
-			streamPaused.value = true
-			if (engineStarted) engine.stop()
+		if (closing || streamPaused.value) return
+		streamPaused.value = true
+		onStreamThread { applyStreamState() }
+	}
+
+	@MainThread
+	fun resumeStream() {
+		if (closing || !streamPaused.value) return
+		streamPaused.value = false
+		onStreamThread { applyStreamState() }
+	}
+
+	/**
+	 * Opens or closes the output to match the screen's latest request; runs on [streamThread] under
+	 * [engineLock]. Before the loader has started the engine there is nothing to open: the loader
+	 * applies the request itself once it has.
+	 */
+	private fun applyStreamState() {
+		if (destroyed || !engineStarted) return
+		val wanted = !streamPaused.value
+		if (wanted == streamOpen) return
+		if (wanted) {
+			streamOpen = engine.start()
+			if (!streamOpen) Log.err("Failed to reopen the audio stream")
+		} else {
+			engine.stop()
+			streamOpen = false
 		}
 	}
 
-	fun resumeStream() {
-		synchronized(engineLock) {
-			if (destroyed || !streamPaused.value) return
-			streamPaused.value = false
-			if (engineStarted && !engine.start()) Log.err("Failed to reopen the audio stream")
+	/** Queues [change] on [streamThread]; a failure there is logged, as the thread serves every pack. */
+	private fun onStreamThread(change: () -> Unit) {
+		streamThread.execute {
+			try {
+				synchronized(engineLock) { change() }
+			} catch (e: Throwable) {
+				Log.err("Audio stream change failed", e)
+			}
 		}
+	}
+
+	/** Waits until every stream change and release asked for so far has run. */
+	@VisibleForTesting
+	internal fun awaitStreamThread(timeoutSeconds: Long = 10): Boolean {
+		val done = CountDownLatch(1)
+		streamThread.execute { done.countDown() }
+		return done.await(timeoutSeconds, TimeUnit.SECONDS)
 	}
 
 	/** Drops chain moves whose originating playback or chain selection is no longer current. */
@@ -338,34 +390,40 @@ class SoundRunner(
 		cancelPendingWormholes()
 		chain.removeSelectionObserver(cancelWormholesOnChainSelection)
 		loadJob.cancel()
-		synchronized(engineLock) {
-			if (destroyed) return
-			destroyed = true
-			// Collect unique sound IDs to avoid double-unload
-			val unloadedIds = mutableSetOf<Int>()
-			unipack.soundTable?.let { table ->
-				for (i in table)
-					for (j in i)
-						for (arrayList in j) {
-							if (arrayList != null) {
-								for (sound in arrayList) {
-									if (sound.id >= 0 && unloadedIds.add(sound.id)) {
-										try {
-											engine.unloadSound(sound.id)
-										} catch (e: RuntimeException) {
-											Log.err("Sound unload failed", e)
-										}
+		if (closing) return
+		closing = true
+		// Queued behind an output still opening; the screen leaves without waiting for it.
+		onStreamThread { release() }
+	}
+
+	private fun release() {
+		if (destroyed) return
+		destroyed = true
+		// Collect unique sound IDs to avoid double-unload
+		val unloadedIds = mutableSetOf<Int>()
+		unipack.soundTable?.let { table ->
+			for (i in table)
+				for (j in i)
+					for (arrayList in j) {
+						if (arrayList != null) {
+							for (sound in arrayList) {
+								if (sound.id >= 0 && unloadedIds.add(sound.id)) {
+									try {
+										engine.unloadSound(sound.id)
+									} catch (e: RuntimeException) {
+										Log.err("Sound unload failed", e)
 									}
-									// The engine reuses freed slots for the next pack's sounds.
-									sound.id = Sound.NOT_LOADED
 								}
+								// The engine reuses freed slots for the next pack's sounds.
+								sound.id = Sound.NOT_LOADED
 							}
 						}
-			}
-			if (engineStarted) {
-				engine.unloadAll()
-				engine.stop()
-			}
+					}
+		}
+		if (engineStarted) {
+			engine.unloadAll()
+			engine.stop()
+			streamOpen = false
 		}
 	}
 }
