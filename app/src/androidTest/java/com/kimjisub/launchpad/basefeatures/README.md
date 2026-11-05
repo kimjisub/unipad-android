@@ -369,9 +369,10 @@ by hand in the device's Settings app, rotating the same screens without switchin
 on Android 13 and 14, so this came from the test's own overlay switching, not from the app.
 `DisplayOverlays` therefore waits, after enabling and after restoring a navigation overlay, until
 the reported navigation mode and the bar's thickness match what the enabled overlays define. It
-reads those with `cmd overlay lookup` and `dumpsys window displays`, which Android 10 lacks; the
-navigation overlays are only switched by API 33+ tests, and switching only the cutout (the play
-screen's window-change tests, which run on every version) does not wait.
+reads those with `cmd overlay lookup` and `dumpsys window displays`. Android 10 has no `lookup`,
+so there a navigation overlay is switched without waiting, as before; of the tests that switch one,
+only `transferScreenSearchResultsScrollAboveKeyboardOnTablet` runs below API 33. Switching only the
+cutout (the play screen's window-change tests, which run on every version) does not wait.
 `midiSelectRotatesAfterReopeningFromReverseLandscape` repeats that sequence ten times;
 `midiSelectRotatesWithExistingNavigationSettings` rotates the same screens ten times without
 changing any overlay, in whatever navigation mode the device has (it prints `navigation_mode` and

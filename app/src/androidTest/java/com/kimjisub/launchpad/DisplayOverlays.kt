@@ -15,8 +15,8 @@ import kotlin.math.roundToInt
  * time can leave the bar, and the windows laid out around it, in a mode no overlay asks for. So when
  * a navigation overlay is switched, both the change and the restore wait until the navigation bar
  * has the mode and size the enabled overlays define. That wait reads the overlays' values with
- * `cmd overlay lookup` and the bar from `dumpsys window displays`, neither of which Android 10
- * offers; switching only the cutout does not wait and runs on every version.
+ * `cmd overlay lookup`, which Android 11 added, so below it a navigation overlay is switched without
+ * waiting, as before. Switching only the cutout does not wait on any version.
  */
 object DisplayOverlays {
     private const val NAVIGATION = "com.android.internal.systemui.navbar."
@@ -26,13 +26,14 @@ object DisplayOverlays {
     const val HOLE_CUTOUT = CUTOUT + "hole"
     private const val APPLY_TIMEOUT_MS = 10000L
     private const val POLL_MS = 100L
+    private val CAN_LOOK_UP_OVERLAYS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
     private val NAVIGATION_BAR_SOURCE =
         Regex("""InsetsSource [^\n]*type=(?:ITYPE_NAVIGATION_BAR|navigationBars) frame=\[(-?\d+),(-?\d+)]\[(-?\d+),(-?\d+)]""")
     private val SIZE = Regex("""(\d+)x(\d+)""")
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {
         val previous = overlays.map(::categoryOf).associateWith { enabledIn(device, it) }
-        val awaitApplied = { if (NAVIGATION in previous) awaitNavigationBar(device) }
+        val awaitApplied = { if (NAVIGATION in previous && CAN_LOOK_UP_OVERLAYS) awaitNavigationBar(device) }
         var failure: Throwable? = null
         try {
             overlays.forEach {
