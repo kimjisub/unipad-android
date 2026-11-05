@@ -205,6 +205,14 @@ and on (dragging moves the press). The test sets the preference and restores it 
 | J. Palm resting on the margin, another finger taps the chain buttons | `chainButtonSwitchesChainWhilePalmRestsOnEdge` | same |
 | K. A pad held, another finger taps the chain buttons | `chainButtonSwitchesChainWhilePadIsHeld` | same |
 
+A and B also check the screen itself, held and after release (`FeatureScreen.capturePads`).
+A press sets the `PRESSED` channel and the pad view at once, but the display shows it only after
+the next frame, so a screenshot taken on the channel alone could show the last pressed pad still
+dark. The check waits, within the usual deadline, for one screenshot in which every pad's centre
+pixel is the colour its own view draws and exactly the pressed pads hold a light, and saves that
+screenshot: `two-fingers`, `five-fingers`, `five-fingers-slide`, each with a `-released` capture.
+On failure the message lists each differing pad's view state, view colour and screen colour.
+
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
 Case G cancellation is checked by the touch cancellation regression above in both modes.

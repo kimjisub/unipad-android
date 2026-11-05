@@ -53,7 +53,10 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         fingers = Fingers(screen)
     }
 
-    protected fun center(cell: Cell): Point = screen.padBounds()[cell.x * GRID + cell.y].let { Point(it.centerX(), it.centerY()) }
+    /** The pad's position in [FeatureScreen.padBounds]. */
+    private fun index(cell: Cell) = cell.x * GRID + cell.y
+
+    protected fun center(cell: Cell): Point = screen.padBounds()[index(cell)].let { Point(it.centerX(), it.centerY()) }
 
     protected fun awaitLights(message: String, lit: Set<Cell>) {
         var last = emptySet<Cell>()
@@ -86,16 +89,18 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         assertEquals("$message: pressed lights", lit, litCells())
     }
 
-    /** B: a five-finger chord plays every pad and lights each one. */
+    /** B: a five-finger chord plays every pad and lights each one, all five shown on screen at once. */
     protected fun fiveFingerChord() {
         start()
         val cells = listOf(Cell(2, 1), Cell(2, 3), Cell(3, 5), Cell(5, 2), Cell(6, 6))
         val ids = cells.map { fingers.down(center(it)) }
         awaitPlays("Not every finger requested its sound", cells.size)
         awaitLights("Not every pressed pad lit", cells.toSet())
-        screen.capture(if (slideMode) "five-fingers-slide" else "five-fingers")
+        val capture = if (slideMode) "five-fingers-slide" else "five-fingers"
+        screen.capturePads(capture, cells.map(::index).toSet())
         for (i in listOf(2, 0, 4, 1, 3)) fingers.up(ids[i])
         awaitLights("Released pads stayed lit", emptySet())
+        screen.capturePads("$capture-released", emptySet())
         assertStill("After releasing the chord", cells.size, emptySet())
     }
 

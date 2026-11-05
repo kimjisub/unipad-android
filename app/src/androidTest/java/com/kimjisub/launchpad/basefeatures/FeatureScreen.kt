@@ -4,7 +4,12 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Point
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
@@ -212,6 +217,73 @@ class FeatureScreen {
     fun padBounds(): List<Rect> = onMain {
         views(resumed().window.decorView).filterIsInstance<PadView>().map(::bounds)
     }
+    /**
+     * One pad as the display shows it: whether its LED layer holds a light (press feedback, a keyLED
+     * or a guide), the colour the pad view itself draws at its centre, and the screen pixel there.
+     */
+    class PadOnScreen(val index: Int, val center: Point, val lit: Boolean, val drawn: Int, val shown: Int) {
+        val onScreen: Boolean get() = channels(drawn).zip(channels(shown)).all { (a, b) -> kotlin.math.abs(a - b) <= PIXEL_TOLERANCE }
+        override fun toString() =
+            "pad ${index + 1} at ${center.x},${center.y}: view ${if (lit) "lit" else "dark"} ${rgb(drawn)}, screen ${rgb(shown)}"
+        private fun channels(color: Int) = listOf(Color.red(color), Color.green(color), Color.blue(color))
+        private fun rgb(color: Int) = channels(color).joinToString(",")
+    }
+
+    /** Every pad of the resumed screen, in [padBounds] order, compared with [shot] taken after reading the views. */
+    fun padsOnScreen(shot: () -> Bitmap?): Pair<Bitmap, List<PadOnScreen>>? {
+        val views = onMain {
+            views(resumed().window.decorView).filterIsInstance<PadView>().map { pad ->
+                val bounds = bounds(pad)
+                val led = pad.findViewById<View>(com.kimjisub.design.R.id.led).background
+                val lit = led != null && (led as? ColorDrawable)?.let { Color.alpha(it.color) != 0 } != false
+                val drawing = Bitmap.createBitmap(pad.width, pad.height, Bitmap.Config.ARGB_8888)
+                val drawn = try {
+                    pad.draw(Canvas(drawing))
+                    drawing.getPixel(pad.width / 2, pad.height / 2)
+                } finally {
+                    drawing.recycle()
+                }
+                Triple(Point(bounds.centerX(), bounds.centerY()), lit, drawn)
+            }
+        }
+        val frame = shot() ?: return null
+        return frame to views.mapIndexed { index, (center, lit, drawn) ->
+            PadOnScreen(index, center, lit, drawn, frame.getPixel(center.x, center.y))
+        }
+    }
+
+    /**
+     * Waits for one screenshot in which exactly the pads in [lit] (indices of [padBounds]) hold a
+     * light and every pad shows the colour its own view draws, then saves that screenshot as [name].
+     * A press sets the light state and the pad view at once, but the display shows it only once the
+     * next frame is drawn: a screenshot taken on the light state alone can still show the pad dark.
+     */
+    fun capturePads(name: String, lit: Set<Int>) {
+        var frame: Bitmap? = null
+        var pads = emptyList<PadOnScreen>()
+        var screenshots = 0
+        val started = SystemClock.elapsedRealtime()
+        try {
+            await({ "Screen did not show exactly pads $lit lit for $name; differing: ${pads.filter { it.lit != (it.index in lit) || !it.onScreen }}" }) {
+                frame?.recycle()
+                frame = null
+                val read = padsOnScreen { instrumentation.uiAutomation.takeScreenshot() } ?: return@await false
+                screenshots++
+                frame = read.first
+                pads = read.second
+                pads.isNotEmpty() && pads.all { it.lit == (it.index in lit) && it.onScreen }
+            }
+            println("Pads on screen $name after $screenshots screenshots, ${SystemClock.elapsedRealtime() - started} ms: " +
+                "lit ${pads.filter { it.index in lit }}")
+            val shot = checkNotNull(frame)
+            assertTrue("Screenshot was not saved", TestCaptures.save(device, "$CAPTURES/$name.png") { file ->
+                file.outputStream().use { shot.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            })
+        } finally {
+            frame?.recycle()
+        }
+    }
+
     fun views(view: View): List<View> = buildList {
         if (view.visibility == View.VISIBLE) {
             add(view)
@@ -254,7 +326,7 @@ class FeatureScreen {
         await("Options remained on screen") { !has(By.text(text(id))) }
     }
     fun capture(name: String) {
-        val folder = "basefeatures-captures"
+        val folder = CAPTURES
         assertTrue("Screenshot was not saved", TestCaptures.screenshot(device, "$folder/$name.png"))
         if (name.startsWith("missing-")) {
             TestCaptures.save(device, "$folder/$name-windows.txt") {
@@ -313,6 +385,9 @@ class FeatureScreen {
     }
     companion object {
         const val PACK_ID = "basefeatures-pack"
+        private const val CAPTURES = "basefeatures-captures"
+        // Allows rounding of a colour channel in the screenshot; the default theme's pressed and dark pads differ by 16 or more.
+        private const val PIXEL_TOLERANCE = 3
         const val TITLE = "Base Features Synthetic Pack"
         const val STORE_ID = "basefeatures-store"
         // Earlier versions of this suite installed a pack here; a device they stopped on still has it.
