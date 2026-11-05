@@ -247,12 +247,13 @@ ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
 | `SettingsTest.testLanguageRowOpensSystemAppLanguageScreen` | On API 33+ the language row opens the system's language screen for UniPad, which lists Korean and stays open; Back returns to Settings. Below 33 tapping it leaves Settings open. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
-| `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. |
-| `BackupFolderTest.disconnectAfterThePermissionIsGoneKeepsSettingsOpen` | Connect Documents/Unipad through the system folder picker; Disconnect after its permission is gone forgets it and Settings stays open. |
+| Every `BackupFolderTest` case | Starts with Documents/Unipad holding one backed-up folder and no saved folder or permission; removes both after. |
+| `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. On Android 10, which has no folder backup settings, Storage shows App Storage and offers neither Connect nor Disconnect. |
+| `BackupFolderTest.disconnectAfterThePermissionIsGoneKeepsSettingsOpen` | Connect Documents/Unipad through the system folder picker: the folder and its lasting read/write permission are saved, the recovery offer counts the one backed-up folder and Later closes it. Disconnect after its permission is gone forgets it and Settings stays open. On Android 10 it checks App Storage and the absence of those settings instead. |
 | `BackupFolderTest.restoreAsksForTheFolderAgainWhenItsPermissionIsGone` | Restore offers Grant Access again for a saved folder whose permission is gone. |
 | `BackupFolderTest.restoreRefusesAFolderOtherThanUnipad` | Choosing Documents itself from Restore is refused: nothing saved, no permission kept, Grant Access still offered. |
-| `BackupFolderTest.restoreAcceptsTheUnipadFolder` | Choosing Documents/Unipad from Restore saves it and lists the backed-up folder. |
-| `BackupFolderTest.settingsWithoutFolderPickerReportsIt` | With the folder picker disabled, Connect shows a message and Settings stays open; the picker is enabled again after. |
+| `BackupFolderTest.restoreAcceptsTheUnipadFolder` | Opening Unipad in the picker shows the backed-up folder that Documents does not; choosing it from Restore saves it with lasting read/write permission and lists the backed-up folder. |
+| `BackupFolderTest.settingsWithoutFolderPickerReportsIt` | With the folder picker disabled, Connect shows a message and Settings stays open; the picker is enabled again after. On Android 10 it checks App Storage and the absence of those settings instead. |
 | `BackupFolderTest.restoreWithoutFolderPickerStaysOpen` | With the folder picker disabled, Grant Access leaves Restore open. |
 | `BackupFolderTest.themeImportWithoutFilePickerStaysOpen` | With the file pickers disabled, theme ZIP import leaves the theme screen open. |
 | `BackupFolderTest.packImportWithoutFilePickerStaysOpen` | With the file picker disabled, Import leaves Main open. |

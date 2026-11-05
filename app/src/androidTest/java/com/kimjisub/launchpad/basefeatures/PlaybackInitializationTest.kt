@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -78,7 +79,7 @@ class PlaybackInitializationTest : PlaybackScreenTest() {
         // clears that task and sends the user to the launcher when the play screen closes.
         screen.onMain { mainActivity.startActivity(intent) }
         screen.awaitActivity(PlayActivity::class.java)
-        screen.node(By.text(screen.text(R.string.audio_load_failed_title)))
+        screen.node(By.pkg(screen.context.packageName).text(screen.text(R.string.audio_load_failed_title)))
         val report = requireNotNull(screen.onMain { screen.vm().soundLoadReport })
         assertTrue("Every used sound file must have failed", report.allFailed)
         assertEquals(report.usedFiles, report.failures.size)
@@ -94,6 +95,7 @@ class PlaybackInitializationTest : PlaybackScreenTest() {
 
         screen.clickText(R.string.audio_load_pack_list)
         screen.awaitActivity(MainActivity::class.java)
+        assertSame("Pack list must return to the existing library", mainActivity, screen.resumed())
         SystemClock.sleep(300)
         val capture = "${TestCaptures.DIRECTORY}/basefeatures-captures/unplayable-pack-result.png"
         screen.device.executeShellCommand("screencap -p $capture")
