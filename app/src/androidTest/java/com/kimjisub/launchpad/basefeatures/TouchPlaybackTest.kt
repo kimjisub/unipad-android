@@ -110,7 +110,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             screen.await("Both pressed lights were not shown at once") { screen.onMain {
                 (1..2).all { screen.vm().channelManager.get(0, it)?.channel == Channel.PRESSED }
             } }
-            screen.capture("two-fingers")
+            screen.capturePads("two-fingers", setOf(1, 2))
             inject(MotionEvent.ACTION_POINTER_UP or (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT), 2)
             activePointers = 1
             inject(MotionEvent.ACTION_UP, 1)
@@ -118,6 +118,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             screen.await("Released fingers still light pads") { screen.onMain {
                 (1..2).all { screen.vm().channelManager.get(0, it)?.channel != Channel.PRESSED }
             } }
+            screen.capturePads("two-fingers-released", emptySet())
         } finally {
             if (activePointers > 0) inject(MotionEvent.ACTION_CANCEL, activePointers)
         }
