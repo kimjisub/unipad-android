@@ -32,8 +32,37 @@ class SystemExitPolicyTest {
 		}
 	}
 
-	@Test fun crashesAnrAndRoutineExitsAreExcluded() {
-		for (reason in listOf(0, 1, 4, 5, 6, 8, 10, 11, 12, 15, 16, 99)) {
+	@Test fun anrIsReportedInFrontAndInTheBackground() {
+		for (importance in listOf(100, 125, 230, 400)) {
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(6, importance = importance), true))
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(6, importance = importance), false))
+		}
+	}
+
+	@Test fun descriptionKeepsTheSystemReasonWithinTheKeyLimit() {
+		val reason = "Input dispatching timed out (Waited 5000ms for MotionEvent)"
+		assertEquals(reason, SystemExitPolicy.description(SystemExit(6, description = reason)))
+		assertEquals("", SystemExitPolicy.description(SystemExit(6)))
+		val long = SystemExitPolicy.description(SystemExit(6, description = "a".repeat(5000)))
+		assertEquals("a".repeat(1024), long)
+	}
+
+	@Test fun descriptionKeepsOnlyTheSchemeOfIntentData() {
+		val broadcast = "Broadcast of Intent { act=android.intent.action.VIEW " +
+			"dat=content://downloads/my%20pack.zip flg=0x10 cmp=com.kimjisub.launchpad/.Receiver }"
+		assertEquals("Broadcast of Intent { act=android.intent.action.VIEW " +
+			"dat=content:<redacted> flg=0x10 cmp=com.kimjisub.launchpad/.Receiver }",
+			SystemExitPolicy.description(SystemExit(6, description = broadcast)))
+		assertEquals("Broadcast of Intent { dat=<redacted> (has extras) }",
+			SystemExitPolicy.description(SystemExit(6, description = "Broadcast of Intent { dat=/sdcard/my pack.zip (has extras) }")))
+		assertEquals("ends dat=file:<redacted>",
+			SystemExitPolicy.description(SystemExit(6, description = "ends dat=file:///sdcard/my pack.zip")))
+		val service = "executing service com.kimjisub.launchpad/.MessagingService"
+		assertEquals(service, SystemExitPolicy.description(SystemExit(6, description = service)))
+	}
+
+	@Test fun crashesAndRoutineExitsAreExcluded() {
+		for (reason in listOf(0, 1, 4, 5, 8, 10, 11, 12, 15, 16, 99)) {
 			assertFalse("reason $reason", SystemExitPolicy.shouldReport(SystemExit(reason), false))
 		}
 	}

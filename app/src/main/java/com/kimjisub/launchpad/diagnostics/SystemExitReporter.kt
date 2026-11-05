@@ -42,7 +42,7 @@ internal object SystemExitReporter {
 
 	private fun keysFor(exit: SystemExit, lmkSupported: Boolean, background: BackgroundScreen?) = CustomKeysAndValues.Builder()
 		.putInt("exit_reason", exit.reason)
-		.putString("exit_description", exit.description.orEmpty().take(1024))
+		.putString("exit_description", SystemExitPolicy.description(exit))
 		.putInt("exit_status", exit.status)
 		.putInt("exit_importance", exit.importance)
 		.putLong("exit_pss_kb", exit.pssKb)
@@ -63,6 +63,7 @@ internal object SystemExitReporter {
 	// Keep names and prevent R8 class merging so system exit causes stay in separate groups.
 	private fun exceptionFor(exit: SystemExit): Exception = when (exit.reason) {
 		SystemExitPolicy.LOW_MEMORY -> LowMemoryExit()
+		SystemExitPolicy.ANR -> AnrReasonExit()
 		SystemExitPolicy.SIGNALED -> KillSignalExit()
 		SystemExitPolicy.OTHER -> MemoryLimiterExit()
 		SystemExitPolicy.INITIALIZATION_FAILURE -> InitializationFailureExit()
@@ -73,6 +74,12 @@ internal object SystemExitReporter {
 
 	@Keep
 	private class LowMemoryExit : Exception("System terminated a perceptible process under memory pressure")
+	/**
+	 * Crashlytics already reports the same ANR with its threads; count ANRs there. This group only carries
+	 * the system's reason, which that report lacks.
+	 */
+	@Keep
+	private class AnrReasonExit : Exception("Reason the system gave for an ANR (count ANRs from Crashlytics ANR reports, not this)")
 	@Keep
 	private class KillSignalExit : Exception("System sent SIGKILL on a device without low-memory reporting")
 	@Keep
