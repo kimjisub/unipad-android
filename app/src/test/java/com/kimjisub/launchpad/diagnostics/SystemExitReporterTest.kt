@@ -95,7 +95,8 @@ class SystemExitReporterTest {
 	@Test fun anrIsReportedInItsOwnGroupWithTheSystemReason() {
 		checkpoint = 10
 		backgroundScreen = "PlayActivity"
-		val reason = "Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE } " + "x".repeat(2000)
+		val reason = "bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE " +
+			"dat=content://x/" + "y".repeat(2000) + " }"
 		history = listOf(exit(6, 20, reason, importance = 400), exit(3, 21))
 		val errors = mutableListOf<Throwable>()
 		val keys = mutableListOf<CustomKeysAndValues>()
@@ -104,11 +105,13 @@ class SystemExitReporterTest {
 		assertEquals(listOf("LowMemoryExit", "AnrReasonExit"), errors.map { it.javaClass.simpleName })
 		val values = keys[1].values()
 		assertEquals("6", values["exit_reason"])
-		assertEquals(reason.take(1024), values["exit_description"])
+		assertEquals("bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE <redacted> }",
+			values["exit_description"])
 		assertEquals("400", values["exit_importance"])
 		assertEquals("PlayActivity", values["exit_last_screen"])
 		assertEquals("8", values["exit_background_ms"])
 		assertEquals(21L, checkpoint)
+		verify(exactly = 0) { history[0].traceInputStream }
 	}
 
 	@Test fun backgroundExitCarriesTheScreenTheAppLeft() {

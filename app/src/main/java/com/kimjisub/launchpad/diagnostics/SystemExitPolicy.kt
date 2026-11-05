@@ -30,9 +30,12 @@ internal object SystemExitPolicy {
 	private const val IMPORTANCE_PERCEPTIBLE = 230
 	private const val MAX_REPORTS = 5
 	private const val MAX_DESCRIPTION = 1024
-	// An intent's data can name a file or a link the user opened; only its scheme helps explain a timeout.
-	// Intent.toString() follows the data with another " name=" field, "(has ...)" or the closing brace.
-	private val intentData = Regex("""\bdat=([A-Za-z][A-Za-z0-9+.-]*:)?.*?(?=\s+\w+=|\s*\(has |\s*}|$)""")
+	// An intent's data and extras can name a file or a link the user opened, and their text may contain any
+	// character, so nothing after "Intent {" or "dat=" is kept except the action and component, whose
+	// characters are limited to names. The braces are escaped: Android's regex engine rejects a bare "}".
+	private val sensitiveStart = Regex("""Intent \{|\bdat=""")
+	private val intentAction = Regex("""\bact=[A-Za-z0-9_.]+""")
+	private val intentComponent = Regex("""\bcmp=[A-Za-z0-9_.]+/[A-Za-z0-9_.${'$'}]+""")
 
 	fun shouldReport(exit: SystemExit, lmkSupported: Boolean): Boolean = when (exit.reason) {
 		LOW_MEMORY -> exit.importance <= IMPORTANCE_PERCEPTIBLE
@@ -43,10 +46,20 @@ internal object SystemExitPolicy {
 		else -> false
 	}
 
-	/** The system's own words for the exit, such as what an ANR waited for, without intent data. */
-	fun description(exit: SystemExit): String = exit.description.orEmpty()
-		.replace(intentData) { "dat=${it.groupValues[1]}<redacted>" }
-		.take(MAX_DESCRIPTION)
+	/**
+	 * The system's own words for the exit without intent data. For an ANR they name what the system waited
+	 * for, after how it ended the process: "bg anr: Broadcast of Intent { ... }",
+	 * "user request after error: Input dispatching timed out (...)".
+	 */
+	fun description(exit: SystemExit): String = redact(exit.description.orEmpty())
+
+	private fun redact(text: String): String {
+		val start = sensitiveStart.find(text)?.range?.first ?: return text.take(MAX_DESCRIPTION)
+		val tail = text.substring(start)
+		val kept = listOfNotNull(intentAction.find(tail)?.value, intentComponent.find(tail)?.value) + "<redacted>"
+		val redacted = if (tail.startsWith("Intent")) "Intent { ${kept.joinToString(" ")} }" else "dat=<redacted>"
+		return (text.substring(0, start) + redacted).take(MAX_DESCRIPTION)
+	}
 
 	/**
 	 * Only the process that left the [record]ed screen can be described by it: a later process started
@@ -60,9 +73,11 @@ internal object SystemExitPolicy {
 		// Establish a baseline on upgrade rather than reporting old exits retroactively.
 		if (lastProcessed == null) return SystemExitBatch(emptyList(), now)
 		val newer = history.filter { it.timestamp > lastProcessed }
+		// ANRs have their own allowance so that a run of them cannot crowd out memory exits, and vice versa.
+		val reports = newer.filter { shouldReport(it, lmkSupported) }.partition { it.reason == ANR }.toList()
+			.flatMap { group -> group.sortedByDescending { it.timestamp }.take(MAX_REPORTS) }
 		return SystemExitBatch(
-			newer.filter { shouldReport(it, lmkSupported) }
-				.sortedByDescending { it.timestamp }.take(MAX_REPORTS),
+			reports.sortedByDescending { it.timestamp },
 			newer.maxOfOrNull { it.timestamp } ?: lastProcessed,
 		)
 	}

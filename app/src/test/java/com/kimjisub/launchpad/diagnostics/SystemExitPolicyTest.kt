@@ -40,25 +40,36 @@ class SystemExitPolicyTest {
 	}
 
 	@Test fun descriptionKeepsTheSystemReasonWithinTheKeyLimit() {
-		val reason = "Input dispatching timed out (Waited 5000ms for MotionEvent)"
+		val reason = "user request after error: Input dispatching timed out (8a1b2c3 com.kimjisub.launchpad.dev/" +
+			"com.kimjisub.launchpad.activity.MainActivity (server) is not responding. Waited 5004ms for MotionEvent(" +
+			"deviceId=-1, source=TOUCHSCREEN, action=DOWN, pointers=[0: (80.0, 1800.0)]), policyFlags=0x6b000000)."
 		assertEquals(reason, SystemExitPolicy.description(SystemExit(6, description = reason)))
+		assertEquals("bg anr", SystemExitPolicy.description(SystemExit(6, description = "bg anr")))
 		assertEquals("", SystemExitPolicy.description(SystemExit(6)))
-		val long = SystemExitPolicy.description(SystemExit(6, description = "a".repeat(5000)))
-		assertEquals("a".repeat(1024), long)
+		assertEquals("a".repeat(1024), SystemExitPolicy.description(SystemExit(6, description = "a".repeat(5000))))
 	}
 
-	@Test fun descriptionKeepsOnlyTheSchemeOfIntentData() {
-		val broadcast = "Broadcast of Intent { act=android.intent.action.VIEW " +
-			"dat=content://downloads/my%20pack.zip flg=0x10 cmp=com.kimjisub.launchpad/.Receiver }"
-		assertEquals("Broadcast of Intent { act=android.intent.action.VIEW " +
-			"dat=content:<redacted> flg=0x10 cmp=com.kimjisub.launchpad/.Receiver }",
-			SystemExitPolicy.description(SystemExit(6, description = broadcast)))
-		assertEquals("Broadcast of Intent { dat=<redacted> (has extras) }",
-			SystemExitPolicy.description(SystemExit(6, description = "Broadcast of Intent { dat=/sdcard/my pack.zip (has extras) }")))
-		assertEquals("ends dat=file:<redacted>",
-			SystemExitPolicy.description(SystemExit(6, description = "ends dat=file:///sdcard/my pack.zip")))
-		val service = "executing service com.kimjisub.launchpad/.MessagingService"
-		assertEquals(service, SystemExitPolicy.description(SystemExit(6, description = service)))
+	@Test fun intentDataAndExtrasAreDroppedKeepingActionAndComponent() {
+		fun reason(text: String) = SystemExitPolicy.description(SystemExit(6, description = text))
+		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW cmp=com.kimjisub.launchpad/.Receiver <redacted> }",
+			reason("bg anr: Broadcast of Intent { act=android.intent.action.VIEW dat=content://downloads/my%20pack.zip " +
+				"flg=0x10 cmp=com.kimjisub.launchpad/.Receiver (has extras) }"))
+		// Names that look like other fields, a line break or a colon in the data are dropped with the rest.
+		assertEquals("bg anr: Broadcast of Intent { <redacted> }",
+			reason("bg anr: Broadcast of Intent { dat=content://x/my pack v=2.zip flg=0x10 }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=/sdcard/a\nb.zip }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=MyPack:final.zip }"))
+		assertEquals("ends dat=<redacted>", reason("ends dat=file:///sdcard/my pack.zip"))
+		val service = "bg anr: executing service com.kimjisub.launchpad/.MessagingService"
+		assertEquals(service, reason(service))
+	}
+
+	@Test fun anrsAndOtherExitsEachKeepTheirOwnAllowance() {
+		val anrs = (1..7L).map { SystemExit(6, timestamp = it) }
+		val memory = (11..17L).map { SystemExit(3, timestamp = it) }
+		val batch = SystemExitPolicy.select(anrs + memory, 0, 100, true)
+		assertEquals(listOf(17L, 16, 15, 14, 13, 7, 6, 5, 4, 3), batch.reports.map { it.timestamp })
+		assertEquals(17L, batch.checkpoint)
 	}
 
 	@Test fun crashesAndRoutineExitsAreExcluded() {

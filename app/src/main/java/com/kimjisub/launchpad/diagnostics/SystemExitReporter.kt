@@ -76,7 +76,8 @@ internal object SystemExitReporter {
 	private class LowMemoryExit : Exception("System terminated a perceptible process under memory pressure")
 	/**
 	 * Crashlytics already reports the same ANR with its threads; count ANRs there. This group only carries
-	 * the system's reason, which that report lacks.
+	 * the system's reason in `exit_description` (Android 14 and later; Android 12 keeps only "bg anr" or
+	 * "user request after error"), which that report lacks.
 	 */
 	@Keep
 	private class AnrReasonExit : Exception("Reason the system gave for an ANR (count ANRs from Crashlytics ANR reports, not this)")
