@@ -57,6 +57,8 @@ LOADING_CASE = case('nextSoundAfterLoadingIsHeard', [0], [6], 'loading', alterna
 CASE_BY_NAME = {c['name']:c for c in [*CASES, LOADING_CASE]}
 # Observed stream timestamp jitter is up to 36 ms in either direction.
 PACKET_UNCERTAINTY_S = .036
+# Stream time a case window may hold without samples; the recorder's own break tolerance.
+MAX_STREAM_SHORTFALL_S = .1
 
 
 
@@ -143,6 +145,24 @@ def overlapping_gaps(log: dict, start: int, end: int) -> list[dict]:
             if gap['at_frame'] < end and gap['at_frame']+gap['frames'] > start]
 
 
+def stream_shortfall(log: dict, start: int, end: int) -> dict:
+    """Stream time inside a case window that the emulator delivered no samples for.
+
+    A packet's timestamp marks its last sample, so the samples after the first packet
+    in the window should advance the timestamps by their own length. An emulator that
+    discards part of its output keeps its timestamps on time while sending fewer samples,
+    in breaks too short for the recorder to report: the Android 11 image streamed about
+    82% of its samples, joining the rest of a one-second sound into 0.8 seconds.
+    """
+    inside = [p for p in log['packets'] if p['at_frame'] >= start and p['at_frame']+p['frames'] <= end]
+    if len(inside) < 2:
+        raise ValueError('too few packets inside the case window to confirm its stream time')
+    stream = (inside[-1]['timestamp_us']-inside[0]['timestamp_us'])/1_000_000
+    delivered = sum(p['frames'] for p in inside[1:])/log['sample_rate']
+    return {'stream_seconds':round(stream,6),'delivered_seconds':round(delivered,6),
+            'missing_seconds':round(stream-delivered,6)}
+
+
 def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
     """Copy original PCM, retaining packet-mapped input and environmental errors."""
     clock = clock_bounds(event)
@@ -161,6 +181,7 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
         if released < pressed or start < round(.2*rate) or start+frames > reader.getnframes():
             raise ValueError('four-second case baseline/postroll is outside recorded PCM')
         gaps = overlapping_gaps(log,start,start+frames)
+        stream = stream_shortfall(log,start,start+frames)
         reader.setpos(start)
         pcm = reader.readframes(frames)
         with wave.open(str(target),'wb') as writer:
@@ -168,9 +189,14 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
             writer.writeframes(pcm)
     result = {'file':str(target),'seconds':4.,'source_frame_offset':start,'sample_rate':rate,
               'pressed_s':(pressed-start)/rate,'released_s':(released-start)/rate,
-              'gaps':gaps,'clock':clock,'packet_uncertainty_s':PACKET_UNCERTAINTY_S,'input_uncertainty_s':(latest_press-pressed)/rate}
+              'gaps':gaps,'stream':stream,'clock':clock,'packet_uncertainty_s':PACKET_UNCERTAINTY_S,
+              'input_uncertainty_s':(latest_press-pressed)/rate}
     if gaps:
         result['environment_error'] = 'managed recorder inserted silence inside this case window'
+    elif abs(stream['missing_seconds']) > MAX_STREAM_SHORTFALL_S:
+        result['environment_error'] = (f"emulator streamed {stream['delivered_seconds']:.3f} s of samples over "
+                                       f"{stream['stream_seconds']:.3f} s of its stream time in this case window; "
+                                       'the output it did not stream cannot be judged')
     return result
 
 
