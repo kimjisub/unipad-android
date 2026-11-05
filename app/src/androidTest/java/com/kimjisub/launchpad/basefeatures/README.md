@@ -56,9 +56,11 @@ assertions or timeouts. Debuggable packages may report a `verify` compiler filte
 full optimization. Archive `dumpsys package dexopt` with the run output.
 No baseline fixture is downloaded. Screenshots are copied by the shell to
 `/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
-applications being uninstalled at the end of a complete Gradle run. Pull them with
-`adb -s <serial> pull /data/local/tmp/unipad_tests` before stopping the emulator.
-Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
+applications being uninstalled at the end of a complete Gradle run. `scripts/ci-connected-tests.sh`
+empties that folder before the tests start and copies it to `<results>/captures/` when it ends.
+Without that script, clear the shell-owned folder before a new run to avoid mistaking older
+captures for new ones, and pull it with `adb -s <serial> pull /data/local/tmp/unipad_tests`
+before stopping the emulator.
 Readiness failure screenshots, activity state and hierarchy are kept under the same root.
 
 ## Screen transition synchronization
