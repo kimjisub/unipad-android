@@ -30,12 +30,14 @@ internal object SystemExitPolicy {
 	private const val IMPORTANCE_PERCEPTIBLE = 230
 	private const val MAX_REPORTS = 5
 	private const val MAX_DESCRIPTION = 1024
-	// An intent's data and extras can name a file or a link the user opened, and their text may contain any
-	// character, so nothing after "Intent {" or "dat=" is kept except the action and component, whose
-	// characters are limited to names. The braces are escaped: Android's regex engine rejects a bare "}".
+	private const val INTENT_START = "Intent {"
+	// An intent prints its fields in a fixed order (act, cat, dat, typ, id, flg, pkg, cmp, ...). Its data, type and
+	// identifier are free text that can name a file or a link the user opened, and may contain anything that looks
+	// like a later field, so only the fields before the first free-text one are kept, and only while their
+	// characters are limited to names. Android's regex engine rejects a bare brace or bracket, so they are escaped.
 	private val sensitiveStart = Regex("""Intent \{|\bdat=""")
-	private val intentAction = Regex("""\bact=[A-Za-z0-9_.]+""")
-	private val intentComponent = Regex("""\bcmp=[A-Za-z0-9_.]+/[A-Za-z0-9_.${'$'}]+""")
+	private val nameField =
+		Regex("""(act|pkg)=[A-Za-z0-9_.]+|cat=\[[A-Za-z0-9_.,]+\]|flg=0x[0-9a-fA-F]+|cmp=[A-Za-z0-9_.]+/[A-Za-z0-9_.${'$'}]+""")
 
 	fun shouldReport(exit: SystemExit, lmkSupported: Boolean): Boolean = when (exit.reason) {
 		LOW_MEMORY -> exit.importance <= IMPORTANCE_PERCEPTIBLE
@@ -55,9 +57,14 @@ internal object SystemExitPolicy {
 
 	private fun redact(text: String): String {
 		val start = sensitiveStart.find(text)?.range?.first ?: return text.take(MAX_DESCRIPTION)
-		val tail = text.substring(start)
-		val kept = listOfNotNull(intentAction.find(tail)?.value, intentComponent.find(tail)?.value) + "<redacted>"
-		val redacted = if (tail.startsWith("Intent")) "Intent { ${kept.joinToString(" ")} }" else "dat=<redacted>"
+		val redacted = if (text.startsWith(INTENT_START, start)) {
+			val fields = text.substring(start + INTENT_START.length).trimStart(' ').split(' ')
+			val kept = fields.takeWhile { nameField.matches(it) }
+			val shown = if (fields.drop(kept.size) == listOf("}")) kept else kept + "<redacted>"
+			(listOf(INTENT_START) + shown + "}").joinToString(" ")
+		} else {
+			"dat=<redacted>"
+		}
 		return (text.substring(0, start) + redacted).take(MAX_DESCRIPTION)
 	}
 

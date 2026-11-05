@@ -49,15 +49,29 @@ class SystemExitPolicyTest {
 		assertEquals("a".repeat(1024), SystemExitPolicy.description(SystemExit(6, description = "a".repeat(5000))))
 	}
 
-	@Test fun intentDataAndExtrasAreDroppedKeepingActionAndComponent() {
+	@Test fun intentFieldsBeforeTheDataAreKeptAndEverythingFromTheDataOnIsDropped() {
 		fun reason(text: String) = SystemExitPolicy.description(SystemExit(6, description = text))
-		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW cmp=com.kimjisub.launchpad/.Receiver <redacted> }",
+		assertEquals("bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE flg=0x10000010 " +
+			"pkg=com.kimjisub.launchpad cmp=com.kimjisub.launchpad/com.google.firebase.iid.FirebaseInstanceIdReceiver }",
+			reason("bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE flg=0x10000010 " +
+				"pkg=com.kimjisub.launchpad cmp=com.kimjisub.launchpad/com.google.firebase.iid.FirebaseInstanceIdReceiver }"))
+		assertEquals("Broadcast of Intent { cat=[android.intent.category.DEFAULT] cmp=com.kimjisub.launchpad/.R\$1 <redacted> }",
+			reason("Broadcast of Intent { cat=[android.intent.category.DEFAULT] cmp=com.kimjisub.launchpad/.R\$1 (has extras) }"))
+		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW <redacted> }",
 			reason("bg anr: Broadcast of Intent { act=android.intent.action.VIEW dat=content://downloads/my%20pack.zip " +
 				"flg=0x10 cmp=com.kimjisub.launchpad/.Receiver (has extras) }"))
-		// Names that look like other fields, a line break or a colon in the data are dropped with the rest.
+		// The data can hold text that looks like a later field, a line break or a colon; none of it is kept.
+		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW <redacted> }",
+			reason("bg anr: Broadcast of Intent { act=android.intent.action.VIEW dat=content://documents/cmp=private/album.zip " +
+				"cmp=com.kimjisub.launchpad/.Receiver (has extras) }"))
+		assertEquals("Broadcast of Intent { <redacted> }",
+			reason("Broadcast of Intent { dat=content://x/ act=secret.name flg=0x1 cmp=private/album.zip }"))
+		assertEquals("Broadcast of Intent { <redacted> }",
+			reason("Broadcast of Intent { typ=private/album cmp=com.kimjisub.launchpad/.Receiver }"))
 		assertEquals("bg anr: Broadcast of Intent { <redacted> }",
 			reason("bg anr: Broadcast of Intent { dat=content://x/my pack v=2.zip flg=0x10 }"))
 		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=/sdcard/a\nb.zip }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { act=a.b\ncmp=private/x }"))
 		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=MyPack:final.zip }"))
 		assertEquals("ends dat=<redacted>", reason("ends dat=file:///sdcard/my pack.zip"))
 		val service = "bg anr: executing service com.kimjisub.launchpad/.MessagingService"
