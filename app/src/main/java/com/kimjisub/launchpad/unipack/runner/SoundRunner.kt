@@ -238,7 +238,7 @@ class SoundRunner(
 			try {
 				return engine.decode(file) { streamPaused.value || !job.isActive }
 			} catch (_: OboeAudioEngine.DecodeInterruptedException) {
-				Log.play("Sound decode stopped while hidden: ${file.name}")
+				Log.play("Sound decode stopped (screen hidden or closed): ${file.name}")
 				streamPaused.first { !it }
 				job.ensureActive()
 			}

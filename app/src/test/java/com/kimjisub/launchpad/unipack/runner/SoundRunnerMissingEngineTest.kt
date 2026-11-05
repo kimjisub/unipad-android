@@ -133,7 +133,7 @@ class SoundRunnerMissingEngineTest {
 			touch("start")
 		}
 		override fun stop() = touch("stop")
-		override fun decode(file: File): OboeAudioEngine.DecodedAudio? = touch("decode")
+		override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = touch("decode")
 		override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = touch("load")
 		override fun unloadSound(soundId: Int) = touch("unloadSound")
 		override fun unloadAll() = touch("unloadAll")

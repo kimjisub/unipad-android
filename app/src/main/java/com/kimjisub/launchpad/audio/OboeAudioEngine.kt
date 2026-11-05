@@ -83,6 +83,8 @@ object OboeAudioEngine {
 	class DecodeInterruptedException : Exception("Decode interrupted")
 
 	private fun decodeAudioFile(file: File, interrupted: () -> Boolean): DecodedAudio? {
+		// Opening the file is already a call into the media service.
+		if (interrupted()) throw DecodeInterruptedException()
 		val extractor = MediaExtractor()
 		try {
 			extractor.setDataSource(file.absolutePath)
