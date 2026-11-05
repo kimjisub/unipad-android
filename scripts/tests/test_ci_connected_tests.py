@@ -64,7 +64,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                    sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None,
                    probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n", earlier=None,
                    kill_during_tests=False, captures=None, left_on_device=None, pull_exit=0, clear_exit=0,
-                   check_fails_after_tests=False):
+                   check_fails_after_tests=False, adb_notice=False):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
@@ -73,7 +73,8 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         `captures` maps file names to contents the tests save in the device capture folder and
         `left_on_device` those an earlier run left there. Clearing the folder exits with `clear_exit`;
         pulling copies everything and then exits with `pull_exit`. With `check_fails_after_tests` adb
-        fails to look at the folder once the connected tests ran.
+        fails to look at the folder once the connected tests ran. With `adb_notice` adb also prints a
+        server notice on stderr each time it looks at the folder.
         """
         sources = {"app": 2, "design": 1} if sources is None else sources
         results = {"app": passed(2), "design": passed(1)} if results is None else results
@@ -122,6 +123,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
             script.write(f'if [[ "$*" == *"shell rm -rf {CAPTURES}" ]]; then\n'
                          '  [[ "$CLEAR_EXIT" == 0 ]] && rm -rf fake-device-captures; exit "$CLEAR_EXIT"; fi\n'
                          f'if [[ "$*" == *"shell if [ -d {CAPTURES} ]"* ]]; then\n'
+                         '  [[ -n "$ADB_NOTICE" ]] && echo "* daemon started successfully" >&2\n'
                          '  if [[ -n "$CHECK_FAILS" ]] && grep -qx connected-tests adb-calls.txt; then\n'
                          '    echo "error: device offline" >&2; exit 1; fi\n'
                          '  if [[ -d fake-device-captures ]]; then echo present; else echo absent; fi; exit; fi\n'
@@ -140,7 +142,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
                    GRADLE_EXIT=str(gradle_exit), LOGCAT_EXIT=str(logcat_exit),
                    PULL_EXIT=str(pull_exit), CLEAR_EXIT=str(clear_exit),
-                   CHECK_FAILS="1" if check_fails_after_tests else "")
+                   CHECK_FAILS="1" if check_fails_after_tests else "", ADB_NOTICE="1" if adb_notice else "")
         env.pop("ANDROID_SERIAL", None)
         if serial is not None:
             env["ANDROID_SERIAL"] = serial
@@ -259,7 +261,19 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertFalse((root / ".ci-results/captures").exists())
         self.assertNotIn(f"-s emulator-5678 pull {CAPTURES} .ci-results/captures",
                          (root / "adb-calls.txt").read_text().splitlines())
-        self.assertIn("verdict=", self.status(root))
+        self.assertEqual((root / ".ci-results/captures-pull.txt").read_text(),
+                         "Not copied: the run stopped before the device folder was cleared.\n")
+        self.assertIn("verdict=fail", self.status(root))
+        self.assertRegex(self.status(root), r"exit_code=1\n")
+        record = json.loads((root / ".ci-results/device-settings.json").read_text())
+        self.assertEqual(set(record["final"]["values"]), set(record["before"]["values"]))
+
+    def test_adb_server_notices_are_not_taken_as_the_folder_state(self):
+        root, result = self.run_runner(captures={"two-fingers.png": "png"}, adb_notice=True,
+                                       left_on_device={"five-fingers.png": "earlier run"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.captures(root), {"two-fingers.png": "png"})
+        self.assertIn("verdict=pass", self.status(root))
 
     def test_failed_screen_copy_is_reported_without_changing_the_verdict(self):
         root, result = self.run_runner(captures={"two-fingers.png": "png"}, pull_exit=1,
@@ -267,6 +281,8 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(f"Could not copy {CAPTURES}", result.stderr)
         self.assertEqual(self.captures(root), {"two-fingers.png": "png"})
+        self.assertIn("Copy failed: captures/ may hold only some of this run's screens.",
+                      (root / ".ci-results/captures-pull.txt").read_text())
         self.assertIn("verdict=pass", self.status(root))
 
     def test_adb_failing_to_look_at_the_folder_is_reported_not_taken_as_no_screens(self):

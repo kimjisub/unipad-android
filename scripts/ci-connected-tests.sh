@@ -47,28 +47,39 @@ SECONDS=0
 log_pid=""
 probe_installed=0
 captures_cleared=0
-# Prints present or absent; any other output means adb itself failed.
+# Prints present or absent; when adb itself fails, prints what adb reported instead.
+# adb's own notices (such as a restarted server) go to stderr and are ignored while adb succeeds.
 captures_on_device() {
-  adb -s "$ANDROID_SERIAL" shell "if [ -d $CAPTURES_ON_DEVICE ]; then echo present; else echo absent; fi" 2>&1 \
-    | tr -d '\r' || true
+  local state errors="$RESULTS"/captures-check-errors.txt
+  if state="$(adb -s "$ANDROID_SERIAL" shell "if [ -d $CAPTURES_ON_DEVICE ]; then echo present; else echo absent; fi" 2> "$errors")"; then
+    state="$(tr -d '\r' <<< "$state")"
+  else
+    state="$(cat "$errors")${state:+$'\n'$state}"
+  fi
+  rm -f "$errors"
+  printf '%s\n' "$state"
 }
 # Copies the screens this run saved; never changes the verdict.
 copy_captures() {
   local log="$RESULTS"/captures-pull.txt state
   if [[ "$captures_cleared" -ne 1 ]]; then
     echo "Not copied: the run stopped before the device folder was cleared." > "$log"
-    return
+    # An explicit status: inside the exit handler bash 5 would return the status that triggered it.
+    return 0
   fi
   state="$(captures_on_device)"
   case "$state" in
     absent) echo "No screens were saved on the device." > "$log" ;;
     present)
-      adb -s "$ANDROID_SERIAL" pull "$CAPTURES_ON_DEVICE" "$RESULTS"/captures > "$log" 2>&1 \
-        || echo "Could not copy $CAPTURES_ON_DEVICE; see captures-pull.txt" >&2 ;;
+      if ! adb -s "$ANDROID_SERIAL" pull "$CAPTURES_ON_DEVICE" "$RESULTS"/captures > "$log" 2>&1; then
+        echo "Copy failed: captures/ may hold only some of this run's screens." >> "$log"
+        echo "Could not copy $CAPTURES_ON_DEVICE; see captures-pull.txt" >&2
+      fi ;;
     *)
       printf 'Could not check %s on the device:\n%s\n' "$CAPTURES_ON_DEVICE" "$state" > "$log"
       echo "Could not check $CAPTURES_ON_DEVICE on the device; see captures-pull.txt" >&2 ;;
   esac
+  return 0
 }
 remove_probe_packages() {
   local failed=0
@@ -111,8 +122,9 @@ trap 'exit 143' TERM
 device_settings prepare
 # Screens an earlier run left on the device must never be copied as this run's.
 adb -s "$ANDROID_SERIAL" shell rm -rf "$CAPTURES_ON_DEVICE" || true
-if [[ "$(captures_on_device)" != absent ]]; then
-  echo "Could not clear $CAPTURES_ON_DEVICE on the device" >&2
+captures_state="$(captures_on_device)"
+if [[ "$captures_state" != absent ]]; then
+  printf 'Could not clear %s on the device (after removing it: %s)\n' "$CAPTURES_ON_DEVICE" "$captures_state" >&2
   exit 1
 fi
 captures_cleared=1

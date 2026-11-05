@@ -114,7 +114,8 @@ feature screens use `basefeatures-captures/`, readiness failures use
 `store-progress-captures/<prefix>/`.
 `scripts/ci-connected-tests.sh` empties this root before the tests start (a run that cannot
 empty it stops) and copies it to `<results>/captures/` when it ends, pass or fail;
-`<results>/captures-pull.txt` says what was copied. Without that script, clear the root
+`<results>/captures-pull.txt` says what was copied. Each run replaces `<results>/captures/`, so give
+every batch of a split run its own `CI_RESULTS_DIR`. Without that script, clear the root
 before each run and pull it with `adb -s <serial> pull /data/local/tmp/unipad_tests` after
 the complete run and before stopping the emulator. The capture helper stages files in app-writable external storage, copies
 them as shell and removes the staging file; it checks that each preserved file is nonempty
