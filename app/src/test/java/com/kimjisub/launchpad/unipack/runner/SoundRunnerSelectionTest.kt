@@ -31,7 +31,7 @@ class SoundRunnerSelectionTest {
         var loads = 0
         override fun start() = true
         override fun stop() {}
-        override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+        override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
             synchronized(decoded) { decoded += file.name }
             failures[file.name]?.let { throw it }
             if (file.name in undecodable) return null

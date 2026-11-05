@@ -72,7 +72,7 @@ class PlayActivityViewModelPlaybackSetupTest {
         every { engine.start() } returns true
         every { engine.inspect(any()) } returns com.kimjisub.launchpad.audio.AudioInspection.Readable(
             com.kimjisub.launchpad.audio.AudioFileFacts(44_100, 1, 1))
-        every { engine.decode(any()) } returns if (playable) OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100) else null
+        every { engine.decode(any(), any()) } returns if (playable) OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100) else null
         every { engine.load(any()) } returns 1
         vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
         vm.uiCallback = mockk(relaxed = true)

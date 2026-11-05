@@ -28,15 +28,17 @@ object OboeAudioEngine {
 	 * Returns soundId or -1 on failure.
 	 */
 	fun loadSound(file: File): Int {
-		val decoded = decodeAudioFile(file) ?: return -1
+		val decoded = decodeOnly(file) ?: return -1
 		return loadDecoded(decoded)
 	}
 
 	/**
 	 * Decode audio file to raw PCM without loading into native engine.
 	 * Thread-safe - can be called from multiple threads concurrently.
+	 * [interrupted] is polled between decoder steps; once it answers true the decoder is released
+	 * and [DecodeInterruptedException] is thrown, so the partial PCM is discarded.
 	 */
-	fun decodeOnly(file: File): DecodedAudio? = decodeAudioFile(file)
+	fun decodeOnly(file: File, interrupted: () -> Boolean = { false }): DecodedAudio? = decodeAudioFile(file, interrupted)
 
 	/**
 	 * Load pre-decoded PCM data into native engine.
@@ -77,7 +79,12 @@ object OboeAudioEngine {
 		val sampleRate: Int,
 	)
 
-	private fun decodeAudioFile(file: File): DecodedAudio? {
+	/** A decode given up because its caller asked it to stop; the file itself may be fine. */
+	class DecodeInterruptedException : Exception("Decode interrupted")
+
+	private fun decodeAudioFile(file: File, interrupted: () -> Boolean): DecodedAudio? {
+		// Opening the file is already a call into the media service.
+		if (interrupted()) throw DecodeInterruptedException()
 		val extractor = MediaExtractor()
 		try {
 			extractor.setDataSource(file.absolutePath)
@@ -106,6 +113,7 @@ object OboeAudioEngine {
 			// Displayed duration is untrusted. Start small and grow from actual decoder output.
 			// The shared structural inspection has already decided which files may be decoded.
 
+			if (interrupted()) throw DecodeInterruptedException()
 			val codec = MediaCodec.createDecoderByType(mime)
 			try {
 			codec.configure(format, null, null, 0)
@@ -124,6 +132,7 @@ object OboeAudioEngine {
 			val maxIdleRounds = 2_000 // 2000 x 5 ms = 10 s of nothing after EOS
 
 			while (!outputDone) {
+				if (interrupted()) throw DecodeInterruptedException()
 				if (!inputDone) {
 					val inputIndex = codec.dequeueInputBuffer(timeoutUs)
 					if (inputIndex >= 0) {
@@ -196,6 +205,8 @@ object OboeAudioEngine {
 				// codec instances and made every later sound fail to load.
 				codec.release()
 			}
+		} catch (e: DecodeInterruptedException) {
+			throw e
 		} catch (e: Exception) {
 			Log.err("decode failed: ${file.name}", e)
 			return null

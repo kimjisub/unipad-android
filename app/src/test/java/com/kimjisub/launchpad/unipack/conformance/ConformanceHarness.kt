@@ -252,7 +252,7 @@ private class RecordingEngine(
 	override fun start() = true
 	override fun stop() = stopAllVoices()
 
-	override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+	override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
 		if (!looksLikeAudio(file)) return null
 		return OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file } }
 	}

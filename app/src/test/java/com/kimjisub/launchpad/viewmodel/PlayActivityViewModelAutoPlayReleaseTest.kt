@@ -43,7 +43,7 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start() = true
 		override fun stop() {}
-		override fun decode(file: File) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100)
+		override fun decode(file: File, interrupted: () -> Boolean) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100)
 		override fun load(decoded: OboeAudioEngine.DecodedAudio) = 1
 		override fun unloadSound(soundId: Int) {}
 		override fun unloadAll() {}
