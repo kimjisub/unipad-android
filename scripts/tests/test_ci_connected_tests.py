@@ -26,6 +26,9 @@ SELECTED_ALL_COMMAND = SELECTED.format(FIRST_REGEX + "|" + SECOND_REGEX)
 SELECTED_FIRST_COMMAND = SELECTED.format(FIRST_REGEX)
 SELECTED_SECOND_METHOD_COMMAND = SELECTED.format(SECOND_METHOD_REGEX)
 TEST_PACKAGES = ("com.kimjisub.launchpad.dev", "com.kimjisub.launchpad.dev.test", "com.kimjisub.design.test")
+CAPTURES = "/data/local/tmp/unipad_tests"
+CAPTURES_CLEAR = f"-s emulator-5678 shell rm -rf {CAPTURES}"
+CAPTURES_CHECK = f"-s emulator-5678 shell if [ -d {CAPTURES} ]; then echo present; else echo absent; fi"
 
 
 def source(tests, class_name="ExampleTest", header=""):
@@ -60,14 +63,17 @@ class ConnectedTestRunnerTest(unittest.TestCase):
     def run_runner(self, gradle_exit=0, logcat_exit=0, serial="emulator-5678",
                    sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None,
                    probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n", earlier=None,
-                   kill_during_tests=False, captures=None, pull_exit=0):
+                   kill_during_tests=False, captures=None, left_on_device=None, pull_exit=0, clear_exit=0,
+                   check_fails_after_tests=False):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
         `earlier` maps result file names to contents a previous run left behind. With
         `kill_during_tests` the connected tests hang and the runner is SIGKILLed; the exit code is returned.
-        `captures` maps file names to contents the device holds in its capture folder (none: no folder);
-        pulling them exits with `pull_exit`.
+        `captures` maps file names to contents the tests save in the device capture folder and
+        `left_on_device` those an earlier run left there. Clearing the folder exits with `clear_exit`;
+        pulling copies everything and then exits with `pull_exit`. With `check_fails_after_tests` adb
+        fails to look at the folder once the connected tests ran.
         """
         sources = {"app": 2, "design": 1} if sources is None else sources
         results = {"app": passed(2), "design": passed(1)} if results is None else results
@@ -107,26 +113,34 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                        "if [[ \"$*\" == *'TestRunner:I'* ]]; then cat fake-starts.txt; touch logcat-ready; fi\n")
         with adb.open("a") as script:
             script.write('if [[ "$*" == *DeviceSettingsProbe* ]]; then cat probe.txt; fi\n')
-        if captures is not None:
-            for name, content in captures.items():
-                path = root / "fake-device-captures" / name
+        for folder, files in (("fake-saved-captures", captures), ("fake-device-captures", left_on_device)):
+            for name, content in (files or {}).items():
+                path = root / folder / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(content)
         with adb.open("a") as script:
-            script.write('if [[ "$*" == *"shell test -d /data/local/tmp/unipad_tests" ]]; then [[ -d fake-device-captures ]]; exit; fi\n'
-                         'if [[ "$*" == *" pull /data/local/tmp/unipad_tests "* ]]; then\n'
-                         '  [[ "$PULL_EXIT" == 0 ]] && cp -R fake-device-captures "${@: -1}"; exit "$PULL_EXIT"; fi\n')
+            script.write(f'if [[ "$*" == *"shell rm -rf {CAPTURES}" ]]; then\n'
+                         '  [[ "$CLEAR_EXIT" == 0 ]] && rm -rf fake-device-captures; exit "$CLEAR_EXIT"; fi\n'
+                         f'if [[ "$*" == *"shell if [ -d {CAPTURES} ]"* ]]; then\n'
+                         '  if [[ -n "$CHECK_FAILS" ]] && grep -qx connected-tests adb-calls.txt; then\n'
+                         '    echo "error: device offline" >&2; exit 1; fi\n'
+                         '  if [[ -d fake-device-captures ]]; then echo present; else echo absent; fi; exit; fi\n'
+                         f'if [[ "$*" == *" pull {CAPTURES} "* ]]; then\n'
+                         '  cp -R fake-device-captures "${@: -1}" || exit\n'
+                         '  exit "$PULL_EXIT"; fi\n')
         adb.chmod(0o755)
         gradle = root / "gradlew"
         gradle.write_text("#!/bin/bash\n[[ \"$*\" == *assembleDebug* ]] && exit 0\nprintf '%s\\n' \"$*\" > gradle-args.txt\nprintf '%s\\n' connected-tests >> adb-calls.txt\n"
                           "for ((i=0; i<100; i++)); do [[ -f logcat-ready ]] && break; sleep 0.01; done\n"
                           "if [[ -n \"${HANG:-}\" ]]; then touch connected-started; sleep 60; fi\n"
+                          "if [[ -d fake-saved-captures ]]; then mkdir -p fake-device-captures; cp -R fake-saved-captures/. fake-device-captures/; fi\n"
                           "if [[ -d fake-results ]]; then cp -R fake-results/. .; fi\n"
                           "cat fake-gradle-output.txt\nexit \"$GRADLE_EXIT\"\n")
         gradle.chmod(0o755)
         env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
                    GRADLE_EXIT=str(gradle_exit), LOGCAT_EXIT=str(logcat_exit),
-                   PULL_EXIT=str(pull_exit))
+                   PULL_EXIT=str(pull_exit), CLEAR_EXIT=str(clear_exit),
+                   CHECK_FAILS="1" if check_fails_after_tests else "")
         env.pop("ANDROID_SERIAL", None)
         if serial is not None:
             env["ANDROID_SERIAL"] = serial
@@ -176,7 +190,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                          + [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES[:2]]
                          + ["connected-tests"]
                          + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime",
-                            "-s emulator-5678 shell test -d /data/local/tmp/unipad_tests",
+                            CAPTURES_CLEAR, CAPTURES_CHECK, CAPTURES_CHECK,
                             "-s emulator-5678 logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I *:S"])
 
     def assert_rejected(self, root, result, *reasons, command=COMMAND):
@@ -206,29 +220,72 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                      "design_discovered=1", "verdict=pass"):
             self.assertIn(line + "\n", status)
 
+    def captures(self, root):
+        folder = root / ".ci-results/captures"
+        return {str(path.relative_to(folder)): path.read_text() for path in folder.rglob("*") if path.is_file()}
+
     def test_saved_screens_are_copied_into_this_runs_results(self):
         root, result = self.run_runner(captures={"basefeatures-captures/two-fingers.png": "png"},
                                        earlier={"captures/old.png": "earlier run"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        captures = root / ".ci-results/captures"
-        self.assertEqual((captures / "basefeatures-captures/two-fingers.png").read_text(), "png")
-        self.assertFalse((captures / "old.png").exists())
-        self.assertIn("-s emulator-5678 pull /data/local/tmp/unipad_tests .ci-results/captures",
+        self.assertEqual(self.captures(root), {"basefeatures-captures/two-fingers.png": "png"})
+        self.assertIn(f"-s emulator-5678 pull {CAPTURES} .ci-results/captures",
                       (root / "adb-calls.txt").read_text().splitlines())
+
+    def test_screens_left_on_the_device_by_an_earlier_run_are_not_taken_as_this_runs(self):
+        root, result = self.run_runner(captures={"basefeatures-captures/two-fingers.png": "png"},
+                                       left_on_device={"basefeatures-captures/five-fingers.png": "earlier run",
+                                                       "conformance-screen/pack.png": "earlier run"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.captures(root), {"basefeatures-captures/two-fingers.png": "png"})
+        calls = (root / "adb-calls.txt").read_text().splitlines()
+        self.assertLess(calls.index(CAPTURES_CLEAR), calls.index("connected-tests"))
+
+    def test_run_that_saved_no_screens_copies_none_and_replaces_the_earlier_copy_log(self):
+        root, result = self.run_runner(left_on_device={"basefeatures-captures/two-fingers.png": "earlier run"},
+                                       earlier={"captures/two-fingers.png": "earlier run",
+                                                "captures-pull.txt": "earlier pull error"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((root / ".ci-results/captures").exists())
+        self.assertEqual((root / ".ci-results/captures-pull.txt").read_text(),
+                         "No screens were saved on the device.\n")
+
+    def test_device_folder_that_cannot_be_cleared_stops_the_run_and_copies_nothing(self):
+        root, result = self.run_runner(clear_exit=1, captures={"two-fingers.png": "png"},
+                                       left_on_device={"five-fingers.png": "earlier run"})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f"Could not clear {CAPTURES} on the device", result.stderr)
+        self.assertFalse((root / "gradle-args.txt").exists())
+        self.assertFalse((root / ".ci-results/captures").exists())
+        self.assertNotIn(f"-s emulator-5678 pull {CAPTURES} .ci-results/captures",
+                         (root / "adb-calls.txt").read_text().splitlines())
+        self.assertIn("verdict=", self.status(root))
 
     def test_failed_screen_copy_is_reported_without_changing_the_verdict(self):
         root, result = self.run_runner(captures={"two-fingers.png": "png"}, pull_exit=1,
                                        earlier={"captures/old.png": "earlier run"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Could not copy /data/local/tmp/unipad_tests", result.stderr)
-        self.assertFalse((root / ".ci-results/captures").exists())
+        self.assertIn(f"Could not copy {CAPTURES}", result.stderr)
+        self.assertEqual(self.captures(root), {"two-fingers.png": "png"})
+        self.assertIn("verdict=pass", self.status(root))
+
+    def test_adb_failing_to_look_at_the_folder_is_reported_not_taken_as_no_screens(self):
+        root, result = self.run_runner(captures={"two-fingers.png": "png"}, check_fails_after_tests=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(f"Could not check {CAPTURES} on the device", result.stderr)
+        self.assertIn("error: device offline", (root / ".ci-results/captures-pull.txt").read_text())
         self.assertIn("verdict=pass", self.status(root))
 
     def test_failed_suite_still_copies_saved_screens(self):
         root, result = self.run_runner(captures={"missing-play.png": "png"},
                                        results={"app": [case(0), case(1, "failure")], "design": passed(1)})
         self.assertNotEqual(result.returncode, 0)
-        self.assertEqual((root / ".ci-results/captures/missing-play.png").read_text(), "png")
+        self.assertEqual(self.captures(root), {"missing-play.png": "png"})
+
+    def test_device_capture_folder_matches_the_capture_helper(self):
+        helper = (RUNNER.parents[1] / "app/src/androidTest/java/com/kimjisub/launchpad/TestCaptures.kt").read_text()
+        self.assertIn(f'const val DIRECTORY = "{CAPTURES}"', helper)
+        self.assertIn(f"\nCAPTURES_ON_DEVICE={CAPTURES}\n", RUNNER.read_text())
 
     def test_gradle_failure_is_not_hidden_by_tee(self):
         root, result = self.run_runner(gradle_exit=7)

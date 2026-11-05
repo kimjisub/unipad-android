@@ -112,10 +112,11 @@ which survives uninstalling both the target and test applications. `BaseUITest` 
 feature screens use `basefeatures-captures/`, readiness failures use
 `activity-readiness-captures/`, Store cancellation uses `store-cancel-captures/<prefix>/` and Store download progress uses
 `store-progress-captures/<prefix>/`.
-Clear this root before each run. `scripts/ci-connected-tests.sh` copies it to
-`<results>/captures/` when it ends, pass or fail; otherwise pull it with
-`adb -s <serial> pull /data/local/tmp/unipad_tests` after the complete run and before
-stopping the emulator. The capture helper stages files in app-writable external storage, copies
+`scripts/ci-connected-tests.sh` empties this root before the tests start (a run that cannot
+empty it stops) and copies it to `<results>/captures/` when it ends, pass or fail;
+`<results>/captures-pull.txt` says what was copied. Without that script, clear the root
+before each run and pull it with `adb -s <serial> pull /data/local/tmp/unipad_tests` after
+the complete run and before stopping the emulator. The capture helper stages files in app-writable external storage, copies
 them as shell and removes the staging file; it checks that each preserved file is nonempty
 and has the same byte count as its source. Android 11 keeps the app's external folder closed
 to the shell, so the helper opens that folder for traversal and the staged file for reading

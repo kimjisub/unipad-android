@@ -7,7 +7,8 @@ RESULTS="${CI_RESULTS_DIR:-.ci-results}"
 # Where TestCaptures keeps screenshots on the device (TestCaptures.DIRECTORY).
 CAPTURES_ON_DEVICE=/data/local/tmp/unipad_tests
 # Only the exit handler writes these, so a run that stops before it leaves none, not an earlier verdict.
-rm -f "$RESULTS"/ui-status.txt "$RESULTS"/ui-check.txt "$RESULTS"/logcat.txt
+rm -f "$RESULTS"/ui-status.txt "$RESULTS"/ui-check.txt "$RESULTS"/logcat.txt "$RESULTS"/captures-pull.txt
+rm -rf "$RESULTS"/captures
 # Use only the emulator named by ANDROID_SERIAL (a local one or the hosted runner's).
 : "${ANDROID_SERIAL:?Set ANDROID_SERIAL to the emulator serial from adb devices}"
 MODULES=(app design)
@@ -45,6 +46,30 @@ done
 SECONDS=0
 log_pid=""
 probe_installed=0
+captures_cleared=0
+# Prints present or absent; any other output means adb itself failed.
+captures_on_device() {
+  adb -s "$ANDROID_SERIAL" shell "if [ -d $CAPTURES_ON_DEVICE ]; then echo present; else echo absent; fi" 2>&1 \
+    | tr -d '\r' || true
+}
+# Copies the screens this run saved; never changes the verdict.
+copy_captures() {
+  local log="$RESULTS"/captures-pull.txt state
+  if [[ "$captures_cleared" -ne 1 ]]; then
+    echo "Not copied: the run stopped before the device folder was cleared." > "$log"
+    return
+  fi
+  state="$(captures_on_device)"
+  case "$state" in
+    absent) echo "No screens were saved on the device." > "$log" ;;
+    present)
+      adb -s "$ANDROID_SERIAL" pull "$CAPTURES_ON_DEVICE" "$RESULTS"/captures > "$log" 2>&1 \
+        || echo "Could not copy $CAPTURES_ON_DEVICE; see captures-pull.txt" >&2 ;;
+    *)
+      printf 'Could not check %s on the device:\n%s\n' "$CAPTURES_ON_DEVICE" "$state" > "$log"
+      echo "Could not check $CAPTURES_ON_DEVICE on the device; see captures-pull.txt" >&2 ;;
+  esac
+}
 remove_probe_packages() {
   local failed=0
   adb -s "$ANDROID_SERIAL" uninstall com.kimjisub.launchpad.dev > /dev/null || failed=1
@@ -64,12 +89,7 @@ finish() {
     wait "$log_pid" 2>/dev/null || true
   fi
   adb -s "$ANDROID_SERIAL" logcat -d -v threadtime > "$RESULTS"/logcat.txt 2>&1 || true
-  # Keep the screens the tests saved on the device with this run's results.
-  rm -rf "$RESULTS"/captures
-  if adb -s "$ANDROID_SERIAL" shell test -d "$CAPTURES_ON_DEVICE"; then
-    adb -s "$ANDROID_SERIAL" pull "$CAPTURES_ON_DEVICE" "$RESULTS"/captures > "$RESULTS"/captures-pull.txt 2>&1 \
-      || echo "Could not copy $CAPTURES_ON_DEVICE; see captures-pull.txt" >&2
-  fi
+  copy_captures
   # Gradle can succeed without installing the app, so the reports decide; a Gradle failure keeps its code.
   check=0
   python3 "$CHECKER" --gradle-output "$RESULTS"/gradle-ui.txt --test-starts "$RESULTS"/test-starts.txt ${SELECTION[@]+"${SELECTION[@]}"} "${MODULES[@]}" \
@@ -89,6 +109,13 @@ trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 device_settings prepare
+# Screens an earlier run left on the device must never be copied as this run's.
+adb -s "$ANDROID_SERIAL" shell rm -rf "$CAPTURES_ON_DEVICE" || true
+if [[ "$(captures_on_device)" != absent ]]; then
+  echo "Could not clear $CAPTURES_ON_DEVICE on the device" >&2
+  exit 1
+fi
+captures_cleared=1
 # A run stopped early leaves the apps installed with the permissions its tests gave them,
 # so every run starts from a device these apps are not installed on.
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test com.kimjisub.design.test; do
