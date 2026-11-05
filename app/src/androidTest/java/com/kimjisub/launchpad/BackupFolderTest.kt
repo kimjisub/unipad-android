@@ -247,9 +247,12 @@ class BackupFolderTest : BaseUITest() {
     private fun pickInFolderPicker(folder: String?) {
         assertTrue("Folder picker did not open", device.wait(Until.hasObject(By.pkg(DOCUMENTS_UI)), FILE_PICKER_TIMEOUT))
         if (folder != null) {
+            val folderEntry = By.pkg(DOCUMENTS_UI).text(folder)
             val contents = By.pkg(DOCUMENTS_UI).text(BACKED_UP_PACK)
+            // Only a loaded Documents list can show that the child is absent there.
+            assertTrue("Documents did not list $folder", device.wait(Until.hasObject(folderEntry), WAIT_MS))
             assertFalse("Backup contents must not be in the parent folder", device.hasObject(contents))
-            clickInPicker(By.pkg(DOCUMENTS_UI).text(folder))
+            clickInPicker(folderEntry)
             // Android 10 uses a toolbar title instead of breadcrumb_text. The known child,
             // absent in Documents above, proves the picker actually entered our folder.
             assertTrue(
