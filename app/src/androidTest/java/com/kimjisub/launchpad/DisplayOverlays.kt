@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad
 
+import android.os.Build
 import android.os.SystemClock
 import androidx.test.uiautomator.UiDevice
 import kotlin.math.roundToInt
@@ -11,9 +12,11 @@ import kotlin.math.roundToInt
  *
  * `cmd overlay` returns before the system has applied the change: on Android 13 the navigation bar
  * window takes one to three seconds to follow. Starting another overlay change or a rotation in that
- * time can leave the bar, and the windows laid out around it, in a mode no overlay asks for. So both
- * the change and the restore wait until the navigation bar has the mode and size the enabled
- * overlays define.
+ * time can leave the bar, and the windows laid out around it, in a mode no overlay asks for. So when
+ * a navigation overlay is switched, both the change and the restore wait until the navigation bar
+ * has the mode and size the enabled overlays define. That wait reads the overlays' values with
+ * `cmd overlay lookup` and the bar from `dumpsys window displays`, neither of which Android 10
+ * offers; switching only the cutout does not wait and runs on every version.
  */
 object DisplayOverlays {
     private const val NAVIGATION = "com.android.internal.systemui.navbar."
@@ -29,13 +32,14 @@ object DisplayOverlays {
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {
         val previous = overlays.map(::categoryOf).associateWith { enabledIn(device, it) }
+        val awaitApplied = { if (NAVIGATION in previous) awaitNavigationBar(device) }
         var failure: Throwable? = null
         try {
             overlays.forEach {
                 val result = device.executeShellCommand("cmd overlay enable-exclusive --category $it")
                 check(result.isBlank()) { "Could not enable $it: $result" }
             }
-            awaitNavigationBar(device)
+            awaitApplied()
             return block()
         } catch (t: Throwable) {
             failure = t
@@ -46,7 +50,7 @@ object DisplayOverlays {
                 else enabledIn(device, category)?.let { device.executeShellCommand("cmd overlay disable $it") }
             }
             try {
-                awaitNavigationBar(device)
+                awaitApplied()
             } catch (t: Throwable) {
                 failure?.addSuppressed(t) ?: throw t
             }
@@ -63,14 +67,14 @@ object DisplayOverlays {
         val heightDp = dip(lookup(device, "dimen/navigation_bar_height"))
         val landscapeHeightDp = dip(lookup(device, "dimen/navigation_bar_height_landscape"))
         val widthDp = dip(lookup(device, "dimen/navigation_bar_width"))
+        val scale = density(device) / 160f
+        val longestSide = displaySize(device).let { (w, h) -> maxOf(w, h) }
         var state = ""
         val deadline = SystemClock.elapsedRealtime() + APPLY_TIMEOUT_MS
         do {
             val reported = device.executeShellCommand("settings get secure navigation_mode").trim()
             val bar = NAVIGATION_BAR_SOURCE.find(device.executeShellCommand("dumpsys window displays"))
                 ?.destructured?.toList()?.map(String::toInt)
-            val scale = density(device) / 160f
-            val longestSide = displaySize(device).let { (w, h) -> maxOf(w, h) }
             state = "mode=$reported bar=$bar"
             if (reported == mode && bar != null) {
                 val (left, top, right, bottom) = bar
@@ -91,8 +95,13 @@ object DisplayOverlays {
         )
     }
 
-    private fun lookup(device: UiDevice, resource: String) =
-        device.executeShellCommand("cmd overlay lookup android android:$resource").trim()
+    private fun lookup(device: UiDevice, resource: String): String {
+        val value = device.executeShellCommand("cmd overlay lookup android android:$resource").trim()
+        check(value.isNotEmpty() && value.first().isDigit()) {
+            "Cannot read android:$resource for the navigation overlay wait (API ${Build.VERSION.SDK_INT}): $value"
+        }
+        return value
+    }
 
     private fun dip(value: String) = value.removeSuffix("dip").toFloat()
 

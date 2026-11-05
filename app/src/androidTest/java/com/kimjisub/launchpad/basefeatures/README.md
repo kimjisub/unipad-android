@@ -364,13 +364,18 @@ check them again afterwards.
 window follows one to three seconds later. When one test restored the previous navigation mode and
 the next enabled three-button navigation again within that time, with a forced rotation in between,
 Android 13 could keep the gesture bar under a three-button overlay, or leave the view at the display
-width while the system window had already been narrowed. Keeping the device's own three-button
-setting fixed and rotating the same way passed on Android 13 and 14, so this came from the test's
-own overlay switching, not from the app. `DisplayOverlays` therefore waits, after enabling and
-after restoring, until the reported navigation mode and the bar's thickness match what the
-enabled overlays define. `midiSelectRotatesAfterReopeningFromReverseLandscape` repeats that
-sequence ten times; `midiSelectRotatesWithExistingNavigationSettings` rotates the same screens
-ten times without changing any overlay.
+width while the system window had already been narrowed. With three-button navigation chosen once
+by hand in the device's Settings app, rotating the same screens without switching overlays passed
+on Android 13 and 14, so this came from the test's own overlay switching, not from the app.
+`DisplayOverlays` therefore waits, after enabling and after restoring a navigation overlay, until
+the reported navigation mode and the bar's thickness match what the enabled overlays define. It
+reads those with `cmd overlay lookup` and `dumpsys window displays`, which Android 10 lacks; the
+navigation overlays are only switched by API 33+ tests, and switching only the cutout (the play
+screen's window-change tests, which run on every version) does not wait.
+`midiSelectRotatesAfterReopeningFromReverseLandscape` repeats that sequence ten times;
+`midiSelectRotatesWithExistingNavigationSettings` rotates the same screens ten times without
+changing any overlay, in whatever navigation mode the device has (it prints `navigation_mode` and
+names it in failures). It covers a side bar only when that mode is three-button (`0`).
 Nodes refresh themselves through the public accessibility API; no synthetic
 accessibility events are sent. The reported visible window region must lie inside the view; it
 can be shorter than the whole window where a tablet taskbar covers it. The whole refreshed root
