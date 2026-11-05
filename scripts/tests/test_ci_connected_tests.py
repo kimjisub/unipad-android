@@ -60,12 +60,14 @@ class ConnectedTestRunnerTest(unittest.TestCase):
     def run_runner(self, gradle_exit=0, logcat_exit=0, serial="emulator-5678",
                    sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None,
                    probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n", earlier=None,
-                   kill_during_tests=False):
+                   kill_during_tests=False, captures=None, pull_exit=0):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
         `earlier` maps result file names to contents a previous run left behind. With
         `kill_during_tests` the connected tests hang and the runner is SIGKILLed; the exit code is returned.
+        `captures` maps file names to contents the device holds in its capture folder (none: no folder);
+        pulling them exits with `pull_exit`.
         """
         sources = {"app": 2, "design": 1} if sources is None else sources
         results = {"app": passed(2), "design": passed(1)} if results is None else results
@@ -93,7 +95,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         (root / "probe.txt").write_text(probe_output)
         for name, content in (earlier or {}).items():
             path = root / ".ci-results" / name
-            path.parent.mkdir(exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
         starts = [item for cases in results.values() for item in cases] if starts is None else starts
         (root / "fake-starts.txt").write_text("".join(
@@ -105,6 +107,15 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                        "if [[ \"$*\" == *'TestRunner:I'* ]]; then cat fake-starts.txt; touch logcat-ready; fi\n")
         with adb.open("a") as script:
             script.write('if [[ "$*" == *DeviceSettingsProbe* ]]; then cat probe.txt; fi\n')
+        if captures is not None:
+            for name, content in captures.items():
+                path = root / "fake-device-captures" / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+        with adb.open("a") as script:
+            script.write('if [[ "$*" == *"shell test -d /data/local/tmp/unipad_tests" ]]; then [[ -d fake-device-captures ]]; exit; fi\n'
+                         'if [[ "$*" == *" pull /data/local/tmp/unipad_tests "* ]]; then\n'
+                         '  [[ "$PULL_EXIT" == 0 ]] && cp -R fake-device-captures "${@: -1}"; exit "$PULL_EXIT"; fi\n')
         adb.chmod(0o755)
         gradle = root / "gradlew"
         gradle.write_text("#!/bin/bash\n[[ \"$*\" == *assembleDebug* ]] && exit 0\nprintf '%s\\n' \"$*\" > gradle-args.txt\nprintf '%s\\n' connected-tests >> adb-calls.txt\n"
@@ -114,7 +125,8 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                           "cat fake-gradle-output.txt\nexit \"$GRADLE_EXIT\"\n")
         gradle.chmod(0o755)
         env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
-                   GRADLE_EXIT=str(gradle_exit), LOGCAT_EXIT=str(logcat_exit))
+                   GRADLE_EXIT=str(gradle_exit), LOGCAT_EXIT=str(logcat_exit),
+                   PULL_EXIT=str(pull_exit))
         env.pop("ANDROID_SERIAL", None)
         if serial is not None:
             env["ANDROID_SERIAL"] = serial
@@ -164,6 +176,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                          + [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES[:2]]
                          + ["connected-tests"]
                          + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime",
+                            "-s emulator-5678 shell test -d /data/local/tmp/unipad_tests",
                             "-s emulator-5678 logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I *:S"])
 
     def assert_rejected(self, root, result, *reasons, command=COMMAND):
@@ -192,6 +205,30 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         for line in ("app_expected=2", "app_discovered=2", "design_expected=1",
                      "design_discovered=1", "verdict=pass"):
             self.assertIn(line + "\n", status)
+
+    def test_saved_screens_are_copied_into_this_runs_results(self):
+        root, result = self.run_runner(captures={"basefeatures-captures/two-fingers.png": "png"},
+                                       earlier={"captures/old.png": "earlier run"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        captures = root / ".ci-results/captures"
+        self.assertEqual((captures / "basefeatures-captures/two-fingers.png").read_text(), "png")
+        self.assertFalse((captures / "old.png").exists())
+        self.assertIn("-s emulator-5678 pull /data/local/tmp/unipad_tests .ci-results/captures",
+                      (root / "adb-calls.txt").read_text().splitlines())
+
+    def test_failed_screen_copy_is_reported_without_changing_the_verdict(self):
+        root, result = self.run_runner(captures={"two-fingers.png": "png"}, pull_exit=1,
+                                       earlier={"captures/old.png": "earlier run"})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Could not copy /data/local/tmp/unipad_tests", result.stderr)
+        self.assertFalse((root / ".ci-results/captures").exists())
+        self.assertIn("verdict=pass", self.status(root))
+
+    def test_failed_suite_still_copies_saved_screens(self):
+        root, result = self.run_runner(captures={"missing-play.png": "png"},
+                                       results={"app": [case(0), case(1, "failure")], "design": passed(1)})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual((root / ".ci-results/captures/missing-play.png").read_text(), "png")
 
     def test_gradle_failure_is_not_hidden_by_tee(self):
         root, result = self.run_runner(gradle_exit=7)

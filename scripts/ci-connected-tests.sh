@@ -4,6 +4,8 @@ set -euo pipefail
 # Usage: ci-connected-tests.sh [CLASS[#METHOD]...]
 # With no arguments every test of both modules runs; otherwise only the named classes or methods.
 RESULTS="${CI_RESULTS_DIR:-.ci-results}"
+# Where TestCaptures keeps screenshots on the device (TestCaptures.DIRECTORY).
+CAPTURES_ON_DEVICE=/data/local/tmp/unipad_tests
 # Only the exit handler writes these, so a run that stops before it leaves none, not an earlier verdict.
 rm -f "$RESULTS"/ui-status.txt "$RESULTS"/ui-check.txt "$RESULTS"/logcat.txt
 # Use only the emulator named by ANDROID_SERIAL (a local one or the hosted runner's).
@@ -62,6 +64,12 @@ finish() {
     wait "$log_pid" 2>/dev/null || true
   fi
   adb -s "$ANDROID_SERIAL" logcat -d -v threadtime > "$RESULTS"/logcat.txt 2>&1 || true
+  # Keep the screens the tests saved on the device with this run's results.
+  rm -rf "$RESULTS"/captures
+  if adb -s "$ANDROID_SERIAL" shell test -d "$CAPTURES_ON_DEVICE"; then
+    adb -s "$ANDROID_SERIAL" pull "$CAPTURES_ON_DEVICE" "$RESULTS"/captures > "$RESULTS"/captures-pull.txt 2>&1 \
+      || echo "Could not copy $CAPTURES_ON_DEVICE; see captures-pull.txt" >&2
+  fi
   # Gradle can succeed without installing the app, so the reports decide; a Gradle failure keeps its code.
   check=0
   python3 "$CHECKER" --gradle-output "$RESULTS"/gradle-ui.txt --test-starts "$RESULTS"/test-starts.txt ${SELECTION[@]+"${SELECTION[@]}"} "${MODULES[@]}" \

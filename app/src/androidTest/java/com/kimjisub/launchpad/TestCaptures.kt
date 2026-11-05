@@ -18,10 +18,14 @@ internal object TestCaptures {
             it.isNotEmpty() && it != "." && it != ".."
         }) { "Capture path must stay inside $DIRECTORY" }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val staging = File.createTempFile("ui-capture-", ".tmp", requireNotNull(context.getExternalFilesDir(null)))
+        val folder = requireNotNull(context.getExternalFilesDir(null))
+        // Android 11 closes the package folder to the shell, which then cannot see the staged file at all.
+        listOf(folder.parentFile, folder).forEach { it?.setExecutable(true, false) }
+        val staging = File.createTempFile("ui-capture-", ".tmp", folder)
         val target = File(DIRECTORY, relativePath)
         return try {
             if (!write(staging)) return false
+            staging.setReadable(true, false)
             // UiAutomation executes argument lists, so each command needs no shell quoting or operators.
             device.executeShellCommand("mkdir -p ${target.parent}")
             device.executeShellCommand("rm -f ${target.path}")
