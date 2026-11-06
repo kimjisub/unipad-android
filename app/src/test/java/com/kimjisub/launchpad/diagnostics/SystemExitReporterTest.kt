@@ -20,6 +20,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.IOException
 
 // All framework calls are mocked; these JVM tests do not run on an Android OS.
 @SuppressLint("NewApi")
@@ -112,6 +114,68 @@ class SystemExitReporterTest {
 		assertEquals("8", values["exit_background_ms"])
 		assertEquals(21L, checkpoint)
 		verify(exactly = 0) { history[0].traceInputStream }
+	}
+
+	@Test fun nativeCrashIsReportedFirstInItsOwnGroupWithTheCrashingThreadFrames() {
+		checkpoint = 10
+		val tombstone = protoMessage {
+			varint(6, 30)
+			bytes(10, protoMessage { varint(1, 11); string(2, "SIGSEGV"); varint(3, 2); string(4, "SEGV_ACCERR") })
+			string(14, "secret abort message")
+			bytes(16, protoMessage {
+				varint(1, 30)
+				bytes(2, protoMessage {
+					bytes(4, protoMessage {
+						varint(1, 0x2b4f10); string(4, "android::uirenderer::RenderNode::prepareTreeImpl")
+						varint(5, 120); string(6, "/system/lib64/libhwui.so"); string(8, "9f3c2a1b7d5e4c60")
+					})
+				})
+			})
+		}
+		val native = exit(5, 20)
+		every { native.traceInputStream } returns ByteArrayInputStream(tombstone)
+		history = listOf(exit(3, 21), native)
+		val errors = mutableListOf<Throwable>()
+		val keys = mutableListOf<CustomKeysAndValues>()
+		every { crashlytics.recordException(capture(errors), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context, sdkInt = 31)
+		assertEquals(listOf("NativeCrashExit", "LowMemoryExit"), errors.map { it.javaClass.simpleName })
+		val values = keys[0].values()
+		assertEquals("5", values["exit_reason"])
+		assertEquals("frames", values["native_trace"])
+		assertEquals("SIGSEGV(11) SEGV_ACCERR(2)", values["native_signal"])
+		assertEquals("#00 libhwui.so 0x2b4f10 (android::uirenderer::RenderNode::prepareTreeImpl+120)", values["native_frames"])
+		assertEquals("libhwui.so:9f3c2a1b7d5e4c60", values["native_build_ids"])
+		assertFalse(values.values.any { it.contains("secret") })
+		assertFalse("native_trace" in keys[1].values())
+		assertEquals(21L, checkpoint)
+	}
+
+	@Test fun nativeCrashOnAndroid11IsReportedWithoutReadingARecord() {
+		checkpoint = 10
+		history = listOf(exit(5, 20))
+		val keys = slot<CustomKeysAndValues>()
+		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context, sdkInt = 30)
+		assertEquals("none", keys.captured.values()["native_trace"])
+		assertEquals("", keys.captured.values()["native_frames"])
+		verify(exactly = 0) { history[0].traceInputStream }
+	}
+
+	@Test fun unreadableNativeCrashRecordStillReportsTheExit() {
+		checkpoint = 10
+		val failing = exit(5, 20)
+		every { failing.traceInputStream } throws IOException("gone")
+		val broken = exit(5, 21)
+		every { broken.traceInputStream } returns ByteArrayInputStream(byteArrayOf(0x0b))
+		val missing = exit(5, 22)
+		every { missing.traceInputStream } returns null
+		history = listOf(failing, broken, missing)
+		val keys = mutableListOf<CustomKeysAndValues>()
+		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context, sdkInt = 35)
+		assertEquals(listOf("none", "unreadable", "unreadable"), keys.map { it.values()["native_trace"] })
+		assertEquals(22L, checkpoint)
 	}
 
 	@Test fun backgroundExitCarriesTheScreenTheAppLeft() {

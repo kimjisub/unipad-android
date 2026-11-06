@@ -86,8 +86,25 @@ class SystemExitPolicyTest {
 		assertEquals(17L, batch.checkpoint)
 	}
 
-	@Test fun crashesAndRoutineExitsAreExcluded() {
-		for (reason in listOf(0, 1, 4, 5, 8, 10, 11, 12, 15, 16, 99)) {
+	@Test fun nativeCrashIsReportedInFrontAndInTheBackground() {
+		for (importance in listOf(100, 230, 400)) {
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(5, importance = importance), true))
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(5, importance = importance), false))
+		}
+	}
+
+	@Test fun nativeCrashesAnrsAndOtherExitsEachKeepTheirOwnAllowance() {
+		val natives = (21..27L).map { SystemExit(5, timestamp = it) }
+		val anrs = (1..7L).map { SystemExit(6, timestamp = it) }
+		val memory = (11..17L).map { SystemExit(3, timestamp = it) }
+		val batch = SystemExitPolicy.select(memory + natives + anrs, 0, 100, true)
+		// Native crashes come first: the newest errors of a session are kept, and these are the duplicates.
+		assertEquals(listOf(27L, 26, 25, 24, 23, 17, 16, 15, 14, 13, 7, 6, 5, 4, 3), batch.reports.map { it.timestamp })
+		assertEquals(27L, batch.checkpoint)
+	}
+
+	@Test fun javaCrashesAndRoutineExitsAreExcluded() {
+		for (reason in listOf(0, 1, 4, 8, 10, 11, 12, 15, 16, 99)) {
 			assertFalse("reason $reason", SystemExitPolicy.shouldReport(SystemExit(reason), false))
 		}
 	}

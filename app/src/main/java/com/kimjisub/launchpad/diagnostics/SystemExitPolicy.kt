@@ -20,6 +20,7 @@ internal object SystemExitPolicy {
 	// ApplicationExitInfo values, kept independent of Android for JVM tests.
 	const val SIGNALED = 2
 	const val LOW_MEMORY = 3
+	const val CRASH_NATIVE = 5
 	const val ANR = 6
 	const val INITIALIZATION_FAILURE = 7
 	const val EXCESSIVE_RESOURCE_USAGE = 9
@@ -44,7 +45,7 @@ internal object SystemExitPolicy {
 		SIGNALED -> !lmkSupported && exit.status == SIGKILL &&
 			exit.importance <= IMPORTANCE_PERCEPTIBLE
 		OTHER -> exit.description?.contains("MemoryLimiter") == true
-		ANR, INITIALIZATION_FAILURE, EXCESSIVE_RESOURCE_USAGE, FREEZER -> true
+		ANR, CRASH_NATIVE, INITIALIZATION_FAILURE, EXCESSIVE_RESOURCE_USAGE, FREEZER -> true
 		else -> false
 	}
 
@@ -80,11 +81,15 @@ internal object SystemExitPolicy {
 		// Establish a baseline on upgrade rather than reporting old exits retroactively.
 		if (lastProcessed == null) return SystemExitBatch(emptyList(), now)
 		val newer = history.filter { it.timestamp > lastProcessed }
-		// ANRs have their own allowance so that a run of them cannot crowd out memory exits, and vice versa.
-		val reports = newer.filter { shouldReport(it, lmkSupported) }.partition { it.reason == ANR }.toList()
+		// ANRs and native crashes each have their own allowance so that a run of them cannot crowd out other
+		// exits, and vice versa.
+		val reports = newer.filter { shouldReport(it, lmkSupported) }
+			.groupBy { if (it.reason == ANR || it.reason == CRASH_NATIVE) it.reason else null }.values
 			.flatMap { group -> group.sortedByDescending { it.timestamp }.take(MAX_REPORTS) }
+		// Crashlytics keeps only the newest errors recorded in a session (eight by default). Native crashes go first so that
+		// they are the ones dropped: Crashlytics has already reported each of them with its own native report.
 		return SystemExitBatch(
-			reports.sortedByDescending { it.timestamp },
+			reports.sortedWith(compareBy<SystemExit> { it.reason != CRASH_NATIVE }.thenByDescending { it.timestamp }),
 			newer.maxOfOrNull { it.timestamp } ?: lastProcessed,
 		)
 	}

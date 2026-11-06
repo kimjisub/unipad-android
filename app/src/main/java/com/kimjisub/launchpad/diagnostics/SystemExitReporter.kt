@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.diagnostics
 
 import android.app.ActivityManager
+import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -17,30 +18,49 @@ internal object SystemExitReporter {
 	private const val CHECKPOINT = "last_processed_timestamp"
 	private const val TAG = "SystemExitReporter"
 
-	/** Must run on an IO dispatcher: both the system history and checkpoint use disk. */
-	fun collect(context: Context) {
+	/** Must run on an IO dispatcher: the system history, native crash records and checkpoint use disk. */
+	fun collect(context: Context, sdkInt: Int = Build.VERSION.SDK_INT) {
 		val now = System.currentTimeMillis()
 		val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 		val lastProcessed = if (preferences.contains(CHECKPOINT))
 			preferences.getLong(CHECKPOINT, 0) else null
 		val manager = context.getSystemService(ActivityManager::class.java) ?: return
 		val lmkSupported = ActivityManager.isLowMemoryKillReportSupported()
-		val history = manager.getHistoricalProcessExitReasons(context.packageName, 0, 0).map {
+		val records = manager.getHistoricalProcessExitReasons(context.packageName, 0, 0)
+		val history = records.map {
 			SystemExit(it.reason, it.status, it.description, it.importance, it.timestamp, it.pss, it.rss, it.pid)
 		}
 		val batch = SystemExitPolicy.select(history, lastProcessed, now, lmkSupported)
 		val background = BackgroundScreenRecorder.read(preferences)
 		for (exit in batch.reports) {
-			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background))
+			val nativeTrace = if (exit.reason == SystemExitPolicy.CRASH_NATIVE)
+				nativeTrace(records[history.indexOfFirst { it === exit }], sdkInt) else null
+			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background), nativeTrace)
 			FirebaseCrashlytics.getInstance().recordException(exceptionFor(exit), keys)
-			Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}")
+			Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}" +
+				(nativeTrace?.let { " native=$it" } ?: ""))
 		}
 		preferences.edit(commit = true) {
 			putLong(CHECKPOINT, batch.checkpoint)
 		}
 	}
 
-	private fun keysFor(exit: SystemExit, lmkSupported: Boolean, background: BackgroundScreen?) = CustomKeysAndValues.Builder()
+	/** Android 12 and later attach the native crash's tombstone; reading it must never stop the report. */
+	private fun nativeTrace(record: ApplicationExitInfo, sdkInt: Int): NativeCrashTrace {
+		if (sdkInt < Build.VERSION_CODES.S) return NativeCrashTrace(NativeCrashTrace.NONE)
+		return try {
+			record.traceInputStream.use { TombstoneReader.summarize(it) }
+		} catch (e: Exception) {
+			NativeCrashTrace(NativeCrashTrace.UNREADABLE)
+		}
+	}
+
+	private fun keysFor(
+		exit: SystemExit,
+		lmkSupported: Boolean,
+		background: BackgroundScreen?,
+		nativeTrace: NativeCrashTrace?,
+	) = CustomKeysAndValues.Builder()
 		.putInt("exit_reason", exit.reason)
 		.putString("exit_description", SystemExitPolicy.description(exit))
 		.putInt("exit_status", exit.status)
@@ -57,6 +77,12 @@ internal object SystemExitReporter {
 				putBoolean("exit_pack_open", it.packOpen)
 				putLong("exit_background_ms", exit.timestamp - it.since)
 			}
+			nativeTrace?.let {
+				putString("native_trace", it.status)
+				putString("native_signal", it.signal)
+				putString("native_frames", it.frames)
+				putString("native_build_ids", it.buildIds)
+			}
 		}
 		.build()
 
@@ -64,6 +90,7 @@ internal object SystemExitReporter {
 	private fun exceptionFor(exit: SystemExit): Exception = when (exit.reason) {
 		SystemExitPolicy.LOW_MEMORY -> LowMemoryExit()
 		SystemExitPolicy.ANR -> AnrReasonExit()
+		SystemExitPolicy.CRASH_NATIVE -> NativeCrashExit()
 		SystemExitPolicy.SIGNALED -> KillSignalExit()
 		SystemExitPolicy.OTHER -> MemoryLimiterExit()
 		SystemExitPolicy.INITIALIZATION_FAILURE -> InitializationFailureExit()
@@ -81,6 +108,15 @@ internal object SystemExitReporter {
 	 */
 	@Keep
 	private class AnrReasonExit : Exception("Reason the system gave for an ANR (count ANRs from Crashlytics ANR reports, not this)")
+	/**
+	 * Crashlytics already reports the same crash with its own native report; count native crashes there. This
+	 * group only carries the crashing thread's frames as the system named them on the device (`native_frames`),
+	 * which that report lacks when it cannot name a system library's functions.
+	 */
+	@Keep
+	private class NativeCrashExit : Exception(
+		"Where the system saw a native crash (count native crashes from Crashlytics native reports, not this)"
+	)
 	@Keep
 	private class KillSignalExit : Exception("System sent SIGKILL on a device without low-memory reporting")
 	@Keep
