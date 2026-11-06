@@ -72,14 +72,12 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -149,6 +147,9 @@ import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.TraceLogText
+import com.kimjisub.launchpad.ui.compose.PressOverlayIconButton
+import com.kimjisub.launchpad.ui.compose.PressOverlayTextButton
+import com.kimjisub.launchpad.ui.compose.WithoutRipple
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
@@ -330,7 +331,7 @@ class PlayActivity : BaseActivity() {
 		}
 
 		setContent {
-			UniPadTheme {
+			PlayTheme {
 				BackHandler(enabled = true) {
 					if (vm.isOptionWindowVisible) {
 						vm.toggleOptionWindow(false)
@@ -345,13 +346,13 @@ class PlayActivity : BaseActivity() {
 						onDismissRequest = { autoPlayChangeDialog = null },
 						text = { Text(stringResource(if (restore) string.autoPlayRestoreConfirm else string.autoMappingConfirm)) },
 						confirmButton = {
-							TextButton(enabled = !vm.autoMappingActive, onClick = {
+							PressOverlayTextButton(enabled = !vm.autoMappingActive, onClick = {
 								autoPlayChangeDialog = null
 								if (restore) vm.restoreAutoPlay() else vm.autoMapping()
 							}) { Text(stringResource(if (restore) string.autoPlayRestoreApply else string.autoMappingApply)) }
 						},
 						dismissButton = {
-							TextButton(onClick = { autoPlayChangeDialog = null }) { Text(stringResource(string.cancel)) }
+							PressOverlayTextButton(onClick = { autoPlayChangeDialog = null }) { Text(stringResource(string.cancel)) }
 						},
 					)
 				}
@@ -363,7 +364,7 @@ class PlayActivity : BaseActivity() {
 						title = { Text(title) },
 						text = { Text(message) },
 						confirmButton = {
-							TextButton(onClick = {
+							PressOverlayTextButton(onClick = {
 								unipackErrorDialog = null
 								if (unipackErrorIsCritical) finish()
 							}) {
@@ -379,7 +380,7 @@ class PlayActivity : BaseActivity() {
 						title = { Text(stringResource(string.requireRestart)) },
 						text = { Text(stringResource(string.doYouWantToRestartApp)) },
 						confirmButton = {
-							TextButton(onClick = {
+							PressOverlayTextButton(onClick = {
 								showRestartDialog = false
 								restartApp(this@PlayActivity)
 							}) {
@@ -387,7 +388,7 @@ class PlayActivity : BaseActivity() {
 							}
 						},
 						dismissButton = {
-							TextButton(onClick = {
+							PressOverlayTextButton(onClick = {
 								showRestartDialog = false
 								finish()
 							}) {
@@ -432,6 +433,16 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/**
+	 * The ripple of the play screen's controls is a framework RippleDrawable, whose render thread
+	 * animations were the main thread side of graphics library crashes while playing; this screen
+	 * shows a flat press overlay instead, dialogs included.
+	 */
+	@Composable
+	private fun PlayTheme(content: @Composable () -> Unit) {
+		UniPadTheme { WithoutRipple(content) }
+	}
+
 	@Composable
 	private fun SoundLoadNotice() {
 		val report = vm.soundLoadReport ?: return
@@ -474,20 +485,20 @@ class PlayActivity : BaseActivity() {
 			confirmButton = {
 				Column(horizontalAlignment = Alignment.End) {
 					if (details) {
-						TextButton(onClick = vm::closeSoundLoadDetails) { Text(stringResource(string.audio_load_close)) }
+						PressOverlayTextButton(onClick = vm::closeSoundLoadDetails) { Text(stringResource(string.audio_load_close)) }
 					} else {
-						TextButton(onClick = { vm.soundLoadDetailsVisible = true }) { Text(stringResource(string.audio_load_details)) }
+						PressOverlayTextButton(onClick = { vm.soundLoadDetailsVisible = true }) { Text(stringResource(string.audio_load_details)) }
 						if (report.allFailed) {
-							TextButton(onClick = {
+							PressOverlayTextButton(onClick = {
 								// Release synchronously before a fresh activity starts its engine. Re-read the
 								// original pack so retry repeats selection rather than recycling reservations.
 								vm.prepareSoundRetry()
 								startActivity(intent)
 								finish()
 							}) { Text(stringResource(string.audio_load_retry)) }
-							TextButton(onClick = { finish() }) { Text(stringResource(string.audio_load_pack_list)) }
+							PressOverlayTextButton(onClick = { finish() }) { Text(stringResource(string.audio_load_pack_list)) }
 						} else {
-							TextButton(onClick = { vm.soundLoadNoticeVisible = false }) { Text(stringResource(string.audio_load_close)) }
+							PressOverlayTextButton(onClick = { vm.soundLoadNoticeVisible = false }) { Text(stringResource(string.audio_load_close)) }
 						}
 					}
 				}
@@ -851,7 +862,7 @@ class PlayActivity : BaseActivity() {
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
+			PressOverlayIconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					imageVector = Icons.Default.Menu,
 					contentDescription = stringResource(string.menu),
@@ -867,10 +878,10 @@ class PlayActivity : BaseActivity() {
 						.height(2.dp)
 						.background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(1.dp)),
 				)
-				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
+				PressOverlayIconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
-				IconButton(
+				PressOverlayIconButton(
 					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
 					modifier = Modifier.focusRing(CircleShape).size(40.dp),
 				) {
@@ -881,7 +892,7 @@ class PlayActivity : BaseActivity() {
 						modifier = Modifier.size(26.dp),
 					)
 				}
-				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
+				PressOverlayIconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				Box(
@@ -1058,7 +1069,7 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 		}
-		TextButton(onClick = { vm.scbTraceLog.onLongClick?.invoke() },
+		PressOverlayTextButton(onClick = { vm.scbTraceLog.onLongClick?.invoke() },
 			modifier = Modifier.padding(horizontal = 12.dp)) {
 			Text(stringResource(string.trace_clear_all), color = textColor)
 		}
