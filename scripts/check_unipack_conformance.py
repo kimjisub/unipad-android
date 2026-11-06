@@ -17,6 +17,25 @@ def same_json(left, right):
     return left == right
 
 
+# A case the host harness cannot observe may be observed on an Android device instead; each kind of
+# case has the one device recorder that can see it (merge_device_conformance.py adds the records).
+DEVICE_SOURCES = {
+    "sound-identity": "device-archive-decoder-runner",
+    "files": "device-internal-files",
+    "screen": "device-screen",
+}
+
+
+def device_kind(case, changed_names):
+    if case.get("soundIdentity", False):
+        return "sound-identity"
+    if case.get("screenInputs", False):
+        return "screen"
+    if case.get("requiresCaseSensitiveFiles", False) or changed_names:
+        return "files"
+    return None
+
+
 def check_report(corpus, report, corpus_hash):
     problems = []
     if report.get("platform") != "android":
@@ -60,6 +79,18 @@ def check_report(corpus, report, corpus_hash):
                                or result.get("operationAdapter") != case["observation"]))
                       or (case.get("requiresCaseSensitiveFiles", False)
                           and report.get("caseSensitiveFileSystem") is not True))
+        if result.get("observedOn") == "device":
+            kind = device_kind(case, changed_names)
+            if not restricted or kind is None:
+                problems.append(f"{case_id}: device observation replaces a host observation")
+                continue
+            if result.get("source") != DEVICE_SOURCES[kind]:
+                problems.append(f"{case_id}: device observation from {result.get('source')} cannot observe a {kind} case")
+                continue
+            restricted = False
+        elif "observedOn" in result:
+            problems.append(f"{case_id}: unknown observation place {result['observedOn']}")
+            continue
         if actual is None:
             if status != "unverified":
                 problems.append(f"{case_id}: missing observation cannot be {status}")
