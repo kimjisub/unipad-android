@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.audio
 
 import android.media.AudioFormat
+import android.media.MediaFormat
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -85,4 +86,52 @@ internal fun stereoPcm(pcm: ShortArray, channels: Int, channelMask: Int = 0, sam
             output[frame * 2 + 1] = r.roundToInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
         }
     }
+}
+
+/**
+ * Opus streams of three to eight channels (mapping family 1) carry the Vorbis speaker order
+ * (RFC 7845 section 5.1.1.2): left, center, right, ..., LFE last. Google's software decoders
+ * (Codec2 `c2.android.opus.decoder`, OMX `OMX.google.opus.decoder`) output that order unchanged.
+ * Any channel mask on their output is only copied from the container: Android 10's Ogg extractor
+ * declares Android's 5.1 mask for Vorbis-ordered PCM. A vendor decoder may already reorder to
+ * Android's layout, with or without a mask, so its output is left alone.
+ */
+internal fun decoderEmitsVorbisOrder(mime: String, decoderName: String, channels: Int): Boolean =
+    mime == MediaFormat.MIMETYPE_AUDIO_OPUS && channels in 3..8 &&
+        (decoderName.startsWith("c2.android.") || decoderName.startsWith("OMX.google."))
+
+private val vorbisSpeakers = run {
+    val fl = AudioFormat.CHANNEL_OUT_FRONT_LEFT
+    val fr = AudioFormat.CHANNEL_OUT_FRONT_RIGHT
+    val fc = AudioFormat.CHANNEL_OUT_FRONT_CENTER
+    val lfe = AudioFormat.CHANNEL_OUT_LOW_FREQUENCY
+    val bl = AudioFormat.CHANNEL_OUT_BACK_LEFT
+    val br = AudioFormat.CHANNEL_OUT_BACK_RIGHT
+    val bc = AudioFormat.CHANNEL_OUT_BACK_CENTER
+    val sl = AudioFormat.CHANNEL_OUT_SIDE_LEFT
+    val sr = AudioFormat.CHANNEL_OUT_SIDE_RIGHT
+    arrayOf(
+        intArrayOf(fl, fc, fr),
+        intArrayOf(fl, fr, bl, br),
+        intArrayOf(fl, fc, fr, bl, br),
+        intArrayOf(fl, fc, fr, bl, br, lfe),
+        intArrayOf(fl, fc, fr, sl, sr, bc, lfe),
+        intArrayOf(fl, fc, fr, sl, sr, bl, br, lfe),
+    )
+}
+
+/**
+ * Reorders Vorbis-order frames in place into ascending speaker-bit order, the order [stereoPcm]
+ * reads a channel mask in, and returns that mask.
+ */
+internal fun vorbisOrderToChannelMask(pcm: ShortArray, channels: Int, sampleCount: Int = pcm.size): Int {
+    require(channels in 3..8 && sampleCount in 0..pcm.size && sampleCount % channels == 0)
+    val speakers = vorbisSpeakers[channels - 3]
+    val source = speakers.indices.sortedBy { speakers[it] }
+    val frame = ShortArray(channels)
+    for (start in 0 until sampleCount step channels) {
+        pcm.copyInto(frame, 0, start, start + channels)
+        for (k in 0 until channels) pcm[start + k] = frame[source[k]]
+    }
+    return speakers.fold(0, Int::or)
 }

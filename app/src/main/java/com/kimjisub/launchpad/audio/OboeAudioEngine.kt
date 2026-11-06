@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.audio
 
 import android.media.MediaCodec
 import com.kimjisub.launchpad.tool.Log
-import android.media.MediaExtractor
 import android.media.MediaFormat
 import java.io.File
 import java.nio.ByteOrder
@@ -85,23 +84,10 @@ object OboeAudioEngine {
 	private fun decodeAudioFile(file: File, interrupted: () -> Boolean): DecodedAudio? {
 		// Opening the file is already a call into the media service.
 		if (interrupted()) throw DecodeInterruptedException()
-		val extractor = MediaExtractor()
+		var source: AudioPacketSource? = null
 		try {
-			extractor.setDataSource(file.absolutePath)
-
-			var trackIndex = -1
-			for (i in 0 until extractor.trackCount) {
-				val format = extractor.getTrackFormat(i)
-				val mime = format.getString(MediaFormat.KEY_MIME) ?: continue
-				if (mime.startsWith("audio/")) {
-					trackIndex = i
-					break
-				}
-			}
-			if (trackIndex < 0) return null
-
-			extractor.selectTrack(trackIndex)
-			val format = extractor.getTrackFormat(trackIndex)
+			source = openAudioPacketSource(file) ?: return null
+			val format = source.format
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
 			var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 			var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
@@ -137,15 +123,15 @@ object OboeAudioEngine {
 					val inputIndex = codec.dequeueInputBuffer(timeoutUs)
 					if (inputIndex >= 0) {
 						val inputBuffer = codec.getInputBuffer(inputIndex)!!
-						val bytesRead = extractor.readSampleData(inputBuffer, 0)
+						val bytesRead = source.readPacket(inputBuffer)
 						if (bytesRead < 0) {
 							codec.queueInputBuffer(inputIndex, 0, 0, 0,
 								MediaCodec.BUFFER_FLAG_END_OF_STREAM)
 							inputDone = true
 						} else {
 							codec.queueInputBuffer(inputIndex, 0, bytesRead,
-								extractor.sampleTime, 0)
-							extractor.advance()
+								source.packetTimeUs, 0)
+							source.advance()
 						}
 					}
 				}
@@ -198,7 +184,10 @@ object OboeAudioEngine {
 
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null
-			return DecodedAudio(stereoPcm(pcm, channels, decoderChannelMask(channels, channelMask), totalSamples),
+			val speakers = if (decoderEmitsVorbisOrder(mime, codec.name, channels)) {
+				vorbisOrderToChannelMask(pcm, channels, totalSamples)
+			} else decoderChannelMask(channels, channelMask)
+			return DecodedAudio(stereoPcm(pcm, channels, speakers, totalSamples),
 				numFrames, minOf(channels, 2), sampleRate)
 			} finally {
 				// Released on every path; a codec leaked per failed file exhausted the device's
@@ -211,7 +200,7 @@ object OboeAudioEngine {
 			Log.err("decode failed: ${file.name}", e)
 			return null
 		} finally {
-			extractor.release()
+			source?.close()
 		}
 	}
 
