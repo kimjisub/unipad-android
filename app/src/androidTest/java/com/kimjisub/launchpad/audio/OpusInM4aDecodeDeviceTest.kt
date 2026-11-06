@@ -1,16 +1,19 @@
 package com.kimjisub.launchpad.audio
 
 import android.media.MediaExtractor
+import android.os.Build
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import java.io.File
+import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -42,6 +45,25 @@ class OpusInM4aDecodeDeviceTest {
         assertEquals("5.1 must reach the stereo mixer as stereo", 2, decoded.channels)
         assertTone("5.1 left", decoded, side = 0, peak = MONO_PEAK * sqrt(0.5))
         assertTone("5.1 right", decoded, side = 1, peak = MONO_PEAK * sqrt(0.5))
+    }
+
+    /**
+     * Every Opus packet replaced by bytes no decoder accepts (a code 3 header claiming 63 frames).
+     * Android 9 and earlier never reach a decoder because the MP4 inspection rejects the packets;
+     * later versions hand them to the decoder. Either way only this sound may be lost.
+     */
+    @Test
+    fun brokenOpusPacketsInM4aDropOnlyThatSound() {
+        val name = "libopus-48000-6.m4a"
+        val bytes = instrumentation.context.assets.open("audio-safety/$name").use { it.readBytes() }
+        // The fixture's only mdat box starts at byte 36; its packets follow the 8-byte header.
+        assertEquals("mdat", String(bytes, 40, 4, Charsets.US_ASCII))
+        val mdatEnd = 36 + ByteBuffer.wrap(bytes, 36, 4).int
+        bytes.fill(0xff.toByte(), 44, mdatEnd)
+        val file = File(dir.root, "broken-$name").apply { writeBytes(bytes) }
+        val decoded = OboeAudioEngine.decodeOnly(file)
+        Log.i(TAG, "broken $name decoded=${decoded?.let { "${it.numFrames} frames" }} on API ${Build.VERSION.SDK_INT}")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) assertNull("$name must be dropped, not decoded", decoded)
     }
 
     private fun decode(name: String): OboeAudioEngine.DecodedAudio {
