@@ -62,6 +62,7 @@ class SoundRunnerMissingEngineTest {
 		runner.pauseStream()
 		runner.resumeStream()
 		runner.destroy()
+		assertTrue(runner.awaitStreamThread())
 
 		assertEquals("Nothing may call the engine after it failed to load", emptyList<String>(), engine.touches.drop(touchesAfterFailure))
 	}
@@ -95,6 +96,7 @@ class SoundRunnerMissingEngineTest {
 		}
 		loading.awaitFailure()
 		runner.destroy()
+		assertTrue(runner.awaitStreamThread())
 
 		assertEquals("Only the loader's start may touch the engine", listOf("start"), engine.touches)
 	}

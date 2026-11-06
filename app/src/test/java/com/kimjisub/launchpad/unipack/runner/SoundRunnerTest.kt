@@ -78,12 +78,25 @@ class SoundRunnerTest {
 		var streamOpen = false
 			private set
 
+		/** While closed, opening the output waits for it, as a slow audio device does. */
+		@Volatile
+		var startGate: CountDownLatch? = null
+		@Volatile
+		var startEntered = CountDownLatch(1)
+
+		/** Output opens, closes and full releases in the order they ran. */
+		val streamEvents = CopyOnWriteArrayList<String>()
+
 		override fun inspect(file: File) = AudioInspection.Readable(AudioFileFacts(44_100, 1, 1))
 		override fun start(): Boolean {
+			startEntered.countDown()
+			startGate?.await(30, TimeUnit.SECONDS)
+			streamEvents.add("start")
 			streamOpen = true
 			return true
 		}
 		override fun stop() {
+			streamEvents.add("stop")
 			streamOpen = false
 		}
 
@@ -137,6 +150,7 @@ class SoundRunnerTest {
 		}
 
 		override fun unloadAll() {
+			streamEvents.add("unloadAll")
 			synchronized(lock) { liveIds.clear() }
 		}
 
@@ -233,6 +247,7 @@ class SoundRunnerTest {
 
 		val loadsBeforeDestroy = engine.loadCalls.get()
 		runner.destroy()
+		assertTrue(runner.awaitStreamThread())
 		assertTrue("sounds left in the engine: ${engine.liveIds}", engine.liveIds.isEmpty())
 		assertTrue(unipack.sounds().all { it.id == Sound.NOT_LOADED })
 		awaitDecodesDrained(engine)
@@ -335,6 +350,7 @@ class SoundRunnerTest {
 		val loadsAtDestroy = engine.loadCalls.get()
 		engine.decodeGate!!.countDown()
 		awaitDecodesDrained(engine)
+		assertTrue(runner.awaitStreamThread())
 
 		assertEquals("files were loaded after destroy()", loadsAtDestroy, engine.loadCalls.get())
 		assertTrue("sounds left in the engine: ${engine.liveIds}", engine.liveIds.isEmpty())
@@ -423,6 +439,7 @@ class SoundRunnerTest {
 		first.destroy()
 		engine.decodeGate!!.countDown()
 		awaitDecodesDrained(engine)
+		assertTrue(first.awaitStreamThread())
 		assertTrue(engine.liveIds.isEmpty())
 
 		engine.decodeGate = null
@@ -435,6 +452,7 @@ class SoundRunnerTest {
 		assertNotEquals(0, engine.loadCalls.get())
 
 		second.destroy()
+		assertTrue(second.awaitStreamThread())
 		assertTrue(engine.liveIds.isEmpty())
 		assertFalse(unipack.sounds().any { it.id >= 0 })
 	}
@@ -464,6 +482,7 @@ class SoundRunnerTest {
         assertEquals(listOf(SoundRunner.FailureReason.MEMORY), listener.report!!.failures.map { it.reason })
         assertTrue(uncaught.isEmpty())
         runner.destroy()
+        assertTrue(runner.awaitStreamThread())
         assertTrue(engine.liveIds.isEmpty())
         assertTrue(unipack.sounds().all { it.id == Sound.NOT_LOADED })
     }
@@ -478,6 +497,7 @@ class SoundRunnerTest {
 		assertTrue("failure was not reported; escaped the load job instead: $uncaught", reported)
 		awaitLoadJobsFinished()
 		first.destroy()
+		assertTrue(first.awaitStreamThread())
 		assertTrue(failing.liveIds.isEmpty())
 
 		val engine = FakeEngine()
@@ -489,6 +509,7 @@ class SoundRunnerTest {
 		assertEquals(20, engine.liveIds.size)
 		assertTrue(unipack.sounds().all { it.id >= 0 })
 		second.destroy()
+		assertTrue(second.awaitStreamThread())
 		assertTrue(engine.liveIds.isEmpty())
 		awaitLoadJobsFinished()
 		assertTrue("failure escaped the load job: $uncaught", uncaught.isEmpty())
@@ -505,10 +526,12 @@ class SoundRunnerTest {
 		val ids = unipack.sounds().map { it.id }
 
 		runner.pauseStream()
+		assertTrue(runner.awaitStreamThread())
 		assertFalse("stream left open while the screen is hidden", engine.streamOpen)
 		assertEquals(10, engine.liveIds.size)
 
 		runner.resumeStream()
+		assertTrue(runner.awaitStreamThread())
 		assertTrue("stream did not reopen when the screen came back", engine.streamOpen)
 		assertEquals("sounds were reloaded on return", 10, engine.loadCalls.get())
 		assertEquals(ids, unipack.sounds().map { it.id })
@@ -527,11 +550,13 @@ class SoundRunnerTest {
 		awaitDecodesDrained(engine)
 
 		Thread.sleep(200)
+		assertTrue(runner.awaitStreamThread())
 		assertFalse("stream opened while the screen was hidden", engine.streamOpen)
 		assertEquals("the whole pack loaded while the screen was hidden", 1L, listener.ended.count)
 
 		runner.resumeStream()
 		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		assertTrue(runner.awaitStreamThread())
 		assertTrue(engine.streamOpen)
 		assertTrue(unipack.sounds().all { it.id >= 0 })
 		runner.destroy()
@@ -548,6 +573,143 @@ class SoundRunnerTest {
 		runner.pauseStream()
 		runner.destroy()
 		runner.resumeStream()
+		assertTrue(runner.awaitStreamThread())
 		assertFalse("a destroyed runner reopened the stream", engine.streamOpen)
+	}
+
+	/**
+	 * Runs [call] on its own thread, as the screen would, while the engine is still opening the output.
+	 * It must finish without that open ending: the gate is opened only after the verdict. The verdict is
+	 * the thread's state, not how long it took; the join limit only stops a blocked call from hanging the run.
+	 */
+	private fun assertReturnsWhileOutputOpens(engine: FakeEngine, call: () -> Unit) {
+		val gate = engine.startGate!!
+		val eventsBefore = engine.streamEvents.toList()
+		val screen = Thread(call, "screen")
+		screen.start()
+		screen.join(10_000)
+		val state = screen.state
+		val stack = screen.stackTrace.joinToString("\n\t")
+		val stillOpening = engine.streamEvents == eventsBefore
+		gate.countDown()
+		screen.join(10_000)
+		assertTrue("the output open ended before the verdict", stillOpening)
+		assertEquals("the screen waited for the output to open:\n\t$stack", Thread.State.TERMINATED, state)
+	}
+
+	private fun slowOpeningEngine() = FakeEngine().apply {
+		startGate = CountDownLatch(1)
+		startEntered = CountDownLatch(1)
+	}
+
+	@Test
+	fun hiddenWhileOutputOpens_returnsAtOnceAndEndsClosed() {
+		val unipack = pack(fileCount = 3)
+		val engine = slowOpeningEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue("the output never started opening", engine.startEntered.await(10, TimeUnit.SECONDS))
+
+		assertReturnsWhileOutputOpens(engine) { runner.pauseStream() }
+
+		assertTrue(runner.awaitStreamThread())
+		assertFalse("stream left open while the screen is hidden", engine.streamOpen)
+		assertEquals(listOf("start", "stop"), engine.streamEvents)
+
+		runner.resumeStream()
+		assertTrue("loading must finish after the screen returns", listener.ended.await(10, TimeUnit.SECONDS))
+		assertTrue(runner.awaitStreamThread())
+		assertTrue("stream did not reopen when the screen came back", engine.streamOpen)
+		assertTrue(unipack.sounds().all { it.id >= 0 })
+		runner.destroy()
+	}
+
+	@Test
+	fun leftWhileOutputOpens_returnsAtOnceAndReleasesEverything() {
+		val unipack = pack(fileCount = 3)
+		val engine = slowOpeningEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue("the output never started opening", engine.startEntered.await(10, TimeUnit.SECONDS))
+
+		assertReturnsWhileOutputOpens(engine) { runner.destroy() }
+
+		assertTrue(runner.awaitStreamThread())
+		awaitLoadJobsFinished()
+		assertFalse("a closed screen left the stream open", engine.streamOpen)
+		assertEquals(listOf("start", "unloadAll", "stop"), engine.streamEvents)
+		assertEquals("files were loaded after leaving", 0, engine.loadCalls.get())
+		assertTrue(engine.liveIds.isEmpty())
+		assertEquals(0, listener.failureCount.get())
+		assertTrue(uncaught.isEmpty())
+
+		runner.resumeStream()
+		assertTrue(runner.awaitStreamThread())
+		assertFalse("a destroyed runner reopened the stream", engine.streamOpen)
+	}
+
+	@Test
+	fun retryWhileOutputOpens_releasesTheFirstLoadBeforeTheSecondOpens() {
+		val unipack = pack(fileCount = 5)
+		val engine = slowOpeningEngine()
+		val first = SoundRunner(unipack, ChainObserver(), RecordingListener(), scope, engine)
+		assertTrue("the output never started opening", engine.startEntered.await(10, TimeUnit.SECONDS))
+
+		assertReturnsWhileOutputOpens(engine) { first.destroy() }
+		val listener = RecordingListener(engine)
+		val second = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+
+		assertTrue("the retried load did not finish", listener.ended.await(10, TimeUnit.SECONDS))
+		assertTrue(second.awaitStreamThread())
+		assertEquals(
+			"the first load's release must run before the retry opens the output",
+			listOf("start", "unloadAll", "stop", "start"),
+			engine.streamEvents,
+		)
+		assertTrue(engine.streamOpen)
+		assertEquals(5, engine.liveIds.size)
+		assertTrue(unipack.sounds().all { it.id >= 0 })
+		second.destroy()
+	}
+
+	@Test
+	fun returnWhileOutputReopens_returnsAtOnceAndEndsOpen() {
+		val unipack = pack(fileCount = 3)
+		val engine = FakeEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(listener.ended.await(10, TimeUnit.SECONDS))
+		runner.pauseStream()
+		assertTrue(runner.awaitStreamThread())
+		assertFalse(engine.streamOpen)
+		engine.startEntered = CountDownLatch(1)
+		engine.startGate = CountDownLatch(1)
+
+		assertReturnsWhileOutputOpens(engine) { runner.resumeStream() }
+
+		assertTrue(runner.awaitStreamThread())
+		assertTrue("stream did not reopen when the screen came back", engine.streamOpen)
+		assertEquals(listOf("start", "stop", "start"), engine.streamEvents)
+		runner.destroy()
+	}
+
+	@Test
+	fun hiddenAndBackWhileOutputOpens_endsOpenWithoutAnotherOpen() {
+		val unipack = pack(fileCount = 3)
+		val engine = slowOpeningEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue("the output never started opening", engine.startEntered.await(10, TimeUnit.SECONDS))
+
+		assertReturnsWhileOutputOpens(engine) {
+			runner.pauseStream()
+			runner.resumeStream()
+		}
+
+		assertTrue(listener.ended.await(10, TimeUnit.SECONDS))
+		assertTrue(runner.awaitStreamThread())
+		assertTrue(engine.streamOpen)
+		assertEquals("only the latest request is applied", listOf("start"), engine.streamEvents)
+		runner.destroy()
 	}
 }
