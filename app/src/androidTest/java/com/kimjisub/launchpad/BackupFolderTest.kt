@@ -15,7 +15,11 @@ import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.TransferActivity
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.tool.SafMigrationHelper
+import kotlinx.coroutines.runBlocking
+import net.lingala.zip4j.ZipFile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,6 +29,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
 import java.util.regex.Pattern
 
 /**
@@ -155,6 +161,73 @@ class BackupFolderTest : BaseUITest() {
             takeScreenshot("backup_restore_connected")
         }
     }
+
+    /**
+     * Moves into Documents/Unipad through the system documents provider: each backup ends up under
+     * exactly the pack's name and its source is removed, what a killed export left is neither
+     * listed nor kept, and a backup the provider has to save under another name keeps its source.
+     */
+    @Test
+    fun movesIntoTheConnectedFolderTakeThePackName() {
+        device.executeShellCommand("mkdir -p $BACKUP_DIR/$KILLED_EXPORT")
+        device.executeShellCommand("touch $BACKUP_DIR/$KILLED_EXPORT/info $BACKUP_DIR/.someone-else $BACKUP_DIR/$CLASHING_PACK")
+        ActivityScenario.launch<TransferActivity>(restoreIntent()).use {
+            clickWhenShown(device.wait(Until.findObject(grantAccessButton()), WAIT_MS))
+            pickInFolderPicker(BACKUP_FOLDER_NAME)
+            assertNotNull("Backed-up pack is not listed", device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(BACKED_UP_PACK)), WAIT_MS))
+            assertFalse("A killed export is listed for restore", device.hasObject(By.pkg(PACKAGE_NAME).textStartsWith(".unipad-partial-")))
+        }
+        val folder = requireNotNull(DocumentFile.fromTreeUri(context, prefs.backupSafUri!!.toUri()))
+        val workspace = File(context.getExternalFilesDir(null), "backup-provider-${UUID.randomUUID()}").apply { check(mkdir()) }
+        try {
+            val helper = SafMigrationHelper(context)
+            fun pack(name: String) = File(workspace, name).apply {
+                check(mkdirs())
+                File(this, "info").writeText("title=$name")
+                File(this, "sounds").mkdir()
+                File(this, "sounds/a.wav").writeText("sound of $name")
+            }
+            val folderPack = pack("zz_provider_folder")
+            val folderResult = runBlocking { helper.transferFileToSaf(listOf(folderPack), folder, true) { _, _, _ -> } }
+            val zipPack = pack("zz_provider_zip")
+            val zipResult = runBlocking { helper.transferFileToSafZip(listOf(zipPack), folder, true) { _, _, _ -> } }
+            val clashingPack = pack(CLASHING_PACK)
+            val clashResult = runBlocking { helper.transferFileToSaf(listOf(clashingPack), folder, true) { _, _, _ -> } }
+            val names = folder.listFiles().mapNotNull { it.name }.sorted()
+            println("Provider backups api=${Build.VERSION.SDK_INT} folder=$folderResult zip=$zipResult clash=$clashResult names=$names")
+
+            assertEquals(SafMigrationHelper.TransferResult(1, 1, 0, 0, emptyList<String>()), folderResult)
+            assertFalse("Folder move kept its source", folderPack.exists())
+            val folderBackup = requireNotNull(folder.findFile("zz_provider_folder"))
+            assertEquals("title=zz_provider_folder", readText(requireNotNull(folderBackup.findFile("info"))))
+            assertEquals("sound of zz_provider_folder", readText(requireNotNull(folderBackup.findFile("sounds")?.findFile("a.wav"))))
+
+            assertEquals(SafMigrationHelper.TransferResult(1, 1, 0, 0, emptyList<String>()), zipResult)
+            assertFalse("ZIP move kept its source", zipPack.exists())
+            val archive = File(context.cacheDir, "provider-backup.zip")
+            try {
+                context.contentResolver.openInputStream(requireNotNull(folder.findFile("zz_provider_zip.zip")).uri)!!
+                    .use { input -> archive.outputStream().use { input.copyTo(it) } }
+                ZipFile(archive).use { zip ->
+                    assertEquals("sound of zz_provider_zip", zip.getInputStream(zip.getFileHeader("zz_provider_zip/sounds/a.wav")).bufferedReader().use { it.readText() })
+                }
+            } finally {
+                archive.delete()
+            }
+
+            assertEquals(1, clashResult.failed)
+            assertEquals("title=$CLASHING_PACK", File(clashingPack, "info").readText())
+            assertEquals("sound of $CLASHING_PACK", File(clashingPack, "sounds/a.wav").readText())
+
+            assertTrue("Someone else's file was removed", ".someone-else" in names)
+            assertEquals("Partial entries are left: $names", emptyList<String>(), names.filter { it.startsWith(".unipad-partial-") })
+        } finally {
+            FileManager.deleteDirectory(workspace)
+        }
+    }
+
+    private fun readText(document: DocumentFile): String =
+        context.contentResolver.openInputStream(document.uri)!!.bufferedReader().use { it.readText() }
 
     @Test
     fun settingsWithoutFolderPickerReportsIt() = withoutFolderPicker {
@@ -350,6 +423,8 @@ class BackupFolderTest : BaseUITest() {
         const val BACKUP_FOLDER_NAME = "Unipad"
         const val BACKUP_DIR = "/sdcard/Documents/$BACKUP_FOLDER_NAME"
         const val BACKED_UP_PACK = "zz_backup_folder_pack"
+        const val CLASHING_PACK = "zz_provider_clash"
+        const val KILLED_EXPORT = ".unipad-partial-00000000-0000-0000-0000-000000000000"
         const val UNIPAD_TREE = "content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FUnipad"
         const val PERMISSION_FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         val DOCUMENTS_UI: Pattern = Pattern.compile(".*documentsui")
