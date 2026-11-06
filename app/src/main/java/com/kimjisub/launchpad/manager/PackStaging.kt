@@ -13,8 +13,9 @@ import java.util.UUID
  * A pack being installed or moved is built in a folder of its own under the workspace's staging
  * folder and renamed under its final name only once complete. The app can be killed at any moment;
  * a half-built pack then stays in the staging folder, which is never listed as a pack, instead of
- * showing up with missing sounds. The staging folder sits on the same storage as the packs, so the
- * final rename moves nothing.
+ * showing up with missing sounds. A pack being deleted goes the other way ([delete]). The staging
+ * folder sits on the same storage as the packs, so these renames move nothing. Temporary files that
+ * must not outlive a kill use the same folder in the app's cache.
  *
  * Only this object creates folders under the staging folder, so clearing it on the next start
  * ([setAsideLeftovers]) never touches a folder the person put in the workspace.
@@ -56,6 +57,21 @@ object PackStaging {
 			if (folder.mkdir()) return folder
 		}
 		throw IOException("Could not create a staging folder in ${workspace.path}")
+	}
+
+	/**
+	 * Deletes [pack] by first renaming it into its workspace's staging folder, so it leaves the pack
+	 * list in one step instead of showing up half-deleted. A kill during deletion leaves it there for
+	 * the next start's cleanup. Throws without touching [pack] when the rename fails.
+	 */
+	suspend fun delete(pack: File) {
+		val workspace = pack.absoluteFile.parentFile ?: throw IOException("${pack.path} has no parent folder")
+		val holder = create(workspace)
+		try {
+			if (!pack.renameTo(File(holder, pack.name))) throw IOException("Could not set ${pack.path} aside for deletion")
+		} finally {
+			discard(holder)
+		}
 	}
 
 	/** Deletes [staged] if it was not renamed into place, and the staging folder once no job uses it. */

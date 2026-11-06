@@ -364,6 +364,7 @@ class TransferActivity : AppCompatActivity() {
 		treeDoc.listFiles().forEach { doc ->
 			val name = doc.name ?: return@forEach
 			when {
+				SafMigrationHelper.isPartialBackup(name) -> Unit
 				doc.isDirectory -> items.add(TransferItem(name = name, documentFile = doc))
 				name.endsWith(".zip", ignoreCase = true) ->
 					items.add(TransferItem(name = name.removeSuffix(".zip"), documentFile = doc, isZip = true))
