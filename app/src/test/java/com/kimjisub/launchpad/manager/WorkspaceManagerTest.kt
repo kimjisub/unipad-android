@@ -200,6 +200,31 @@ class WorkspaceManagerTest {
 	}
 
 	@Test
+	fun setAsideStagingLeftovers_coversInternalStorageOnceItsLastPackIsGone() {
+		val manager = managerWithExternalDirs()
+		writePack(appWorkspace())
+		File(appWorkspace(), ".unipad-staging/kept/sounds").mkdirs()
+		// A kill while the internal folder's last pack was being deleted: it now holds no pack.
+		File(internalWorkspace(), ".unipad-staging/deleting/sounds").mkdirs()
+		File(internalWorkspace(), ".unipad-staging/deleting/sounds/a.wav").writeText("left by a kill")
+
+		assertTrue(manager.availableWorkspaces.none { it.file == internalWorkspace() })
+		val leftovers = manager.setAsideStagingLeftovers()
+
+		assertEquals(setOf(appWorkspace(), internalWorkspace()), leftovers.map { it.parentFile }.toSet())
+		assertTrue(leftovers.single { it.parentFile == internalWorkspace() }.resolve("deleting/sounds/a.wav").isFile)
+		assertFalse(File(internalWorkspace(), ".unipad-staging").exists())
+	}
+
+	@Test
+	fun setAsideStagingLeftovers_withoutInternalFolderFindsNothingThere() {
+		val manager = managerWithExternalDirs()
+
+		assertEquals(emptyList<File>(), manager.setAsideStagingLeftovers())
+		assertFalse("Cleanup created the internal folder", internalWorkspace().exists())
+	}
+
+	@Test
 	fun availableWorkspaces_includesExternalSdCards() {
 		val sdCardDir = File(tempDir, "sdcard")
 		sdCardDir.mkdirs()

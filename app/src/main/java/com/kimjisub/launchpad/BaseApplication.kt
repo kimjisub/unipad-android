@@ -84,13 +84,19 @@ class BaseApplication : Application() {
 		PackStaging.startCleanup(
 			scope = ioScope,
 			setAside = {
-				try {
-					val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
-					workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) } + SafMigrationHelper.setAsideTempArchives(cacheDir)
+				val packs = try {
+					GlobalContext.get().get<WorkspaceManager>().setAsideStagingLeftovers()
 				} catch (e: Exception) {
 					Log.err("Pack staging cleanup failed", e)
 					emptyList()
 				}
+				val archives = try {
+					SafMigrationHelper.setAsideTempArchives(cacheDir)
+				} catch (e: Exception) {
+					Log.err("Temporary archive cleanup failed", e)
+					emptyList()
+				}
+				packs + archives
 			},
 			deleteLeftovers = { leftovers ->
 				try {

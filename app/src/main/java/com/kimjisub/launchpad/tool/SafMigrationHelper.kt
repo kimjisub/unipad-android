@@ -41,9 +41,6 @@ class SafMigrationHelper(
 		val errors: List<String>,
 	)
 
-	fun getSubfolders(treeRoot: DocumentFile): List<DocumentFile> =
-		treeRoot.listFiles().filter { it.isDirectory }
-
 	suspend fun transferSafToFile(
 		folders: List<DocumentFile>,
 		targetDir: File,
@@ -363,6 +360,14 @@ class SafMigrationHelper(
 
 		/** An export that has not finished; never a pack to restore. */
 		fun isPartialBackup(name: String?): Boolean = name?.startsWith(PARTIAL_PREFIX) == true
+
+		/** A pack in a backup folder: a folder or a `.zip` archive, and never an export that has not finished. */
+		fun isBackupPack(name: String?, isDirectory: Boolean): Boolean =
+			name != null && !isPartialBackup(name) && (isDirectory || name.endsWith(".zip", ignoreCase = true))
+
+		/** The packs [folder] holds, as the restore list shows and Settings counts them. */
+		fun backupPacks(folder: DocumentFile): List<DocumentFile> =
+			folder.listFiles().filter { isBackupPack(it.name, it.isDirectory) }
 
 		/**
 		 * Startup cleanup for [cacheDir]: sets aside temporary archives killed transfers left (see
