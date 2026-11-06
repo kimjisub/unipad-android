@@ -27,35 +27,48 @@ class MultichannelDecodeDeviceTest {
 
     @Test fun surroundWavBecomesStereoWithoutChangingFrameCount() = checkSpeakers(6, 0x3f)
 
-    @Test fun quadAacKeepsEverySpeaker() = checkAacSpeakers(4, "quad")
+    @Test fun quadAacKeepsEverySpeaker() = checkCodedSpeakers(4, "quad.m4a", "quad-aac", 44100)
 
-    @Test fun surroundAacKeepsCenterAndRearSpeakers() = checkAacSpeakers(6, "surround")
+    @Test fun surroundAacKeepsCenterAndRearSpeakers() = checkCodedSpeakers(6, "surround.m4a", "surround-aac", 44100)
 
-    private fun checkAacSpeakers(channels: Int, name: String) {
-        val source = dir.newFile("$name.m4a")
-        instrumentation.context.assets.open("audio-multichannel/$name.m4a").use { input ->
+    /**
+     * Opus keeps its speakers in Vorbis order (left, center, right, rear left, rear right, LFE).
+     * Both files hold the same 48 kHz sine moved through FL, FR, FC, LFE, BL, BR for half a second
+     * each, encoded by libopus with `-mapping_family 1 -b:a 384k` into Ogg and into MP4.
+     */
+    @Test fun surroundOggOpusKeepsCenterAndRearSpeakers() =
+        checkCodedSpeakers(6, "surround.opus", "surround-opus-ogg", 48000)
+
+    @Test fun surroundOpusInM4aKeepsCenterAndRearSpeakers() =
+        checkCodedSpeakers(6, "surround-opus.m4a", "surround-opus-m4a", 48000)
+
+    private fun checkCodedSpeakers(channels: Int, asset: String, name: String, rate: Int) {
+        val source = dir.newFile(asset)
+        instrumentation.context.assets.open("audio-multichannel/$asset").use { input ->
             source.outputStream().use { output -> input.copyTo(output) }
         }
-        val decoded = checkNotNull(OboeAudioEngine.decodeOnly(source))
+        val decoded = checkNotNull(OboeAudioEngine.decodeOnly(source)) { "$asset did not decode" }
+        val segment = rate / 2
+        val window = rate / 5
         assertEquals(2, decoded.channels)
-        assertEquals(44100, decoded.sampleRate)
-        assertTrue(decoded.numFrames in (22050 * channels)..(22050 * channels + 2048))
+        assertEquals(rate, decoded.sampleRate)
+        assertTrue("$name decoded ${decoded.numFrames} frames", decoded.numFrames in (segment * channels)..(segment * channels + 2048))
         val observed = (0 until channels).map { speaker ->
-            // Stay clear of AAC priming and the transitions between isolated speakers.
+            // Stay clear of codec priming and the transitions between isolated speakers.
             DoubleArray(2) { side ->
-                val start = speaker * 22050 + 7000
-                sqrt((start until start + 8820).sumOf { frame ->
+                val start = speaker * segment + rate * 7000 / 44100
+                sqrt((start until start + window).sumOf { frame ->
                     val value = decoded.pcm[frame * 2 + side].toDouble()
                     value * value
-                } / 8820)
+                } / window)
             }
         }
-        assertTrue(TestCaptures.save(device, "audio-downmix/$name-aac-observed.txt") {
-            it.writeText("channels=${decoded.channels}\nframes=${decoded.numFrames}\n" +
+        assertTrue(TestCaptures.save(device, "audio-downmix/$name-observed.txt") {
+            it.writeText("channels=${decoded.channels}\nframes=${decoded.numFrames}\nrate=${decoded.sampleRate}\n" +
                 observed.mapIndexed { i, rms -> "speaker=$i rms=${rms.toList()}" }.joinToString("\n")); true
         })
-        assertTrue(TestCaptures.save(device, "audio-downmix/$name-aac-decoded.wav") {
-            writeWave(it, decoded.pcm, 2, 3); true
+        assertTrue(TestCaptures.save(device, "audio-downmix/$name-decoded.wav") {
+            writeWave(it, decoded.pcm, 2, 3, decoded.sampleRate); true
         })
         val gains = if (channels == 4) listOf(
             0.5 to 0.0, 0.0 to 0.5, 0.5 to 0.0, 0.0 to 0.5,
@@ -67,7 +80,7 @@ class MultichannelDecodeDeviceTest {
             for (side in 0..1) {
                 val gain = if (side == 0) gains[speaker].first else gains[speaker].second
                 val expected = 6553 / sqrt(2.0) * gain
-                assertEquals("$name AAC speaker $speaker side $side", expected, rms[side], 400.0)
+                assertEquals("$name speaker $speaker side $side", expected, rms[side], 400.0)
             }
         }
     }
@@ -114,11 +127,11 @@ class MultichannelDecodeDeviceTest {
         }
     }
 
-    private fun writeWave(file: File, pcm: ShortArray, channels: Int, mask: Int) {
+    private fun writeWave(file: File, pcm: ShortArray, channels: Int, mask: Int, rate: Int = 44100) {
         val bytes = ByteBuffer.allocate(68 + pcm.size * 2).order(ByteOrder.LITTLE_ENDIAN)
         bytes.put("RIFF".toByteArray()).putInt(bytes.capacity() - 8).put("WAVEfmt ".toByteArray())
-        bytes.putInt(40).putShort(0xfffe.toShort()).putShort(channels.toShort()).putInt(44100)
-        bytes.putInt(44100 * channels * 2).putShort((channels * 2).toShort()).putShort(16)
+        bytes.putInt(40).putShort(0xfffe.toShort()).putShort(channels.toShort()).putInt(rate)
+        bytes.putInt(rate * channels * 2).putShort((channels * 2).toShort()).putShort(16)
         bytes.putShort(22).putShort(16).putInt(mask)
         bytes.putInt(1).putShort(0).putShort(0x10).put(byteArrayOf(0x80.toByte(), 0, 0, 0xaa.toByte(), 0, 0x38, 0x9b.toByte(), 0x71))
         bytes.put("data".toByteArray()).putInt(pcm.size * 2)
