@@ -112,16 +112,21 @@ class ConformanceScreenObservationTest : PlaybackScreenTest() {
                         fingers.up(pointer)
                     }
                     "autoplay", "autoplayOff" -> {
+                        val held = pointerIds.isNotEmpty()
+                        if (held) {
+                            // UiDevice option taps form a new gesture and cannot preserve the held
+                            // one this scenario requires. Android 17 refuses a new touch down while
+                            // an injected one is still down, so the held gesture is cancelled first.
+                            fingers.cancelRemaining()
+                            pointerIds.clear()
+                        }
                         screen.chooseOption(R.string.autoPlay)
-                        if (pointerIds.isNotEmpty()) {
-                            // UiDevice option taps form a new gesture. They cannot preserve the
-                            // held gesture this scenario requires, so never invent its later lift.
+                        if (held) {
+                            // Never invent the held gesture's later lift.
                             val limitation = "Opening auto-play options replaced the held touch gesture; the remaining overlap scenario was not executed"
                             delivered.put("limitation", limitation)
                                 .put("completedMs", SystemClock.elapsedRealtime() - started)
                             report.put("detail", limitation)
-                            fingers.forgetCancelled()
-                            pointerIds.clear()
                             break
                         }
                     }
