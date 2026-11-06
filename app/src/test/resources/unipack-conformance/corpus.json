@@ -23609,9 +23609,7 @@
           "note": "releasing the later player input stops the sound and light it started"
         }
       ],
-      "expectedFailing": [
-        "android"
-      ],
+      "expectedFailing": [],
       "scenario": [
         {
           "do": "watchStops"
@@ -23762,77 +23760,6 @@
           ],
           []
         ]
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "sound",
-                  0,
-                  0,
-                  0,
-                  "a.wav",
-                  -1
-                ],
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ]
-              ],
-              [
-                [
-                  "soundStop",
-                  0,
-                  0,
-                  0,
-                  "a.wav"
-                ],
-                [
-                  "sound",
-                  0,
-                  0,
-                  0,
-                  "a.wav",
-                  -1
-                ],
-                [
-                  "ledOff",
-                  0,
-                  0
-                ],
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ]
-              ],
-              [],
-              [
-                [
-                  "soundStop",
-                  0,
-                  0,
-                  0,
-                  "a.wav"
-                ],
-                [
-                  "ledOff",
-                  0,
-                  0
-                ]
-              ]
-            ]
-          },
-          "note": "Observed at application commit 208afb9e5be3bebef9fd50c5e1b77dcb40e29330 after unipad-android#304, using a local test-only adapter through PadTouchTracker and controllerPadTouch. Source corpus SHA256 fe37e7731224b51218d94a351e9513beab3f60206100511f90d238612b1069c8; original RUN-G617.json SHA256 90aa9083125a706bba3da30cc62d48c01090256cd6b05fad84fd70d12f09a330 (investigations/android-input-release-observations/). Releasing the later input leaves its sound and pack light running until the last finger releases. The separately observed pressed indicator follows the last-input rule. This JVM observation does not measure USB transport, screen rendering or audible output."
-        }
       }
     },
     {
@@ -23851,9 +23778,7 @@
           "note": "releasing the later player input stops the sound and light it started"
         }
       ],
-      "expectedFailing": [
-        "android"
-      ],
+      "expectedFailing": [],
       "scenario": [
         {
           "do": "watchStops"
@@ -24004,77 +23929,6 @@
           ],
           []
         ]
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "sound",
-                  0,
-                  0,
-                  0,
-                  "a.wav",
-                  -1
-                ],
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ]
-              ],
-              [
-                [
-                  "soundStop",
-                  0,
-                  0,
-                  0,
-                  "a.wav"
-                ],
-                [
-                  "sound",
-                  0,
-                  0,
-                  0,
-                  "a.wav",
-                  -1
-                ],
-                [
-                  "ledOff",
-                  0,
-                  0
-                ],
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ]
-              ],
-              [],
-              [
-                [
-                  "soundStop",
-                  0,
-                  0,
-                  0,
-                  "a.wav"
-                ],
-                [
-                  "ledOff",
-                  0,
-                  0
-                ]
-              ]
-            ]
-          },
-          "note": "Observed at application commit 208afb9e5be3bebef9fd50c5e1b77dcb40e29330 after unipad-android#304, using a local test-only adapter through PadTouchTracker and controllerPadTouch. Source corpus SHA256 fe37e7731224b51218d94a351e9513beab3f60206100511f90d238612b1069c8; original RUN-G618.json SHA256 5866b8aa01d14c230421c6a94dd322705378ac404a19d0dbe246a34ca2b2dde0 (investigations/android-input-release-observations/). Releasing the later input leaves its sound and pack light running until the last finger releases. The separately observed pressed indicator follows the last-input rule. This JVM observation does not measure USB transport, screen rendering or audible output."
-        }
       }
     },
     {
