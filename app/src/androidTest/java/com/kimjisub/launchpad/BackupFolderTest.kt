@@ -119,6 +119,63 @@ class BackupFolderTest : BaseUITest() {
         }
     }
 
+    /**
+     * What a killed export left in the backup folder is not a pack in Settings: neither in the
+     * restore offer after connecting nor in the folder's count, which is 0 once only those remain.
+     */
+    @Test
+    fun settingsCountsOnlyFinishedBackups() {
+        device.executeShellCommand("mkdir -p $BACKUP_DIR/$KILLED_EXPORT")
+        device.executeShellCommand("touch $BACKUP_DIR/$KILLED_EXPORT/info $BACKUP_DIR/$KILLED_EXPORT_ZIP")
+        launchToMainScreen()
+        openStorageSettings()
+        checkBackupSettings {
+            clickWhenShown(scrollToText(str(R.string.backup_grant_access)))
+            pickInFolderPicker(BACKUP_FOLDER_NAME)
+
+            val recoveryTitle = By.pkg(PACKAGE_NAME).text(str(R.string.backup_recovery_title))
+            assertNotNull("Recovery offer is not shown", device.wait(Until.findObject(recoveryTitle), WAIT_MS))
+            assertEquals(
+                "Recovery offer counts what a killed export left",
+                counted(R.string.backup_recovery_message, 1),
+                device.findObject(By.pkg(PACKAGE_NAME).text(anyCount(R.string.backup_recovery_message)))?.text,
+            )
+            clickWhenShown(device.wait(Until.findObject(By.pkg(PACKAGE_NAME).text(str(R.string.backup_recovery_later))), WAIT_MS))
+            assertTrue("Recovery offer did not close", device.wait(Until.gone(recoveryTitle), WAIT_MS))
+            assertTrue("Backup folder count is not 1", waitUntil(WAIT_MS) { backupFolderCount() == counted(R.string.workspace_unipack_count, 1) })
+
+            device.executeShellCommand("rm -rf $BACKUP_DIR/$BACKED_UP_PACK")
+            // Settings counts again when it comes back to the front.
+            clickWhenShown(scrollToText(str(R.string.backup_restore_button)))
+            assertTrue("Restore did not open", device.wait(Until.gone(By.pkg(PACKAGE_NAME).text(BACKUP_ROW_TITLE)), WAIT_MS))
+            device.pressBack()
+            assertTrue(
+                "A folder holding only a killed export is counted as ${backupFolderCount()}",
+                waitUntil(WAIT_MS) { backupFolderCount() == counted(R.string.workspace_unipack_count, 0) },
+            )
+            takeScreenshot("backup_settings_only_killed_export")
+        }
+    }
+
+    private fun counted(resId: Int, count: Int): String = AppLanguage.localized(context).getString(resId, count)
+
+    /** [resId]'s text with any count in its one `%d`. */
+    private fun anyCount(resId: Int): Pattern =
+        Pattern.compile(counted(resId, COUNT_MARK).split(COUNT_MARK.toString()).joinToString("\\d+") { Pattern.quote(it) })
+
+    /** The pack count shown under the backup folder's row in Settings. */
+    private fun backupFolderCount(): String? = try {
+        val title = scrollToText(BACKUP_ROW_TITLE)?.visibleBounds
+        title?.let { row ->
+            device.findObjects(By.pkg(PACKAGE_NAME).text(anyCount(R.string.workspace_unipack_count)))
+                .filter { it.visibleBounds.top >= row.bottom && it.visibleBounds.left == row.left }
+                .minByOrNull { it.visibleBounds.top }
+                ?.text
+        }
+    } catch (e: StaleObjectException) {
+        null
+    }
+
     /** Restore asks for the folder again when the saved one can no longer be opened, instead of listing nothing. */
     @Test
     fun restoreAsksForTheFolderAgainWhenItsPermissionIsGone() {
@@ -425,6 +482,9 @@ class BackupFolderTest : BaseUITest() {
         const val BACKED_UP_PACK = "zz_backup_folder_pack"
         const val CLASHING_PACK = "zz_provider_clash"
         const val KILLED_EXPORT = ".unipad-partial-00000000-0000-0000-0000-000000000000"
+        const val KILLED_EXPORT_ZIP = ".unipad-partial-11111111-1111-1111-1111-111111111111.zip"
+        const val BACKUP_ROW_TITLE = "Documents/Unipad"
+        const val COUNT_MARK = 987_654
         const val UNIPAD_TREE = "content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FUnipad"
         const val PERMISSION_FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         val DOCUMENTS_UI: Pattern = Pattern.compile(".*documentsui")
