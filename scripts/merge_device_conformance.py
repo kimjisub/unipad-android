@@ -2,15 +2,14 @@
 """Put device observations into the shared Android corpus result, for the cases the host cannot observe.
 
 The host report (UniPackConformanceCasesTest's android.json) leaves a case unverified when its harness
-cannot see it: file names a macOS disk cannot keep apart, original archive identity, and distinct screen
-inputs. The device recorders write one record per case (conformance-files/<id>.json,
-conformance-screen/<id>.json). A record replaces the host's empty result only when it ran the same
+cannot see it: file names a macOS disk cannot keep apart and original archive identity. The device
+recorder writes one record per case (conformance-files/<id>.json). A record replaces the host's empty result only when it ran the same
 corpus and input, comes from the recorder for that kind of case, and its own status agrees with its
 actual value. Anything else stays unverified, with the reason. The result is then checked with
 check_unipack_conformance.py.
 
     python3 scripts/merge_device_conformance.py build/unipack-conformance/android.json \\
-        <pulled conformance-files> <pulled conformance-screen> -o android-merged.json
+        <pulled conformance-files> -o android-merged.json
 """
 import argparse
 import hashlib
@@ -63,8 +62,6 @@ def refusal(case, host, record, corpus_hash):
         filesystem = record.get("filesystem", {})
         if filesystem.get("caseSensitive") is not True or filesystem.get("normalizationSensitive") is not True:
             return "device storage merges names the case keeps apart"
-    if kind == "screen" and record.get("timing", {}).get("certified") is not True:
-        return "the device run's timing does not certify the checkpoints: " + str(record.get("timing", {}).get("detail", ""))
     status = "pass" if same_json(record["actual"], case.get("expected")) else "fail"
     if record.get("status") != status:
         return f"the device record says {record.get('status')} but its actual value is a {status}"

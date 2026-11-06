@@ -26,16 +26,28 @@ The playback recorder reports effective repeats as the native mixer consumes the
 `-1` is infinite, positive counts repeat, and values below `-1` play once (`0`).
 The parser report still preserves the raw parsed repeat value.
 
-The generic runner cannot observe `screenInputs` cases. It must report them as
-`unverified`, without substituting ordinary pad calls for distinct fingers or
-MIDI sources. `requiresCaseSensitiveFiles` cases must likewise stay unverified
-when the filesystem cannot preserve their distinct input files. Existing
-`unobserved` restrictions in the corpus remain in force.
+`screenInputs` cases run through the play screen's own input path on the same virtual clock: each
+finger is a pointer of a `PadTouchTracker` wired to the view model as `PlayActivity` wires it, the
+Launchpad's pads reach `controllerPadTouch` as the screen's MIDI controller passes them, chains are
+chosen with the chain buttons' `selectChain`, auto play is switched with the mode buttons'
+`switchPlayMode`, and auto play's presses and releases go through the screen's own auto-play listener,
+which drops commands from a runner the screen has stopped or replaced. Their results name
+`"inputAdapter": "play-screen"`; the report check accepts a screen-input observation only with it, and
+refuses it on any other case. Distinct `input` names outside these cases are rejected. What this path
+does not include: Compose's pointer events (a finger enters the tracker at its pad's centre) and the
+MIDI driver's packet decoding (a pad enters at `controllerPadTouch`).
+`requiresCaseSensitiveFiles` cases must stay unverified when the filesystem cannot preserve their
+distinct input files. Existing `unobserved` restrictions in the corpus remain in force.
 If the host changes a filename while writing it (for example, a decomposed
 Unicode name becomes composed), the parser is not called. The case stays
 unverified and its actual path inventory is saved as `storedInputPaths`.
 
-The device recorder exercises the eight screen scenarios separately:
+Results are taken with Pro light mode on. The play screen starts with it off, which hides a keyLED
+file's round-button and logo lights on the screen and on the Launchpad (both read the same light).
+`ProLightModeOffTest` runs every playback case that lights them both ways and checks that off hides
+exactly those lights and keeps the pad lights; it writes both results to `android-pro-light-off.json`.
+
+The device recorder also exercises the eight screen scenarios with real input:
 
 ```sh
 ANDROID_SERIAL=<leased-device-id> bash scripts/ci-connected-tests.sh \
@@ -53,14 +65,11 @@ feedback off, so RUN-G617 and RUN-G618 are recorded a second time with it on
 (`<id>-press-light.json`) to show when each pad's press light ends.
 Its audio recorder uses the native decoder but does not open a speaker.
 
-These are raw real-time observations, not normalized conformance results. Every
-screen record remains `unverified`: a completed recorder test cannot certify
-virtual-clock event ordering.
+These are raw real-time observations, not normalized conformance results, and never enter the
+report: real-time snapshots cannot certify the corpus's virtual-clock event ordering.
 Opening options while a finger is held replaces the injected gesture. That
 case saves partial evidence with `completed=false` and an explicit limitation;
-it does not invent a later release of the cancelled finger. Do not replace
-the generic report's missing screen observations with these snapshots or count
-successful recorder checks as corpus passes. Preserve the complete output and
+it does not invent a later release of the cancelled finger. Preserve the complete output and
 device files before running the tests again.
 
 The fifteen file tests write the exact corpus files on Android internal storage, which keeps

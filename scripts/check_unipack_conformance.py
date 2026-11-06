@@ -22,15 +22,16 @@ def same_json(left, right):
 DEVICE_SOURCES = {
     "sound-identity": "device-archive-decoder-runner",
     "files": "device-internal-files",
-    "screen": "device-screen",
 }
+
+# The play screen's own input path (finger tracker, controller entry, the screen's auto-play
+# listener); the only way the host harness may observe a screen-input case.
+PLAY_SCREEN_INPUTS = "play-screen"
 
 
 def device_kind(case, changed_names):
     if case.get("soundIdentity", False):
         return "sound-identity"
-    if case.get("screenInputs", False):
-        return "screen"
     if case.get("requiresCaseSensitiveFiles", False) or changed_names:
         return "files"
     return None
@@ -70,7 +71,11 @@ def check_report(corpus, report, corpus_hash):
             else:
                 expected_paths = [entry["path"] for entry in case.get("files", [])]
                 changed_names = bool(expected_paths) and sorted(stored_paths) != sorted(expected_paths)
-        restricted = (case.get("screenInputs", False)
+        input_adapter = result.get("inputAdapter")
+        if input_adapter is not None and not (case.get("screenInputs", False) and input_adapter == PLAY_SCREEN_INPUTS):
+            problems.append(f"{case_id}: input adapter {input_adapter} cannot observe this case")
+            continue
+        restricted = ((case.get("screenInputs", False) and input_adapter != PLAY_SCREEN_INPUTS)
                       or "android" in case.get("unobserved", {})
                       or changed_names
                       or case.get("soundIdentity", False)

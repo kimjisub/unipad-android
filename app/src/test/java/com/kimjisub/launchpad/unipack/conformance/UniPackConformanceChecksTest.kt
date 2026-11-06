@@ -41,13 +41,19 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
-	fun screenInputCasesCannotPassThroughTheGenericRunner() {
-		val neverRun = Deps(loadPack = { error("screen input case reached the generic runner") })
+	fun screenInputCasesNameThePlayScreenInputPath() {
 		for (id in listOf("RUN-G606", "RUN-G607", "RUN-G608", "RUN-G609", "RUN-G610", "RUN-G616", "RUN-G617", "RUN-G618")) {
-			val result = resultFor(byId(id), corpus, neverRun)
-			assertEquals(id, "unverified", result.outcome.status)
-			assertEquals(id, JsonNull, result.actual)
+			val result = resultFor(byId(id), corpus)
+			assertEquals(id, PLAY_SCREEN_INPUTS, result.outcome.inputAdapter)
+			assertNotEquals(id, JsonNull, result.actual)
 		}
+		assertEquals(null, resultFor(byId("RUN-G605"), corpus).outcome.inputAdapter)
+	}
+
+	@Test
+	fun distinctInputsOutsideScreenInputCasesAreRejected() {
+		val g617 = byId("RUN-G617")
+		assertThrows(IllegalArgumentException::class.java) { actualFor(g617.copy(screenInputs = false), corpus) }
 	}
 
 	@Test
