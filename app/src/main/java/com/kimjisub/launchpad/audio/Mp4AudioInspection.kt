@@ -33,7 +33,39 @@ private fun AudioData.child(parent: AudioBox, type: String): AudioBox {
 }
 
 /** Checks sample counts, timing and every referenced sample's physical mdat extent. */
-internal fun inspectMp4(d: AudioData): AudioFileFacts {
+internal fun inspectMp4(d: AudioData): AudioFileFacts = inspectMp4Track(d, null)
+
+/**
+ * Opus packets of an MP4 sound track in decoding order, with the RFC 7845 identification
+ * header a decoder is configured from. Android 9 and earlier read the track type as unknown.
+ */
+internal class Mp4OpusTrack(val head: ByteArray, val channels: Int, val preSkip: Int,
+    val offsets: LongArray, val sizes: IntArray, val frames: IntArray)
+
+/** Lists the first sound track's Opus packets after the same checks [inspectMp4] makes. */
+internal fun mp4OpusTrack(d: AudioData): Mp4OpusTrack {
+    val packets = Mp4OpusPackets()
+    inspectMp4Track(d, packets)
+    return packets.track
+}
+
+/** Filled while [inspectMp4Track] walks the sample tables; packet storage is bounded by its row ceilings. */
+private class Mp4OpusPackets {
+    lateinit var track: Mp4OpusTrack
+        private set
+    private var added = 0
+    fun start(d: AudioData, dOps: AudioBox, packets: Long) {
+        val count = packets.toInt()
+        track = Mp4OpusTrack(opusHead(d, dOps), d.byte(dOps.data + 1), d.uint(dOps.data + 2, 2).toInt(),
+            LongArray(count), IntArray(count), IntArray(count))
+    }
+    fun add(offset: Long, size: Long, frames: Long) {
+        audioRequire(size <= Int.MAX_VALUE)
+        track.offsets[added] = offset; track.sizes[added] = size.toInt(); track.frames[added] = frames.toInt(); added++
+    }
+}
+
+private fun inspectMp4Track(d: AudioData, opus: Mp4OpusPackets?): AudioFileFacts {
     val top = d.boxes(0, d.size).toList()
     val media = top.filter { it.type == "mdat" }
     audioRequire(media.isNotEmpty())
@@ -104,6 +136,10 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         val mappings = tableCount(d, stsc, 12)
         audioRequire(chunks > 0 && mappings > 0)
         if (codec.pcmAlign == 0 && aacPacketFrames == null) inspectionCapacity(samples, MAX_AUDIO_SAMPLE_SIZES)
+        if (opus != null) {
+            audioRequire(codec.type == "Opus")
+            opus.start(d, d.child(sampleEntryChildren(d, entries.first()), "dOps"), samples)
+        }
         var physicalFrames = 0L
         var mapping = 0L
         var used = 0L
@@ -155,6 +191,7 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
                         }.toLong()
                         else -> throw InvalidAudio()
                     }
+                    opus?.add(packetAt, size, frames)
                     physicalFrames = audioAdd(physicalFrames, frames)
                     packetAt += size
                 }
@@ -188,10 +225,7 @@ private fun mp4Codec(d: AudioData, entry: AudioBox): Mp4Codec {
     audioRequire(entry.type in setOf("mp4a", "alac", "fLaC", "Opus", "sowt", "twos", "lpcm"))
     d.range(entry.data, 28, entry.end)
     val version = d.uint(entry.data + 8, 2).toInt()
-    audioRequire(version in 0..1)
-    val headerSize = if (version == 1) 44L else 28L
-    d.range(entry.data, headerSize, entry.end)
-    val children = AudioBox("entry", entry.data + headerSize, entry.end)
+    val children = sampleEntryChildren(d, entry)
     var channels = d.uint(entry.data + 16, 2).toInt()
     var rate = (d.uint(entry.data + 24, 4) ushr 16).toInt()
     val codec = when (entry.type) {
@@ -258,6 +292,37 @@ private fun mp4Codec(d: AudioData, entry: AudioBox): Mp4Codec {
     }
     audioRequire(codec.rate > 0 && codec.channels > 0)
     return codec
+}
+
+/** The boxes after an audio sample entry's fixed fields (version 0 or QuickTime version 1). */
+private fun sampleEntryChildren(d: AudioData, entry: AudioBox): AudioBox {
+    val version = d.uint(entry.data + 8, 2).toInt()
+    audioRequire(version in 0..1)
+    val headerSize = if (version == 1) 44L else 28L
+    d.range(entry.data, headerSize, entry.end)
+    return AudioBox("entry", entry.data + headerSize, entry.end)
+}
+
+/**
+ * Converts a dOps box (big-endian, ISO/IEC 23003-5 "Encapsulation of Opus in ISOBMFF") into
+ * the little-endian OpusHead packet (RFC 7845 section 5.1) that Android's decoder takes as csd-0.
+ * [mp4Codec] has already checked the box covers the mapping table its family declares.
+ */
+private fun opusHead(d: AudioData, dOps: AudioBox): ByteArray {
+    val channels = d.byte(dOps.data + 1)
+    val family = d.byte(dOps.data + 10)
+    val table = if (family == 0) 0 else 2 + channels
+    val head = ByteArray(19 + table)
+    "OpusHead".forEachIndexed { i, c -> head[i] = c.code.toByte() }
+    head[8] = 1
+    head[9] = channels.toByte()
+    // Pre-skip (2 bytes), input sample rate (4) and output gain (2), each byte-reversed.
+    for ((at, length) in listOf(2 to 2, 4 to 4, 8 to 2)) {
+        for (i in 0 until length) head[8 + at + i] = d.byte(dOps.data + at + length - 1 - i).toByte()
+    }
+    head[18] = family.toByte()
+    for (i in 0 until table) head[19 + i] = d.byte(dOps.data + 11 + i).toByte()
+    return head
 }
 
 private fun alacPacketFrames(d: AudioData, at: Long, size: Long, maximum: Long): Long {
