@@ -1,7 +1,9 @@
 package com.kimjisub.launchpad.activity
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -89,6 +91,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.SafMigrationHelper
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.tool.splitties.openAppLanguageSettings
 import com.kimjisub.launchpad.tool.tryLaunch
@@ -897,12 +900,7 @@ private fun BackupSection(
 		val uri = backupFolder.usableUri
 		backupUri = uri
 		if (uri != null) {
-			unipackCount = withContext(Dispatchers.IO) {
-				val treeDoc = DocumentFile.fromTreeUri(context, uri.toUri())
-				treeDoc?.listFiles()?.count {
-					it.isDirectory || (it.name?.endsWith(".zip", ignoreCase = true) == true)
-				} ?: 0
-			}
+			unipackCount = withContext(Dispatchers.IO) { countBackupPacks(context, uri.toUri()) }
 		}
 	}
 
@@ -916,12 +914,7 @@ private fun BackupSection(
 				backupUri = uri.toString()
 				// After successful connection, count packs and show recovery dialog
 				scope.launch {
-					val count = withContext(Dispatchers.IO) {
-						val tree = DocumentFile.fromTreeUri(context, uri)
-						tree?.listFiles()?.count {
-					it.isDirectory || (it.name?.endsWith(".zip", ignoreCase = true) == true)
-				} ?: 0
-					}
+					val count = withContext(Dispatchers.IO) { countBackupPacks(context, uri) }
 					unipackCount = count
 					if (count > 0) {
 						showRecoveryDialog = true
@@ -1165,3 +1158,7 @@ private fun getWorkspaceDescription(workspace: WorkspaceManager.Workspace): Stri
 		else -> ""
 	}
 }
+
+/** The packs the backup folder at [uri] holds, counted as the restore list shows them. */
+private fun countBackupPacks(context: Context, uri: Uri): Int =
+	DocumentFile.fromTreeUri(context, uri)?.let { SafMigrationHelper.backupPacks(it).size } ?: 0

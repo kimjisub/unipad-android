@@ -19,6 +19,7 @@ import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.FirebaseCrashContext
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.SafMigrationHelper
 import com.kimjisub.launchpad.tool.ScreenCrashTrail
 import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
 import com.kimjisub.launchpad.ui.theme.UniPadTypography
@@ -76,20 +77,26 @@ class BaseApplication : Application() {
 	}
 
 	/**
-	 * Removes what an install or a move was building when the app was last killed. Runs once per
-	 * process on IO; new installs and moves await only the rename through [PackStaging.create].
+	 * Removes what an install, a move or a transfer's temporary archive left when the app was last
+	 * killed. Runs once per process on IO; new installs and moves await only the rename through [PackStaging.create].
 	 */
 	private fun clearPackStagingLeftovers() {
 		PackStaging.startCleanup(
 			scope = ioScope,
 			setAside = {
-				try {
-					val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
-					workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
+				val packs = try {
+					GlobalContext.get().get<WorkspaceManager>().setAsideStagingLeftovers()
 				} catch (e: Exception) {
 					Log.err("Pack staging cleanup failed", e)
 					emptyList()
 				}
+				val archives = try {
+					SafMigrationHelper.setAsideTempArchives(cacheDir)
+				} catch (e: Exception) {
+					Log.err("Temporary archive cleanup failed", e)
+					emptyList()
+				}
+				packs + archives
 			},
 			deleteLeftovers = { leftovers ->
 				try {

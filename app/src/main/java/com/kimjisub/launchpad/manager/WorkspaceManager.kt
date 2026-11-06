@@ -60,7 +60,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			// volume unmounted or not ready), so the list is never empty: downloadWorkspace indexes
 			// [0] and would otherwise throw (#46). Packs saved there meanwhile stay listed, and so
 			// playable and deletable, once the external dir is back.
-			val internalWorkspace = File(context.filesDir, "UniPack")
+			val internalWorkspace = internalWorkspaceDir
 			if (appExternalDir == null && !internalWorkspace.exists()) {
 				internalWorkspace.mkdirs()
 			}
@@ -121,6 +121,18 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 			return uniPackWorkspaces.toTypedArray()
 		}
+
+	private val internalWorkspaceDir: File
+		get() = File(context.filesDir, "UniPack")
+
+	/**
+	 * Startup cleanup: sets aside what killed installs, moves and deletions left in every listed
+	 * workspace, and in the internal folder even when it is not listed (see [PackStaging.setAsideLeftovers]).
+	 * That folder is listed only while it holds a pack, so a kill while its last pack is being
+	 * deleted would otherwise leave that pack's files there for good.
+	 */
+	fun setAsideStagingLeftovers(): List<File> =
+		(availableWorkspaces.map { it.file } + internalWorkspaceDir).distinct().flatMap(PackStaging::setAsideLeftovers)
 
 	/** Everything in the workspaces except installs in progress and what a killed one left behind. */
 	suspend fun getAvailableWorkspacesSize() =

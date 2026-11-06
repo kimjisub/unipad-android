@@ -360,16 +360,11 @@ class TransferActivity : AppCompatActivity() {
 
 	private fun scanBackupItems(safUri: String): List<TransferItem> {
 		val treeDoc = DocumentFile.fromTreeUri(this, safUri.toUri()) ?: return emptyList()
-		val items = mutableListOf<TransferItem>()
-		treeDoc.listFiles().forEach { doc ->
-			val name = doc.name ?: return@forEach
-			when {
-				doc.isDirectory -> items.add(TransferItem(name = name, documentFile = doc))
-				name.endsWith(".zip", ignoreCase = true) ->
-					items.add(TransferItem(name = name.removeSuffix(".zip"), documentFile = doc, isZip = true))
-			}
+		return SafMigrationHelper.backupPacks(treeDoc).mapNotNull { doc ->
+			val name = doc.name ?: return@mapNotNull null
+			if (doc.isDirectory) TransferItem(name = name, documentFile = doc)
+			else TransferItem(name = name.removeSuffix(".zip"), documentFile = doc, isZip = true)
 		}
-		return items
 	}
 
 	private fun startTransfer() {
