@@ -207,7 +207,8 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     /**
      * Uses the device's existing settings; no cutout/navigation overlay is changed during rotation.
      * Whatever navigation mode the device has is printed and named in every failure, since this
-     * test covers a side bar only when the device itself uses three-button navigation.
+     * test covers a side bar only when the device itself uses three-button navigation, and the
+     * gesture handle along the bottom when it uses gesture navigation (navigation_mode=2).
      */
     @Test fun midiSelectRotatesWithExistingNavigationSettings() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
@@ -223,6 +224,9 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                     screen.await("Requested rotation did not reach window") {
                         screen.onMain { screen.resumed().display!!.rotation == expected }
                     }
+                    // With gesture navigation the handle's strip runs along the bottom. A list may
+                    // run on under it as long as its end scrolls clear, as with the tablet's bottom bar.
+                    screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach(::scrollToEnd)
                     val controls = screen.freshControls()
                     val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
                     assertTrue("No controls on ${type.simpleName} (navigation_mode=$navigationMode)", controls.isNotEmpty())
