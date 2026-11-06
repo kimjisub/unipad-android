@@ -3,11 +3,11 @@ package com.kimjisub.launchpad
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.diagnostics.NativeCrashTrace
 import com.kimjisub.launchpad.diagnostics.TombstoneReader
+import com.kimjisub.launchpad.diagnostics.protoMessage
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 
 /**
  * The tombstone reader keeps names by regular expressions, which Android compiles with its own engine, so
@@ -22,10 +22,14 @@ class TombstoneReaderDeviceTest {
             frame("/system/bin/linker64", "__dl__start", null),
             frame("/storage/emulated/0/Unipad/my pack.zip", "f", null),
         )
-        val tombstone = number(6, 7) +
-            field(10, number(1, 11) + field(2, "SIGSEGV".toByteArray()) + number(3, 1) +
-                field(4, "SEGV_MAPERR".toByteArray())) +
-            field(16, number(1, 7) + field(2, frames.fold(ByteArray(0)) { all, frame -> all + field(4, frame) }))
+        val tombstone = protoMessage {
+            varint(6, 7)
+            bytes(10, protoMessage { varint(1, 11); string(2, "SIGSEGV"); varint(3, 1); string(4, "SEGV_MAPERR") })
+            bytes(16, protoMessage {
+                varint(1, 7)
+                bytes(2, protoMessage { frames.forEach { bytes(4, it) } })
+            })
+        }
         val trace = TombstoneReader.summarize(ByteArrayInputStream(tombstone))
         assertEquals(NativeCrashTrace.FRAMES, trace.status)
         assertEquals("SIGSEGV(11) SEGV_MAPERR(1)", trace.signal)
@@ -35,23 +39,10 @@ class TombstoneReaderDeviceTest {
         assertEquals("libhwui.so:9f3c2a1b7d5e4c60", trace.buildIds)
     }
 
-    private fun frame(file: String, function: String, buildId: String?) =
-        number(1, 0x10) + field(4, function.toByteArray()) + field(6, file.toByteArray()) +
-            (buildId?.let { field(8, it.toByteArray()) } ?: ByteArray(0))
-
-    private fun number(field: Int, value: Long) = encode((field shl 3).toLong()) + encode(value)
-
-    private fun field(number: Int, value: ByteArray) =
-        encode((number shl 3 or 2).toLong()) + encode(value.size.toLong()) + value
-
-    private fun encode(value: Long): ByteArray {
-        val out = ByteArrayOutputStream()
-        var rest = value
-        while ((rest and 0x7fL.inv()) != 0L) {
-            out.write(((rest and 0x7fL) or 0x80L).toInt())
-            rest = rest ushr 7
-        }
-        out.write(rest.toInt())
-        return out.toByteArray()
+    private fun frame(file: String, function: String, buildId: String?) = protoMessage {
+        varint(1, 0x10)
+        string(4, function)
+        string(6, file)
+        buildId?.let { string(8, it) }
     }
 }

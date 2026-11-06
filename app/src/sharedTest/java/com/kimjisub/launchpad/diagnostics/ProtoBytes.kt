@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.diagnostics
 
 import java.io.ByteArrayOutputStream
 
-/** Builds protobuf wire-format bytes for tests. */
+/** Builds protobuf wire-format bytes for the unit and device tests. */
 internal class ProtoWriter {
 	val out = ByteArrayOutputStream()
 
