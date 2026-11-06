@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.os.SystemClock
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import java.io.File
@@ -12,6 +13,8 @@ class RecordingAudio : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
     val loops = CopyOnWriteArrayList<Int>()
     val stoppedVoices = CopyOnWriteArrayList<Int>()
+    /** Play and stop requests in the order the runner made them, each ending in its elapsedRealtime. */
+    val requests = CopyOnWriteArrayList<List<Any>>()
     val loaded = ConcurrentHashMap<String, Int>()
     val silences = AtomicInteger()
     val stops = AtomicInteger()
@@ -36,10 +39,15 @@ class RecordingAudio : SoundRunner.Engine {
     @Synchronized override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
         loops += loop
         plays += soundId
+        requests += listOf("play", soundId, loop, plays.size, SystemClock.elapsedRealtime())
         return plays.size
     }
-    @Synchronized override fun stopVoice(stopKey: Int) { stoppedVoices += stopKey }
+    @Synchronized override fun stopVoice(stopKey: Int) {
+        stoppedVoices += stopKey
+        requests += listOf("stop", stopKey, SystemClock.elapsedRealtime())
+    }
     @Synchronized override fun stopAllVoices() {
+        requests += listOf("stopAll", SystemClock.elapsedRealtime())
         silencedThrough = plays.size
         silences.incrementAndGet()
     }
@@ -49,6 +57,7 @@ class RecordingAudio : SoundRunner.Engine {
         plays.clear()
         loops.clear()
         stoppedVoices.clear()
+        requests.clear()
         silencedThrough = 0
     }
 
