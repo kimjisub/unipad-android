@@ -1,11 +1,11 @@
-"""Verify that release optimization preserves the six system-exit exception types."""
+"""Verify that release optimization preserves the seven system-exit exception types."""
 
 import re
 import sys
 from pathlib import Path
 
 EXCEPTION_NAMES = (
-    "LowMemoryExit", "KillSignalExit", "MemoryLimiterExit",
+    "LowMemoryExit", "AnrReasonExit", "KillSignalExit", "MemoryLimiterExit",
     "InitializationFailureExit", "ExcessiveResourceExit", "FreezerExit",
 )
 PREFIX = "com.kimjisub.launchpad.diagnostics.SystemExitReporter$"

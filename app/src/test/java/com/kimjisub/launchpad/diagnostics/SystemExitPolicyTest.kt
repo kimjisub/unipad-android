@@ -32,8 +32,62 @@ class SystemExitPolicyTest {
 		}
 	}
 
-	@Test fun crashesAnrAndRoutineExitsAreExcluded() {
-		for (reason in listOf(0, 1, 4, 5, 6, 8, 10, 11, 12, 15, 16, 99)) {
+	@Test fun anrIsReportedInFrontAndInTheBackground() {
+		for (importance in listOf(100, 125, 230, 400)) {
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(6, importance = importance), true))
+			assertTrue(SystemExitPolicy.shouldReport(SystemExit(6, importance = importance), false))
+		}
+	}
+
+	@Test fun descriptionKeepsTheSystemReasonWithinTheKeyLimit() {
+		val reason = "user request after error: Input dispatching timed out (8a1b2c3 com.kimjisub.launchpad.dev/" +
+			"com.kimjisub.launchpad.activity.MainActivity (server) is not responding. Waited 5004ms for MotionEvent(" +
+			"deviceId=-1, source=TOUCHSCREEN, action=DOWN, pointers=[0: (80.0, 1800.0)]), policyFlags=0x6b000000)."
+		assertEquals(reason, SystemExitPolicy.description(SystemExit(6, description = reason)))
+		assertEquals("bg anr", SystemExitPolicy.description(SystemExit(6, description = "bg anr")))
+		assertEquals("", SystemExitPolicy.description(SystemExit(6)))
+		assertEquals("a".repeat(1024), SystemExitPolicy.description(SystemExit(6, description = "a".repeat(5000))))
+	}
+
+	@Test fun intentFieldsBeforeTheDataAreKeptAndEverythingFromTheDataOnIsDropped() {
+		fun reason(text: String) = SystemExitPolicy.description(SystemExit(6, description = text))
+		assertEquals("bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE flg=0x10000010 " +
+			"pkg=com.kimjisub.launchpad cmp=com.kimjisub.launchpad/com.google.firebase.iid.FirebaseInstanceIdReceiver }",
+			reason("bg anr: Broadcast of Intent { act=com.google.android.c2dm.intent.RECEIVE flg=0x10000010 " +
+				"pkg=com.kimjisub.launchpad cmp=com.kimjisub.launchpad/com.google.firebase.iid.FirebaseInstanceIdReceiver }"))
+		assertEquals("Broadcast of Intent { cat=[android.intent.category.DEFAULT] cmp=com.kimjisub.launchpad/.R\$1 <redacted> }",
+			reason("Broadcast of Intent { cat=[android.intent.category.DEFAULT] cmp=com.kimjisub.launchpad/.R\$1 (has extras) }"))
+		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW <redacted> }",
+			reason("bg anr: Broadcast of Intent { act=android.intent.action.VIEW dat=content://downloads/my%20pack.zip " +
+				"flg=0x10 cmp=com.kimjisub.launchpad/.Receiver (has extras) }"))
+		// The data can hold text that looks like a later field, a line break or a colon; none of it is kept.
+		assertEquals("bg anr: Broadcast of Intent { act=android.intent.action.VIEW <redacted> }",
+			reason("bg anr: Broadcast of Intent { act=android.intent.action.VIEW dat=content://documents/cmp=private/album.zip " +
+				"cmp=com.kimjisub.launchpad/.Receiver (has extras) }"))
+		assertEquals("Broadcast of Intent { <redacted> }",
+			reason("Broadcast of Intent { dat=content://x/ act=secret.name flg=0x1 cmp=private/album.zip }"))
+		assertEquals("Broadcast of Intent { <redacted> }",
+			reason("Broadcast of Intent { typ=private/album cmp=com.kimjisub.launchpad/.Receiver }"))
+		assertEquals("bg anr: Broadcast of Intent { <redacted> }",
+			reason("bg anr: Broadcast of Intent { dat=content://x/my pack v=2.zip flg=0x10 }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=/sdcard/a\nb.zip }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { act=a.b\ncmp=private/x }"))
+		assertEquals("Broadcast of Intent { <redacted> }", reason("Broadcast of Intent { dat=MyPack:final.zip }"))
+		assertEquals("ends dat=<redacted>", reason("ends dat=file:///sdcard/my pack.zip"))
+		val service = "bg anr: executing service com.kimjisub.launchpad/.MessagingService"
+		assertEquals(service, reason(service))
+	}
+
+	@Test fun anrsAndOtherExitsEachKeepTheirOwnAllowance() {
+		val anrs = (1..7L).map { SystemExit(6, timestamp = it) }
+		val memory = (11..17L).map { SystemExit(3, timestamp = it) }
+		val batch = SystemExitPolicy.select(anrs + memory, 0, 100, true)
+		assertEquals(listOf(17L, 16, 15, 14, 13, 7, 6, 5, 4, 3), batch.reports.map { it.timestamp })
+		assertEquals(17L, batch.checkpoint)
+	}
+
+	@Test fun crashesAndRoutineExitsAreExcluded() {
+		for (reason in listOf(0, 1, 4, 5, 8, 10, 11, 12, 15, 16, 99)) {
 			assertFalse("reason $reason", SystemExitPolicy.shouldReport(SystemExit(reason), false))
 		}
 	}
