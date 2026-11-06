@@ -59,21 +59,14 @@ class MainPackPanelViewModel(
 			}
 		}
 
-		if (unipack.detailLoaded) {
-			soundCount = unipack.soundCount
-			ledCount = unipack.ledTableCount
-		} else {
-			soundCount = null
-			ledCount = null
-			viewModelScope.launch(Dispatchers.IO) {
-				val counts = readOrNull("UniPack detail read failed") { countSoundsAndLeds() }
-				withContext(Dispatchers.Main) {
-					if (counts != null) {
-						soundCount = counts.first
-						ledCount = counts.second
-					} else {
-						countsUnknown = true
-					}
+		viewModelScope.launch(Dispatchers.IO) {
+			val counts = readOrNull("UniPack detail read failed") { countSoundsAndLeds() }
+			withContext(Dispatchers.Main) {
+				if (counts != null) {
+					soundCount = counts.first
+					ledCount = counts.second
+				} else {
+					countsUnknown = true
 				}
 			}
 		}

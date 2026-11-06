@@ -23,19 +23,24 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.io.File
+import java.io.IOException
 
 /**
- * The pack list keeps a detail panel model for every pack selected on it, also while one of them is
+ * Selecting a pack reads all of it to count its sounds and LEDs.
+ *
+ * A pack too large for memory threw OutOfMemoryError there, nothing caught it, and the whole app
+ * closed before the pack was played.
+ *
+ * The pack list also keeps the panel model of every pack selected on it, also while one of them is
  * played from its own copy. Each model held the whole pack it had counted, so a played pack was in
  * memory twice and every pack looked at stayed in memory until the list screen closed.
  */
-class MainPackPanelViewModelReleaseTest {
+class MainPackPanelViewModelCountTest {
 
 	@get:Rule(order = 0)
 	val tmp = TemporaryFolder()
 	@get:Rule(order = 1)
 	val models = MainViewModelRule()
-
 	private val app = mockk<Application>(relaxed = true)
 
 	@Before
@@ -48,6 +53,31 @@ class MainPackPanelViewModelReleaseTest {
 		stopKoin()
 	}
 
+	/** A failing read has read the sound table before it fails, as when keyLed breaks after keySound. */
+	private class FailingPack(
+		private val detailFailure: Throwable? = null,
+		private val sizeFailure: Throwable? = null,
+	) : UniPack() {
+		override val id = "failing"
+		override fun lastModified() = 0L
+		override fun loadInfo() = this
+		override fun loadDetail(): UniPack {
+			detailFailure?.let {
+				soundTable = Array(1) { Array(8) { arrayOfNulls(8) } }
+				throw it
+			}
+			soundCount = 3
+			ledTableCount = 2
+			detailLoaded = true
+			return this
+		}
+		override fun checkFile() = Unit
+		override fun delete() = false
+		override fun getPathString() = "/packs/failing"
+		override fun getByteSize(): Long = sizeFailure?.let { throw it } ?: 0L
+	}
+
+	/** The panel with every read it started finished, including the handling of any failure. */
 	private fun openPanel(pack: UniPack): MainPackPanelViewModel {
 		val panel = models.track(MainPackPanelViewModel.of(models, app, pack))
 		runBlocking { panel.viewModelScope.coroutineContext.job.children.toList().joinAll() }
@@ -71,7 +101,49 @@ class MainPackPanelViewModelReleaseTest {
 		assertNull("sound table", pack.soundTable)
 		assertNull("LED table", pack.ledAnimationTable)
 		assertNull("autoplay table", pack.autoPlayTable)
-		assertFalse(pack.detailLoaded)
+		assertFalse("a released or failed read must not pass for a loaded one", pack.detailLoaded)
+	}
+
+	@Test
+	fun outOfMemoryWhileCountingSoundsAndLeds_doesNotCloseTheApp() {
+		openPanel(FailingPack(detailFailure = OutOfMemoryError("keySound")))
+	}
+
+	@Test
+	fun readErrorWhileCountingSoundsAndLeds_doesNotCloseTheApp() {
+		openPanel(FailingPack(detailFailure = IllegalStateException("broken keyLed")))
+	}
+
+	@Test
+	fun readErrorWhileMeasuringTheFolder_doesNotCloseTheApp() {
+		openPanel(FailingPack(sizeFailure = SecurityException("no access")))
+	}
+
+	@Test
+	fun countsThatCouldNotBeRead_areShownAsUnknownInsteadOfMeasuringForever() {
+		val panel = openPanel(FailingPack(detailFailure = OutOfMemoryError("keySound")))
+
+		assertTrue(panel.countsUnknown)
+		assertNull(panel.soundCount)
+		assertNull(panel.ledCount)
+	}
+
+	@Test
+	fun folderSizeThatCouldNotBeRead_staysEmpty() {
+		val panel = openPanel(FailingPack(sizeFailure = IOException("gone")))
+
+		assertNull(panel.fileSize)
+		assertEquals(3, panel.soundCount)
+		assertFalse(panel.countsUnknown)
+	}
+
+	@Test
+	fun countsReadNormally_areShown() {
+		val panel = openPanel(FailingPack())
+
+		assertEquals(3, panel.soundCount)
+		assertEquals(2, panel.ledCount)
+		assertFalse(panel.countsUnknown)
 	}
 
 	@Test
@@ -109,19 +181,7 @@ class MainPackPanelViewModelReleaseTest {
 
 	@Test
 	fun readThatFailedHalfWay_letsGoOfWhatItHadRead() {
-		val pack = object : UniPack() {
-			override val id = "half"
-			override fun lastModified() = 0L
-			override fun loadInfo() = this
-			override fun loadDetail(): UniPack {
-				soundTable = Array(1) { Array(8) { arrayOfNulls(8) } }
-				throw OutOfMemoryError("keyLed")
-			}
-			override fun checkFile() = Unit
-			override fun delete() = false
-			override fun getPathString() = "/packs/half"
-			override fun getByteSize() = 0L
-		}
+		val pack = FailingPack(detailFailure = OutOfMemoryError("keyLed"))
 		val panel = openPanel(pack)
 
 		assertTrue(panel.countsUnknown)
