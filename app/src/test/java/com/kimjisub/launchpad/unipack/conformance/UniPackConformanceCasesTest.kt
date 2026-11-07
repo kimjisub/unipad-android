@@ -81,6 +81,7 @@ class UniPackConformanceCasesTest(private val id: String) {
 						put("detail", r.outcome.detail)
 						put("actual", r.actual)
 						r.outcome.operationAdapter?.let { put("operationAdapter", it) }
+						r.outcome.inputAdapter?.let { put("inputAdapter", it) }
 						r.outcome.storedInputPaths?.let { paths ->
 							putJsonArray("storedInputPaths") { paths.forEach { add(JsonPrimitive(it)) } }
 						}

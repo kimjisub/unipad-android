@@ -61,11 +61,20 @@ class ConformanceReportTest(unittest.TestCase):
         self.corpus["cases"][0]["expectation"] = "undetermined"
         self.assertIn("A: undetermined case cannot be pass", self.check())
 
-    def test_screen_case_requires_screen_runner(self):
+    def test_screen_case_requires_the_play_screen_input_path(self):
         self.corpus["cases"][0]["screenInputs"] = True
         self.assertIn("A: generic runner claimed an observation outside its seam", self.check())
-        self.report["cases"][0].update(status="unverified", actual=None)
+        self.report["cases"][0]["inputAdapter"] = "play-screen"
         self.assertEqual([], self.check())
+        self.report["cases"][0]["inputAdapter"] = "pad-calls"
+        self.assertIn("A: input adapter pad-calls cannot observe this case", self.check())
+        self.report["cases"][0].update(status="unverified", actual=None)
+        self.report["cases"][0].pop("inputAdapter")
+        self.assertEqual([], self.check())
+
+    def test_the_play_screen_input_path_cannot_claim_other_cases(self):
+        self.report["cases"][0]["inputAdapter"] = "play-screen"
+        self.assertIn("A: input adapter play-screen cannot observe this case", self.check())
 
     def test_case_insensitive_disk_cannot_confirm_colliding_files(self):
         self.corpus["cases"][0]["requiresCaseSensitiveFiles"] = True
@@ -105,10 +114,12 @@ class ConformanceReportTest(unittest.TestCase):
         for case in added:
             with self.subTest(case=case["id"]):
                 # Fabricated validator fixtures, never runtime observations of the app.
-                restricted = case.get("screenInputs") or "android" in case.get("unobserved", {}) or case.get("requiresCaseSensitiveFiles") or case.get("soundIdentity") or case.get("observation") not in (None, "runner")
+                restricted = "android" in case.get("unobserved", {}) or case.get("requiresCaseSensitiveFiles") or case.get("soundIdentity") or case.get("observation") not in (None, "runner")
                 result = {"id": case["id"], "fingerprint": case["fingerprint"],
                           "status": "unverified" if restricted else "pass",
                           "actual": None if restricted else case["expected"]}
+                if case.get("screenInputs") and not restricted:
+                    result["inputAdapter"] = "play-screen"
                 fake = {"platform": "android", "corpusSha256": "digest", "assertions": "checked",
                         "caseSensitiveFileSystem": False, "cases": [result]}
                 sample = {"cases": [case]}

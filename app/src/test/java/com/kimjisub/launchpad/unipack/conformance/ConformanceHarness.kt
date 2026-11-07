@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.unipack.conformance
 import android.media.AudioManager
 import android.os.SystemClock
 import androidx.lifecycle.viewModelScope
+import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.AudioFileFacts
 import com.kimjisub.launchpad.audio.AudioInspection
@@ -63,16 +64,12 @@ class Deps(
 	val wrapLedRunner: (LedRunner) -> LedRunner = { it },
 )
 
-private fun hex8(value: Int) = "%08x".format(value)
-
 class CaseResult(val actual: JsonElement, val outcome: Outcome)
 
 private class InputNamesNotPreserved(val paths: List<String>) : IllegalStateException("the filesystem changed the input file names")
 
 /** What Android reports for a case: its result and status, or why the corpus says it is not observed here. */
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
-	if (c.screenInputs) return CaseResult(JsonNull, Outcome("unverified", false,
-		"requires the real play screen's distinct pointer/MIDI inputs and auto-play listeners; the generic runner cannot observe it"))
 	if (c.requiresCaseSensitiveFiles && !caseSensitiveFileSystem()) return CaseResult(JsonNull, Outcome("unverified", false,
 		"this filesystem cannot preserve the case-distinct input files"))
 	val unobserved = c.unobserved[PLATFORM]
@@ -99,14 +96,24 @@ fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 		return CaseResult(JsonNull, Outcome("unverified", false,
 			"the filesystem changed the input file names before parsing; see storedInputPaths", changed.paths))
 	}
-	return CaseResult(actual, classify(c, actual))
+	val outcome = classify(c, actual)
+	return CaseResult(actual, if (c.screenInputs) outcome.copy(inputAdapter = PLAY_SCREEN_INPUTS) else outcome)
 }
 
-fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), includePressFeedback: Boolean = false): JsonElement {
+/** Names, in the report, the play screen's own input path that screen-input cases go through. */
+const val PLAY_SCREEN_INPUTS = "play-screen"
+
+/**
+ * Play-screen options the corpus does not state. Its results are taken with press feedback off and Pro
+ * light mode on, so that only the pack's lights are reported, round and logo lights included.
+ */
+data class ScreenOptions(val pressFeedback: Boolean = false, val proLight: Boolean = true)
+
+fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), options: ScreenOptions = ScreenOptions()): JsonElement {
 	require(c.observation == null || c.observation == "runner") { "${c.id}: operations require their own adapter" }
 	require(!c.soundIdentity) { "${c.id}: original archive identity must be observed" }
 	require(c.layer in setOf("parse", "run", "palette")) { "${c.id}: unregistered layer ${c.layer}" }
-	require(!c.screenInputs && c.scenario.none { "input" in it }) { "${c.id}: distinct screen inputs require a device recorder" }
+	require(c.screenInputs || c.scenario.none { "input" in it }) { "${c.id}: distinct inputs need the play screen's input path" }
 	require(!c.requiresCaseSensitiveFiles || caseSensitiveFileSystem()) { "${c.id}: case-sensitive files are required" }
 	if (c.layer == "palette") {
 		return buildJsonObject { putJsonArray("argb") { LaunchpadColor.ARGB.forEach { add(JsonPrimitive(hex8(it.toInt()))) } } }
@@ -119,15 +126,11 @@ fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), includePressFe
 		if (stored != c.files.map { it.path }.sorted()) throw InputNamesNotPreserved(stored)
 		val pack = deps.loadPack(root)
 		if (pack.criticalError) return buildJsonObject { put("loaded", false) }
-		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps, includePressFeedback)
+		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps, options)
 	} finally {
 		root.deleteRecursively()
 	}
 }
-
-/** The pack's sounds folder as it is on disk; the parser finds it whatever its letter case. */
-private fun soundsDirOf(root: File): File =
-	root.listFiles()?.firstOrNull { it.isDirectory && it.name.equals("sounds", ignoreCase = true) } ?: File(root, "sounds")
 
 /**
  * Whether files whose names differ only in letter case are different files where the packs are
@@ -140,76 +143,6 @@ fun caseSensitiveFileSystem(): Boolean {
 		return !File(dir, "A").exists()
 	} finally {
 		dir.deleteRecursively()
-	}
-}
-
-internal fun parseResult(pack: UniPack, root: File): JsonElement {
-	val soundsDir = soundsDirOf(root)
-	return buildJsonObject {
-		put("loaded", true)
-		putJsonObject("info") {
-			put("title", pack.title)
-			put("producerName", pack.producerName)
-			put("buttonX", pack.buttonX)
-			put("buttonY", pack.buttonY)
-			put("chain", pack.chain)
-			put("squareButton", pack.squareButton)
-			pack.website?.takeIf { it.isNotEmpty() }?.let { put("website", it) }
-		}
-		putJsonArray("sounds") {
-			val table = pack.soundTable ?: return@putJsonArray
-			for (c in 0 until pack.chain) for (x in 0 until pack.buttonX) for (y in 0 until pack.buttonY) {
-				val queue = table[c][x][y]?.takeIf { it.isNotEmpty() } ?: continue
-				add(buildJsonObject {
-					put("c", c); put("x", x); put("y", y)
-					putJsonArray("queue") {
-						for (s in queue) add(buildJsonObject {
-							put("file", s.file.relativeTo(soundsDir).path.replace(File.separatorChar, '/'))
-							put("loop", s.loop)
-							put("wormhole", s.wormhole)
-						})
-					}
-				})
-			}
-		}
-		put("keyLedExist", pack.keyLedExist)
-		putJsonArray("leds") {
-			val table = pack.ledAnimationTable ?: return@putJsonArray
-			for (c in 0 until pack.chain) for (x in 0 until pack.buttonX) for (y in 0 until pack.buttonY) {
-				val queue = table[c][x][y]?.takeIf { it.isNotEmpty() } ?: continue
-				add(buildJsonObject {
-					put("c", c); put("x", x); put("y", y)
-					putJsonArray("queue") {
-						for (a in queue) add(buildJsonObject {
-							put("loop", a.loop)
-							putJsonArray("events") { a.ledEvents.forEach { add(ledEventJson(it)) } }
-						})
-					}
-				})
-			}
-		}
-		val autoPlay = pack.autoPlayTable
-		if (autoPlay == null) put("autoPlay", JsonNull)
-		else putJsonArray("autoPlay") { autoPlay.elements.forEach { add(autoPlayElementJson(it)) } }
-		putJsonArray("errors") { pack.errorDetail?.lines()?.forEach { add(JsonPrimitive(normalizeError(it))) } }
-	}
-}
-
-private fun ledEventJson(e: LedEvent): JsonElement = buildJsonArray {
-	when (e) {
-		is LedEvent.On -> { add(JsonPrimitive("on")); add(JsonPrimitive(e.x)); add(JsonPrimitive(e.y)); add(JsonPrimitive(hex8(e.color))); add(JsonPrimitive(e.velocity)) }
-		is LedEvent.Off -> { add(JsonPrimitive("off")); add(JsonPrimitive(e.x)); add(JsonPrimitive(e.y)) }
-		is LedEvent.Delay -> { add(JsonPrimitive("delay")); add(JsonPrimitive(e.delay)) }
-		is LedEvent.Chain -> { add(JsonPrimitive("chain")); add(JsonPrimitive(e.chain)) }
-	}
-}
-
-private fun autoPlayElementJson(e: AutoPlay.Element): JsonElement = buildJsonArray {
-	when (e) {
-		is AutoPlay.Element.On -> { add(JsonPrimitive("on")); add(JsonPrimitive(e.x)); add(JsonPrimitive(e.y)); add(JsonPrimitive(e.currChain)); add(JsonPrimitive(e.num)) }
-		is AutoPlay.Element.Off -> { add(JsonPrimitive("off")); add(JsonPrimitive(e.x)); add(JsonPrimitive(e.y)); add(JsonPrimitive(e.currChain)) }
-		is AutoPlay.Element.Chain -> { add(JsonPrimitive("chain")); add(JsonPrimitive(e.c)) }
-		is AutoPlay.Element.Delay -> { add(JsonPrimitive("delay")); add(JsonPrimitive(e.delay)) }
 	}
 }
 
@@ -297,13 +230,21 @@ private class RecordingEngine(
  * listener wrapped: pad presses and releases are recorded, and onEnd is the screen's own. Leaving and
  * returning to the screen are PlayActivity's onStop and onStart/onResume calls into the view model.
  *
+ * A screen-input case (`screenInputs`) goes through the screen's own input path: each finger is a
+ * pointer of a PadTouchTracker wired to the view model as PlayActivity wires it, the Launchpad's pads
+ * reach controllerPadTouch as PlayActivity's MIDI controller passes them, and auto play's pad presses
+ * and releases go to the screen's own auto-play listener, which drops a command from a runner the
+ * screen has since stopped or replaced. Other cases hand auto play's pads to the view model directly.
+ *
  * Where this run still differs from the play screen: the auto-play listener's other calls (start,
  * progress, guides, chain lights) are not passed on; "start" expects a "stop" before it; returning
- * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
+ * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again;
+ * a finger enters the tracker at its pad's centre in grid coordinates, not through Compose's pointer
+ * input, and a Launchpad pad enters at controllerPadTouch, not as a MIDI packet through its driver.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(
-	val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps, private val includePressFeedback: Boolean,
+	val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps, private val options: ScreenOptions,
 ) {
 	private val soundsDir = soundsDirOf(root)
 	private val testThread = Thread.currentThread()
@@ -333,6 +274,8 @@ private class ScenarioRun(
 	private var pressX = 0
 	private var pressY = 0
 	private val pointerIds = mutableMapOf("pointer:0" to 0L)
+	private val screenInputs = c.screenInputs
+	private val fingers = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }
 	@Volatile private var watchingStops = false
 	@Volatile private var watchingAutoEnd = false
 
@@ -402,9 +345,11 @@ private class ScenarioRun(
 		vm.initState()
 		vm.setupCheckBoxVisibility()
 		vm.setupCheckBoxListeners()
-		// Pro light mode on. Off, which is the play screen's default (PlayActivityViewModel.proLightMode),
-		// hides the round and logo lights of a keyLED file, and the cases that light them would see nothing.
-		vm.scbProLightMode.setChecked(true)
+		// Pro light mode on unless asked otherwise. Off, which is the play screen's default
+		// (PlayActivityViewModel.proLightMode), hides the round and logo lights of a keyLED file. Then
+		// applied as PlayActivity's layout step applies it, which also covers the unchanged default.
+		vm.scbProLightMode.setChecked(options.proLight)
+		vm.proLightMode(vm.scbProLightMode.isChecked())
 		// The option window open with the UI hidden: the screen's own lights on the round buttons (selected
 		// chain, option bar, logo) are all off, so only the pack's lights are reported.
 		vm.scbHideUI.setChecked(true)
@@ -418,6 +363,7 @@ private class ScenarioRun(
 		}
 		vm.initPlayback()
 		vm.showScreenForLoading()
+		fingers.setGrid(pack.buttonX, pack.buttonY)
 		// Touch feedback off, which initPlayback turns on for a pack without a keyLED file: the cases report
 		// the pack's own lights only.
 		vm.scbFeedbackLight.setChecked(false)
@@ -458,8 +404,10 @@ private class ScenarioRun(
 		override fun setLedChain(c: Int) = seen(-1, c)
 
 		private fun seen(x: Int, y: Int) {
-			// The corpus reports keyLED output; press feedback is a separate screen option.
-			val item = vm.channelManager.get(x, y)?.takeIf { includePressFeedback || it.channel == Channel.LED }
+			// The corpus reports keyLED output; press feedback is a separate screen option. Round buttons and
+			// the logo read the same light the screen draws and the Launchpad is sent (setLedUIChain,
+			// setLedLaunchpadChain), so a light Pro light mode hides is not reported.
+			val item = vm.channelManager.get(x, y)?.takeIf { options.pressFeedback || it.channel == Channel.LED }
 			val key = "$x,$y"
 			if (item != null) {
 				val light = item.color to item.code
@@ -493,7 +441,13 @@ private class ScenarioRun(
 			finally { vm.isOptionWindowVisible = options }
 		} else {
 			val pointerId = pointerIds.getOrPut(name) { pointerIds.size.toLong() }
-			press(x, y, down) { vm.padTouch(x, y, down, pointerId) }
+			when {
+				!screenInputs -> press(x, y, down) { vm.padTouch(x, y, down, pointerId) }
+				down -> press(x, y, true) {
+					fingers.down(pointerId, (y + 0.5f) * CELL, (x + 0.5f) * CELL, pack.buttonY * CELL.toInt(), pack.buttonX * CELL.toInt())
+				}
+				else -> press(x, y, false) { fingers.up(pointerId) }
+			}
 		}
 	}
 
@@ -512,8 +466,9 @@ private class ScenarioRun(
 	}
 
 	/**
-	 * [toPads]: each press, release and chain change also reaches the screen the way PlayActivityViewModel's
-	 * own auto-play listener sends it, delivered on the main thread and handed to the view model's auto-play calls.
+	 * [toPads]: each press, release and chain change also reaches the screen. In a screen-input case the
+	 * presses and releases go to PlayActivityViewModel's own auto-play listener; otherwise they are handed
+	 * to the view model's auto-play calls directly, as that listener would deliver them on the main thread.
 	 */
 	private fun startAutoPlay(toPads: Boolean) {
 		val runner = checkNotNull(vm.autoPlayRunner) { "${c.id}: the play screen has no auto play" }
@@ -536,10 +491,14 @@ private class ScenarioRun(
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
 			override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
-				forward(x, y, true) { vm.autoPlayPadOn(x, y, c, num, atMs) }
+				forward(x, y, true) {
+					if (screenInputs) screen.onPadTouchOn(x, y, c, num, atMs) else vm.autoPlayPadOn(x, y, c, num, atMs)
+				}
 			}
 			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
-				forward(x, y, false) { vm.autoPlayPadTouch(x, y, false, atMs) }
+				forward(x, y, false) {
+					if (screenInputs) screen.onPadTouchOff(x, y, atMs) else vm.autoPlayPadTouch(x, y, false, atMs)
+				}
 			}
 			override fun onChainChange(c: Int) {
 				changeChain(c)
@@ -664,13 +623,15 @@ private class ScenarioRun(
 
 	private companion object {
 		const val TICK_MS = 4
+		/** A pad's side in the finger tracker's grid coordinates. */
+		const val CELL = 100f
 		const val STARTING = 3
 		const val WORMHOLE_WAIT_MS = 1_000L
 	}
 }
 
 private fun runScenario(
-	c: CorpusCase, pack: UniPack, root: File, deps: Deps, includePressFeedback: Boolean,
+	c: CorpusCase, pack: UniPack, root: File, deps: Deps, options: ScreenOptions,
 ): JsonElement = buildJsonObject {
-	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps, includePressFeedback).run().forEach { add(it) } }
+	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps, options).run().forEach { add(it) } }
 }

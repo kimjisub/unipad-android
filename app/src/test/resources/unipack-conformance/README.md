@@ -26,21 +26,36 @@ The playback recorder reports effective repeats as the native mixer consumes the
 `-1` is infinite, positive counts repeat, and values below `-1` play once (`0`).
 The parser report still preserves the raw parsed repeat value.
 
-The generic runner cannot observe `screenInputs` cases. It must report them as
-`unverified`, without substituting ordinary pad calls for distinct fingers or
-MIDI sources. `requiresCaseSensitiveFiles` cases must likewise stay unverified
-when the filesystem cannot preserve their distinct input files. Existing
-`unobserved` restrictions in the corpus remain in force.
+`screenInputs` cases run through the play screen's own input path on the same virtual clock: each
+finger is a pointer of a `PadTouchTracker` wired to the view model as `PlayActivity` wires it, the
+Launchpad's pads reach `controllerPadTouch` as the screen's MIDI controller passes them, chains are
+chosen with the chain buttons' `selectChain`, auto play is switched with the mode buttons'
+`switchPlayMode`, and auto play's presses and releases go through the screen's own auto-play listener,
+which drops commands from a runner the screen has stopped or replaced. Their results name
+`"inputAdapter": "play-screen"`; the report check accepts a screen-input observation only with it, and
+refuses it on any other case. Distinct `input` names outside these cases are rejected. What this path
+does not include: Compose's pointer events (a finger enters the tracker at its pad's centre), the
+MIDI driver's packet decoding (a pad enters at `controllerPadTouch`), the screen's `onPause` cancelling
+held fingers, and the option window's scrim, which on the real screen takes the presses made while the
+window is open (the runner keeps the window open to hide the screen's own round-button lights).
+`requiresCaseSensitiveFiles` cases must stay unverified when the filesystem cannot preserve their
+distinct input files. Existing `unobserved` restrictions in the corpus remain in force.
 If the host changes a filename while writing it (for example, a decomposed
 Unicode name becomes composed), the parser is not called. The case stays
 unverified and its actual path inventory is saved as `storedInputPaths`.
 
-The device recorder exercises the eight screen scenarios separately:
+Results are taken with Pro light mode on. The play screen starts with it off, which hides a keyLED
+file's round-button and logo lights on the screen and on the Launchpad (both read the same light).
+`ProLightModeOffTest` runs every playback case with lights both ways and checks that off removes
+exactly the round-button and logo lights: the cases that light them show them hidden, and the cases
+that light pads show every pad light kept. It writes both results to `android-pro-light-off.json`.
+
+The device recorder also exercises the eight screen scenarios with real input:
 
 ```sh
 ANDROID_SERIAL=<leased-device-id> bash scripts/ci-connected-tests.sh \
   com.kimjisub.launchpad.basefeatures.ConformanceScreenObservationTest \
-  com.kimjisub.launchpad.basefeatures.ConformanceCaseSensitiveObservationTest
+  com.kimjisub.launchpad.basefeatures.ConformanceFileObservationTest
 ```
 
 It injects distinct pointers, uses a virtual Launchpad transport with the real
@@ -53,25 +68,37 @@ feedback off, so RUN-G617 and RUN-G618 are recorded a second time with it on
 (`<id>-press-light.json`) to show when each pad's press light ends.
 Its audio recorder uses the native decoder but does not open a speaker.
 
-These are raw real-time observations, not normalized conformance results. Every
-screen record remains `unverified`: a completed recorder test cannot certify
-virtual-clock event ordering.
+These are raw real-time observations, not normalized conformance results, and never enter the
+report: real-time snapshots cannot certify the corpus's virtual-clock event ordering.
 Opening options while a finger is held replaces the injected gesture. That
 case saves partial evidence with `completed=false` and an explicit limitation;
-it does not invent a later release of the cancelled finger. Do not replace
-the generic report's missing screen observations with these snapshots or count
-successful recorder checks as corpus passes. Preserve the complete output and
+it does not invent a later release of the cancelled finger. Preserve the complete output and
 device files before running the tests again.
 
-The thirteen file tests write the exact corpus files on Android
-internal storage, check their stored fingerprint and distinct path inventory,
-use the production archive extractor, parser, decoder and sound runner for the
-ten sound-identity cases, and compare the selected original ZIP entry and SHA-256.
-The other three cases compare the normalized parser result. Their separate
-records in `conformance-files/` include every stored file's hash. They can confirm
-the three case-colliding and ten Unicode filename cases on that device;
-they do not change the generic host
-report or the restrictions in the canonical corpus.
+The fifteen file tests write the exact corpus files on Android internal storage, which keeps
+names that differ only in letter case or in composed and decomposed spelling apart (a macOS disk
+merges the latter even when it is case-sensitive). They check the stored fingerprint and distinct
+path inventory, then read the files with the real parser: KL-026, KL-028 and KS-G617 to KS-G619 in
+the host harness's parse form, and the ten sound-identity cases through the production archive
+extractor, decoder and sound runner, reporting the selected original ZIP entry and SHA-256. Each
+case leaves `conformance-files/<id>.json` with its `actual`, its status against the corpus and
+every stored file's hash.
+
+Those records fill the host report's gaps:
+
+```sh
+adb -s <leased-device-id> pull /data/local/tmp/unipad_tests/conformance-files device/
+python3 scripts/merge_device_conformance.py build/unipack-conformance/android.json \
+  device/conformance-files -o build/unipack-conformance/android-merged.json
+```
+
+A record is merged only when it ran the same corpus and input, comes from the recorder for that kind
+of case, kept every name apart, traced every selected sound to its archive entry, and its status
+agrees with its actual value; otherwise the case stays unverified with the reason. A sound whose bytes
+the app's archive extraction changed is a failure even when the chosen names match: the device test
+fails and the merged case is `fail`. The merged report names the device, each record's SHA-256 and the
+storage evidence (`deviceEvidence`). `check_unipack_conformance.py` checks that evidence again and
+accepts a device observation only for a case the host cannot see because of its file names.
 
 The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
 and `AudioSelector.select` for 115 cases. Physical WAV fixtures use real PCM
