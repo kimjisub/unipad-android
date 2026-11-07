@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
+import re
 import subprocess
 import time
 
@@ -14,6 +15,10 @@ SETTINGS = (
     ("global", "transition_animation_scale"),
     ("global", "animator_duration_scale"),
 )
+# Display size and density overrides set with `wm`. Tests that turn the display into a tablet or a
+# larger screen put them back when they end, but a run stopped inside one (a time limit, a killed
+# process) leaves them on the emulator, and every later run starts on that screen.
+DISPLAY_OVERRIDES = ("size", "density")
 PROBE = "com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.DeviceSettingsProbe"
 
 
@@ -21,7 +26,9 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def is_default(value):
+def is_default(key, value):
+    if key.startswith("display."):
+        return value == ""
     if value in ("", "null"):
         return True
     try:
@@ -41,9 +48,23 @@ class DeviceSettings:
         return subprocess.run(self.command + list(args), check=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout).stdout.strip()
 
+    def display_override(self, name):
+        """The override `wm` reports for the display's size or density, or "" when it has none."""
+        match = re.search(rf"^Override {name}: (\S+)$", self.adb("shell", "wm", name), re.MULTILINE)
+        return match.group(1) if match else ""
+
     def snapshot(self):
-        return {"time": now(), "values": {f"{namespace}.{key}": self.adb(
-            "shell", "settings", "get", namespace, key) for namespace, key in SETTINGS}}
+        values = {f"{namespace}.{key}": self.adb("shell", "settings", "get", namespace, key)
+                  for namespace, key in SETTINGS}
+        values.update({f"display.{name}": self.display_override(name) for name in DISPLAY_OVERRIDES})
+        return {"time": now(), "values": values}
+
+    def reset(self, full_key):
+        namespace, key = full_key.split(".")
+        if namespace == "display":
+            self.adb("shell", "wm", key, "reset")
+        else:
+            self.adb("shell", "settings", "put", namespace, key, "1.0")
 
     def save(self, record):
         self.path.write_text(json.dumps(record, indent=2) + "\n")
@@ -61,16 +82,15 @@ class DeviceSettings:
         try:
             record["before"] = self.snapshot()
             record["reset"] = [key for key, value in record["before"]["values"].items()
-                               if not is_default(value)]
+                               if not is_default(key, value)]
             self.save(record)
             for full_key in record["reset"]:
-                namespace, key = full_key.split(".")
-                self.adb("shell", "settings", "put", namespace, key, "1.0")
+                self.reset(full_key)
             deadline = time.monotonic() + 10
             while True:
                 record["after"] = self.snapshot()
                 self.save(record)
-                if all(is_default(value) for value in record["after"]["values"].values()):
+                if all(is_default(key, value) for key, value in record["after"]["values"].items()):
                     break
                 if time.monotonic() >= deadline:
                     raise RuntimeError("Device settings did not return to their defaults")
