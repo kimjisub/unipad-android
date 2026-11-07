@@ -16,7 +16,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from check_unipack_conformance import DEVICE_SOURCES, check_report, device_kind, same_json
+from check_unipack_conformance import (DEVICE_SOURCES, check_report, device_evidence, device_evidence_problem,
+                                       device_kind, same_json, stored_names_changed)
 
 
 def load_records(folders):
@@ -44,25 +45,20 @@ def refusal(case, host, record, corpus_hash):
         return "the device record ran other input"
     if host.get("actual") is not None:
         return "the host observed this case itself"
-    stored = host.get("storedInputPaths")
-    changed = stored is not None and sorted(stored) != sorted(f["path"] for f in case.get("files", []))
-    kind = device_kind(case, changed)
+    kind = device_kind(case, stored_names_changed(case, host.get("storedInputPaths")))
     if kind is None or record.get("source") != DEVICE_SOURCES[kind]:
         return f"{record.get('source')} does not observe this kind of case"
     if record.get("actual") is None:
         return "the device record has no actual value"
     if record.get("completed") is False:
         return "the device recorder did not complete: " + str(record.get("detail", ""))
-    if kind == "sound-identity":
-        if record.get("identityTraced") is not True:
-            return "the device could not trace every selected sound to its archive entry"
-        if not all(entry.get("contentsPreserved") is True for entry in record.get("storage", [])):
-            return "device storage did not keep every archive entry's bytes"
-    if kind in ("files", "sound-identity"):
-        filesystem = record.get("filesystem", {})
-        if filesystem.get("caseSensitive") is not True or filesystem.get("normalizationSensitive") is not True:
-            return "device storage merges names the case keeps apart"
-    status = "pass" if same_json(record["actual"], case.get("expected")) else "fail"
+    evidence = device_evidence(kind, record)
+    why = device_evidence_problem(kind, evidence)
+    if why is not None:
+        return why
+    # Extraction that changed a sound's bytes is the app's failure, whatever name it chose.
+    contents_changed = kind == "sound-identity" and not evidence["contentsPreserved"]
+    status = "pass" if not contents_changed and same_json(record["actual"], case.get("expected")) else "fail"
     if record.get("status") != status:
         return f"the device record says {record.get('status')} but its actual value is a {status}"
     return None
@@ -83,10 +79,13 @@ def merge(corpus, corpus_hash, host, records):
         if why is not None:
             out.append({**result, "deviceRefused": f"{path.name}: {why}"})
             continue
+        case = cases[result["id"]]
+        kind = device_kind(case, stored_names_changed(case, result.get("storedInputPaths")))
         entry = {
             "id": result["id"], "fingerprint": result["fingerprint"], "status": record["status"],
             "detail": f"observed on {record.get('device', 'an Android device')} API {record.get('sdkInt', '?')} by {record['source']}",
             "actual": record["actual"], "observedOn": "device", "source": record["source"],
+            "deviceEvidence": device_evidence(kind, record),
             "deviceRecord": {"file": path.name, "sha256": digest},
         }
         if "storedInputPaths" in result:

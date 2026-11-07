@@ -37,6 +37,39 @@ def device_kind(case, changed_names):
     return None
 
 
+def stored_names_changed(case, stored_paths):
+    """Whether the host stored the case's input files under other names than the corpus gives."""
+    expected_paths = [entry["path"] for entry in case.get("files", [])]
+    return stored_paths is not None and bool(expected_paths) and sorted(stored_paths) != sorted(expected_paths)
+
+
+def device_evidence(kind, record):
+    """What a device record shows about its own storage, carried into the merged report and checked there."""
+    filesystem = record.get("filesystem", {})
+    evidence = {"caseSensitive": filesystem.get("caseSensitive") is True,
+                "normalizationSensitive": filesystem.get("normalizationSensitive") is True}
+    if kind == "sound-identity":
+        storage = record.get("storage", [])
+        evidence["identityTraced"] = record.get("identityTraced") is True
+        evidence["storageEntries"] = len(storage)
+        evidence["contentsPreserved"] = bool(storage) and all(entry.get("contentsPreserved") is True for entry in storage)
+    return evidence
+
+
+def device_evidence_problem(kind, evidence):
+    """Why the evidence cannot support a device observation; contents that changed are a failure, not a gap."""
+    if not isinstance(evidence, dict):
+        return "device observation carries no storage evidence"
+    if evidence.get("caseSensitive") is not True or evidence.get("normalizationSensitive") is not True:
+        return "device storage merges names the case keeps apart"
+    if kind == "sound-identity":
+        if evidence.get("identityTraced") is not True:
+            return "device could not trace every selected sound to its archive entry"
+        if not isinstance(evidence.get("storageEntries"), int) or evidence["storageEntries"] < 1:
+            return "device recorded no archive entry"
+    return None
+
+
 def check_report(corpus, report, corpus_hash):
     problems = []
     if report.get("platform") != "android":
@@ -69,28 +102,43 @@ def check_report(corpus, report, corpus_hash):
                     or len(stored_paths) != len(set(stored_paths))):
                 problems.append(f"{case_id}: invalid stored input path inventory")
             else:
-                expected_paths = [entry["path"] for entry in case.get("files", [])]
-                changed_names = bool(expected_paths) and sorted(stored_paths) != sorted(expected_paths)
+                changed_names = stored_names_changed(case, stored_paths)
         input_adapter = result.get("inputAdapter")
         if input_adapter is not None and not (case.get("screenInputs", False) and input_adapter == PLAY_SCREEN_INPUTS):
             problems.append(f"{case_id}: input adapter {input_adapter} cannot observe this case")
             continue
-        restricted = ((case.get("screenInputs", False) and input_adapter != PLAY_SCREEN_INPUTS)
-                      or "android" in case.get("unobserved", {})
-                      or changed_names
-                      or case.get("soundIdentity", False)
-                      or (case.get("observation") not in (None, "runner")
-                          and (case["observation"] not in {"audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map"}
-                               or result.get("operationAdapter") != case["observation"]))
-                      or (case.get("requiresCaseSensitiveFiles", False)
-                          and report.get("caseSensitiveFileSystem") is not True))
+        # A device observation may lift only the restrictions that come from the host's file names.
+        case_sensitive_files = case.get("requiresCaseSensitiveFiles", False)
+        file_restricted = (changed_names
+                           or case.get("soundIdentity", False)
+                           or (case_sensitive_files and report.get("caseSensitiveFileSystem") is not True)
+                           or (case_sensitive_files and "android" in case.get("unobserved", {})))
+        other_restricted = ((case.get("screenInputs", False) and input_adapter != PLAY_SCREEN_INPUTS)
+                            or ("android" in case.get("unobserved", {}) and not case_sensitive_files)
+                            or (case.get("observation") not in (None, "runner")
+                                and (case["observation"] not in {"audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map"}
+                                     or result.get("operationAdapter") != case["observation"])))
+        restricted = file_restricted or other_restricted
         if result.get("observedOn") == "device":
             kind = device_kind(case, changed_names)
-            if not restricted or kind is None:
+            if not file_restricted or kind is None:
                 problems.append(f"{case_id}: device observation replaces a host observation")
+                continue
+            if other_restricted:
+                problems.append(f"{case_id}: device observation cannot lift a restriction outside file names")
                 continue
             if result.get("source") != DEVICE_SOURCES[kind]:
                 problems.append(f"{case_id}: device observation from {result.get('source')} cannot observe a {kind} case")
+                continue
+            evidence = result.get("deviceEvidence")
+            why = device_evidence_problem(kind, evidence)
+            if why is not None:
+                problems.append(f"{case_id}: {why}")
+                continue
+            if kind == "sound-identity" and evidence.get("contentsPreserved") is not True:
+                if status != "fail":
+                    problems.append(f"{case_id}: changed sound contents cannot be {status}")
+                problems.append(f"{case_id}: the app's archive extraction changed a sound file's contents")
                 continue
             restricted = False
         elif "observedOn" in result:

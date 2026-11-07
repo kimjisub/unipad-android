@@ -9,6 +9,7 @@ import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.conformance.identityFileSystem
 import com.kimjisub.launchpad.unipack.conformance.observeSoundIdentity
 import com.kimjisub.launchpad.unipack.conformance.parseResult
+import com.kimjisub.launchpad.unipack.conformance.sha256Hex
 import com.kimjisub.launchpad.unipack.conformance.soundIdentityOutcome
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -25,7 +26,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -78,12 +78,15 @@ class ConformanceFileObservationTest : PlaybackScreenTest() {
             for (file in storedFiles) fileEvidence.put(JSONObject()
                 .put("path", file.relativeTo(root).invariantSeparatorsPath)
                 .put("bytes", file.length())
-                .put("sha256", MessageDigest.getInstance("SHA-256").digest(file.readBytes()).joinToString("") { "%02x".format(it) }))
+                .put("sha256", sha256Hex(file.readBytes())))
 
             val observation = if (case.optBoolean("soundIdentity")) observeIdentity(case, root) else observeParse(root)
             val expected = Json.parseToJsonElement(case.getJSONObject("expected").toString())
             val actual = observation.getValue("actual")
-            val status = if (actual == expected) "pass" else "fail"
+            // A sound-identity observation brings its own status: extraction that changed a sound's
+            // bytes fails, and a selection not traced to its archive entry is unverified, even when
+            // the chosen names match.
+            val status = observation["status"]?.jsonPrimitive?.content ?: if (actual == expected) "pass" else "fail"
             val report = JSONObject(observation.toString())
                 .put("platform", "android").put("id", id)
                 .put("fingerprint", case.getString("fingerprint")).put("corpusSha256", digest)
@@ -95,6 +98,7 @@ class ConformanceFileObservationTest : PlaybackScreenTest() {
                 it.writeText(report.toString(2) + "\n"); true
             })
             assertEquals("$id: actual result on device storage", expected, actual)
+            assertEquals("$id: status on device storage (${observation["storage"]})", "pass", status)
         } finally {
             root.deleteRecursively()
         }

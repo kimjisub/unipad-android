@@ -34,8 +34,10 @@ chosen with the chain buttons' `selectChain`, auto play is switched with the mod
 which drops commands from a runner the screen has stopped or replaced. Their results name
 `"inputAdapter": "play-screen"`; the report check accepts a screen-input observation only with it, and
 refuses it on any other case. Distinct `input` names outside these cases are rejected. What this path
-does not include: Compose's pointer events (a finger enters the tracker at its pad's centre) and the
-MIDI driver's packet decoding (a pad enters at `controllerPadTouch`).
+does not include: Compose's pointer events (a finger enters the tracker at its pad's centre), the
+MIDI driver's packet decoding (a pad enters at `controllerPadTouch`), the screen's `onPause` cancelling
+held fingers, and the option window's scrim, which on the real screen takes the presses made while the
+window is open (the runner keeps the window open to hide the screen's own round-button lights).
 `requiresCaseSensitiveFiles` cases must stay unverified when the filesystem cannot preserve their
 distinct input files. Existing `unobserved` restrictions in the corpus remain in force.
 If the host changes a filename while writing it (for example, a decomposed
@@ -44,8 +46,9 @@ unverified and its actual path inventory is saved as `storedInputPaths`.
 
 Results are taken with Pro light mode on. The play screen starts with it off, which hides a keyLED
 file's round-button and logo lights on the screen and on the Launchpad (both read the same light).
-`ProLightModeOffTest` runs every playback case that lights them both ways and checks that off hides
-exactly those lights and keeps the pad lights; it writes both results to `android-pro-light-off.json`.
+`ProLightModeOffTest` runs every playback case with lights both ways and checks that off removes
+exactly the round-button and logo lights: the cases that light them show them hidden, and the cases
+that light pads show every pad light kept. It writes both results to `android-pro-light-off.json`.
 
 The device recorder also exercises the eight screen scenarios with real input:
 
@@ -90,9 +93,12 @@ python3 scripts/merge_device_conformance.py build/unipack-conformance/android.js
 ```
 
 A record is merged only when it ran the same corpus and input, comes from the recorder for that kind
-of case, kept every name and byte apart, and its status agrees with its actual value; otherwise the
-case stays unverified with the reason. The merged report names the device and each record's SHA-256,
-and `check_unipack_conformance.py` accepts a device observation only for a case the host cannot see.
+of case, kept every name apart, traced every selected sound to its archive entry, and its status
+agrees with its actual value; otherwise the case stays unverified with the reason. A sound whose bytes
+the app's archive extraction changed is a failure even when the chosen names match: the device test
+fails and the merged case is `fail`. The merged report names the device, each record's SHA-256 and the
+storage evidence (`deviceEvidence`). `check_unipack_conformance.py` checks that evidence again and
+accepts a device observation only for a case the host cannot see because of its file names.
 
 The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
 and `AudioSelector.select` for 115 cases. Physical WAV fixtures use real PCM

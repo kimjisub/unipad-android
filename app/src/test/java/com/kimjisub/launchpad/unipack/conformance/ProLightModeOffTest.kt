@@ -19,8 +19,9 @@ import java.io.File
 /**
  * The play screen starts with Pro light mode off, which the corpus does not measure: it reports Android
  * with the mode on. Off, a keyLED file's round-button and logo lights are hidden on the screen and on the
- * Launchpad, and its pad lights are unchanged. Every corpus playback case that lights a round button or
- * the logo is run both ways; `android-pro-light-off.json` keeps both results.
+ * Launchpad, and its pad lights are unchanged. Every corpus playback case with lights is run both ways:
+ * the cases that light round buttons or the logo show what is hidden, and the cases that light pads show
+ * that their lights stay. `android-pro-light-off.json` keeps both results.
  */
 class ProLightModeOffTest {
 
@@ -30,9 +31,12 @@ class ProLightModeOffTest {
 	@Test
 	fun roundAndLogoLightsAreHiddenAndPadLightsKept() {
 		val cases = corpus.cases.filter { c ->
-			c.layer == "run" && c.determined && PLATFORM !in c.unobserved && (c.expected?.jsonObject?.get("checkpoints") as? JsonArray).orEmpty().any { it.jsonArray.any(::isRound) }
+			c.layer == "run" && c.determined && PLATFORM !in c.unobserved && !c.requiresCaseSensitiveFiles &&
+				(c.expected?.jsonObject?.get("checkpoints") as? JsonArray).orEmpty().any { it.jsonArray.any(::isLight) }
 		}
-		assertTrue("the corpus has playback cases that light round buttons or the logo", cases.isNotEmpty())
+		val expectedEvents = cases.map { c -> checkpointsOf(c.expected).flatMap { it.jsonArray } }
+		assertTrue("the corpus has playback cases that light round buttons or the logo", expectedEvents.any { e -> e.any(::isRound) })
+		assertTrue("the corpus has playback cases that light pads", expectedEvents.any { e -> e.any(::isPadLight) })
 		val observed = cases.map { c ->
 			val on = checkpointsOf(actualFor(c, corpus))
 			val off = checkpointsOf(actualFor(c, corpus, options = ScreenOptions(proLight = false)))
@@ -42,16 +46,22 @@ class ProLightModeOffTest {
 		for ((c, on, off) in observed) {
 			assertEquals("${c.id}: with Pro light mode on the corpus result holds", checkpointsOf(c.expected), on)
 			assertEquals("${c.id}: Pro light mode off hides round and logo lights only", withoutRound(on), off)
+			if (on.any { it.jsonArray.any(::isPadLight) }) {
+				assertTrue("${c.id}: pad lights stay with Pro light mode off", off.any { it.jsonArray.any(::isPadLight) })
+			}
 		}
+		assertTrue("pad lights were observed with Pro light mode off",
+			observed.any { (_, _, off) -> off.any { it.jsonArray.any(::isPadLight) } })
 	}
 
 	private fun checkpointsOf(result: JsonElement?): JsonArray = result!!.jsonObject.getValue("checkpoints").jsonArray
 
+	private fun isLight(event: JsonElement): Boolean = event.jsonArray[0].jsonPrimitive.content in setOf("ledOn", "ledOff")
+
 	/** A light event on a round button or the logo: the corpus puts them at x = -1. */
-	private fun isRound(event: JsonElement): Boolean {
-		val parts = event.jsonArray
-		return parts[0].jsonPrimitive.content in setOf("ledOn", "ledOff") && parts[1].jsonPrimitive.int == -1
-	}
+	private fun isRound(event: JsonElement): Boolean = isLight(event) && event.jsonArray[1].jsonPrimitive.int == -1
+
+	private fun isPadLight(event: JsonElement): Boolean = isLight(event) && event.jsonArray[1].jsonPrimitive.int >= 0
 
 	private fun withoutRound(checkpoints: JsonArray): JsonArray = buildJsonArray {
 		for (checkpoint in checkpoints) add(buildJsonArray { checkpoint.jsonArray.filterNot(::isRound).forEach { add(it) } })

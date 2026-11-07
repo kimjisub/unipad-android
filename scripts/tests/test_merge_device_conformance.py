@@ -68,14 +68,44 @@ class MergeDeviceConformanceTest(unittest.TestCase):
                 self.assertEqual("unverified", self.statuses(self.merged())["S"])
                 record.clear(); record.update(saved)
 
-    def test_untraced_identity_or_merged_storage_is_refused(self):
-        for change in ({"identityTraced": False}, {"storage": [{"contentsPreserved": False}]},
+    def test_untraced_identity_missing_storage_or_merged_names_are_refused(self):
+        for change in ({"identityTraced": False}, {"storage": []},
                        {"filesystem": {"caseSensitive": True, "normalizationSensitive": False}}):
             with self.subTest(change=change):
                 saved = copy.deepcopy(self.records["S"])
                 self.records["S"].update(change)
                 self.assertEqual("unverified", self.statuses(self.merged())["S"])
                 self.records["S"] = saved
+
+    def test_changed_sound_contents_are_a_failure_even_with_the_expected_name(self):
+        self.records["S"].update(storage=[{"contentsPreserved": True}, {"contentsPreserved": False}])
+        self.assertEqual("unverified", self.statuses(self.merged())["S"], "a record claiming pass is refused")
+        self.records["S"]["status"] = "fail"
+        report = self.merged()
+        self.assertEqual("fail", self.statuses(report)["S"])
+        self.assertIn("S: the app's archive extraction changed a sound file's contents",
+                      merger.check_report(self.corpus, report, "digest"))
+
+    def test_the_checker_rechecks_the_device_evidence(self):
+        for change, problem in (
+                ({"normalizationSensitive": False}, "S: device storage merges names the case keeps apart"),
+                ({"identityTraced": False}, "S: device could not trace every selected sound to its archive entry"),
+                ({"storageEntries": 0}, "S: device recorded no archive entry")):
+            with self.subTest(change=change):
+                report = self.merged()
+                report["cases"][0]["deviceEvidence"].update(change)
+                self.assertIn(problem, merger.check_report(self.corpus, report, "digest"))
+        report = self.merged()
+        report["cases"][0]["status"] = "pass"
+        report["cases"][0]["deviceEvidence"]["contentsPreserved"] = False
+        problems = merger.check_report(self.corpus, report, "digest")
+        self.assertIn("S: changed sound contents cannot be pass", problems)
+
+    def test_a_device_observation_lifts_only_file_name_restrictions(self):
+        self.corpus["cases"][0]["unobserved"] = {"android": "needs a speaker"}
+        report = self.merged()
+        self.assertIn("S: device observation cannot lift a restriction outside file names",
+                      merger.check_report(self.corpus, report, "digest"))
 
     def test_a_device_record_never_replaces_a_host_observation(self):
         self.records["H"] = dict(self.records["C"], id="H", fingerprint="f-h")
