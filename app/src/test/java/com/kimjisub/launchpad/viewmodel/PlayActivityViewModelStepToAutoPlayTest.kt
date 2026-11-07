@@ -133,8 +133,10 @@ class PlayActivityViewModelStepToAutoPlayTest(
             assertFalse(vm.autoPlayRunner!!.stepMode)
             assertTrue(plays.isEmpty())
             assertTrue("Guide resume must not request pack lights", lights.isEmpty())
-            assertEquals("Guide resume keeps the existing progress handling",
-                previousProgress + if (finalGroup) 0 else 1, vm.autoPlayRunner!!.progress)
+            // An untouched chord stays owed, so progress returns to its first pad (`on 2 1`, element 4);
+            // a partly played chord is due at once and its trailing delay is read as before.
+            assertEquals("Guide resume keeps an unplayed chord and passes a partly played one",
+                if (playedPad < 0) 4 else previousProgress + if (finalGroup) 0 else 1, vm.autoPlayRunner!!.progress)
             scheduler.advanceTimeBy(5000)
             scheduler.runCurrent()
             assertTrue("Timed guidance must remain silent", plays.isEmpty())

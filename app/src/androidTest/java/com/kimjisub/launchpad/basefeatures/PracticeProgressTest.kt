@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.util.Log
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
+import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -154,5 +155,51 @@ class PracticeProgressTest : PlaybackScreenTest() {
         screen.await("The still upcoming guide must remain visible after resume") { hints() == setOf(0) }
         assertEquals(PlayMode.GuidePlay, screen.onMain { screen.vm().playMode })
         record("practice-resumed-upcoming-hint")
+    }
+
+    /** The runner's timed hints, keyed x * 256 + y, with the time each note is due. */
+    private fun guideTargets(): Map<Int, Long> {
+        val runner = screen.onMain { screen.vm().autoPlayRunner!! }
+        @Suppress("UNCHECKED_CAST")
+        val guides = AutoPlayRunner::class.java.getDeclaredField("activeGuides")
+            .apply { isAccessible = true }.get(runner) as MutableMap<Int, Long>
+        return synchronized(guides) { guides.toMap() }
+    }
+
+    @Test fun resumingAfterPlayingThePausedStepKeepsTheWrittenGapAfterIt() {
+        File(screen.pack(), "autoPlay").writeText("d 1000\no 1 1\nf 1 1\nd 1000\no 1 2\nf 1 2\nd 1000\no 2 1\nf 2 1\nd 1000\n")
+        screen.openPlay()
+        val startedAt = screen.onMain { SystemClock.elapsedRealtime().also { screen.vm().switchPlayMode(PlayMode.GuidePlay) } }
+        screen.await("The first note's guide did not appear") { hints() == setOf(0) }
+        val pausedAt = screen.onMain { screen.vm().autoPlayPause(); SystemClock.elapsedRealtime() }
+        val songAtPause = pausedAt - startedAt
+        assertTrue("Timing condition failed: paused at song +$songAtPause ms, at least 200 ms before the first note was required",
+            songAtPause <= 800)
+        screen.await("Pausing did not show the first note as a step") {
+            screen.onMain { screen.vm().autoPlayRunner!!.stepMode } && hints() == setOf(0)
+        }
+        record("practice-pause-before-first-note")
+        pressPad(0)
+        screen.await("Playing the paused step did not show the next note") { hints() == setOf(1) }
+        record("practice-paused-step-played")
+        SystemClock.sleep(2000)
+        val resumedAt = screen.onMain { SystemClock.elapsedRealtime().also { screen.vm().autoPlayResume() } }
+        var targets = emptyMap<Int, Long>()
+        screen.await("The next note was not guided after resume") { guideTargets().also { targets = it }.containsKey(1) }
+        record("practice-resumed-next-note")
+        SystemClock.sleep((resumedAt + 1300 - SystemClock.elapsedRealtime()).coerceAtLeast(0))
+        record("practice-resumed-plus-1300ms")
+        val gap = targets.getValue(1) - resumedAt
+        // Ignoring the played note would put the next one 2000 ms after the song time at the pause.
+        val gapIgnoringThePress = 2000 - songAtPause
+        assertTrue("The next note must be due 1000 ms after resuming, as written after the played note; " +
+            "it was +$gap ms (+$gapIgnoringThePress ms or later if the press were ignored)",
+            gap >= 1000 && gap < gapIgnoringThePress)
+        assertFalse("The played note must not be guided again: $targets", targets.containsKey(0))
+        screen.await("The third note was not guided") { guideTargets().also { targets = it }.containsKey(256) }
+        assertEquals("The third note keeps its written gap after the second", 1000L, targets.getValue(256) - (resumedAt + gap))
+        screen.await("Practice did not finish after the last note") { screen.onMain { screen.vm().playMode == PlayMode.None } }
+        assertTrue("No guide may stay lit after practice ends", hints().isEmpty())
+        assertTrue("Timed guidance never sounds a pad: ${audio.plays}", audio.plays.size == 1)
     }
 }
