@@ -246,10 +246,22 @@ object FileManager {
 		}
 	}
 
+	/**
+	 * Lists [dir], throwing where [File.listFiles] returns null: a copy that skipped an unreadable
+	 * folder used to report the pack as moved, and the original was deleted with that folder in it.
+	 */
+	fun listEntries(dir: File): Array<File> =
+		dir.listFiles() ?: throw IOException("Could not read the folder ${dir.path}")
+
+	/** Throws unless every folder under [dir] can be listed. */
+	fun requireReadableTree(dir: File) {
+		for (child in listEntries(dir)) if (child.isDirectory) requireReadableTree(child)
+	}
+
 	fun copyDirectory(source: File, target: File) {
 		if (source.isDirectory) {
-			if (!target.exists()) target.mkdirs()
-			source.listFiles()?.forEach { child ->
+			if (!target.isDirectory && !target.mkdirs()) throw IOException("Could not create ${target.path}")
+			listEntries(source).forEach { child ->
 				copyDirectory(child, File(target, child.name))
 			}
 		} else {
@@ -287,8 +299,9 @@ object FileManager {
 	fun copyFileToDocumentTree(context: Context, source: File, targetParent: DocumentFile) {
 		if (source.isDirectory) {
 			val dirDoc = targetParent.createDirectory(source.name)
-				?: targetParent.findFile(source.name) ?: return
-			source.listFiles()?.forEach { child ->
+				?: targetParent.findFile(source.name)?.takeIf { it.isDirectory }
+				?: throw IOException("Could not create the folder ${source.name} in ${targetParent.uri}")
+			listEntries(source).forEach { child ->
 				copyFileToDocumentTree(context, child, dirDoc)
 			}
 		} else {

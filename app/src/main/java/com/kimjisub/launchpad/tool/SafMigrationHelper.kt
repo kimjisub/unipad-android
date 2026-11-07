@@ -105,7 +105,7 @@ class SafMigrationHelper(
 					skipped++
 				} else {
 					writeBackup(targetTreeDoc, folder.name, partialSuffix = "", create = DocumentFile::createDirectory) { dir ->
-						folder.listFiles()?.forEach { FileManager.copyFileToDocumentTree(context, it, dir) }
+						FileManager.listEntries(folder).forEach { FileManager.copyFileToDocumentTree(context, it, dir) }
 					}
 					if (deleteSource) deleteMovedSource(folder)
 					transferred++
@@ -144,6 +144,8 @@ class SafMigrationHelper(
 					skipped++
 				} else {
 					withTempArchive { tempZip ->
+						// zip4j leaves out a folder it cannot list instead of failing.
+						FileManager.requireReadableTree(folder)
 						ZipFile(tempZip).use { it.addFolder(folder) }
 						writeBackup(targetTreeDoc, zipName, partialSuffix = ".zip", create = { parent, name -> parent.createFile(ZIP_MIME_TYPE, name) }) { doc ->
 							context.contentResolver.openOutputStream(doc.uri)?.use { out ->

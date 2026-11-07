@@ -137,6 +137,44 @@ class SafMigrationDeletionTest(private val route: String) {
         assertEquals(emptyList<String>(), target.listFiles()!!.map { it.name })
     }
 
+    @Test fun aFolderThatCannotBeReadFailsTheMoveAndKeepsTheSource() = runBlocking {
+        val sounds = File(source, "sounds").apply { mkdir() }
+        File(sounds, "s0.wav").writeText("sound")
+        sounds.setReadable(false)
+        try {
+            assumeTrue("needs a file system that enforces permissions", sounds.listFiles() == null)
+
+            val result = transfer(deleteSource = true)
+
+            assertEquals(0, result.transferred)
+            assertEquals(1, result.failed)
+            assertTrue(result.errors.single(), result.errors.single().contains("sounds"))
+        } finally {
+            sounds.setReadable(true)
+        }
+        assertEquals("title=Original", File(source, "info").readText())
+        assertEquals("sound", File(sounds, "s0.wav").readText())
+        assertEquals(emptyList<String>(), target.list()!!.toList())
+    }
+
+    @Test fun aSubfolderTheBackupFolderCannotCreateFailsTheMoveAndKeepsTheSource() = runBlocking {
+        assumeTrue(route == "folder")
+        File(source, "sounds").apply { mkdir(); File(this, "s0.wav").writeText("sound") }
+        val backupFolder = spyk(DocumentFile.fromFile(target)) {
+            every { createDirectory(any()) } answers {
+                callOriginal()?.let { entry -> spyk(entry) { every { createDirectory(any()) } returns null } }
+            }
+        }
+
+        val result = SafMigrationHelper(context).transferFileToSaf(listOf(source), backupFolder, true) { _, _, _ -> }
+
+        assertEquals(0, result.transferred)
+        assertEquals(1, result.failed)
+        assertTrue(result.errors.single(), result.errors.single().contains("sounds"))
+        assertEquals("sound", File(source, "sounds/s0.wav").readText())
+        assertEquals(emptyList<String>(), target.list()!!.toList())
+    }
+
     @Test fun aKillWhileDeletingTheSourceLeavesNoHalfDeletedPackInTheList() = runBlocking {
         // A folder whose files cannot be deleted stands in for a kill part way through deletion.
         val sounds = File(source, "sounds").apply { mkdir() }
