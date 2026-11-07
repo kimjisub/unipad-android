@@ -13,15 +13,25 @@ SPEC.loader.exec_module(settings)
 
 
 class DeviceSettingsTest(unittest.TestCase):
-    def device(self, values=None):
+    def device(self, values=None, overrides=None):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         device = settings.DeviceSettings("adb", "borrowed-device", directory.name)
         values = dict(values or {f"{ns}.{key}": "1.0" for ns, key in settings.SETTINGS})
+        values.update({f"display.{name}": "" for name in settings.DISPLAY_OVERRIDES})
+        values.update({f"display.{name}": value for name, value in (overrides or {}).items()})
+        physical = {"size": "1080x2400", "density": "420"}
         calls = []
 
         def adb(*args, **kwargs):
             calls.append(args)
+            if args[:2] == ("shell", "wm"):
+                name = args[2]
+                if args[3:] == ("reset",):
+                    values[f"display.{name}"] = ""
+                    return ""
+                override = values[f"display.{name}"]
+                return f"Physical {name}: {physical[name]}" + (f"\nOverride {name}: {override}" if override else "")
             if args[:2] == ("shell", "settings"):
                 key = ".".join(args[3:5])
                 if args[2] == "get":
@@ -41,9 +51,9 @@ class DeviceSettingsTest(unittest.TestCase):
         values["global.animator_duration_scale"] = "10"
         device.finish()
         record = json.loads(device.path.read_text())
-        self.assertEqual(record["before"]["values"], original)
+        self.assertEqual(record["before"]["values"], original | {"display.size": "", "display.density": ""})
         self.assertEqual(set(record["reset"]), set(original))
-        self.assertTrue(all(value == "1.0" for value in record["after"]["values"].values()))
+        self.assertTrue(all(record["after"]["values"][key] == "1.0" for key in original))
         self.assertEqual(record["final"]["values"]["global.animator_duration_scale"], "10")
         self.assertEqual(record["status"], "ready")
         self.assertIn("verified_at", record)
@@ -51,6 +61,43 @@ class DeviceSettingsTest(unittest.TestCase):
         summary = (device.directory / "device-settings-summary.txt").read_text()
         self.assertIn("system.font_scale='2.0'->'1.0'", summary)
         self.assertEqual(len(summary.splitlines()), 1)
+
+    def test_display_overrides_left_by_a_stopped_test_are_reset_and_recorded(self):
+        device, values, calls = self.device(overrides={"size": "1600x2560", "density": "240"})
+        device.prepare()
+        device.verify()
+        device.finish()
+        record = json.loads(device.path.read_text())
+        self.assertEqual(record["before"]["values"]["display.density"], "240")
+        self.assertEqual(record["before"]["values"]["display.size"], "1600x2560")
+        self.assertEqual(set(record["reset"]), {"display.size", "display.density"})
+        self.assertIn(("shell", "wm", "density", "reset"), calls)
+        self.assertIn(("shell", "wm", "size", "reset"), calls)
+        self.assertFalse(any(args[2] == "put" for args in calls))
+        self.assertEqual(record["after"]["values"]["display.density"], "")
+        self.assertEqual(record["final"]["values"]["display.size"], "")
+        self.assertEqual(record["status"], "ready")
+        summary = (device.directory / "device-settings-summary.txt").read_text()
+        self.assertIn("display.density='240'->''", summary)
+
+    def test_a_display_without_overrides_is_left_alone(self):
+        device, _, calls = self.device()
+        device.prepare()
+        self.assertFalse(any(args[2:] and args[-1] == "reset" for args in calls))
+        record = json.loads(device.path.read_text())
+        self.assertEqual(record["reset"], [])
+        self.assertEqual(record["before"]["values"]["display.density"], "")
+
+    def test_a_display_override_that_stays_stops_preparation(self):
+        device, _, _ = self.device(overrides={"density": "240"})
+        adb = device.adb
+        device.adb = lambda *args, **kwargs: "" if args[-1] == "reset" else adb(*args, **kwargs)
+        with patch.object(settings.time, "monotonic", side_effect=[0, 11]):
+            with self.assertRaisesRegex(RuntimeError, "did not return"):
+                device.prepare()
+        record = json.loads(device.path.read_text())
+        self.assertEqual(record["status"], "failed")
+        self.assertEqual(record["after"]["values"]["display.density"], "240")
 
     def test_default_and_absent_values_do_not_get_written(self):
         for value in ("", "null", "1", "1.0", "1.00"):

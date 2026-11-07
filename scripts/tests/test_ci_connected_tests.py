@@ -187,7 +187,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertIn("diagnostic-output", (root / ".ci-results/logcat.txt").read_text())
         self.assertRegex(self.status(root), rf"exit_code={exit_code}\nelapsed_seconds=\d+\n")
         self.assertCountEqual([line for line in (root / "adb-calls.txt").read_text().splitlines()
-                          if not any(part in line for part in ("shell settings", "DeviceSettingsProbe", " install -r "))],
+                          if not any(part in line for part in ("shell settings", "shell wm ", "DeviceSettingsProbe", " install -r "))],
                          [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
                          + [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES[:2]]
                          + ["connected-tests"]
@@ -208,7 +208,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         record = json.loads((root / ".ci-results/device-settings.json").read_text())
         self.assertEqual(set(record["final"]["values"]), set(record["before"]["values"]))
-        self.assertEqual(len(record["final"]["values"]), 4)
+        self.assertEqual(len(record["final"]["values"]), 6)
         self.assertEqual(self.status(root).splitlines()[0],
                          (root / ".ci-results/device-settings-summary.txt").read_text().strip())
         self.assertIn("verified_at=", self.status(root).splitlines()[0])
