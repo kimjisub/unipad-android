@@ -4,13 +4,14 @@ import android.os.SystemClock
 import android.util.Log
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
-import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -157,13 +158,23 @@ class PracticeProgressTest : PlaybackScreenTest() {
         record("practice-resumed-upcoming-hint")
     }
 
-    /** The runner's timed hints, keyed x * 256 + y, with the time each note is due. */
-    private fun guideTargets(): Map<Int, Long> {
-        val runner = screen.onMain { screen.vm().autoPlayRunner!! }
-        @Suppress("UNCHECKED_CAST")
-        val guides = AutoPlayRunner::class.java.getDeclaredField("activeGuides")
-            .apply { isAccessible = true }.get(runner) as MutableMap<Int, Long>
-        return synchronized(guides) { guides.toMap() }
+    /**
+     * From now on, records each timed hint the play screen is asked to draw, keyed like [hints], with the
+     * time its note is due. The screen still draws every hint.
+     */
+    private fun recordGuideTargets(): Map<Int, Long> {
+        val targets = ConcurrentHashMap<Int, Long>()
+        screen.onMain {
+            val vm = screen.vm()
+            val drawn = vm.uiCallback!!
+            vm.uiCallback = object : PlayActivityViewModel.UiCallback by drawn {
+                override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {
+                    targets[x * 8 + y] = targetWallTimeMs
+                    drawn.startGuideAnimation(x, y, targetWallTimeMs)
+                }
+            }
+        }
+        return targets
     }
 
     @Test fun resumingAfterPlayingThePausedStepKeepsTheWrittenGapAfterIt() {
@@ -183,9 +194,9 @@ class PracticeProgressTest : PlaybackScreenTest() {
         screen.await("Playing the paused step did not show the next note") { hints() == setOf(1) }
         record("practice-paused-step-played")
         SystemClock.sleep(2000)
+        val targets = recordGuideTargets()
         val resumedAt = screen.onMain { SystemClock.elapsedRealtime().also { screen.vm().autoPlayResume() } }
-        var targets = emptyMap<Int, Long>()
-        screen.await("The next note was not guided after resume") { guideTargets().also { targets = it }.containsKey(1) }
+        screen.await("The next note was not guided after resume") { targets.containsKey(1) }
         record("practice-resumed-next-note")
         SystemClock.sleep((resumedAt + 1300 - SystemClock.elapsedRealtime()).coerceAtLeast(0))
         record("practice-resumed-plus-1300ms")
@@ -195,11 +206,11 @@ class PracticeProgressTest : PlaybackScreenTest() {
         assertTrue("The next note must be due 1000 ms after resuming, as written after the played note; " +
             "it was +$gap ms (+$gapIgnoringThePress ms or later if the press were ignored)",
             gap >= 1000 && gap < gapIgnoringThePress)
-        assertFalse("The played note must not be guided again: $targets", targets.containsKey(0))
-        screen.await("The third note was not guided") { guideTargets().also { targets = it }.containsKey(256) }
-        assertEquals("The third note keeps its written gap after the second", 1000L, targets.getValue(256) - (resumedAt + gap))
+        screen.await("The third note was not guided") { targets.containsKey(8) }
+        assertEquals("The third note keeps its written gap after the second", 1000L, targets.getValue(8) - (resumedAt + gap))
         screen.await("Practice did not finish after the last note") { screen.onMain { screen.vm().playMode == PlayMode.None } }
         assertTrue("No guide may stay lit after practice ends", hints().isEmpty())
-        assertTrue("Timed guidance never sounds a pad: ${audio.plays}", audio.plays.size == 1)
+        assertFalse("The played note must not be guided again: $targets", targets.containsKey(0))
+        assertEquals("Only the paused step's own press sounds; timed guidance sounds nothing: ${audio.plays}", 1, audio.plays.size)
     }
 }

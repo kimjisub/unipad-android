@@ -418,6 +418,74 @@ class AutoPlayRunnerPracticeProgressTest {
         assertTrue(presses.isEmpty())
     }
 
+    @Test fun aPressedChordPadIsNotGuidedAgainAfterTheChainChangesDuringARepause() {
+        val delivery = HeldDispatcher(dispatcher)
+        start(listOf(AutoPlay.Element.Delay(1000), on(0), on(1), AutoPlay.Element.Delay(1000), on(2), AutoPlay.Element.Delay(1000)), delivery = delivery)
+        tick(500 - now)
+        runner.playmode = false
+        runner.stepMode = true
+        tick()
+        assertEquals(setOf(0 to 0, 1 to 0), hints)
+        runner.stepPadPressed(1, 0)
+        tick()
+        assertEquals(setOf(0 to 0), hints)
+        // Paused again before the resume pass's commands were handled on the event thread.
+        delivery.held = true
+        runner.resume()
+        scheduler.runCurrent()
+        runner.playmode = false
+        runner.stepMode = true
+        delivery.release()
+        tick()
+        assertEquals("The re-pause shows only the unpressed pad", setOf(0 to 0), hints)
+        // Another chain makes the step wait in front of the chord, so this pause shows none of it.
+        chain.value = 1
+        tick()
+        val logged = guideLog.size
+        runner.resume()
+        tick(100)
+        chain.value = 0
+        repeat(3000) { tick() }
+        assertTrue("The pressed pad must not be guided again: ${guideLog.drop(logged)}",
+            guideLog.drop(logged).none { it[0] == 1L && it[1] == 0L })
+        // The chord's song time passed long ago, so the unpressed pad is late and shown briefly once its chain is back.
+        val unpressed = guideLog.drop(logged).filter { it[0] == 0L && it[1] == 0L }
+        assertEquals("The unpressed pad is guided once: ${guideLog.drop(logged)}", 1, unpressed.size)
+        assertEquals("It stays one light update interval: $unpressed", LATE_HINT_MS, unpressed.single()[2] - unpressed.single()[3])
+        assertTrue(ended)
+        assertTrue(hints.isEmpty())
+        assertTrue(velocities.values.all { it == 0 })
+    }
+
+    @Test fun aLateNoteOnAnotherChainIsShownOnceItsChainIsSelected() {
+        start(listOf(AutoPlay.Element.Delay(1000), on(0, c = 1), AutoPlay.Element.Off(0, 0, 1), AutoPlay.Element.Delay(1000), on(1, c = 1), AutoPlay.Element.Delay(1000)))
+        clockSkew = 1500 - scheduler.currentTime
+        runner.playmode = false
+        runner.stepMode = true
+        tick()
+        tick(2000)
+        runner.resume()
+        tick(100)
+        assertEquals("Guidance waits for chain 1", 1, chainHints.lastOrNull())
+        val switchedAt = now
+        chain.value = 1
+        repeat(200) { tick() }
+        val late = guideLog.filter { it[0] == 0L && it[1] == 0L && it[3] >= switchedAt }
+        assertEquals("The late note is hinted once after the chain is selected: $guideLog", 1, late.size)
+        val shownAt = late.single()[3]
+        assertEquals("It stays one light update interval: $late", shownAt + LATE_HINT_MS, late.single()[2])
+        assertLateHintShown(0, 0, shownAt)
+        // The song clock is not moved for the late note: it stays at the paused 1500 ms through the chain
+        // wait, so the next note (2000 ms) comes 500 ms after the switch, less the pass that began the wait.
+        repeat(2000) { tick() }
+        val next = guideLog.last()
+        assertEquals("$guideLog", listOf(1L, 0L), next.take(2))
+        assertTrue("$guideLog", next[2] - shownAt in 499L..500L)
+        assertTrue(ended)
+        assertTrue(hints.isEmpty())
+        assertTrue(velocities.values.all { it == 0 })
+    }
+
     private companion object {
         /** The runner's guide light update interval. */
         const val LATE_HINT_MS = 50L

@@ -211,10 +211,17 @@ class AutoPlayRunner(
 
 	/**
 	 * How step practice is left. [owedPads] are the pads of the shown group that were not pressed, and
-	 * [firstOwed] the first of them in the song; [end] is where the scan stopped. [lastPlayedSongTimeMs]
-	 * is the song time of the last note pressed since practice began, or null when none was.
+	 * [firstOwed] the first of them in the song; [end] is where the scan stopped. [played] holds the
+	 * touch indices it passed as pressed, and [lastPlayedSongTimeMs] the song time of the last of them
+	 * on a selectable chain, or null when none was.
 	 */
-	private data class StepExit(val end: Int, val owedPads: Set<Int>, val firstOwed: Int?, val lastPlayedSongTimeMs: Long?)
+	private data class StepExit(
+		val end: Int,
+		val owedPads: Set<Int>,
+		val firstOwed: Int?,
+		val played: Set<Int>,
+		val lastPlayedSongTimeMs: Long?,
+	)
 
 	private fun stepExit(autoPlay: AutoPlay): StepExit {
 		val end = progress
@@ -223,6 +230,7 @@ class AutoPlayRunner(
 		}
 		var songTimeMs = 0L
 		var firstOwed: Int? = null
+		val played = mutableSetOf<Int>()
 		var lastPlayed: Long? = null
 		for (index in 0 until end) {
 			when (val element = autoPlay.elements[index]) {
@@ -231,12 +239,15 @@ class AutoPlayRunner(
 					val owedHere = index >= groupStart && guideKey(element.x, element.y) in owed
 					if (owedHere) {
 						if (firstOwed == null) firstOwed = index
-					} else if (origin in 0..index && isSelectable(element.currChain)) lastPlayed = songTimeMs
+					} else if (origin in 0..index) {
+						played += index
+						if (isSelectable(element.currChain)) lastPlayed = songTimeMs
+					}
 				}
 				else -> {}
 			}
 		}
-		return StepExit(end, owed, firstOwed, lastPlayed)
+		return StepExit(end, owed, firstOwed, played, lastPlayed)
 	}
 
 	/** A guide pad on a chain the user cannot select would be waited for forever, so it is passed over. */
@@ -292,10 +303,19 @@ class AutoPlayRunner(
 					var accountedPauseMs = totalPausedAt(startTime)
 					var prevPracticeGuide = practiceGuide
 					var rebaseSeekOnResume = false
-					// Notes before stepReplayEnd that step practice showed were pressed, unless still owed.
-					var stepReplayEnd = 0
-					var stepReplayPads = emptySet<Int>()
-					fun isOwed(index: Int, key: Int) = index >= stepReplayEnd || key in stepReplayPads
+					// Touches pressed in step practice since the last seek. Each pause adds to them, so a
+					// later pause that scans less of the song does not hand back what an earlier one played.
+					val stepPlayed = mutableSetOf<Int>()
+					fun isOwed(index: Int) = index !in stepPlayed
+					// Leaves step practice, counting input queued just before the mode change as played.
+					fun leaveStep(): StepExit {
+						drainPressedKeys()
+						return stepExit(autoPlay).also { stepPlayed += it.played }
+					}
+					// Set when timed guidance resumes from a step, until a hint is given ahead of its time:
+					// a note already due then is still shown, briefly, rather than lit and cleared in the
+					// same pass, even when a chain wait delays it; the song clock is not moved for it.
+					var showLateHints = false
 					// Only timed guide waits own wall time; step-mode chain hints do not.
 					var timedWaitStart: Long? = null
 					fun finishChainWait(now: Long) {
@@ -335,16 +355,10 @@ class AutoPlayRunner(
 						// Song time the target resumes at, when it is not where the target's own commands start.
 						var targetSongTimeMs: Long? = null
 						var keepSongClock = false
-						// A note already due when timed guidance resumes is still shown, briefly, rather than
-						// lit and cleared in the same pass; the song clock is not moved for it.
-						var lateHintUntil: Long? = null
+						var resumingFromStep = false
 						if (switchingToAutoPlay) {
-							// A shown step has advanced progress without playing it. Recover only the
-							// unplayed pads, including input queued immediately before the mode change.
-							drainPressedKeys()
-							val exit = stepExit(autoPlay)
-							stepReplayEnd = exit.end
-							stepReplayPads = exit.owedPads
+							// A shown step has advanced progress without playing it. Recover only the unplayed pads.
+							val exit = leaveStep()
 							if (seek == null && exit.firstOwed != null) {
 								target = exit.firstOwed
 								setProgress(exit.firstOwed)
@@ -354,21 +368,19 @@ class AutoPlayRunner(
 							synchronized(stepPendingPads) { stepOrigin >= 0 }) {
 							// Timed guidance after a paused step: a shown note left unpressed is still owed at
 							// its own song time, while a pressed one is played and the written gap after it
-							// starts now. Input queued just before the resume counts as played.
-							drainPressedKeys()
-							val exit = stepExit(autoPlay)
-							stepReplayEnd = exit.end
-							stepReplayPads = exit.owedPads
+							// starts now.
+							val exit = leaveStep()
 							// The step light gives way to the timed hint, which relights the pad as its time nears.
 							for (key in exit.owedPads) listener.onGuideLedUpdate(key / 256, key % 256, 0)
 							targetSongTimeMs = exit.lastPlayedSongTimeMs
 							keepSongClock = targetSongTimeMs == null && target == null
-							lateHintUntil = currTime + GUIDE_LED_UPDATE_INTERVAL_MS
+							resumingFromStep = true
 							target = exit.firstOwed ?: exit.end
 							setProgress(target)
 						}
 						if (target != null) {
 							finishChainWait(currTime)
+							showLateHints = resumingFromStep
 							// Step practice can advance after a paused seek. On resume, align to
 							// that current position without replaying the seek.
 							rebaseSeekOnResume = !playing
@@ -376,7 +388,7 @@ class AutoPlayRunner(
 							// the scan of the new position, and never after it.
 							if (seek != null) {
 								clearStepProgress()
-								stepReplayEnd = 0
+								stepPlayed.clear()
 							}
 							delayAccum = 0
 							for (index in 0 until target) {
@@ -455,7 +467,7 @@ class AutoPlayRunner(
 									while (guideIndex < guideTimeline.size) {
 										val event = guideTimeline[guideIndex]
 										if (event.timeMs <= elapsed + GUIDE_LOOKAHEAD_MS) {
-											if (!isSelectable(event.chain) || !isOwed(event.index, guideKey(event.x, event.y))) {
+											if (!isSelectable(event.chain) || !isOwed(event.index)) {
 												guideIndex++
 												continue
 											}
@@ -474,7 +486,11 @@ class AutoPlayRunner(
 												break
 											}
 											val dueWallTimeMs = startTime + event.timeMs
-											val targetWallTimeMs = lateHintUntil?.takeIf { dueWallTimeMs <= currTime } ?: dueWallTimeMs
+											val late = showLateHints && dueWallTimeMs <= currTime
+											val targetWallTimeMs = if (late) currTime + GUIDE_LED_UPDATE_INTERVAL_MS else dueWallTimeMs
+											// A late hint's controller light is sent lit on this pass, not at the next update.
+											if (late) lastGuideUpdateMs = currTime - GUIDE_LED_UPDATE_INTERVAL_MS
+											else showLateHints = false
 											synchronized(activeGuides) { activeGuides[guideKey(event.x, event.y)] = targetWallTimeMs }
 											listener.onGuidePadOn(event.x, event.y, targetWallTimeMs)
 											guideIndex++
@@ -516,7 +532,7 @@ class AutoPlayRunner(
 										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
-												if (!practiceGuide && isOwed(index, guideKey(element.x, element.y))) {
+												if (!practiceGuide && isOwed(index)) {
 													if (chain.value != element.currChain) listener.onChainChange(element.currChain)
 													listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
 												}
@@ -721,7 +737,7 @@ class AutoPlayRunner(
 	}
 
 	/** Shows the next group of owed pads; [isOwed] passes over notes already played in an earlier step. */
-	private fun stepScanNext(autoPlay: AutoPlay, isOwed: (index: Int, key: Int) -> Boolean) {
+	private fun stepScanNext(autoPlay: AutoPlay, isOwed: (index: Int) -> Boolean) {
 		val newPending = mutableSetOf<Int>()
 		var totalDelayMs = 0L
 
@@ -730,7 +746,7 @@ class AutoPlayRunner(
 			when (element) {
 				is AutoPlay.Element.On -> {
 					val key = guideKey(element.x, element.y)
-					if (!isSelectable(element.currChain) || !isOwed(index, key)) {
+					if (!isSelectable(element.currChain) || !isOwed(index)) {
 						advanceProgressFrom(index)
 						continue@scanLoop
 					}
