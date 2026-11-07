@@ -26,7 +26,7 @@ class SafMigrationDeletionDeviceTest {
         checkStorage(context.filesDir, requireNotNull(context.getExternalFilesDir(null)))
 
     @Test fun backupMovesCopyThePackAndKeepItWhenAFolderCannotBeRead() = runBlocking {
-        val root = File(requireNotNull(context.getExternalFilesDir(null)), "backup-move-${UUID.randomUUID()}").apply { check(mkdir()) }
+        val root = File(context.filesDir, "backup-move-${UUID.randomUUID()}").apply { check(mkdir()) }
         val sounds = File(root, "backup/broken/sounds")
         try {
             val backup = File(root, "backup")
