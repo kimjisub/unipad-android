@@ -277,22 +277,20 @@ object FileManager {
 		}
 	}
 
-	fun copyDocumentTreeToFile(context: Context, source: DocumentFile, target: File) {
+	/** Copies [source] from a backup folder to [target], throwing where any part of it cannot be copied. */
+	fun copyDocumentTreeToFile(context: Context, source: DocumentFile, target: File) =
+		copyDocumentTreeToFile(context, DocumentTree.Entry(source.uri, source.name ?: target.name, source.isDirectory), target)
+
+	private fun copyDocumentTreeToFile(context: Context, source: DocumentTree.Entry, target: File) {
 		if (source.isDirectory) {
-			if (!target.exists()) target.mkdirs()
-			for (child in source.listFiles()) {
-				copyDocumentTreeToFile(context, child, File(target, child.name ?: "unknown"))
+			if (!target.isDirectory && !target.mkdirs()) throw IOException("Could not create ${target.path}")
+			DocumentTree.list(context, source.uri).forEach { child ->
+				copyDocumentTreeToFile(context, child, File(target, child.name))
 			}
 		} else {
-			context.contentResolver.openInputStream(source.uri)?.use { input ->
-				FileOutputStream(target).use { output ->
-					val buffer = ByteArray(COPY_BUFFER_SIZE)
-					var count: Int
-					while (input.read(buffer).also { count = it } != -1) {
-						output.write(buffer, 0, count)
-					}
-				}
-			}
+			val input = context.contentResolver.openInputStream(source.uri)
+				?: throw IOException("Could not open ${source.name} in the backup folder")
+			input.use { FileOutputStream(target).use { output -> it.copyTo(output, COPY_BUFFER_SIZE) } }
 		}
 	}
 

@@ -25,6 +25,40 @@ class SafMigrationDeletionDeviceTest {
     @Test fun internalLinksMovedToExternalStoragePreserveTheOtherPack() =
         checkStorage(context.filesDir, requireNotNull(context.getExternalFilesDir(null)))
 
+    @Test fun backupMovesCopyThePackAndKeepItWhenAFolderCannotBeRead() = runBlocking {
+        val root = File(context.filesDir, "backup-move-${UUID.randomUUID()}").apply { check(mkdir()) }
+        val sounds = File(root, "backup/broken/sounds")
+        try {
+            val backup = File(root, "backup")
+            for (name in listOf("complete", "broken")) {
+                File(backup, "$name/sounds").apply { check(mkdirs()) }
+                File(backup, "$name/info").writeText("title=$name")
+                File(backup, "$name/sounds/s0.wav").writeText("sound")
+            }
+            check(sounds.setReadable(false) && sounds.listFiles() == null) { "the device lists an unreadable folder" }
+            val workspace = File(root, "workspace").apply { check(mkdir()) }
+            val helper = SafMigrationHelper(context)
+
+            val complete = helper.transferSafToFile(listOf(DocumentFile.fromFile(File(backup, "complete"))), workspace, true) { _, _, _ -> }
+            val broken = helper.transferSafToFile(listOf(DocumentFile.fromFile(File(backup, "broken"))), workspace, true) { _, _, _ -> }
+            println("Backup move complete=$complete broken=$broken")
+
+            assertEquals(SafMigrationHelper.TransferResult(1, 1, 0, 0, emptyList<String>()), complete)
+            assertEquals("sound", File(workspace, "complete/sounds/s0.wav").readText())
+            assertFalse("a completed move must remove the backup", File(backup, "complete").exists())
+            assertEquals(0, broken.transferred)
+            assertEquals(1, broken.failed)
+            assertTrue(broken.errors.single(), broken.errors.single().contains("sounds"))
+            check(sounds.setReadable(true))
+            assertEquals("sound", File(sounds, "s0.wav").readText())
+            assertEquals("title=broken", File(backup, "broken/info").readText())
+            assertEquals(listOf("complete"), workspace.list()!!.toList())
+        } finally {
+            sounds.setReadable(true)
+            FileManager.deleteDirectory(root)
+        }
+    }
+
     private fun checkStorage(storage: File, destinationStorage: File = storage) = runBlocking {
         val root = File(storage, "migration-safety-${UUID.randomUUID()}").apply { check(mkdir()) }
         val destinationRoot = if (destinationStorage == storage) root else
