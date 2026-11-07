@@ -135,8 +135,8 @@ class ConformanceFileObservationTest : PlaybackScreenTest() {
             PackArchive.extract(archive, root)
             val parsedCase = Json.parseToJsonElement(case.toString()).jsonObject
             val pack = UniPackFolder(root).load().loadDetail()
-            // identityTraced and every storage entry's contentsPreserved stay in the record: the merge
-            // accepts the selection only when both hold.
+            // identityTraced and every storage entry's contentsPreserved stay in the record. The merge
+            // refuses an untraced selection; a sound whose contents changed goes in as a failure.
             return soundIdentityOutcome(parsedCase, observeSoundIdentity(bytes, root, pack, OboeAudioEngine::decodeOnly))
         } finally { archive.delete() }
     }

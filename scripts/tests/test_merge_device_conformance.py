@@ -11,6 +11,8 @@ merger = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(merger)
 
 EXPECTED = {"loaded": True}
+CASE_INSENSITIVE_HOST = ("this host cannot store names differing only in letter case; "
+                         "run on a case-sensitive filesystem before confirming this case")
 
 
 class MergeDeviceConformanceTest(unittest.TestCase):
@@ -18,7 +20,7 @@ class MergeDeviceConformanceTest(unittest.TestCase):
         self.corpus = {"cases": [
             {"id": "S", "fingerprint": "f-s", "expectation": "determined", "expected": EXPECTED, "soundIdentity": True},
             {"id": "C", "fingerprint": "f-c", "expectation": "determined", "expected": EXPECTED,
-             "requiresCaseSensitiveFiles": True, "unobserved": {"android": "case-insensitive host"}},
+             "requiresCaseSensitiveFiles": True, "unobserved": {"android": CASE_INSENSITIVE_HOST}},
             {"id": "H", "fingerprint": "f-h", "expectation": "determined", "expected": EXPECTED},
         ]}
         self.host = {"platform": "android", "corpusSha256": "digest", "assertions": "checked", "caseSensitiveFileSystem": False,
@@ -102,9 +104,25 @@ class MergeDeviceConformanceTest(unittest.TestCase):
         self.assertIn("S: changed sound contents cannot be pass", problems)
 
     def test_a_device_observation_lifts_only_file_name_restrictions(self):
-        self.corpus["cases"][0]["unobserved"] = {"android": "needs a speaker"}
         report = self.merged()
+        self.corpus["cases"][0]["unobserved"] = {"android": "needs a speaker"}
         self.assertIn("S: device observation cannot lift a restriction outside file names",
+                      merger.check_report(self.corpus, report, "digest"))
+
+    def test_a_record_for_a_case_with_another_restriction_stays_unverified_with_the_reason(self):
+        self.corpus["cases"][0]["screenInputs"] = True
+        self.corpus["cases"][1]["unobserved"] = {"android": "needs a speaker"}
+        report = self.merged()
+        self.assertEqual({"S": "unverified", "C": "unverified", "H": "pass"}, self.statuses(report))
+        self.assertEqual([], report["deviceObservations"])
+        self.assertIn("needs the play screen's input", report["cases"][0]["deviceRefused"])
+        self.assertIn("unobserved on android: needs a speaker", report["cases"][1]["deviceRefused"])
+        self.assertEqual([], merger.check_report(self.corpus, report, "digest"))
+
+    def test_a_case_sensitive_case_unobserved_for_another_reason_keeps_that_restriction(self):
+        report = self.merged()
+        self.corpus["cases"][1]["unobserved"] = {"android": "needs a speaker"}
+        self.assertIn("C: device observation cannot lift a restriction outside file names",
                       merger.check_report(self.corpus, report, "digest"))
 
     def test_a_device_record_never_replaces_a_host_observation(self):

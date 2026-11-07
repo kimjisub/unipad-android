@@ -134,6 +134,14 @@ class ConformanceReportTest(unittest.TestCase):
                 unknown["cases"][0]["id"] = "unregistered"
                 self.assertIn("unregistered: unregistered result", checker.check_report(sample, unknown, "digest"))
 
+    def test_the_corpus_leaves_case_sensitive_cases_unobserved_only_for_their_file_names(self):
+        corpus_path = Path(__file__).resolve().parents[2] / "app/src/test/resources/unipack-conformance/corpus.json"
+        cases = [case for case in json.loads(corpus_path.read_bytes())["cases"]
+                 if case.get("requiresCaseSensitiveFiles") and "android" in case.get("unobserved", {})]
+        self.assertEqual(["KS-G617", "KS-G618", "KS-G619"], [case["id"] for case in cases])
+        for case in cases:
+            self.assertTrue(checker.unobserved_for_file_names(case), case["id"])
+
 
 if __name__ == "__main__":
     unittest.main()
