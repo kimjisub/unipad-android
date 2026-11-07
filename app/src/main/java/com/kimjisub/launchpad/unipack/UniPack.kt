@@ -76,6 +76,17 @@ abstract class UniPack {
 		return loadDetail()
 	}
 
+	/**
+	 * Drops the sound, LED and autoplay tables [loadDetail] read, keeping [soundCount] and
+	 * [ledTableCount]. For a pack that is only shown: a large pack's tables run to megabytes.
+	 */
+	fun releaseDetail() {
+		soundTable = null
+		ledAnimationTable = null
+		autoPlayTable = null
+		detailLoaded = false
+	}
+
 	// Validates the file structure to detect a valid unipack.
 	abstract fun checkFile()
 

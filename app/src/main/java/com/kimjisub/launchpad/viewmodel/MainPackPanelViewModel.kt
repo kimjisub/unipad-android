@@ -59,24 +59,29 @@ class MainPackPanelViewModel(
 			}
 		}
 
-		if (unipack.detailLoaded) {
-			soundCount = unipack.soundCount
-			ledCount = unipack.ledTableCount
-		} else {
-			soundCount = null
-			ledCount = null
-			viewModelScope.launch(Dispatchers.IO) {
-				val loaded = readOrNull("UniPack detail read failed") { unipack.loadDetail() } != null
-				withContext(Dispatchers.Main) {
-					if (loaded) {
-						soundCount = unipack.soundCount
-						ledCount = unipack.ledTableCount
-					} else {
-						countsUnknown = true
-					}
+		viewModelScope.launch(Dispatchers.IO) {
+			val counts = readOrNull("UniPack detail read failed") { countSoundsAndLeds() }
+			withContext(Dispatchers.Main) {
+				if (counts != null) {
+					soundCount = counts.first
+					ledCount = counts.second
+				} else {
+					countsUnknown = true
 				}
 			}
 		}
+	}
+
+	/**
+	 * The panel keeps only the counts. This model stays in the pack list's screen for every pack
+	 * selected there, also while that pack is being played from its own copy, so the tables are
+	 * let go as soon as they are counted, a read that failed half way included.
+	 */
+	private fun countSoundsAndLeds(): Pair<Int, Int> = try {
+		unipack.loadDetail()
+		unipack.soundCount to unipack.ledTableCount
+	} finally {
+		unipack.releaseDetail()
 	}
 
 	/**
