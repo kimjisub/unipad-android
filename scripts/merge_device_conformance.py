@@ -4,8 +4,9 @@
 The host report (UniPackConformanceCasesTest's android.json) leaves a case unverified when its harness
 cannot see it: file names a macOS disk cannot keep apart and original archive identity. The device
 recorder writes one record per case (conformance-files/<id>.json). A record replaces the host's empty result only when it ran the same
-corpus and input, comes from the recorder for that kind of case, and its own status agrees with its
-actual value. Anything else stays unverified, with the reason. The result is then checked with
+corpus and input, comes from the recorder for that kind of case, the case has no restriction other than
+file names, and the record's own status agrees with its actual value. Anything else stays unverified,
+with the reason. The result is then checked with
 check_unipack_conformance.py.
 
     python3 scripts/merge_device_conformance.py build/unipack-conformance/android.json \\
@@ -17,7 +18,7 @@ import json
 from pathlib import Path
 
 from check_unipack_conformance import (DEVICE_SOURCES, check_report, device_evidence, device_evidence_problem,
-                                       device_kind, same_json, stored_names_changed)
+                                       device_kind, restriction_outside_file_names, same_json, stored_names_changed)
 
 
 def load_records(folders):
@@ -35,7 +36,7 @@ def load_records(folders):
     return records
 
 
-def refusal(case, host, record, corpus_hash):
+def refusal(case, host, record, corpus_hash, kind, evidence):
     """Why this record cannot stand for the case, or None when it can."""
     if record.get("platform") != "android":
         return "the device record is not android's"
@@ -45,14 +46,16 @@ def refusal(case, host, record, corpus_hash):
         return "the device record ran other input"
     if host.get("actual") is not None:
         return "the host observed this case itself"
-    kind = device_kind(case, stored_names_changed(case, host.get("storedInputPaths")))
     if kind is None or record.get("source") != DEVICE_SOURCES[kind]:
         return f"{record.get('source')} does not observe this kind of case"
+    # The merged entry carries no input or operation adapter, so the check sees it as this empty result does.
+    why = restriction_outside_file_names(case, {})
+    if why is not None:
+        return why
     if record.get("actual") is None:
         return "the device record has no actual value"
     if record.get("completed") is False:
         return "the device recorder did not complete: " + str(record.get("detail", ""))
-    evidence = device_evidence(kind, record)
     why = device_evidence_problem(kind, evidence)
     if why is not None:
         return why
@@ -75,17 +78,18 @@ def merge(corpus, corpus_hash, host, records):
             out.append(result)
             continue
         record, path, digest = found
-        why = refusal(cases[result["id"]], result, record, corpus_hash)
+        case = cases[result["id"]]
+        kind = device_kind(case, stored_names_changed(case, result.get("storedInputPaths")))
+        evidence = None if kind is None else device_evidence(kind, record)
+        why = refusal(case, result, record, corpus_hash, kind, evidence)
         if why is not None:
             out.append({**result, "deviceRefused": f"{path.name}: {why}"})
             continue
-        case = cases[result["id"]]
-        kind = device_kind(case, stored_names_changed(case, result.get("storedInputPaths")))
         entry = {
             "id": result["id"], "fingerprint": result["fingerprint"], "status": record["status"],
             "detail": f"observed on {record.get('device', 'an Android device')} API {record.get('sdkInt', '?')} by {record['source']}",
             "actual": record["actual"], "observedOn": "device", "source": record["source"],
-            "deviceEvidence": device_evidence(kind, record),
+            "deviceEvidence": evidence,
             "deviceRecord": {"file": path.name, "sha256": digest},
         }
         if "storedInputPaths" in result:

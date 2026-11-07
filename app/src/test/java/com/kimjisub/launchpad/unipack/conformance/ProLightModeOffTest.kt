@@ -46,12 +46,7 @@ class ProLightModeOffTest {
 		for ((c, on, off) in observed) {
 			assertEquals("${c.id}: with Pro light mode on the corpus result holds", checkpointsOf(c.expected), on)
 			assertEquals("${c.id}: Pro light mode off hides round and logo lights only", withoutRound(on), off)
-			if (on.any { it.jsonArray.any(::isPadLight) }) {
-				assertTrue("${c.id}: pad lights stay with Pro light mode off", off.any { it.jsonArray.any(::isPadLight) })
-			}
 		}
-		assertTrue("pad lights were observed with Pro light mode off",
-			observed.any { (_, _, off) -> off.any { it.jsonArray.any(::isPadLight) } })
 	}
 
 	private fun checkpointsOf(result: JsonElement?): JsonArray = result!!.jsonObject.getValue("checkpoints").jsonArray

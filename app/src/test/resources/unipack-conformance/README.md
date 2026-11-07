@@ -93,12 +93,15 @@ python3 scripts/merge_device_conformance.py build/unipack-conformance/android.js
 ```
 
 A record is merged only when it ran the same corpus and input, comes from the recorder for that kind
-of case, kept every name apart, traced every selected sound to its archive entry, and its status
-agrees with its actual value; otherwise the case stays unverified with the reason. A sound whose bytes
-the app's archive extraction changed is a failure even when the chosen names match: the device test
-fails and the merged case is `fail`. The merged report names the device, each record's SHA-256 and the
-storage evidence (`deviceEvidence`). `check_unipack_conformance.py` checks that evidence again and
-accepts a device observation only for a case the host cannot see because of its file names.
+of case, the case has no restriction other than file names (screen input, an operation adapter, or an
+`unobserved` reason other than the case-insensitive host's), it kept every name apart, traced every
+selected sound to its archive entry, and its status agrees with its actual value; otherwise the case
+stays unverified with the reason. A sound whose bytes the app's archive extraction changed is a failure
+even when the chosen names match: the device test fails and the merged case is `fail`. The merged
+report names the device, each record's SHA-256 and a summary of its storage evidence
+(`deviceEvidence`). `check_unipack_conformance.py` reads only the merged report, not the device
+records: it checks that each `deviceEvidence` summary supports its case's result and accepts a device
+observation only for a case the host cannot see because of its file names.
 
 The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
 and `AudioSelector.select` for 115 cases. Physical WAV fixtures use real PCM

@@ -28,6 +28,33 @@ DEVICE_SOURCES = {
 # listener); the only way the host harness may observe a screen-input case.
 PLAY_SCREEN_INPUTS = "play-screen"
 
+# Observations the host harness makes through an operation adapter instead of the runner; each result names its adapter.
+OPERATION_ADAPTERS = {"audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map"}
+
+# The corpus's reason for leaving a case-sensitive case unobserved when the host cannot keep its file
+# names apart. Only this reason is about file names; any other `unobserved` reason stays in force.
+CASE_INSENSITIVE_HOST = ("this host cannot store names differing only in letter case; "
+                         "run on a case-sensitive filesystem before confirming this case")
+
+
+def unobserved_for_file_names(case):
+    return (case.get("requiresCaseSensitiveFiles", False)
+            and case.get("unobserved", {}).get("android") == CASE_INSENSITIVE_HOST)
+
+
+def restriction_outside_file_names(case, result):
+    """Why the result's observer cannot see the case for a reason other than file names, or None."""
+    if case.get("screenInputs", False) and result.get("inputAdapter") != PLAY_SCREEN_INPUTS:
+        return "the case needs the play screen's input"
+    reason = case.get("unobserved", {}).get("android")
+    if reason is not None and not unobserved_for_file_names(case):
+        return f"the corpus leaves the case unobserved on android: {reason}"
+    observation = case.get("observation")
+    if observation not in (None, "runner") and (observation not in OPERATION_ADAPTERS
+                                                or result.get("operationAdapter") != observation):
+        return f"the case needs the {observation} observation"
+    return None
+
 
 def device_kind(case, changed_names):
     if case.get("soundIdentity", False):
@@ -108,16 +135,11 @@ def check_report(corpus, report, corpus_hash):
             problems.append(f"{case_id}: input adapter {input_adapter} cannot observe this case")
             continue
         # A device observation may lift only the restrictions that come from the host's file names.
-        case_sensitive_files = case.get("requiresCaseSensitiveFiles", False)
         file_restricted = (changed_names
                            or case.get("soundIdentity", False)
-                           or (case_sensitive_files and report.get("caseSensitiveFileSystem") is not True)
-                           or (case_sensitive_files and "android" in case.get("unobserved", {})))
-        other_restricted = ((case.get("screenInputs", False) and input_adapter != PLAY_SCREEN_INPUTS)
-                            or ("android" in case.get("unobserved", {}) and not case_sensitive_files)
-                            or (case.get("observation") not in (None, "runner")
-                                and (case["observation"] not in {"audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map"}
-                                     or result.get("operationAdapter") != case["observation"])))
+                           or (case.get("requiresCaseSensitiveFiles", False) and report.get("caseSensitiveFileSystem") is not True)
+                           or unobserved_for_file_names(case))
+        other_restricted = restriction_outside_file_names(case, result) is not None
         restricted = file_restricted or other_restricted
         if result.get("observedOn") == "device":
             kind = device_kind(case, changed_names)
