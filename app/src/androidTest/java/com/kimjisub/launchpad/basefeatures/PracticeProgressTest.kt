@@ -213,4 +213,41 @@ class PracticeProgressTest : PlaybackScreenTest() {
         assertFalse("The played note must not be guided again: $targets", targets.containsKey(0))
         assertEquals("Only the paused step's own press sounds; timed guidance sounds nothing: ${audio.plays}", 1, audio.plays.size)
     }
+
+    @Test fun restartingAfterPracticeEndsInStepsKeepsTheWrittenGap() {
+        File(screen.pack(), "autoPlay").writeText("d 1000\no 1 1\nf 1 1\nd 1000\no 1 2\nf 1 2\nd 1000\no 2 1\nf 2 1\nd 1000\n")
+        screen.openPlay()
+        screen.onMain { screen.vm().switchPlayMode(PlayMode.GuidePlay) }
+        screen.await("Timed guidance did not reach the delay before the final note") {
+            screen.onMain { screen.vm().autoPlayProgress == 7 }
+        }
+        screen.onMain { screen.vm().autoPlayPause() }
+        screen.await("The final note was not shown as a step") { hints() == setOf(8) }
+        pressPad(8)
+        screen.await("The first practice did not end after its final step") {
+            screen.onMain { screen.vm().playMode == PlayMode.None }
+        }
+        screen.onMain { screen.vm().switchPlayMode(PlayMode.StepPractice) }
+        screen.await("The new practice did not show its first step") { hints() == setOf(0) }
+        pressPad(0)
+        screen.await("Playing the first step did not advance the new practice") { hints() == setOf(1) }
+        SystemClock.sleep(2000)
+        val targets = recordGuideTargets()
+        val resumedAt = screen.onMain { SystemClock.elapsedRealtime().also { screen.vm().autoPlayResume() } }
+        screen.await("The second practice did not guide its next note") { targets.containsKey(1) }
+        try {
+            val gap = targets.getValue(1) - resumedAt
+            assertTrue("The restarted practice must keep the written 1000 ms gap after the played note; got $gap ms",
+                gap in 1000L..1499L)
+            assertFalse("The first note was already played: $targets", targets.containsKey(0))
+        } finally {
+            record("practice-restarted-resume")
+        }
+        screen.await("The restarted practice did not finish") {
+            screen.onMain { screen.vm().playMode == PlayMode.None }
+        }
+        assertTrue("The restarted practice left a screen hint", hints().isEmpty())
+        assertEquals("Only the two step presses sound", 2, audio.plays.size)
+    }
+
 }

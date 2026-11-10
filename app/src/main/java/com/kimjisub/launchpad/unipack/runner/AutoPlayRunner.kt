@@ -280,6 +280,7 @@ class AutoPlayRunner(
 					pendingAutoPlay.set(false)
 					setProgress(0)
 				}
+				clearStepProgress()
 				listener.onStart()
 
 				val autoPlay = unipack.autoPlayTable

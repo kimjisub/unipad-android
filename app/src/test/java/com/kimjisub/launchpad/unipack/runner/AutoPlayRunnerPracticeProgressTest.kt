@@ -486,6 +486,52 @@ class AutoPlayRunnerPracticeProgressTest {
         assertTrue(velocities.values.all { it == 0 })
     }
 
+    private fun commonInput() = listOf(
+        AutoPlay.Element.Delay(1000), on(0), AutoPlay.Element.Off(0, 0, 0),
+        AutoPlay.Element.Delay(1000), on(1), AutoPlay.Element.Off(1, 0, 0),
+        AutoPlay.Element.Delay(1000), on(2), AutoPlay.Element.Off(2, 0, 0),
+        AutoPlay.Element.Delay(1000))
+
+    /** Starts step practice from the beginning, plays the first note, and resumes timed guidance 2 s later. */
+    private fun stepFromStartPlayFirstAndResume(): Long {
+        assertEquals(setOf(0 to 0), hints)
+        runner.stepPadPressed(0, 0)
+        tick()
+        assertEquals(setOf(1 to 0), hints)
+        tick(2000)
+        val logged = guideLog.size
+        runner.resume()
+        val resumedAt = now
+        repeat(1500) { tick() }
+        val next = guideLog.drop(logged).first { it[0] == 1L && it[1] == 0L }
+        return next[2] - resumedAt
+    }
+
+    @Test fun freshStepPracticeResumeKeepsTheWrittenGap() {
+        start(commonInput(), step = true)
+        assertEquals(1000L, stepFromStartPlayFirstAndResume())
+    }
+
+    @Test fun restartingAfterPracticeEndsInStepsKeepsTheWrittenGap() {
+        start(commonInput())
+        tick(2600 - now)
+        runner.playmode = false
+        runner.stepMode = true
+        tick()
+        assertEquals(setOf(2 to 0), hints)
+        runner.stepPadPressed(2, 0)
+        repeat(50) { tick() }
+        assertTrue("first run ended", ended)
+        // The play screen starts step practice again from no mode: flags, then launch, as switchPlayMode does.
+        ended = false
+        runner.practiceGuide = true
+        runner.stepMode = true
+        runner.playmode = false
+        runner.launch()
+        tick(10)
+        assertEquals("second run: next note after the played one", 1000L, stepFromStartPlayFirstAndResume())
+    }
+
     private companion object {
         /** The runner's guide light update interval. */
         const val LATE_HINT_MS = 50L
