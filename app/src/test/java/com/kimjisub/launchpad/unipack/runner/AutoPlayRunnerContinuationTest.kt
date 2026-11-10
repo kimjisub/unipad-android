@@ -42,13 +42,13 @@ class AutoPlayRunnerContinuationTest {
         unmockkStatic(SystemClock::class)
     }
 
-    private fun start(guide: Boolean) {
-        val pack = mockk<UniPack>(relaxed = true)
-        every { pack.autoPlayTable } returns AutoPlay(arrayListOf(
+    private fun start(guide: Boolean, elements: ArrayList<AutoPlay.Element> = arrayListOf(
             AutoPlay.Element.On(0, 0, 0, 0), AutoPlay.Element.Off(0, 0, 0),
             AutoPlay.Element.Delay(500), AutoPlay.Element.On(1, 0, 0, 0),
             AutoPlay.Element.Off(1, 0, 0), AutoPlay.Element.Delay(1000),
-        ))
+        )) {
+        val pack = mockk<UniPack>(relaxed = true)
+        every { pack.autoPlayTable } returns AutoPlay(elements)
         val listener = mockk<AutoPlayRunner.Listener>(relaxed = true)
         every { listener.onGuidePadOn(any(), any(), any()) } answers { guides += arg<Int>(0) to arg<Long>(2) }
         every { listener.onPadTouchOn(any(), any(), any(), any(), any()) } answers { presses += arg<Int>(0) }
@@ -92,4 +92,46 @@ class AutoPlayRunnerContinuationTest {
         at(4500)
         assertEquals(1, ends)
     }
+    @Test fun pausingConsecutiveFinalWaitsPreservesTheirCombinedRemainder() {
+        start(true, arrayListOf(
+            AutoPlay.Element.On(0, 0, 0, 0), AutoPlay.Element.Off(0, 0, 0),
+            AutoPlay.Element.Delay(500), AutoPlay.Element.Delay(1000),
+        ))
+        at(250)
+        runner.playmode = false
+        runner.stepMode = true
+        scheduler.runCurrent()
+        at(3250)
+        assertTrue(runner.active)
+        runner.resume()
+        scheduler.runCurrent()
+        at(4499)
+        assertEquals(0, ends)
+        at(4500)
+        assertEquals(1, ends)
+    }
+
+    @Test fun repeatedPausesKeepTheFinalWaitRemainderEachTime() {
+        start(true)
+        at(750)
+        runner.playmode = false
+        runner.stepMode = true
+        scheduler.runCurrent()
+        at(3750)
+        runner.resume()
+        scheduler.runCurrent()
+        at(4000)
+        runner.playmode = false
+        runner.stepMode = true
+        scheduler.runCurrent()
+        at(7000)
+        assertTrue(runner.active)
+        runner.resume()
+        scheduler.runCurrent()
+        at(7499)
+        assertEquals(0, ends)
+        at(7500)
+        assertEquals(1, ends)
+    }
+
 }

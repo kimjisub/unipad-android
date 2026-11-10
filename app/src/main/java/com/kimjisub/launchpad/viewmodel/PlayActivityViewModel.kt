@@ -284,6 +284,7 @@ class PlayActivityViewModel(
 	var screenVisible = false
 		set(value) {
 			field = value
+			if (!value) soundRunner?.cancelPendingWormholes()
 			syncLedRunner()
 			syncSoundStream()
 		}
