@@ -328,8 +328,9 @@ class AutoPlayRunner(
 					fun hasPendingDelay() = delayAccum > currTime - startTime
 					// A timed hint still on screen after the last command keeps the loop until it expires.
 					fun hasTimedHint() = practiceGuide && playmode && synchronized(activeGuides) { activeGuides.isNotEmpty() }
-					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
-						stepMode && practiceGuide && hasPendingStep() || suspended || hasPendingDelay() || hasTimedHint()) && isActive) {
+					fun hasPendingWork() = progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
+						stepMode && practiceGuide && hasPendingStep() || suspended || hasPendingDelay() || hasTimedHint()
+					while (hasPendingWork() && isActive) {
 						if (suspended) {
 							wakeSignal.receive()
 							continue
@@ -605,6 +606,8 @@ class AutoPlayRunner(
 							}
 
 						}
+						// The clock was updated this tick: finish at its deadline without another sleep.
+						if (!hasPendingWork()) break
 						if (!playmode && (progress < autoPlay.elements.size ||
 							stepMode && practiceGuide && hasPendingStep() || hasPendingDelay())) {
 							wakeSignal.receive()
