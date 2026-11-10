@@ -40,7 +40,7 @@ class ConformanceFileCasesTest {
     }
 
     @Test fun everyRequiredFileCaseIsObservedOrProvesHostNameLoss() {
-        val required = System.getProperty("os.name").startsWith("Linux") ||
+        val required = System.getProperty("os.name").orEmpty().startsWith("Linux") ||
             System.getenv("UNIPACK_REQUIRE_FILE_CASES") == "1"
         val cases = corpus.cases.filter { it.id in REQUIRED_FILE_CASE_IDS }
         assertEquals(13, cases.size)
