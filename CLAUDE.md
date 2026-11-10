@@ -49,6 +49,15 @@ keyAlias=dummy
 keyPassword=dummy
 ```
 
+### Gradle on a Shared Machine
+When several builds run on one machine at once (agents or CI jobs in separate worktrees):
+- Never run `./gradlew --stop`. It stops every Gradle daemon of this Gradle version on the machine, including daemons in the middle of other builds, which then fail as cancelled. To end your own build, stop its process or let your own timeout end it.
+- Pass `--no-daemon`, and give all the tasks of one check to a single invocation, with `--continue` so one failing task does not hide the others' results:
+  ```bash
+  ./gradlew --no-daemon --continue assembleDebug lintDebug testDebugUnitTest
+  ```
+  Every invocation starts a new Java process: an up-to-date `:app:compileDebugKotlin` costs about 40 CPU seconds that way against about 6 in a reused daemon, so three separate calls pay that start three times. A kept daemon would avoid it but holds 0.7–1 GB of memory until its idle timeout (3 hours by default), which a busy shared machine cannot spare.
+
 ### Testing
 
 #### Running Tests
