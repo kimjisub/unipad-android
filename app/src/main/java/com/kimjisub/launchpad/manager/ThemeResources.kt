@@ -70,13 +70,20 @@ fun IThemeResources.applyTraceLogTextStyle(pad: PadView) {
 }
 
 fun loadTheme(context: Context, themeId: String, fullLoad: Boolean = false): IThemeResources {
+	val resolvedId = resolveBundledThemeId(themeId) { name ->
+		try {
+			"theme.json" in (context.assets.list("themes/$name") ?: emptyArray())
+		} catch (_: java.io.IOException) {
+			false
+		}
+	}
 	return when {
-		themeId.startsWith("asset://") -> {
-			val themeName = themeId.removePrefix("asset://")
+		resolvedId.startsWith("asset://") -> {
+			val themeName = resolvedId.removePrefix("asset://")
 			AssetThemeResources(context, "themes/$themeName", fullLoad)
 		}
-		themeId.startsWith("zip://") -> {
-			val folderName = themeId.removePrefix("zip://")
+		resolvedId.startsWith("zip://") -> {
+			val folderName = resolvedId.removePrefix("zip://")
 			val themesDir = context.getExternalFilesDir(null)?.let { java.io.File(it, "themes/$folderName") }
 				?: throw java.io.FileNotFoundException("External files dir not available")
 			ZipThemeResources(context, themesDir, fullLoad)
