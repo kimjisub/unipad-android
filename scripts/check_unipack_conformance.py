@@ -97,7 +97,10 @@ def device_evidence_problem(kind, evidence):
     return None
 
 
-def check_report(corpus, report, corpus_hash):
+REQUIRED_FILE_CASE_IDS = {f"KS-G{i}" for i in (*range(601, 605), *range(617, 626))}
+
+
+def check_report(corpus, report, corpus_hash, require_file_cases=False):
     problems = []
     if report.get("platform") != "android":
         problems.append("report platform is not android")
@@ -138,8 +141,20 @@ def check_report(corpus, report, corpus_hash):
         file_restricted = (changed_names
                            or case.get("soundIdentity", False)
                            or (case.get("requiresCaseSensitiveFiles", False) and report.get("caseSensitiveFileSystem") is not True)
-                           or unobserved_for_file_names(case))
+                           or (unobserved_for_file_names(case) and report.get("caseSensitiveFileSystem") is not True))
         other_restricted = restriction_outside_file_names(case, result) is not None
+        if "identityAdapter" in result:
+            evidence = result.get("identityEvidence", {})
+            if (not case.get("soundIdentity") or result["identityAdapter"] != "host-archive-runner"
+                    or not isinstance(evidence, dict) or stored_paths is None or changed_names
+                    or evidence.get("identityTraced") is not True
+                    or evidence.get("contentsPreserved") is not True
+                    or type(evidence.get("storageEntries")) is not int
+                    or evidence["storageEntries"] != len(case.get("files", []))):
+                problems.append(f"{case_id}: invalid host archive identity evidence")
+                continue
+            file_restricted = (changed_names or (case.get("requiresCaseSensitiveFiles", False)
+                                                and report.get("caseSensitiveFileSystem") is not True))
         restricted = file_restricted or other_restricted
         if result.get("observedOn") == "device":
             kind = device_kind(case, changed_names)
@@ -193,6 +208,13 @@ def check_report(corpus, report, corpus_hash):
                 problems.append(f"{case_id}: unexpected app result")
     for case_id in sorted(cases.keys() - seen):
         problems.append(f"{case_id}: missing result")
+    if require_file_cases:
+        by_id = {result.get("id"): result for result in report.get("cases", [])}
+        for case_id in sorted(REQUIRED_FILE_CASE_IDS):
+            result = by_id.get(case_id, {})
+            if (case_id not in cases or result.get("status") != "pass" or result.get("actual") is None
+                    or "observedOn" in result):
+                problems.append(f"{case_id}: required file case was not observed and passed on the host")
     return problems
 
 
@@ -200,13 +222,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("report", type=Path)
     parser.add_argument("--corpus", type=Path, default=Path("app/src/test/resources/unipack-conformance/corpus.json"))
+    parser.add_argument("--require-file-cases", action="store_true", help="fail unless all thirteen file cases pass on the host")
     args = parser.parse_args()
     raw = args.corpus.read_bytes()
     declared = args.corpus.with_name("corpus.sha256").read_text()
     digest = hashlib.sha256(raw).hexdigest()
     if declared != f"{digest}  corpus.json\n":
         raise SystemExit("corpus digest file does not match corpus bytes")
-    problems = check_report(json.loads(raw), json.loads(args.report.read_text()), digest)
+    problems = check_report(json.loads(raw), json.loads(args.report.read_text()), digest, args.require_file_cases)
     for problem in problems:
         print(problem)
     print(f"{len(problems)} report problems")

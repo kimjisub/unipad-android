@@ -80,6 +80,10 @@ class UniPackConformanceCasesTest(private val id: String) {
 						put("status", r.outcome.status)
 						put("detail", r.outcome.detail)
 						put("actual", r.actual)
+						r.outcome.identityEvidence?.let {
+							put("identityAdapter", "host-archive-runner")
+							put("identityEvidence", it)
+						}
 						r.outcome.operationAdapter?.let { put("operationAdapter", it) }
 						r.outcome.inputAdapter?.let { put("inputAdapter", it) }
 						r.outcome.storedInputPaths?.let { paths ->
