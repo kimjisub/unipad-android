@@ -85,6 +85,35 @@ class PackArchiveTest {
 		return tmp.newFile().apply { writeBytes(bytes) }
 	}
 
+	@Test fun caseDistinctFilesRequireStorageThatPreservesTheirNames() {
+		val archive = zip(Charsets.UTF_8, mapOf("sounds/Kick.wav" to "first", "sounds/kick.wav" to "second"))
+		val selected = tmp.newFolder()
+		val internal = tmp.newFolder()
+		assertEquals(internal, PackArchive.installationWorkspace(archive, selected) { internal })
+	}
+
+	@Test fun caseDistinctDirectoriesAlsoRequireNamePreservingStorage() {
+		val archive = zip(Charsets.UTF_8, mapOf("sounds/FX/a.wav" to "first", "sounds/fx/b.wav" to "second"))
+		val selected = tmp.newFolder()
+		val internal = tmp.newFolder()
+		assertEquals(internal, PackArchive.installationWorkspace(archive, selected) { internal })
+	}
+
+	@Test fun ordinaryArchivesKeepTheSelectedStorageWithoutReadingInternalStorage() {
+		val archive = zip(Charsets.UTF_8, packFiles)
+		val selected = tmp.newFolder()
+		assertEquals(selected, PackArchive.installationWorkspace(archive, selected) { error("Internal storage is unnecessary") })
+	}
+
+	@Test fun multiplePacksAtDifferentDepthsHaveAnExplicitReason() {
+		for (entries in listOf(
+			mapOf("One/info" to "title=One", "Two/info" to "title=Two"),
+			mapOf("info" to "title=One", "Wrapper/Two/INFO" to "title=Two"),
+		)) {
+			assertThrows(PackArchive.MultiplePacksException::class.java) { extracted(zip(Charsets.UTF_8, entries)) }
+		}
+	}
+
 	@Test
 	fun unicodePathExtraField_preservesTheWrittenName() {
 		val dir = extracted(unicodePathArchive("sounds/caf\u00e9.wav"))

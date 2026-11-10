@@ -284,7 +284,6 @@ class PlayActivityViewModel(
 	var screenVisible = false
 		set(value) {
 			field = value
-			if (!value) soundRunner?.cancelPendingWormholes()
 			syncLedRunner()
 			syncSoundStream()
 		}
@@ -587,11 +586,9 @@ class PlayActivityViewModel(
 		chain.value = c
 	}
 
-	// Inputs remain held independently. Re-pressing still replaces the pad's current loop;
-	// only a release from its current owner may end that loop.
+	// Inputs own their output independently. Re-pressing the same pad and chain replaces its output.
 	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?, val pointerId: Long = 0)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
-	private val padOutputOwner = mutableMapOf<Pair<Int, Int>, PadInput>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun silenceAllInputs() {
@@ -614,10 +611,9 @@ class PlayActivityViewModel(
 
 	/** Lets go of auto play's pads and clears the lights auto play left on. */
 	private fun resetPadsAfterAutoPlay() {
-		soundRunner?.cancelPendingWormholes()
 		releaseAutoPlayPads()
 		padInit()
-		ledInitInOrder()
+		ledRunner?.clearOwner(PadInput(PlayTrigger.AUTOPLAY, null))
 	}
 
 	/** A pad the person pressed or released on the screen. */
@@ -695,12 +691,11 @@ class PlayActivityViewModel(
 				if (!audioFocusPolicy.hasFocus &&
 					(pressedBy != PlayTrigger.PAD || !acquirePlaybackAudio())) return
 				heldPads.getOrPut(x to y) { mutableSetOf() }.add(input)
-				padOutputOwner[x to y] = input
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true && interruptedMode == null) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
-				soundRunner?.soundOn(x, y, followWormhole = pressedBy != PlayTrigger.AUTOPLAY)
+				soundRunner?.soundOn(x, y, followWormhole = pressedBy != PlayTrigger.AUTOPLAY, owner = input)
 				if (scbRecord.isChecked()) {
 					val currTime = SystemClock.elapsedRealtime()
 					addLog("d ${currTime - recPrevEventMs}")
@@ -713,21 +708,17 @@ class PlayActivityViewModel(
 					channelManager.add(x, y, Channel.PRESSED, ChannelManager.NO_COLOR, LED_RED)
 					uiCallback?.setLedPad(x, y)
 				}
-				ledRunner?.eventOn(x, y, atMs)
+				ledRunner?.eventOn(x, y, atMs, owner = input)
 			} else {
 				val pad = x to y
 				val sources = heldPads[pad] ?: return
 				if (!sources.remove(input)) return
 				// Sound and pack lights belong to the input that started them. Press feedback
 				// stays on independently until every input holding this pad has released it.
-				if (padOutputOwner[pad] == input) {
-					padOutputOwner.remove(pad)
-					soundRunner?.soundOff(x, y)
-					ledRunner?.eventOff(x, y, atMs)
-				}
+				soundRunner?.soundOff(x, y, owner = input)
+				ledRunner?.eventOff(x, y, atMs, owner = input)
 				if (sources.isEmpty()) {
 					heldPads.remove(pad)
-					padOutputOwner.remove(pad)
 					channelManager.remove(x, y, Channel.PRESSED)
 				}
 				uiCallback?.setLedPad(x, y)
@@ -859,42 +850,16 @@ class PlayActivityViewModel(
 	 * backlog nor a tick delivered just before can light a pad after the reset. Only the chain they would
 	 * have left selected is kept.
 	 */
-	fun ledInit() = resetLeds(dropWaiting = true)
-
-	// Playback carries on around autoplay controls, so every change the runner produced before the reset
-	// is still applied, before it. While some are waiting the reset queues behind them, so a large
-	// backlog is applied a few changes per task instead of holding the main thread for all of it.
-	private fun ledInitInOrder() = resetLeds(dropWaiting = false)
-
-	private fun resetLeds(dropWaiting: Boolean) {
-		log("ledInit dropWaiting=$dropWaiting")
-		if (!isChannelManagerInitialized) return
-		if (unipack.keyLedExist) {
-			val runner = ledRunner ?: return
-			if (dropWaiting) {
-				val lastChainChange = runner.afterDelivery {
-					runner.clear()
-					ledChanges.discard()
-				}
-				// The chain picks the sounds of the next press, so the one the dropped changes ended on still applies.
-				lastChainChange?.dispatchTo(ledRunnerListener)
-				clearLeds()
-			} else {
-				val resetNow = runner.afterDelivery {
-					stopLoopingLeds(runner)
-					ledChanges.requestReset()
-				}
-				if (resetNow) clearLeds()
-			}
+	fun ledInit() {
+		if (!isChannelManagerInitialized || !unipack.keyLedExist) return
+		val runner = ledRunner ?: return
+		val lastChainChange = runner.afterDelivery {
+			runner.clear()
+			ledChanges.discard()
 		}
-	}
-
-	private fun stopLoopingLeds(runner: LedRunner) {
-		for (i in 0 until unipack.buttonX)
-			for (j in 0 until unipack.buttonY)
-				runner.eventOffAll(i, j)
-		for (i in 0 until FUNCTION_KEY_COUNT)
-			runner.eventOffAll(-1, i)
+		// The chain picks the sounds of the next press, so retain the last dropped chain command.
+		lastChainChange?.dispatchTo(ledRunnerListener)
+		clearLeds()
 	}
 
 	private fun clearLeds() {
@@ -1011,9 +976,9 @@ class PlayActivityViewModel(
 		if (interrupted != null) {
 			interruptedMode = null
 			isPracticeMode = interrupted != PlayMode.AutoPlay
-			isAutoPlayPlaying = interrupted != PlayMode.StepPractice
+			isAutoPlayPlaying = true
 			runner.resumeAfterInterruption()
-			if (interrupted != PlayMode.StepPractice) runner.resume()
+			runner.resume()
 		} else {
 			resetPadsAfterAutoPlay()
 			isAutoPlayPlaying = true

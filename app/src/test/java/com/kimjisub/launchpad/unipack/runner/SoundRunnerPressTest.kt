@@ -160,23 +160,23 @@ class SoundRunnerPressTest {
 	}
 
 	@Test
-	fun stoppingPlaybackCancelsPendingWormholes() {
+	fun silencingVoicesPreservesPendingManualWormholes() {
 		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
 		tap()
 		scheduler.runCurrent()
 		runner.stopAll()
 		scheduler.advanceUntilIdle()
-		assertEquals(0, chain.value)
+		assertEquals(1, chain.value)
 	}
 
 	@Test
-	fun hidingTheScreenCancelsPendingWormholes() {
+	fun pausingTheStreamPreservesPendingManualWormholes() {
 		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
 		tap()
 		scheduler.runCurrent()
 		runner.pauseStream()
 		scheduler.advanceUntilIdle()
-		assertEquals(0, chain.value)
+		assertEquals(1, chain.value)
 	}
 
 	@Test

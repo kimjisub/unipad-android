@@ -325,7 +325,7 @@ class AutoPlayRunner(
 						waitingForChain = -1
 					}
 					var currTime = startTime
-					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
+					fun hasPendingDelay() = delayAccum > currTime - startTime
 					// A timed hint still on screen after the last command keeps the loop until it expires.
 					fun hasTimedHint() = practiceGuide && playmode && synchronized(activeGuides) { activeGuides.isNotEmpty() }
 					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
@@ -433,8 +433,7 @@ class AutoPlayRunner(
 							if (practiceGuide) {
 								// Switched TO practice mode — initialize guide state
 								guideTimeline = buildGuideTimeline(autoPlay)
-								val elapsed = currTime - startTime
-								guideIndex = guideTimeline.indexOfFirst { it.timeMs > elapsed - GUIDE_LOOKAHEAD_MS }
+								guideIndex = guideTimeline.indexOfFirst { it.index >= progress }
 									.let { if (it < 0) guideTimeline.size else it }
 								synchronized(activeGuides) { activeGuides.clear() }
 							} else {

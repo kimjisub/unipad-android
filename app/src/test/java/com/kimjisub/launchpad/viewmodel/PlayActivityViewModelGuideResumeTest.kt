@@ -93,6 +93,25 @@ class PlayActivityViewModelGuideResumeTest {
         assertTrue("Guide state: targets=$animationTargets hardware=$hardware progress=${vm.autoPlayRunner?.progress}", check())
     }
 
+    @Test fun onePlayAfterInterruptedPausedGuideMatchesOnePlayWithoutInterruption() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        clock.set(100)
+        vm.autoPlayPause()
+        await { animationTargets[0 to 0] == 0L }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+        main.runAll()
+        clock.set(3100)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        await { vm.autoPlayRunner!!.playmode && !vm.autoPlayRunner!!.stepMode }
+        assertEquals(PlayMode.GuidePlay, vm.playMode)
+        assertTrue(vm.isAutoPlayPlaying)
+        assertTrue(vm.isPracticeMode)
+        assertTrue(vm.autoPlayRunner!!.practiceGuide)
+        await { animationTargets[0 to 0] == 3500L }
+    }
+
     @Test fun interruptionKeepsGuideModeAndPositionWithoutRelighting() {
         vm.switchPlayMode(PlayMode.GuidePlay)
         await { animationTargets[0 to 0] == 500L }
@@ -130,11 +149,11 @@ class PlayActivityViewModelGuideResumeTest {
         main.runAll()
         assertEquals("Input before manual resume cannot consume the pending step", progress, vm.autoPlayRunner!!.progress)
         vm.autoPlayResume()
-        await { animationTargets[0 to 0] == 0L }
-        assertEquals(PlayMode.StepPractice, vm.playMode)
-        vm.padTouch(0, 0, true)
-        vm.padTouch(0, 0, false)
-        await { animationTargets[1 to 1] == 0L }
+        await { animationTargets[0 to 0] == 10500L }
+        assertEquals("Play has the same timed-guide effect as without interruption", PlayMode.GuidePlay, vm.playMode)
+        assertTrue(vm.isAutoPlayPlaying)
+        assertTrue(vm.autoPlayRunner!!.practiceGuide)
+        assertTrue(!vm.autoPlayRunner!!.stepMode)
     }
 
     @Test fun resumingAnInterruptedChainWaitRestoresItsChainHint() {

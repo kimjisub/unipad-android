@@ -60,12 +60,15 @@ class PlayActivityViewModelInputOwnershipTest {
         mockkStatic(SystemClock::class)
         every { SystemClock.elapsedRealtime() } answers { clock.get() }
         val folder = tmp.newFolder()
-        File(folder, "info").writeText("title=Inputs\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=1\nsquareButton=true\n")
+        File(folder, "info").writeText("title=Inputs\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=2\nsquareButton=true\n")
         File(folder, "sounds").mkdir()
         File(folder, "sounds/a.wav").writeText("")
-        File(folder, "keySound").writeText("1 1 1 a.wav 0\n")
+        File(folder, "keySound").writeText("1 1 1 a.wav 0\n2 1 1 a.wav 0\n1 1 2 a.wav 0\n")
         File(folder, "keyLED").mkdir()
         File(folder, "keyLED/1 1 1 0").writeText("on 1 1 a 4\nd 100000\n")
+        File(folder, "keyLED/2 1 1 0").writeText("on 2 2 a 5\nd 100000\n")
+        File(folder, "keyLED/1 1 2 0").writeText("on 3 3 a 6\nd 100000\n")
+        File(folder, "autoPlay").writeText("d 60000\non 1 2\nd 60000\n")
         vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
         vm.unipack = UniPackFolder(folder).load().loadDetail()
         vm.initState()
@@ -126,6 +129,60 @@ class PlayActivityViewModelInputOwnershipTest {
         advance()
         assertEquals(listOf(0, null, false), state())
     }
+
+    private fun differentChains(firstReleased: Long) {
+        fingerDown(10)
+        vm.selectChain(1)
+        fingerDown(20)
+        assertEquals("Different chains may overlap", 2, engine.voices.size)
+        assertEquals(listOf(2, 4, true), state())
+        assertEquals(5, vm.channelManager.get(1, 1)?.code)
+        screen.up(firstReleased)
+        advance()
+        assertEquals("Only the released finger's loop ends", 1, engine.voices.size)
+        assertEquals(if (firstReleased == 10L) null else 4, state()[1])
+        assertEquals(if (firstReleased == 20L) null else 5, vm.channelManager.get(1, 1)?.code)
+        screen.up(if (firstReleased == 10L) 20 else 10)
+        advance()
+        assertEquals(listOf(0, null, false), state())
+        assertEquals(null, vm.channelManager.get(1, 1)?.code)
+    }
+
+    @Test fun differentChainsKeepTheFirstFingersLoopUntilItsRelease() = differentChains(10)
+    @Test fun differentChainsKeepTheLaterFingersLoopUntilItsRelease() = differentChains(20)
+
+    @Test fun turningOffAutoplayKeepsThePlayersLoopAndLight() {
+        vm.switchPlayMode(PlayMode.AutoPlay)
+        fingerDown(10)
+        vm.autoPlayPadTouch(0, 1, true, clock.get())
+        advance()
+        assertEquals(2, engine.voices.size)
+        vm.switchPlayMode(PlayMode.None)
+        advance()
+        assertEquals(listOf(1, 4, false), state())
+        assertEquals(null, vm.channelManager.get(2, 2)?.code)
+        screen.up(10)
+        advance()
+        assertEquals(listOf(0, null, false), state())
+    }
+
+    private fun pendingManualChainMove(turnOff: Boolean) {
+        val table = vm.unipack.soundTable!!
+        table[0][0][0] = ArrayDeque(listOf(com.kimjisub.launchpad.unipack.struct.Sound(File("unused"), -1, 1).apply { id = 1 }))
+        val scheduler = kotlinx.coroutines.test.TestCoroutineScheduler()
+        Dispatchers.setMain(kotlinx.coroutines.test.StandardTestDispatcher(scheduler))
+        try {
+            fingerDown(10)
+            scheduler.runCurrent()
+            scheduler.advanceTimeBy(50)
+            if (turnOff) vm.switchPlayMode(PlayMode.None) else vm.autoPlayPause()
+            scheduler.advanceUntilIdle()
+            assertEquals("Manual chain moves survive autoplay controls", 1, vm.chain.value)
+        } finally { Dispatchers.setMain(main) }
+    }
+
+    @Test fun pausingAutoplayPreservesPendingManualChainMove() = pendingManualChainMove(false)
+    @Test fun turningOffAutoplayPreservesPendingManualChainMove() = pendingManualChainMove(true)
 
     @Test fun firstFingerReleaseKeepsTheCurrentLoopAndBothLights() = twoFingers(10)
     @Test fun laterFingerReleaseEndsItsOutputWhileTheFirstFingerRemains() = twoFingers(20)

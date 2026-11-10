@@ -128,6 +128,52 @@ class PadInputOwnershipTest : PlaybackScreenTest() {
         }
     }
 
+    private fun chainsAndRelease(laterFirst: Boolean) {
+        val pack = screen.pack()
+        File(pack, "keySound").writeText("1 1 1 silence.wav 0\n2 1 1 silence.wav 0\n")
+        File(pack, "keyLED").listFiles().orEmpty().forEach { it.delete() }
+        File(pack, "keyLED/1 1 1 0").writeText("on 1 1 a 4\nd 100000\n")
+        File(pack, "keyLED/2 1 1 0").writeText("on 2 2 a 5\nd 100000\n")
+        screen.openPlay()
+        val fingers = Fingers(screen)
+        try {
+            val first = fingers.down(pad())
+            screen.await("First voice missing") { audio.plays.size == 1 }
+            screen.onMain { screen.vm().selectChain(1) }
+            val later = fingers.down(pad())
+            screen.await("Second voice missing") { audio.plays.size == 2 }
+            val both = observe("chain-input-both-$laterFirst")
+            fingers.up(if (laterFirst) later else first)
+            val remaining = observe("chain-input-one-$laterFirst")
+            val laterLight = screen.onMain { screen.vm().channelManager.get(1, 1)?.code }
+            fingers.up(if (laterFirst) first else later)
+            val none = observe("chain-input-none-$laterFirst")
+            assertEquals(2 to 4, both)
+            assertEquals(1 to if (laterFirst) 4 else null, remaining)
+            assertEquals(if (laterFirst) null else 5, laterLight)
+            assertEquals(0 to null, none)
+        } finally { fingers.cancelRemaining() }
+    }
+
+    @Test fun differentChainsKeepEachFingersLoopWhenTheFirstReleases() = chainsAndRelease(false)
+    @Test fun differentChainsKeepEachFingersLoopWhenTheLaterReleases() = chainsAndRelease(true)
+
+    @Test fun stoppingAutoplayKeepsTheHeldPlayersLightAndSound() {
+        open("d 60000\non 1 2\nd 60000\n")
+        screen.onMain { screen.vm().switchPlayMode(PlayMode.AutoPlay) }
+        val fingers = Fingers(screen)
+        try {
+            val finger = fingers.down(pad())
+            screen.await("Manual voice missing") { audio.plays.size == 1 }
+            assertEquals(1 to 4, observe("autoplay-stop-player-before"))
+            screen.onMain { screen.vm().switchPlayMode(PlayMode.None) }
+            val stopped = observe("autoplay-stop-player-after")
+            fingers.up(finger)
+            assertEquals(0 to null, observe("autoplay-stop-player-release"))
+            assertEquals(1 to 4, stopped)
+        } finally { fingers.cancelRemaining() }
+    }
+
     private fun feedback(name: String): Boolean {
         val pressed = screen.onMain { screen.vm().channelManager.get(0, 0)?.channel == Channel.PRESSED }
         val drawn = CountDownLatch(1)

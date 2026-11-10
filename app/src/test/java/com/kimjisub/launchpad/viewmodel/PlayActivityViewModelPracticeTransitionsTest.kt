@@ -60,12 +60,12 @@ class PlayActivityViewModelPracticeTransitionsTest {
         vm.unipack = UniPackFolder(folder).load().loadDetail()
         vm.initState()
         vm.soundRunner = mockk<SoundRunner>(relaxed = true).also { sound ->
-            every { sound.soundOn(any(), any(), any()) } answers {
+            every { sound.soundOn(any(), any(), any(), any()) } answers {
                 sounds += Output(vm.chain.value, firstArg(), secondArg(), scheduler.currentTime)
             }
         }
         vm.ledRunner = mockk<LedRunner>(relaxed = true).also { led ->
-            every { led.eventOn(any(), any(), any()) } answers {
+            every { led.eventOn(any(), any(), any(), any()) } answers {
                 lights += Output(vm.chain.value, firstArg(), secondArg(), thirdArg())
             }
         }
@@ -233,9 +233,6 @@ class PlayActivityViewModelPracticeTransitionsTest {
         assertTrue(vm.autoPlayRunner!!.suspended)
         assertEquals(progress, vm.autoPlayRunner!!.progress)
         assertEquals(2, sounds.size)
-        vm.autoPlayResume()
-        scheduler.runCurrent()
-        assertGuides(2 to 0)
         val replayAt = scheduler.currentTime
         vm.switchPlayMode(PlayMode.AutoPlay)
         scheduler.runCurrent()

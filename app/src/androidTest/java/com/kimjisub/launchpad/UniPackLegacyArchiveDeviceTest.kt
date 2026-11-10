@@ -83,6 +83,36 @@ class UniPackLegacyArchiveDeviceTest {
         }
     }
 
+    @Test fun appStorageImportPreservesBothCaseDistinctSoundsAndExactLookup() {
+        val root = File(checkNotNull(context.getExternalFilesDir(null)), "archive-case-test").apply { mkdirs() }
+        val workspace = File(root, "workspace").apply { mkdirs() }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val recorder = Recorder()
+        try {
+            val archive = File(context.cacheDir, "case-pack.zip").apply {
+                writeBytes(zip(Charsets.UTF_8, linkedMapOf(
+                    "info" to "title=Case names\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray(),
+                    "keySound" to "1 1 1 Kick.wav\n1 1 2 kick.wav\n1 1 3 fx/../Kick.wav\n".toByteArray(),
+                    "sounds/Kick.wav" to byteArrayOf(1, 2, 3),
+                    "sounds/kick.wav" to byteArrayOf(4, 5, 6),
+                )))
+            }
+            UniPackImporter(context, Uri.fromFile(archive), { workspace }, recorder,
+                usage = UsageAnalytics(UsageEventSink { _, _ -> }).packImport(PackImportSource.FILE), scope = scope)
+            assertEquals(true, recorder.done.await(TIMEOUT_S, TimeUnit.SECONDS))
+            assertNull("import failed: ${recorder.error}", recorder.error)
+            val pack = UniPackFolder(requireNotNull(recorder.folder)).load().loadDetail()
+            val contents = (0..2).map { pack.soundGet(0, 0, it)?.file?.readBytes()?.toList() }
+            android.util.Log.i("ArchiveCaseTest", "sounds=$contents path=${recorder.folder}")
+            assertEquals(listOf(listOf<Byte>(1, 2, 3), listOf<Byte>(4, 5, 6), listOf<Byte>(1, 2, 3)), contents)
+            archive.delete()
+        } finally {
+            scope.cancel()
+            root.deleteRecursively()
+            recorder.folder?.deleteRecursively()
+        }
+    }
+
     /** Names in [charset]; java.util.zip sets the UTF-8 flag only for UTF-8, as Korean Windows zips lack it. */
     private fun zip(charset: java.nio.charset.Charset, entries: Map<String, ByteArray>): ByteArray =
         ByteArrayOutputStream().also { out ->

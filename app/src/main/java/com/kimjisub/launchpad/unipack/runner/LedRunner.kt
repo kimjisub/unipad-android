@@ -30,13 +30,12 @@ class LedRunner(
 		private const val LATE_PRESS_MS = 1_000L
 	}
 
-	private val btnLed: Array<Array<Led?>> = Array(unipack.buttonX) { arrayOfNulls<Led>(unipack.buttonY) }
-	private val cirLed: Array<Led?> = arrayOfNulls<Led>(CIRCULAR_LED_COUNT)
+	private val btnLed: Array<Array<LedAnimationState?>> = Array(unipack.buttonX) { arrayOfNulls<LedAnimationState>(unipack.buttonY) }
+	private val cirLed: Array<LedAnimationState?> = arrayOfNulls<LedAnimationState>(CIRCULAR_LED_COUNT)
 	private var ledAnimationStates: MutableList<LedAnimationState> = mutableListOf()
 	private val ledAnimationStatesAdd: MutableList<LedAnimationState> = mutableListOf()
-	// The endless animation the press of each held pad (x, y) started, null when none. Its release ends
-	// that animation even when the chain changed while the pad was held.
-	private val heldLoop: Array<Array<LedAnimationState?>> = Array(unipack.buttonX) { arrayOfNulls<LedAnimationState>(unipack.buttonY) }
+	private data class HeldPad(val x: Int, val y: Int, val owner: Any)
+	private val heldLoops = mutableMapOf<HeldPad, LedAnimationState>()
 	// Numbers presses and releases, so steps due in the same millisecond play in the order they were asked for.
 	private var requests = 0L
 
@@ -180,7 +179,7 @@ class LedRunner(
 		synchronized(this) {
 			ledAnimationStates.clear()
 			ledAnimationStatesAdd.clear()
-			for (row in heldLoop) row.fill(null)
+			heldLoops.clear()
 			for (row in btnLed) row.fill(null)
 			cirLed.fill(null)
 			pausedAt = null
@@ -215,7 +214,7 @@ class LedRunner(
 	 * A press of pad ([x], [y]) at [pressedAt] (SystemClock.elapsedRealtime): the pad's running animation
 	 * ends there and its new one starts there, however late the loop gets to them.
 	 */
-	fun eventOn(x: Int, y: Int, pressedAt: Long = SystemClock.elapsedRealtime()) {
+	fun eventOn(x: Int, y: Int, pressedAt: Long = SystemClock.elapsedRealtime(), owner: Any = Unit) {
 		if (active) {
 			synchronized(this) {
 				val order = ++requests
@@ -225,22 +224,20 @@ class LedRunner(
 						if (state.equal(x, y, currentChain)) state.shutDownAt(pressedAt, order)
 					}
 				}
-				// A press made on another chain while the pad is still held replaces its loop below; end
-				// that earlier loop now, as a press on the same chain does, or nothing could end it.
-				heldLoop[x][y]?.shutDownAt(pressedAt, order)
-				val state = LedAnimationState(x, y, pressedAt, order)
-				heldLoop[x][y] = state.takeIf { it.ledAnimation?.loop == 0 }
+				val held = HeldPad(x, y, owner)
+				heldLoops.remove(held)?.shutDownAt(pressedAt, order)
+				val state = LedAnimationState(x, y, pressedAt, order, owner)
+				if (state.ledAnimation?.loop == 0) heldLoops[held] = state
 				if (state.noError) ledAnimationStatesAdd.add(state)
 			}
 		}
 	}
 
 	/** A release of pad ([x], [y]) at [releasedAt]: the endless animation the pad's press started ends there. */
-	fun eventOff(x: Int, y: Int, releasedAt: Long = SystemClock.elapsedRealtime()) {
+	fun eventOff(x: Int, y: Int, releasedAt: Long = SystemClock.elapsedRealtime(), owner: Any = Unit) {
 		if (active) {
 			synchronized(this) {
-				val loop = heldLoop[x][y] ?: return
-				heldLoop[x][y] = null
+				val loop = heldLoops.remove(HeldPad(x, y, owner)) ?: return
 				loop.shutDownAt(releasedAt, ++requests)
 			}
 		}
@@ -261,19 +258,21 @@ class LedRunner(
 		}
 	}
 
-	// Represents a single illuminated LED.
-	inner class Led(
-		val buttonX: Int,
-		val buttonY: Int,
-		val chain: Int,
-	) {
-		fun equal(buttonX: Int, buttonY: Int, chain: Int): Boolean {
-			return this.buttonX == buttonX && this.buttonY == buttonY && this.chain == chain
+	/** Clears only this input's animations and last written lights, between whole deliveries. */
+	fun clearOwner(owner: Any) = deliveryLock.withLock {
+		val changes = mutableListOf<LedChange>()
+		synchronized(this) {
+			// Finished animations can leave a static light after leaving the running lists.
+			val states = (ledAnimationStates + ledAnimationStatesAdd + btnLed.flatMap { it.toList() } + cirLed)
+				.filterNotNull().filter { it.owner == owner }.toSet()
+			for (state in states) state.shutDown(changes)
+			heldLoops.keys.removeAll { it.owner == owner }
 		}
+		if (changes.isNotEmpty()) listener.onLedChanges(changes)
 	}
 
 	// Tracks the execution state of a LedAnimation (a collection of LED events).
-	inner class LedAnimationState(val buttonX: Int, val buttonY: Int, startedAt: Long, private val order: Long) {
+	inner class LedAnimationState(val buttonX: Int, val buttonY: Int, startedAt: Long, private val order: Long, val owner: Any = Unit) {
 		var index = 0
 		/** When the animation was pressed, on the SystemClock.elapsedRealtime clock. */
 		private var startedAt = startedAt
@@ -370,10 +369,10 @@ class LedRunner(
 						// Recorded after the table write, which rejects a coordinate outside the grid:
 						// the change is applied later, outside the catch below.
 						if (x != -1) {
-							btnLed[x][y] = Led(buttonX, buttonY, chainAtCreation)
+							btnLed[x][y] = this
 							changes.add(LedChange.PadOn(x, y, color, velocity))
 						} else {
-							cirLed[y] = Led(buttonX, buttonY, chainAtCreation)
+							cirLed[y] = this
 							changes.add(LedChange.ChainLedOn(y, color, velocity))
 						}
 					}
@@ -383,12 +382,12 @@ class LedRunner(
 						val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
 						if (x != -1) {
-							if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+							if (btnLed[x][y] === this) {
 								changes.add(LedChange.PadOff(x, y))
 								btnLed[x][y] = null
 							}
 						} else {
-							if (cirLed[y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+							if (cirLed[y] === this) {
 								changes.add(LedChange.ChainLedOff(y))
 								cirLed[y] = null
 							}
@@ -425,18 +424,18 @@ class LedRunner(
 			if (animation.loop != 0 && animation.loop <= loopProgress) isPlaying = false
 		}
 
-		/** Turns off every LED this pad and chain lit last. */
+		/** Turns off only the lights this animation wrote last. */
 		internal fun shutDown(changes: MutableList<LedChange>) {
 			for (x in 0 until unipack.buttonX) {
 				for (y in 0 until unipack.buttonY) {
-					if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+					if (btnLed[x][y] === this) {
 						changes.add(LedChange.PadOff(x, y))
 						btnLed[x][y] = null
 					}
 				}
 			}
 			for (y in cirLed.indices) {
-				if (cirLed[y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+				if (cirLed[y] === this) {
 					changes.add(LedChange.ChainLedOff(y))
 					cirLed[y] = null
 				}
