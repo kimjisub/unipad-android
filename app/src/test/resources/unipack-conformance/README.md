@@ -39,7 +39,8 @@ MIDI driver's packet decoding (a pad enters at `controllerPadTouch`), the screen
 held fingers, and the option window's scrim, which on the real screen takes the presses made while the
 window is open (the runner keeps the window open to hide the screen's own round-button lights).
 `requiresCaseSensitiveFiles` cases must stay unverified when the filesystem cannot preserve their
-distinct input files. Existing `unobserved` restrictions in the corpus remain in force.
+distinct input files. The specific `unobserved` reason about a case-insensitive host is lifted only
+when a real filesystem probe confirms case sensitivity; other restrictions remain in force.
 If the host changes a filename while writing it (for example, a decomposed
 Unicode name becomes composed), the parser is not called. The case stays
 unverified and its actual path inventory is saved as `storedInputPaths`.
@@ -113,3 +114,25 @@ The mapper adapter invokes `UniPackAutoMapper.run`, then reopens its actual outp
 through the app parser. Integer and fractional duration fixtures enter the app's
 `SoundDurationReader` unchanged; rounding is performed by the real mapper. Any observed mapper
 difference still fails the suite, even if `expectedFailing` did not predict it.
+
+On Linux, the host suite also observes KS-G601–604 and KS-G617–625. The ten
+`soundIdentity` cases first prove the host preserves the input path inventory,
+then construct the original ZIP and run the production `PackArchive` extractor,
+parser and `SoundRunner`. The recorder hashes the selected disk bytes and traces
+the runner's decode/load/play requests back to original ZIP entries. Results
+carry `identityAdapter: "host-archive-runner"`, `storedInputPaths` and
+`identityEvidence` (traced selection, preserved contents and entry count).
+Native decoding and speaker output are not part of this host observation; the
+device suite still checks native decoding. A host that merges the fixture names
+keeps an explicit unverified result, suitable for the device merge above.
+
+GitHub sets `UNIPACK_REQUIRE_FILE_CASES=1` and independently checks:
+
+```sh
+python3 scripts/check_unipack_conformance.py build/unipack-conformance/android.json --require-file-cases
+```
+
+Both gates require all thirteen host observations to pass. Missing, unverified,
+wrong or device-substituted results fail this required Linux check. The default
+report checker continues to support truthful macOS gaps and merged device
+reports. The corpus bytes and expectations remain unchanged.

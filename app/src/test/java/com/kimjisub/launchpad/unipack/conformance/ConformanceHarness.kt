@@ -66,14 +66,18 @@ class Deps(
 
 class CaseResult(val actual: JsonElement, val outcome: Outcome)
 
-private class InputNamesNotPreserved(val paths: List<String>) : IllegalStateException("the filesystem changed the input file names")
+internal class InputNamesNotPreserved(val paths: List<String>) : IllegalStateException("the filesystem changed the input file names")
+
+internal const val CASE_INSENSITIVE_HOST = "this host cannot store names differing only in letter case; " +
+	"run on a case-sensitive filesystem before confirming this case"
 
 /** What Android reports for a case: its result and status, or why the corpus says it is not observed here. */
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 	if (c.requiresCaseSensitiveFiles && !caseSensitiveFileSystem()) return CaseResult(JsonNull, Outcome("unverified", false,
 		"this filesystem cannot preserve the case-distinct input files"))
 	val unobserved = c.unobserved[PLATFORM]
-	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
+	val observableFileNames = c.requiresCaseSensitiveFiles && unobserved == CASE_INSENSITIVE_HOST && caseSensitiveFileSystem()
+	if (unobserved != null && !observableFileNames) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
 	if (c.observation == "auto-map") {
 		val actual = observeAutoMap(c, corpus)
 		return CaseResult(actual, classify(c, actual).copy(operationAdapter = c.observation))
@@ -87,8 +91,10 @@ fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 			"the Android harness has no ${c.observation} operation adapter; the pack parser cannot observe this operation"))
 	}
 	if (c.soundIdentity) {
-		return CaseResult(JsonNull, Outcome("unverified", false,
-			"the Android harness records relative sound names, not original archive entries and selected file hashes"))
+		return try { hostIdentityResult(c, corpus, deps) } catch (changed: InputNamesNotPreserved) {
+			CaseResult(JsonNull, Outcome("unverified", false,
+				"the filesystem changed the input file names before parsing; see storedInputPaths", changed.paths))
+		}
 	}
 	val actual = try {
 		actualFor(c, corpus, deps)

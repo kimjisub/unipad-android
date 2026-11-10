@@ -254,11 +254,10 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
-	fun aSoundIdentityCaseCannotPassWithOnlyARelativeFilename() {
+	fun aSoundIdentityCaseCannotBypassTheArchiveRunner() {
 		val c = byId("KS-001").copy(soundIdentity = true)
-		val result = resultFor(c, corpus, Deps(loadPack = { error("identity was not observed") }))
-		assertEquals(JsonNull, result.actual)
-		assertEquals("unverified", result.outcome.status)
-		assertTrue(result.outcome.detail.contains("hashes"))
+		assertThrows(IllegalStateException::class.java) {
+			resultFor(c, corpus, Deps(loadPack = { error("identity parsing reached the production seam") }))
+		}
 	}
 }
