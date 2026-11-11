@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.os.SystemClock
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModelProvider
@@ -136,7 +137,7 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         requireNotNull(panelItem(By.text(str(R.string.autoMapping))).first).click()
         assertTrue("[$name] confirmation missing", clickFresh { device.findObject(By.text(str(R.string.autoMappingApply))) })
         assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(autoMappingBusy)), 5000L))
-        val busyShot = screenshot()
+        val busyShot = shotAfterDialog(name, By.text(autoMappingBusy))
         takeScreenshot("option_panel_${name}_automapping")
         val busy = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(autoMappingBusy), text))
         val finished = device.wait(Until.findObject(By.text(str(R.string.autoMapping))), AUTO_MAPPING_TIMEOUT_MS)
@@ -159,6 +160,46 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
     }
 
     private fun screenshot(): Bitmap = requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()) { "Screenshot failed" }
+
+    /**
+     * A screenshot of [selector] once the confirmation dialog has gone and the screen there has stopped
+     * changing. The dialog dims the play screen, and the dim fades out only after the dialog closes;
+     * text read during that fade sits on a darker panel than anyone sees once it settles.
+     */
+    private fun shotAfterDialog(name: String, selector: BySelector): Bitmap {
+        assertTrue("[$name] confirmation stayed on screen", device.wait(Until.gone(By.text(str(R.string.autoMappingConfirm))), 5000L))
+        val deadline = SystemClock.elapsedRealtime() + SETTLE_TIMEOUT_MS
+        var previous: IntArray? = null
+        var first: IntArray? = null
+        var shots = 0
+        while (true) {
+            val area = device.findObject(selector)?.visibleBounds
+                ?: throw AssertionError("[$name] $selector left the screen before the dialog's dim had gone")
+            val shot = screenshot()
+            val pixels = pixels(shot, area)
+            shots++
+            if (first == null) first = pixels
+            if (previous?.contentEquals(pixels) == true) {
+                println("[$name] screen behind $selector settled after $shots screenshots: background " +
+                    "#%06X in the first, #%06X settled".format(background(first) and 0xFFFFFF, background(pixels) and 0xFFFFFF))
+                return shot
+            }
+            previous = pixels
+            if (SystemClock.elapsedRealtime() > deadline) {
+                takeScreenshot("option_panel_${name}_unsettled")
+                throw AssertionError("[$name] screen behind $selector kept changing for $SETTLE_TIMEOUT_MS ms after the dialog closed")
+            }
+        }
+    }
+
+    /** The most common colour; glyph edges are anti-aliased, so it is the colour behind the text. */
+    private fun background(pixels: IntArray): Int = pixels.toList().groupingBy { it }.eachCount().maxBy { it.value }.key
+
+    private fun pixels(frame: Bitmap, bounds: Rect): IntArray {
+        val area = Rect(bounds)
+        if (!area.intersect(0, 0, frame.width, frame.height)) return IntArray(0)
+        return IntArray(area.width() * area.height()).also { frame.getPixels(it, 0, area.width(), area.left, area.top, area.width(), area.height()) }
+    }
 
     private class Contrast(val label: String, val ratio: Float, val ink: Int, val required: Float) {
         fun assertReadable(skin: String) =
@@ -194,11 +235,9 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
                 frame = screenshot()
                 takeScreenshot("option_panel_${name}_scrolled_$index")
             }
-            val area = Rect(node!!.visibleBounds)
-            assertTrue("[$name] $label is outside the screenshot", area.intersect(0, 0, frame.width, frame.height))
-            val pixels = IntArray(area.width() * area.height())
-            frame.getPixels(pixels, 0, area.width(), area.left, area.top, area.width(), area.height())
-            val background = Color(pixels.toList().groupingBy { it }.eachCount().maxBy { it.value }.key)
+            val pixels = pixels(frame, node!!.visibleBounds)
+            assertTrue("[$name] $label is outside the screenshot", pixels.isNotEmpty())
+            val background = Color(background(pixels))
             val ink = pixels.maxBy { PlayPalette.contrastRatio(Color(it), background) }
             val ratio = PlayPalette.contrastRatio(Color(ink), background)
             val floor = knownLimits[label]
@@ -218,6 +257,7 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         private const val SKIN_FOLDER = "zz_ui_test_panel_skin"
         private const val PANEL_SETTLE_MS = 800L
         private const val AUTO_MAPPING_TIMEOUT_MS = 60_000L
+        private const val SETTLE_TIMEOUT_MS = 3_000L
         private const val FLOOR_TOLERANCE = 0.05f
         private const val INFO_CARD_TITLE = "pack title (info card)"
         private const val INFO_CARD_PRODUCER = "pack producer (info card, secondary)"
