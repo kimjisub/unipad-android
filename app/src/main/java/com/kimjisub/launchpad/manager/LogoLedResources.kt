@@ -9,9 +9,9 @@ import com.kimjisub.launchpad.R
 import java.io.IOException
 import java.io.InputStream
 
-/** Decode a theme's optional alpha mask once, using the ZIP image extension order. */
+/** Decode a bundled theme's optional alpha mask once, sharing the ZIP image extension order. */
 internal fun loadLogoLed(context: Context, open: (String) -> InputStream): Drawable {
-	for (extension in listOf("png", "webp", "jpg", "jpeg")) {
+	for (extension in ZipThemeResources.imageExtensions) {
 		val stream = try { open("logo_led.$extension") } catch (_: IOException) { continue }
 		val bitmap = try { stream.use { BitmapFactory.decodeStream(it) } } catch (_: IOException) { null }
 		if (bitmap != null) return bitmap.toDrawable(context.resources)

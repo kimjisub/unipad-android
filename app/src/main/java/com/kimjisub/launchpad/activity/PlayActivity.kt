@@ -96,7 +96,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -143,6 +142,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.ui.compose.LogoLedImage
 import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
@@ -619,7 +619,7 @@ class PlayActivity : BaseActivity() {
 		val logoBitmap = theme?.customLogo?.takeIf { vm.optionViewVisible }?.let { logo ->
 			remember(logo) { logo.toBitmap().asImageBitmap() }
 		}
-		val logoLedBitmap = theme?.logoLed?.let { logo ->
+		val logoLedBitmap = theme?.logoLed?.takeIf { vm.scbProLightMode.checked }?.let { logo ->
 			remember(logo) { logo.toBitmap().asImageBitmap() }
 		}
 		// The open menu covers the chain buttons, so Tab must not reach them behind it.
@@ -711,14 +711,10 @@ class PlayActivity : BaseActivity() {
 							} else {
 								Spacer(modifier = Modifier.size(0.dp))
 							}
-							if (vm.scbProLightMode.checked && logoLedBitmap != null) {
-								Image(
-									bitmap = logoLedBitmap,
-									contentDescription = null,
-									contentScale = ContentScale.Fit,
-									colorFilter = ColorFilter.tint(Color(if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else LOGO_LED_OFF_COLOR)),
-									modifier = Modifier.testTag("play_logo_led").semantics { testTagsAsResourceId = true },
-								)
+							if (logoLedBitmap != null) {
+								LogoLedImage(logoLedBitmap) {
+									if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else LOGO_LED_OFF_COLOR
+								}
 							} else {
 								Spacer(Modifier.size(0.dp))
 							}
@@ -753,12 +749,13 @@ class PlayActivity : BaseActivity() {
 							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
 							(padY + (padPlaceable.height - chromePlaceable.height) / 2).coerceAtLeast(0),
 						)
-						val logoLedBounds = PlayLayout.logoLedBounds(
+						val logoLedBounds = if (logoLedBitmap != null) PlayLayout.logoLedBounds(
 							constraints.maxWidth, constraints.maxHeight, placement,
 							IntSize(padPlaceable.width, padPlaceable.height),
 							IntSize(topPlaceable.width, topPlaceable.height),
 							IntSize(rightPlaceable.width, rightPlaceable.height),
-						)
+							IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
+						) else IntRect.Zero
 						// The logo keeps its place in the window's top-right corner, outside this padded
 						// area, and gives up width where chains, the logo LED or the menu would cover it.
 						val logoRight = constraints.maxWidth + paddingPx - LOGO_INSET.roundToPx()
@@ -772,7 +769,7 @@ class PlayActivity : BaseActivity() {
 								IntRect(topPos, IntSize(topPlaceable.width, topPlaceable.height)),
 								IntRect(bottomPos, IntSize(bottomPlaceable.width, bottomPlaceable.height)),
 								IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
-							) + if (vm.scbProLightMode.checked && logoLedBitmap != null) listOf(logoLedBounds) else emptyList()
+							) + if (logoLedBitmap != null) listOf(logoLedBounds) else emptyList()
 							).filter { it.width > 0 && it.height > 0 }
 							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
 							if (width < LOGO_MIN_WIDTH.roundToPx()) null

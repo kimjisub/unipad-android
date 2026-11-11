@@ -117,10 +117,10 @@ object PlayLayout {
 	 * Unusually shaped grids can extend a strip past that corner. Fit the largest clear square
 	 * nearest that corner without moving any pads or chain buttons.
 	 */
-	fun logoLedBounds(width: Int, height: Int, at: Placement, pads: IntSize, top: IntSize, right: IntSize): IntRect {
+	fun logoLedBounds(width: Int, height: Int, at: Placement, pads: IntSize, top: IntSize, right: IntSize, chrome: IntRect = IntRect.Zero): IntRect {
 		val preferredSide = (min(top.height, right.width) * LOGO_LED_SCALE).toInt().coerceAtLeast(0)
 		val obstacles = listOf(IntRect(at.pads, pads), IntRect(at.top, top), IntRect(at.right, right),
-			IntRect(at.bottom, top), IntRect(at.left, right))
+			IntRect(at.bottom, top), IntRect(at.left, right), chrome).filter { it.width > 0 && it.height > 0 }
 		// A smaller free square is limited by a gap between obstacle or screen edges.
 		val edges = listOf(listOf(0, width) + obstacles.flatMap { listOf(it.left, it.right) },
 			listOf(0, height) + obstacles.flatMap { listOf(it.top, it.bottom) })

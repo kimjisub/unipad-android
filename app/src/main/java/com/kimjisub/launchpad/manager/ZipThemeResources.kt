@@ -60,7 +60,7 @@ class ZipThemeResources(
 		if (fullLoad) {
 			playbg = loadPng("playbg") ?: defaultDrawable(R.drawable.playbg)
 			customLogo = loadPng("custom_logo")
-			logoLed = loadLogoLed(context) { java.io.File(themeDir, it).inputStream() }
+			logoLed = loadPng("logo_led") ?: defaultDrawable(R.drawable.logo_led)
 			btn = loadPng("btn") ?: defaultDrawable(R.drawable.btn)
 			btnPressed = loadPng("btn_") ?: defaultDrawable(R.drawable.btn_)
 
@@ -120,7 +120,7 @@ class ZipThemeResources(
 			"chain__" to listOf("chain_guide"),
 			"phantom_" to listOf("phantom_variant"),
 		)
-		private val imageExtensions = listOf("png", "webp", "jpg", "jpeg")
+		internal val imageExtensions = listOf("png", "webp", "jpg", "jpeg")
 
 		/** Every file a stem could resolve to, in lookup order. Pure, so a JVM test can check it. */
 		fun candidateFiles(themeDir: File, name: String): List<File> {
