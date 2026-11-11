@@ -24,6 +24,8 @@ abstract class HeldPadTest : MultiTouchPlaybackTest(slideMode = false) {
             File(pack, "sounds/${loopFile(x, y)}").writeBytes(silence)
             "1 $x $y ${loopFile(x, y)} 0"
         } + "\n")
+        // Keep every pad's file and sound ID, but do not open a codec for each copy of silence.
+        audio.reuseDecodedFixture(File(pack, "sounds/silence.wav"))
     }
 
     @After fun detachReceived() {

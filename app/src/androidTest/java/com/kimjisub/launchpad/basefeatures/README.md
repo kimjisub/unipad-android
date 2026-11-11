@@ -239,6 +239,11 @@ plain lift ends it. `HeldPadTest` gives every first-chain pad its own endless lo
 `keySound`, a copy of the silent WAV per pad), so each sound request names the pad that made it and
 a pad left playing shows as a loop nothing stopped (`RecordingAudio.ringingLoops`). Each case
 first shows the held pad played, lit and loops with the pointer still down, then makes the change.
+Only this fixture opts into `RecordingAudio.reuseDecodedFixture`: setup decodes the real silence
+once, then byte-identical files share its PCM with separate load tokens and sound IDs. Different
+bytes still use the real decoder, and cancellation is still honored. `HeldPadAudioPreparationTest`
+checks all 65 referenced sound identities, changed content at the same path, and cancellation.
+The screen's existing 10-second preparation condition and all input/release assertions remain.
 `ReceivedInput` records every touch and mouse event the play window received (action, device,
 source, pointer ID and tool type; moves left out), logs it under the `ReceivedInput` tag and
 quotes it in failure messages.
