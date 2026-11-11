@@ -80,6 +80,10 @@ class CheckFailed(Exception):
     pass
 
 
+class ScreenTimeout(CheckFailed):
+    """The screen could be read, but what was waited for did not appear on it in time."""
+
+
 def normalized(text):
     """Titles in the database carry stray tabs and doubled spaces that the screen keeps or drops."""
     return " ".join((text or "").split())
@@ -302,6 +306,18 @@ class Adb:
         return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
 
 
+def verify_rental(devices_tool, serial, generation, run=subprocess.run):
+    """Refuse a device the caller does not hold: the lease must name this Android device and generation."""
+    lease = run([sys.executable, str(devices_tool), "lease", serial], capture_output=True, text=True, timeout=30)
+    try:
+        identity = json.loads(lease.stdout)
+    except ValueError:
+        raise CheckFailed("The rental lease could not be read")
+    if (lease.returncode or not isinstance(identity, dict) or identity.get("device") != serial
+            or identity.get("generation") != generation or identity.get("platform") != "android"):
+        raise CheckFailed("The Android rental device or generation does not match")
+
+
 class Screen:
     """The rented device's screen, through the rental's UI entry (`devices.py ui`)."""
     def __init__(self, devices_tool, serial, generation, out, run=subprocess.run):
@@ -363,8 +379,76 @@ class Screen:
             if time.monotonic() >= deadline:
                 self.screen(name)
                 self.capture(name)
-                raise CheckFailed(f"{what} did not appear within {timeout} s (see {name}.png)")
+                raise ScreenTimeout(f"{what} did not appear within {timeout} s (see {name}.png)")
             time.sleep(0.5)
+
+
+# Shared by the device checks that install a build and play the small test pack ----------------------------
+
+FIXTURE_PACK = Path(__file__).resolve().parents[1] / "app/src/androidTest/assets/audio-output"
+DEVICE_PROPS = (("model", "ro.product.model"), ("os", "ro.build.version.release"),
+                ("api", "ro.build.version.sdk"), ("fingerprint", "ro.build.fingerprint"))
+
+
+def device_facts(adb):
+    return {key: adb.shell("getprop", prop) for key, prop in DEVICE_PROPS}
+
+
+def verify_installed(adb, package, sha256):
+    """The one APK file installed for `package` must be the supplied APK."""
+    paths = adb.shell("pm", "path", package).splitlines()
+    if len(paths) != 1 or not paths[0].startswith("package:/"):
+        raise CheckFailed(f"Expected one APK file installed for {package}, found {paths}")
+    installed = adb.shell("sha256sum", paths[0].removeprefix("package:")).split()
+    if not installed or installed[0] != sha256:
+        raise CheckFailed(f"The installed {package} does not match the supplied APK")
+
+
+def push_fixture_pack(adb, package, pack):
+    """Put the small audio-output test pack in the app's library and return the ownership listing.
+
+    The app must be installed and stopped; adb must be root.
+    """
+    base = f"/data/user/0/{package}"
+    # Keep the app's numeric uid/gid on everything pushed as root.
+    owner = adb.shell("stat", "-c", "%u:%g", base)
+    if not re.fullmatch(r"\d+:\d+", owner):
+        raise CheckFailed(f"Cannot read app ownership: {owner!r}")
+    destination = f"{base}/files/UniPack/{pack}"
+    adb.shell("mkdir", "-p", destination)
+    adb.shell("mkdir", "-p", f"{destination}/sounds")
+    for name in ("info", "keySound"):
+        adb.run("push", str(FIXTURE_PACK / name), f"{destination}/{name}")
+    for sound in sorted(FIXTURE_PACK.iterdir()):
+        if sound.suffix in (".wav", ".mp3", ".ogg", ".m4a"):
+            adb.run("push", str(sound), f"{destination}/sounds/{sound.name}")
+    # mkdir -p also creates files/ on a first install. Repair that ancestor
+    # itself: fixing only UniPack leaves root ownership and a generic label.
+    adb.shell("chown", owner, f"{base}/files")
+    adb.shell("chmod", "700", f"{base}/files")
+    adb.shell("restorecon", "-F", f"{base}/files")
+    adb.shell("chown", "-R", owner, f"{base}/files/UniPack")
+    adb.shell("chmod", "-R", "u=rwX,go=", f"{base}/files/UniPack")
+    adb.shell("restorecon", "-RF", f"{base}/files/UniPack")
+    return adb.shell("ls", "-ldZ", f"{base}/files", f"{base}/files/UniPack")
+
+
+def play_screen_shown(root):
+    return find(root, identifier="play_logo")
+
+
+def open_play_screen(screen, package, pack, timeout, ready=play_screen_shown, what="The play screen",
+                     name="missing-play-screen"):
+    """Launch the app, select `pack` in the library, press its Play button and return `ready`'s answer."""
+    screen.launch(package)
+    row = screen.wait(lambda root: find(root, identifier=f"main_pack_{pack}"), timeout, "The local test pack",
+                      "missing-pack")
+    screen.tap(row)
+    # Selecting a pack exposes its Play control in the row.
+    play = screen.wait(lambda root: find(root, text="Play") or find(root, text="연주"), timeout, "The Play button",
+                       "missing-play")
+    screen.tap(play)
+    return screen.wait(ready, timeout, what, name)
 
 
 class StoreCheck:

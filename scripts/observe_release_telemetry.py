@@ -16,13 +16,13 @@ import sys
 import subprocess
 import time
 
-from release_store_check import Adb, CheckFailed, Screen, Node, find
+from release_store_check import (Adb, CheckFailed, Screen, Node, device_facts, find, open_play_screen,
+                                 push_fixture_pack, verify_installed, verify_rental)
 
 PACKAGE = 'com.kimjisub.launchpad'
 DEBUG_PROP = 'debug.firebase.analytics.app'
 LOG_PROP = 'log.tag.FA-SVC'
 PACK = 'telemetry-observer'
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def split_values(text):
@@ -128,19 +128,12 @@ class Observer:
 
     def prepare(self):
         self.adb.root()
-        self.result['device'] = {key: self.adb.shell('getprop', prop) for key, prop in (
-            ('model', 'ro.product.model'), ('os', 'ro.build.version.release'),
-            ('api', 'ro.build.version.sdk'), ('fingerprint', 'ro.build.fingerprint'))}
+        self.result['device'] = device_facts(self.adb)
         self.result['apk_sha256'] = hashlib.sha256(self.apk.read_bytes()).hexdigest()
         # Stop an existing installation before replacement; never clear its data.
         self.adb.shell('am', 'force-stop', PACKAGE)
         self.adb.run('install', '-r', str(self.apk), timeout=180)
-        paths = self.adb.shell('pm', 'path', PACKAGE).splitlines()
-        if len(paths) != 1 or not paths[0].startswith('package:/'):
-            raise CheckFailed('Expected a standalone release APK at the release package')
-        installed_hash = self.adb.shell('sha256sum', paths[0].removeprefix('package:')).split()
-        if not installed_hash or installed_hash[0] != self.result['apk_sha256']:
-            raise CheckFailed('Installed release package does not match the supplied APK')
+        verify_installed(self.adb, PACKAGE, self.result['apk_sha256'])
         package = self.adb.shell('dumpsys', 'package', PACKAGE)
         version = re.search(r'versionCode=(\d+).*?\n\s*versionName=(\S+)', package, re.S)
         if not version:
@@ -159,41 +152,10 @@ class Observer:
         base = f'/data/user/0/{PACKAGE}'
         self.sessions_path = f'{base}/files/.crashlytics.v3/{PACKAGE}/open-sessions'
         self.previous_sessions = set(self.adb.shell('ls', '-1', self.sessions_path, check=False).splitlines())
-        # Use the existing small test pack, preserving the app's numeric uid/gid.
-        owner = self.adb.shell('stat', '-c', '%u:%g', base)
-        if not re.fullmatch(r'\d+:\d+', owner):
-            raise CheckFailed(f'Cannot read app ownership: {owner!r}')
-        destination = f'{base}/files/UniPack/{PACK}'
-        self.adb.shell('mkdir', '-p', destination)
-        fixture = ROOT / 'app/src/androidTest/assets/audio-output'
-        self.adb.shell('mkdir', '-p', f'{destination}/sounds')
-        for name in ('info', 'keySound'):
-            self.adb.run('push', str(fixture / name), f'{destination}/{name}')
-        for sound in sorted(fixture.iterdir()):
-            if sound.suffix in ('.wav', '.mp3', '.ogg', '.m4a'):
-                self.adb.run('push', str(sound), f'{destination}/sounds/{sound.name}')
-        # mkdir -p also creates files/ on a first install. Repair that ancestor
-        # itself: fixing only UniPack leaves root ownership and a generic label.
-        self.adb.shell('chown', owner, f'{base}/files')
-        self.adb.shell('chmod', '700', f'{base}/files')
-        self.adb.shell('restorecon', '-F', f'{base}/files')
-        self.adb.shell('chown', '-R', owner, f'{base}/files/UniPack')
-        self.adb.shell('chmod', '-R', 'u=rwX,go=', f'{base}/files/UniPack')
-        self.adb.shell('restorecon', '-RF', f'{base}/files/UniPack')
-        self.result['fixture_directory_listing'] = self.adb.shell(
-            'ls', '-ldZ', f'{base}/files', f'{base}/files/UniPack')
+        self.result['fixture_directory_listing'] = push_fixture_pack(self.adb, PACKAGE, PACK)
 
     def drive(self):
-        self.ui.launch(PACKAGE)
-        row = self.ui.wait(lambda root: find(root, identifier=f'main_pack_{PACK}'),
-                           self.timeout, 'The local test pack', 'missing-pack')
-        self.ui.tap(row)
-        # Selecting a pack exposes its Play control in the row.
-        play = self.ui.wait(lambda root: find(root, text='Play') or find(root, text='연주'),
-                            self.timeout, 'The Play button', 'missing-play')
-        self.ui.tap(play)
-        pad = self.ui.wait(first_pad,
-                           self.timeout, 'A screen pad', 'missing-pad')
+        pad = open_play_screen(self.ui, PACKAGE, PACK, self.timeout, first_pad, 'A screen pad', 'missing-pad')
         self.result['pad_bounds'] = pad.bounds
         self.ui.tap(pad)
         self.ui.back()
@@ -289,15 +251,10 @@ def main(argv=None):
         parser.error('An existing APK, device tool and positive timeout are required')
     if args.out.exists():
         parser.error('Output already exists; archive the previous round before running again')
-    lease = subprocess.run([sys.executable, str(args.devices_tool), 'lease', args.serial],
-                           capture_output=True, text=True, timeout=30)
     try:
-        identity = json.loads(lease.stdout)
-    except ValueError:
-        parser.error('The rental lease could not be read')
-    if (lease.returncode or identity.get('device') != args.serial
-            or identity.get('generation') != args.generation or identity.get('platform') != 'android'):
-        parser.error('The Android rental device or generation does not match')
+        verify_rental(args.devices_tool, args.serial, args.generation)
+    except CheckFailed as error:
+        parser.error(str(error))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     observer = Observer(Adb(args.adb, args.serial),
                         Screen(args.devices_tool, args.serial, args.generation, args.out.parent), args.apk, args.timeout)
