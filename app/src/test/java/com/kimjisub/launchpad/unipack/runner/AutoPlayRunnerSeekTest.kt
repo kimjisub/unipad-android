@@ -157,7 +157,11 @@ class AutoPlayRunnerSeekTest {
 		assertTrue("Seeking practice must not play sounds", presses.isEmpty())
 	}
 
-	@Test fun seekInStepPracticeRebasesTheCurrentPositionWhenContinuousPracticeResumes() {
+	/**
+	 * Leaves a step shown after a seek while the loop is inside step handling, before it drains input.
+	 * Clearing the shown step on the caller would let that in-flight pass scan the following pad.
+	 */
+	private fun leaveStepDuringAStepPass(leave: AutoPlayRunner.() -> Unit) {
 		start(practice = true)
 		await("Initial guide missing") { guides.contains(0 to 500L) }
 		runner.playmode = false
@@ -167,8 +171,6 @@ class AutoPlayRunnerSeekTest {
 		val pressedKeysLock = checkNotNull(AutoPlayRunner::class.java.getDeclaredField("pressedKeysLock")
 			.apply { isAccessible = true }.get(runner))
 		synchronized(pressedKeysLock) {
-			// Resume after the loop has entered step handling but before it drains input. Clearing
-			// the shown step on the caller would let that in-flight pass scan the following pad.
 			runner.stepMode = true
 			await("Runner did not reach step input handling") {
 				Thread.getAllStackTraces().any { (thread, stack) ->
@@ -178,11 +180,20 @@ class AutoPlayRunnerSeekTest {
 				}
 			}
 			clock.set(10000)
-			runner.resume()
+			runner.leave()
 		}
-		await("Resume did not keep the delay after the step hint") { runner.progress == 6 }
+		await("Leaving the step did not keep the delay after the step hint") { runner.progress == 6 }
+		assertTrue("Leaving the step skipped the shown pad to guide the following one", guides.none { it == 2 to 0L })
 		clock.set(19200)
 		await("Step seek kept the old continuous guide clock") { guides.contains(2 to 20000L) }
+	}
+
+	@Test fun seekInStepPracticeRebasesTheCurrentPositionWhenContinuousPracticeResumes() {
+		leaveStepDuringAStepPass { resume() }
+	}
+
+	@Test fun choosingGuidePlayDuringAStepPassKeepsTheShownStepOwed() {
+		leaveStepDuringAStepPass { startGuidePlay() }
 	}
 
 	@Test fun stepSeekDuringAStepScanGuidesTheStepAtTheNewPosition() {
