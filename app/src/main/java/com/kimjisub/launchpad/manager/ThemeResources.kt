@@ -10,6 +10,7 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.drawable
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.tool.ZipThemeImporter
 
 /**
  * 기본 테마: 앱 자체 리소스를 직접 사용 (PackageManager 불필요)
@@ -70,13 +71,7 @@ fun IThemeResources.applyTraceLogTextStyle(pad: PadView) {
 }
 
 fun loadTheme(context: Context, themeId: String, fullLoad: Boolean = false): IThemeResources {
-	val resolvedId = resolveBundledThemeId(themeId) { name ->
-		try {
-			"theme.json" in (context.assets.list("themes/$name") ?: emptyArray())
-		} catch (_: java.io.IOException) {
-			false
-		}
-	}
+	val resolvedId = resolveBundledThemeId(themeId) { ZipThemeImporter.isBundled(context, it) }
 	return when {
 		resolvedId.startsWith("asset://") -> {
 			val themeName = resolvedId.removePrefix("asset://")
