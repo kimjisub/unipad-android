@@ -127,6 +127,9 @@ diamond-theme.zip
 The diamond will turn red for palette color 5, follow other pack logo colors,
 and return to dark gray on `f l`. Chain Mode A and B use the same logo rules.
 
+See the [actual logo and diamond-mask screenshots](images/pro-logo-led/README.md)
+for phone and tablet layouts, including the unlit state.
+
 ## Color Customization (Optional)
 
 ### colors.json
