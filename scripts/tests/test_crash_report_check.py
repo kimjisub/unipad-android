@@ -273,8 +273,14 @@ class FirebaseCliTest(unittest.TestCase):
 
 
 class DeviceVerdictTest(unittest.TestCase):
+
+    def setUp(self):
+        # Device steps write evidence (logcat.txt, snapshots) into the output folder.
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.out = Path(folder.name)
     def check(self):
-        check = crc.CrashReportCheck(Mock(), Mock(), Path('app.apk'), Path('.'))
+        check = crc.CrashReportCheck(Mock(), Mock(), Path('app.apk'), self.out)
         for name in ('prepare', 'open_play_screen', 'crash_in_background', 'send_reports'):
             setattr(check, name, Mock())
         return check
@@ -305,7 +311,7 @@ class DeviceVerdictTest(unittest.TestCase):
     def test_preparation_device_errors_are_not_checked(self):
         adb = Mock()
         adb.root.side_effect = CheckFailed('adb root is not available')
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'))
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out)
         verdict, reason = crc.run_device(check, 'run-1')
         self.assertEqual(verdict, crc.NOT_CHECKED)
         self.assertIn('adb root is not available', reason)
@@ -314,7 +320,7 @@ class DeviceVerdictTest(unittest.TestCase):
         adb = Mock()
         adb.shell.side_effect = lambda *args, **kwargs: {'getprop': '34', 'pm': 'package:/data/app/base.apk'}.get(
             args[0], 'other-hash  /data/app/base.apk')
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'))
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out)
         check.result['apk'] = dict(sha256='apk-hash')
         verdict, reason = crc.run_device(check, 'run-1')
         self.assertEqual(verdict, crc.NOT_CHECKED)
@@ -324,7 +330,7 @@ class DeviceVerdictTest(unittest.TestCase):
     def test_prepare_refuses_android_10(self):
         adb = Mock()
         adb.shell.return_value = '29'
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'))
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out)
         with self.assertRaisesRegex(crc.NotChecked, 'API 29'):
             check.prepare()
         adb.run.assert_not_called()
@@ -332,7 +338,7 @@ class DeviceVerdictTest(unittest.TestCase):
     def test_reopen_without_the_recorded_exit_is_an_app_failure(self):
         adb = Mock()
         adb.run.return_value = b'11-11 06:40:01 D SomethingElse: started\n'
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), launch_seconds=0)
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out, launch_seconds=0)
         with self.assertRaisesRegex(crc.AppFailed, 'did not record the native crash exit'):
             check.send_reports()
 
@@ -341,7 +347,7 @@ class DeviceVerdictTest(unittest.TestCase):
         pids = iter(['123', 'stopped'])
         adb.shell.side_effect = lambda *args, **kwargs: (next(pids) if args[0] == 'pidof' else
                                                          '1794379190' if args[0] == 'date' else '')
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), background_seconds=0)
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out, background_seconds=0)
         check.crash_in_background('a;b c')
         broadcast = next(call.args for call in adb.shell.call_args_list if call.args[:2] == ('am', 'broadcast'))
         self.assertEqual(broadcast[-2:], ('check_id', "'a;b c'"))
@@ -360,6 +366,12 @@ if __name__ == '__main__':
 class DeviceErrorKindTest(unittest.TestCase):
     """Only what the app did fails the run; tool, adb and rental errors after preparation are not checked."""
 
+    def setUp(self):
+        # Device steps write evidence (logcat.txt, snapshots) into the output folder.
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.out = Path(folder.name)
+
     def device(self, pids, broadcast=None, logcat=b'SystemExitReporter: Recorded system exit reason=5'):
         adb = Mock()
         pids = iter(pids)
@@ -375,7 +387,7 @@ class DeviceErrorKindTest(unittest.TestCase):
             return '1794379190' if args[0] == 'date' else ''
         adb.shell.side_effect = shell
         adb.run.return_value = logcat
-        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), timeout=0, background_seconds=0,
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), self.out, timeout=0, background_seconds=0,
                                      launch_seconds=0, crash_seconds=0)
         check.prepare = Mock()
         return check
@@ -385,7 +397,7 @@ class DeviceErrorKindTest(unittest.TestCase):
 
         def run(*args, **kwargs):
             raise subprocess.TimeoutExpired('devices.py ui', 660)
-        check.screen = Screen(Path('devices.py'), 'emulator-5574', 'g1', Path('.'), run=run)
+        check.screen = Screen(Path('devices.py'), 'emulator-5574', 'g1', self.out, run=run)
         verdict, reason = crc.run_device(check, 'run-1')
         self.assertEqual(verdict, crc.NOT_CHECKED)
         self.assertIn('TimeoutExpired', reason)
