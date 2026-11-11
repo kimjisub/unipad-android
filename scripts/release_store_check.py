@@ -302,6 +302,18 @@ class Adb:
         return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
 
 
+def verify_rental(devices_tool, serial, generation, run=subprocess.run):
+    """Refuse a device the caller does not hold: the lease must name this Android device and generation."""
+    lease = run([sys.executable, str(devices_tool), "lease", serial], capture_output=True, text=True, timeout=30)
+    try:
+        identity = json.loads(lease.stdout)
+    except ValueError:
+        raise CheckFailed("The rental lease could not be read")
+    if (lease.returncode or not isinstance(identity, dict) or identity.get("device") != serial
+            or identity.get("generation") != generation or identity.get("platform") != "android"):
+        raise CheckFailed("The Android rental device or generation does not match")
+
+
 class Screen:
     """The rented device's screen, through the rental's UI entry (`devices.py ui`)."""
     def __init__(self, devices_tool, serial, generation, out, run=subprocess.run):

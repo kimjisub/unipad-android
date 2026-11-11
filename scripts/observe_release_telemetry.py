@@ -16,7 +16,7 @@ import sys
 import subprocess
 import time
 
-from release_store_check import Adb, CheckFailed, Screen, Node, find
+from release_store_check import Adb, CheckFailed, Screen, Node, find, verify_rental
 
 PACKAGE = 'com.kimjisub.launchpad'
 DEBUG_PROP = 'debug.firebase.analytics.app'
@@ -120,6 +120,36 @@ def first_pad(root):
     return None
 
 
+def push_fixture_pack(adb, package, pack):
+    """Put the small audio-output test pack in the app's library and return the ownership listing.
+
+    The app must be installed and stopped; adb must be root.
+    """
+    base = f'/data/user/0/{package}'
+    # Use the existing small test pack, preserving the app's numeric uid/gid.
+    owner = adb.shell('stat', '-c', '%u:%g', base)
+    if not re.fullmatch(r'\d+:\d+', owner):
+        raise CheckFailed(f'Cannot read app ownership: {owner!r}')
+    destination = f'{base}/files/UniPack/{pack}'
+    adb.shell('mkdir', '-p', destination)
+    fixture = ROOT / 'app/src/androidTest/assets/audio-output'
+    adb.shell('mkdir', '-p', f'{destination}/sounds')
+    for name in ('info', 'keySound'):
+        adb.run('push', str(fixture / name), f'{destination}/{name}')
+    for sound in sorted(fixture.iterdir()):
+        if sound.suffix in ('.wav', '.mp3', '.ogg', '.m4a'):
+            adb.run('push', str(sound), f'{destination}/sounds/{sound.name}')
+    # mkdir -p also creates files/ on a first install. Repair that ancestor
+    # itself: fixing only UniPack leaves root ownership and a generic label.
+    adb.shell('chown', owner, f'{base}/files')
+    adb.shell('chmod', '700', f'{base}/files')
+    adb.shell('restorecon', '-F', f'{base}/files')
+    adb.shell('chown', '-R', owner, f'{base}/files/UniPack')
+    adb.shell('chmod', '-R', 'u=rwX,go=', f'{base}/files/UniPack')
+    adb.shell('restorecon', '-RF', f'{base}/files/UniPack')
+    return adb.shell('ls', '-ldZ', f'{base}/files', f'{base}/files/UniPack')
+
+
 class Observer:
     def __init__(self, adb, screen, apk, timeout=60):
         self.adb, self.ui, self.apk, self.timeout = adb, screen, apk, timeout
@@ -159,29 +189,7 @@ class Observer:
         base = f'/data/user/0/{PACKAGE}'
         self.sessions_path = f'{base}/files/.crashlytics.v3/{PACKAGE}/open-sessions'
         self.previous_sessions = set(self.adb.shell('ls', '-1', self.sessions_path, check=False).splitlines())
-        # Use the existing small test pack, preserving the app's numeric uid/gid.
-        owner = self.adb.shell('stat', '-c', '%u:%g', base)
-        if not re.fullmatch(r'\d+:\d+', owner):
-            raise CheckFailed(f'Cannot read app ownership: {owner!r}')
-        destination = f'{base}/files/UniPack/{PACK}'
-        self.adb.shell('mkdir', '-p', destination)
-        fixture = ROOT / 'app/src/androidTest/assets/audio-output'
-        self.adb.shell('mkdir', '-p', f'{destination}/sounds')
-        for name in ('info', 'keySound'):
-            self.adb.run('push', str(fixture / name), f'{destination}/{name}')
-        for sound in sorted(fixture.iterdir()):
-            if sound.suffix in ('.wav', '.mp3', '.ogg', '.m4a'):
-                self.adb.run('push', str(sound), f'{destination}/sounds/{sound.name}')
-        # mkdir -p also creates files/ on a first install. Repair that ancestor
-        # itself: fixing only UniPack leaves root ownership and a generic label.
-        self.adb.shell('chown', owner, f'{base}/files')
-        self.adb.shell('chmod', '700', f'{base}/files')
-        self.adb.shell('restorecon', '-F', f'{base}/files')
-        self.adb.shell('chown', '-R', owner, f'{base}/files/UniPack')
-        self.adb.shell('chmod', '-R', 'u=rwX,go=', f'{base}/files/UniPack')
-        self.adb.shell('restorecon', '-RF', f'{base}/files/UniPack')
-        self.result['fixture_directory_listing'] = self.adb.shell(
-            'ls', '-ldZ', f'{base}/files', f'{base}/files/UniPack')
+        self.result['fixture_directory_listing'] = push_fixture_pack(self.adb, PACKAGE, PACK)
 
     def drive(self):
         self.ui.launch(PACKAGE)
@@ -289,15 +297,10 @@ def main(argv=None):
         parser.error('An existing APK, device tool and positive timeout are required')
     if args.out.exists():
         parser.error('Output already exists; archive the previous round before running again')
-    lease = subprocess.run([sys.executable, str(args.devices_tool), 'lease', args.serial],
-                           capture_output=True, text=True, timeout=30)
     try:
-        identity = json.loads(lease.stdout)
-    except ValueError:
-        parser.error('The rental lease could not be read')
-    if (lease.returncode or identity.get('device') != args.serial
-            or identity.get('generation') != args.generation or identity.get('platform') != 'android'):
-        parser.error('The Android rental device or generation does not match')
+        verify_rental(args.devices_tool, args.serial, args.generation)
+    except CheckFailed as error:
+        parser.error(str(error))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     observer = Observer(Adb(args.adb, args.serial),
                         Screen(args.devices_tool, args.serial, args.generation, args.out.parent), args.apk, args.timeout)

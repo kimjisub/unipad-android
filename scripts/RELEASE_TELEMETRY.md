@@ -65,7 +65,8 @@ as hexadecimal. Unknown values are retained. A missing debug field is `null`,
 not evidence that debug marking was absent. Presence checks require an
 `input_source` parameter and a new session's `screen` key plus lifecycle lines;
 they impose no whitelist on the observed values. Session files prove local
-context collection, not server receipt of an actual crash report.
+context collection, not server receipt of an actual crash report; that is checked
+with a debug build by `crash_report_check.py` ([CRASH_REPORT_CHECK.md](CRASH_REPORT_CHECK.md)).
 
 `--timeout` bounds each screen wait and the telemetry polling phase (default
 60 seconds); individual device commands also have time limits. Analytics uploads
