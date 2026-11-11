@@ -112,6 +112,23 @@ class PlayActivityViewModelGuideResumeTest {
         await { animationTargets[0 to 0] == 3500L }
     }
 
+    @Test fun selectingStepsAfterPausingAGuidePreservesThatChoiceOnReturn() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        vm.autoPlayPause()
+        vm.switchPlayMode(PlayMode.AutoPlay)
+        vm.switchPlayMode(PlayMode.StepPractice)
+        await { animationTargets[0 to 0] == 0L }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+        main.runAll()
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        await { animationTargets[0 to 0] == 0L }
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue(!vm.isAutoPlayPlaying)
+        assertTrue(vm.autoPlayRunner!!.stepMode)
+    }
+
     @Test fun interruptionKeepsGuideModeAndPositionWithoutRelighting() {
         vm.switchPlayMode(PlayMode.GuidePlay)
         await { animationTargets[0 to 0] == 500L }
@@ -149,11 +166,11 @@ class PlayActivityViewModelGuideResumeTest {
         main.runAll()
         assertEquals("Input before manual resume cannot consume the pending step", progress, vm.autoPlayRunner!!.progress)
         vm.autoPlayResume()
-        await { animationTargets[0 to 0] == 10500L }
-        assertEquals("Play has the same timed-guide effect as without interruption", PlayMode.GuidePlay, vm.playMode)
-        assertTrue(vm.isAutoPlayPlaying)
-        assertTrue(vm.autoPlayRunner!!.practiceGuide)
-        assertTrue(!vm.autoPlayRunner!!.stepMode)
+        await { animationTargets[0 to 0] == 0L }
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        await { animationTargets[1 to 1] == 0L }
     }
 
     @Test fun resumingAnInterruptedChainWaitRestoresItsChainHint() {

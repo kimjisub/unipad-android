@@ -81,7 +81,9 @@ class PracticeTransitionTest : PlaybackScreenTest() {
         }
         assertGuide()
         assertSounds("pad-1-1", "pad-1-2")
-        // Select audible playback directly; Play resumes timed guidance, as without interruption.
+        screen.clickDescription(R.string.cd_autoplay_play)
+        assertGuide(2)
+        screen.capture("practice-$label-restored-$away-$finalGroup")
         screen.chooseOption(R.string.autoPlay)
         screen.await("The pending pad did not sound") { audio.plays.size == 3 }
         assertSounds("pad-1-1", "pad-1-2", "pad-1-3")

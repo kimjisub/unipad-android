@@ -168,6 +168,8 @@ class PlayActivityViewModel(
 	var isAutoPlayPlaying by mutableStateOf(false)
 	var isPracticeMode by mutableStateOf(false)
 	private var interruptedMode by mutableStateOf<PlayMode?>(null)
+	// Paused timed guidance returns to timed play; explicitly selected steps stay in steps.
+	private var userPausedTimedPlayback = false
 	val playMode: PlayMode
 		get() = interruptedMode ?: when {
 			!scbAutoPlay.checked -> PlayMode.None
@@ -894,6 +896,7 @@ class PlayActivityViewModel(
 			return
 		}
 
+		userPausedTimedPlayback = false
 		if (mode == PlayMode.None) {
 			interruptedMode = null
 			runner.practiceGuide = false
@@ -974,12 +977,14 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		if (!acquirePlaybackAudio()) return
 		val interrupted = interruptedMode
+		val resumeTimedPlayback = interrupted != PlayMode.StepPractice || userPausedTimedPlayback
+		userPausedTimedPlayback = false
 		if (interrupted != null) {
 			interruptedMode = null
 			isPracticeMode = interrupted != PlayMode.AutoPlay
-			isAutoPlayPlaying = true
+			isAutoPlayPlaying = resumeTimedPlayback
 			runner.resumeAfterInterruption()
-			runner.resume()
+			if (resumeTimedPlayback) runner.resume()
 		} else {
 			resetPadsAfterAutoPlay()
 			isAutoPlayPlaying = true
@@ -991,6 +996,7 @@ class PlayActivityViewModel(
 	fun autoPlayPause() {
 		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
+		if (playMode == PlayMode.GuidePlay) userPausedTimedPlayback = true
 		runner.playmode = false
 		isAutoPlayPlaying = false
 		resetPadsAfterAutoPlay()
@@ -1067,6 +1073,7 @@ class PlayActivityViewModel(
 		if (!unipack.autoPlayExist) return
 		autoPlayRunner?.stop()
 		interruptedMode = null
+		userPausedTimedPlayback = false
 		releaseAutoPlayPads()
 		// onEnd of a stopped runner arrives asynchronously; by then autoPlayRunner may already be
 		// its replacement, whose flags the old one must not reset.
@@ -1150,6 +1157,7 @@ class PlayActivityViewModel(
 						if (created != null && created !== autoPlayRunner) return@launch
 						releaseAutoPlayPads()
 						interruptedMode = null
+						userPausedTimedPlayback = false
 						isAutoPlayPlaying = false
 						autoPlayRunner?.practiceGuide = false
 						autoPlayRunner?.stepMode = false
