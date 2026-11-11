@@ -64,16 +64,10 @@ class LogoLedScreenTest : PlaybackScreenTest() {
                 screen.tapPad(0)
                 screen.instrumentation.waitForIdleSync()
                 val logo = screen.node(By.res("play_logo_led")).visibleBounds
-                val menu = screen.node(By.desc(screen.text(R.string.menu))).visibleBounds
+                val controls = screen.node(By.res("play_controls")).visibleBounds
                 assertTrue("Transport visibility did not match fixture", screen.has(By.desc(screen.text(R.string.cd_autoplay_next))) == autoplay)
-                if (autoplay) {
-                    for (control in listOf(R.string.cd_autoplay_prev, R.string.cd_autoplay_play, R.string.cd_autoplay_next)) {
-                        val bounds = screen.node(By.desc(screen.text(control))).visibleBounds
-                        if (Rect.intersects(logo, bounds)) overlaps += "logo=$logo covers transport=$bounds"
-                    }
-                }
                 screen.capture("small-pack-logo-autoplay-$autoplay")
-                if (Rect.intersects(logo, menu)) overlaps += "autoplay=$autoplay, logo=$logo, menu=$menu"
+                if (Rect.intersects(logo, controls)) overlaps += "autoplay=$autoplay, logo=$logo, controls=$controls"
                 screen.clickDescription(R.string.menu)
                 screen.await("Menu must remain usable") { screen.onMain { screen.vm().isOptionWindowVisible } }
                 scenario.close()

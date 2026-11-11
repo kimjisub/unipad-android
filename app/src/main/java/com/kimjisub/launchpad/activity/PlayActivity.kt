@@ -879,7 +879,7 @@ class PlayActivity : BaseActivity() {
 		val showTransport = vm.autoPlayControlVisible
 
 		Column(
-			modifier = Modifier
+			modifier = Modifier.testTag("play_controls").semantics { testTagsAsResourceId = true }
 				.background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(24.dp))
 				.padding(vertical = 8.dp, horizontal = 4.dp),
 			verticalArrangement = Arrangement.spacedBy(4.dp),
