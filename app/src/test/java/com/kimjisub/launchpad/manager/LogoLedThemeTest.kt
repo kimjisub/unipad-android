@@ -72,6 +72,15 @@ class LogoLedThemeTest {
         File(folder, "logo_led.png").writeBytes(byteArrayOf(1, 2, 3))
         assertSame(fallback, ZipThemeResources(context, folder, fullLoad = true).logoLed)
     }
+    @Test fun zipLogoUsesTheSameFirstExistingCandidateAsOtherImages() {
+        val folder = zipTheme()
+        val png = File(folder, "logo_led.png").apply { mkdir() }
+        val webp = File(folder, "logo_led.webp").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+        assertSame(fallback, ZipThemeResources(context, folder, fullLoad = true).logoLed)
+        verify(exactly = 1) { BitmapFactory.decodeFile(png.absolutePath) }
+        verify(exactly = 0) { BitmapFactory.decodeFile(webp.absolutePath) }
+        verify(exactly = 0) { BitmapFactory.decodeStream(any()) }
+    }
     private fun zipTheme(): File = temporary.newFolder().also {
         File(it, "theme.json").writeText(metadata)
     }

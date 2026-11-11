@@ -297,4 +297,21 @@ class PlayLayoutTest {
         }
     }
 
+    @Test
+    fun logoLedKeepsClearOfMenuAndAutoplayControlsForSmallPacks() {
+        for ((w, h) in shapes + listOf(360 to 640)) for (rows in 1..8) for (columns in 1..8) {
+            for (chromeHeight in listOf(52, 156)) {
+                val size = PlayLayout.buttonSize(PlayLayout.Area(w, h, strip), rows, columns, true, PlayLayout.chainSides(true, 8))
+                val pads = IntSize(size.x * columns, size.y * rows)
+                val top = IntSize(size.chain * 8, size.chain)
+                val right = IntSize(size.chain, size.chain * 8)
+                val at = PlayLayout.place(w, h, pads, top, right, top, right)
+                val chrome = IntRect(IntOffset(w - strip, (at.pads.y + (pads.height - chromeHeight) / 2).coerceAtLeast(0)), IntSize(strip, chromeHeight))
+                val logo = PlayLayout.logoLedBounds(w, h, at, pads, top, right)
+                assertTrue("$w x $h, $rows x $columns, chrome=$chrome, logo=$logo", !logo.overlaps(chrome))
+                assertTrue("Logo must remain visible", logo.width > 0)
+            }
+        }
+    }
+
 }
