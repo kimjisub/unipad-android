@@ -26,7 +26,13 @@ class LogoLedRenderingTest : PlaybackScreenTest() {
     @get:Rule val compose = createEmptyComposeRule()
 
     @Test fun blinkingRecolorsOnlyTheLogoWithoutRecomposingOrMeasuringItsParent() {
-        val scenario = screen.openPlay()
+        // Compose's test clock advances only through its synchronization APIs. The
+        // regular screen helper sleeps, leaving async pack loading without a frame.
+        val pack = screen.pack()
+        val scenario = screen.launch(PlayActivity::class.java) { putExtra("path", pack.path) }
+        compose.waitUntil(timeoutMillis = 10000) {
+            screen.onMain { !screen.vm().unipackLoading && !screen.vm().soundLoadingActive && screen.vm().uiLoaded }
+        }
         val bitmap = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.WHITE) }
         val image = bitmap.asImageBitmap()
         val color = mutableIntStateOf(Color.Red.toArgb())
