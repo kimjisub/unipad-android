@@ -81,6 +81,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -95,6 +96,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -184,6 +186,7 @@ class PlayActivity : BaseActivity() {
 
 	// UI - Theme
 	private var theme by mutableStateOf<IThemeResources?>(null)
+	private var logoLedColor by mutableIntStateOf(0)
 	private var startReady by mutableStateOf(false)
 
 	// UI - AndroidView references
@@ -616,6 +619,9 @@ class PlayActivity : BaseActivity() {
 		val logoBitmap = theme?.customLogo?.takeIf { vm.optionViewVisible }?.let { logo ->
 			remember(logo) { logo.toBitmap().asImageBitmap() }
 		}
+		val logoLedBitmap = theme?.logoLed?.let { logo ->
+			remember(logo) { logo.toBitmap().asImageBitmap() }
+		}
 		// The open menu covers the chain buttons, so Tab must not reach them behind it.
 		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
@@ -705,6 +711,17 @@ class PlayActivity : BaseActivity() {
 							} else {
 								Spacer(modifier = Modifier.size(0.dp))
 							}
+							if (vm.scbProLightMode.checked && logoLedBitmap != null) {
+								Image(
+									bitmap = logoLedBitmap,
+									contentDescription = null,
+									contentScale = ContentScale.Fit,
+									colorFilter = ColorFilter.tint(Color(if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else 0xFF222222.toInt())),
+									modifier = Modifier.testTag("play_logo_led").semantics { testTagsAsResourceId = true },
+								)
+							} else {
+								Spacer(Modifier.size(0.dp))
+							}
 						},
 						modifier = Modifier.fillMaxSize()
 					) { measurables, constraints ->
@@ -754,6 +771,13 @@ class PlayActivity : BaseActivity() {
 							if (width < LOGO_MIN_WIDTH.roundToPx()) null
 							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
 						}
+						val logoLedBounds = PlayLayout.logoLedBounds(
+							constraints.maxWidth, constraints.maxHeight, placement,
+							IntSize(padPlaceable.width, padPlaceable.height),
+							IntSize(topPlaceable.width, topPlaceable.height),
+							IntSize(rightPlaceable.width, rightPlaceable.height),
+						)
+						val logoLedPlaceable = measurables[8].measure(Constraints.fixed(logoLedBounds.width, logoLedBounds.height))
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
@@ -763,6 +787,7 @@ class PlayActivity : BaseActivity() {
 							bottomPlaceable.place(bottomPos)
 							chromePlaceable.place(chromePos)
 							logoPlaceable?.place(logoRight - logoPlaceable.width, logoTop)
+							logoLedPlaceable.place(logoLedBounds.topLeft)
 						}
 					}
 				}
@@ -1268,7 +1293,8 @@ class PlayActivity : BaseActivity() {
 			if (vm.isTraceLogSequenceInitialized) uiCallback.updateTraceLogOverlay() else vm.traceLogInit()
 			redrawAllLedUI()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
-			// The logo is lit only in Pro light mode, and has no view to redraw with the round buttons.
+			// Restore the logo from the same channel state after changing LED visibility.
+			setLedUIChain(DriverRef.LOGO_FUNCTION_KEY)
 			setLedLaunchpadChain(DriverRef.LOGO_FUNCTION_KEY)
 			vm.uiLoaded = true
 			vm.refreshWatermark()
@@ -1385,6 +1411,7 @@ class PlayActivity : BaseActivity() {
 				setLedUI(x, y)
 		for (c in 0 until CIRCLE_ARRAY_SIZE)
 			setLedUIChain(c)
+		setLedUIChain(DriverRef.LOGO_FUNCTION_KEY)
 	}
 
 	private fun setLedLaunchpad(x: Int, y: Int) {
@@ -1394,6 +1421,10 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedUIChain(y: Int) {
+		if (y == DriverRef.LOGO_FUNCTION_KEY) {
+			logoLedColor = vm.channelManager.get(-1, y)?.color ?: 0
+			return
+		}
 		// The volume observer can fire before start() allocates chainViews (Crashlytics 89bc2683).
 		if (!::chainViews.isInitialized || y !in chainViews.indices) return
 		val item = vm.channelManager.get(-1, y)

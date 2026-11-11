@@ -109,6 +109,25 @@ object PlayLayout {
 		)
 	}
 
+	/**
+	 * A non-interactive mask near the top/right corner, at 70% of a chain button.
+	 * Unusually shaped grids can extend a strip past that corner; choose the nearest clear
+	 * square without moving any pads or chain buttons.
+	 */
+	fun logoLedBounds(width: Int, height: Int, at: Placement, pads: IntSize, top: IntSize, right: IntSize): IntRect {
+		val side = (min(top.height, right.width) * 0.7f).toInt().coerceAtLeast(0)
+		val ideal = IntOffset(at.right.x + (right.width - side) / 2, at.top.y + (top.height - side) / 2)
+		val obstacles = listOf(IntRect(at.pads, pads), IntRect(at.top, top), IntRect(at.right, right),
+			IntRect(at.bottom, top), IntRect(at.left, right))
+		val xs = listOf(ideal.x, 0, width - side) + obstacles.flatMap { listOf(it.left - side, it.right) }
+		val ys = listOf(ideal.y, 0, height - side) + obstacles.flatMap { listOf(it.top - side, it.bottom) }
+		return xs.flatMap { x -> ys.map { y -> IntRect(IntOffset(x, y), IntSize(side, side)) } }
+			.filter { it.left >= 0 && it.top >= 0 && it.right <= width && it.bottom <= height &&
+				obstacles.none(it::overlaps) }
+			.minByOrNull { val dx = (it.left - ideal.x).toLong(); val dy = (it.top - ideal.y).toLong(); dx * dx + dy * dy }
+			?: IntRect.Zero
+	}
+
 	/** Left edge of a [gridWidth] wide grid centred in an area [width] wide. */
 	fun padLeft(width: Int, gridWidth: Int): Int = (width - gridWidth) / 2
 

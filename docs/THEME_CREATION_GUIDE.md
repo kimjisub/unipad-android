@@ -13,7 +13,8 @@ my-theme.zip
 ├── btn_.png            Pad button (pressed state)
 ├── phantom.png         Guide overlay
 ├── phantom_.png        Guide overlay variant (optional)
-├── custom_logo.png     Custom logo (optional)
+├── custom_logo.png     Decorative screen logo (optional)
+├── logo_led.png        Pro light mode logo mask (optional)
 ├── chainled.png        Chain LED mode image (Chain Mode A)
 ├── chain.png           Chain default state (Chain Mode B)
 ├── chain_.png          Chain selected state (Chain Mode B)
@@ -50,7 +51,7 @@ The icon displayed in the theme selection list. Rendered at 44dp with rounded co
 
 ## Image Resources
 
-All image files must be in **PNG format**. Any missing resources will fall back to the app's default theme.
+ZIP themes accept **PNG, WebP, JPG and JPEG**, in that lookup order for each image name. PNG is recommended for transparent images. Missing resources use their existing defaults; optional decorative images may remain absent.
 
 ### Pad Area
 
@@ -84,6 +85,46 @@ In this mode, chain buttons use the pad button (`btn.png`) as background, with `
 | `chain__.png` | Autoplay guide state |
 
 In this mode, different images are displayed directly for each state.
+
+### Pro Light Mode Logo (Optional)
+
+Place `logo_led.png` in the ZIP root beside `theme.json`. It replaces only the
+non-interactive logo at the corner between the top and right chain strips in
+Pro light mode. It is independent of `custom_logo.png`, which remains the
+screen's decorative logo and follows the Hide UI option.
+
+Use **one square image with a transparent background**, preferably at least
+**128×128 pixels**, with a white shape and little transparent padding. The app
+uses its alpha mask: original RGB colors are ignored, while transparent pixels
+and soft edges are preserved. The entire shape receives the pack's logo LED
+color (`o l a 5`, for example); `f l` and the Led option being off show the same
+shape in dark gray. No separate on/off images are needed.
+
+The image fits within a square about 70% of the adjacent round button's size,
+keeping its aspect ratio without cropping or stretching. Transparent padding
+counts as image area. A non-square image fits inside that square. An opaque
+JPEG can light the whole rectangle; a fully transparent image intentionally
+hides the logo. Normal mode never shows this indicator, and Hide UI leaves it
+visible alongside the round buttons.
+
+If the image is absent or cannot be decoded, the app uses its four-part UniPad
+mark, without launcher-icon padding. Existing ZIP themes need no changes.
+Default and bundled themes use the same fallback; bundled logo masks also
+accept `png`, `webp`, `jpg`, `jpeg` in that order. There are no aliases for
+`logo_led` and `custom_logo` is never used as its fallback. Images are loaded
+once with the theme, rather than on each LED change.
+
+For example, a transparent 128×128 PNG containing a white diamond can be used as:
+
+```
+diamond-theme.zip
+├── theme.json
+├── theme_ic.png
+└── logo_led.png
+```
+
+The diamond will turn red for palette color 5, follow other pack logo colors,
+and return to dark gray on `f l`. Chain Mode A and B use the same logo rules.
 
 ## Color Customization (Optional)
 
