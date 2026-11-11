@@ -13,6 +13,7 @@ import android.media.midi.MidiDevice
 import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiInputPort
 import android.media.midi.MidiManager
+import android.os.Bundle
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
@@ -123,8 +124,12 @@ class MidiConnectionModeCableTest {
 	}
 
 	/** The MIDI service lists the pad with one input port per cable and opens it at once. */
+	@Suppress("DEPRECATION")
 	private fun attachThroughMidiService(pad: FakePad): FakePad {
 		val info = mockk<MidiDeviceInfo>(relaxed = true)
+		val properties = mockk<Bundle>(relaxed = true)
+		every { properties.getParcelable<UsbDevice>(MidiDeviceInfo.PROPERTY_USB_DEVICE) } returns pad.device
+		every { info.properties } returns properties
 		val ports = (0 until pad.model.cables).map { n ->
 			mockk<MidiDeviceInfo.PortInfo>(relaxed = true).also {
 				every { it.type } returns MidiDeviceInfo.PortInfo.TYPE_INPUT
