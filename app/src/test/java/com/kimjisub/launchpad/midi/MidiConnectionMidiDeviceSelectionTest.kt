@@ -62,9 +62,7 @@ class MidiConnectionMidiDeviceSelectionTest {
 
 	@After
 	fun tearDown() {
-		for (pad in pads) {
-			MidiConnection.initConnection(intent(UsbManager.ACTION_USB_DEVICE_DETACHED, pad.device), usbManager, context)
-		}
+		for (pad in pads) pad.unplugged = true
 		for (pad in pads) verify(timeout = TIMEOUT_MS) { pad.connection.close() }
 		MidiConnection.controller = null
 		MidiConnection.connectionObserver = null
@@ -200,6 +198,7 @@ class MidiConnectionMidiDeviceSelectionTest {
 		val connection = mockk<UsbDeviceConnection>(relaxed = true)
 		val endpointOut = mockk<UsbEndpoint>(relaxed = true)
 		val usbWrites = Collections.synchronizedList(mutableListOf<List<Byte>>())
+		@Volatile var unplugged = false
 
 		init {
 			val endpointIn = mockk<UsbEndpoint>(relaxed = true)
@@ -220,9 +219,12 @@ class MidiConnectionMidiDeviceSelectionTest {
 			every { connection.claimInterface(any(), any()) } returns true
 			// A slow idle read keeps this session alive until the explicit detach in tearDown.
 			every { connection.bulkTransfer(endpointIn, any(), any<Int>(), any<Int>()) } answers {
-				Thread.sleep(100)
-				0
+				if (unplugged) -1 else {
+					Thread.sleep(100)
+					0
+				}
 			}
+			every { connection.bulkTransfer(endpointOut, any(), any<Int>(), any<Int>()) } answers { thirdArg<Int>() }
 			every { connection.bulkTransfer(endpointOut, any(), any<Int>(), any<Int>(), any<Int>()) } answers {
 				val offset = thirdArg<Int>()
 				val length = arg<Int>(3)
