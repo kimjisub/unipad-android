@@ -7,6 +7,10 @@ import android.graphics.Rect
 import android.util.Log
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kimjisub.launchpad.audio.OboeAudioEngine
+import java.io.File
+import org.junit.Before
+import org.junit.Assert.assertArrayEquals
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,6 +28,20 @@ import org.junit.runner.RunWith
 class HeldPadLayoutChangeTest : HeldPadTest() {
     private var resized = false
     private var originalBounds: Rect? = null
+
+    @Before fun reuseIdenticalFixturePcm() {
+        // These checks exercise layout/input and retain every pad's independent sound ID.
+        // Decode the shared WAV once before launch instead of starting 65 identical codecs
+        // inside the screen-readiness deadline. Every mapped file must still match it.
+        val fixture = File(screen.pack(), "sounds/silence.wav")
+        val bytes = fixture.readBytes()
+        val decoded = requireNotNull(OboeAudioEngine.decodeOnly(fixture) { false })
+        audio = RecordingAudio { file, interrupted ->
+            if (interrupted()) throw OboeAudioEngine.DecodeInterruptedException()
+            assertArrayEquals("Layout sound fixtures must have identical PCM input", bytes, file.readBytes())
+            decoded.copy(pcm = decoded.pcm.copyOf())
+        }
+    }
 
     @After fun restoreScreen() {
         if (resized) {
