@@ -1,88 +1,90 @@
 package com.kimjisub.launchpad.audio
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import java.nio.ShortBuffer
+import org.junit.Assert.*
 import org.junit.Test
 
 class PcmCapacityTest {
     @Test fun longStereoSoundNeedsOnlyOneExactlySizedArray() {
-        val frames = 11_010_048L // 42 MiB of stereo 16-bit PCM.
-        assertEquals(22_020_096, capacity(frames))
+        assertEquals(22_020_096, capacity(11_010_048))
     }
 
-    @Test fun forgedHugeDurationIsBoundedByPhysicalAudio() {
-        assertEquals(88_200, capacity(44_100, durationUs = Long.MAX_VALUE))
-        assertEquals(16_384, capacity(Long.MAX_VALUE, durationUs = Long.MAX_VALUE))
+    @Test fun mp3PaddingDoesNotForceTheSmallFallback() {
+        assertEquals(16_128, capacity(16_128, channels = 1, format = "mp3"))
+    }
+
+    @Test fun excessivePhysicalClaimsCannotEnlargeTheReservation() {
+        assertEquals(88_200, capacity(44_100))
+        assertEquals(16_384, capacity(Long.MAX_VALUE))
         assertEquals(16_384, capacity(600L * 384_000, 384_000, 8))
     }
 
-    @Test fun unavailableOrEmptyLengthKeepsSmallFallback() {
-        assertEquals(16_384, capacity(44_100, durationUs = 0))
-        assertEquals(16_384, capacity(44_100, durationUs = -1))
+    @Test fun knownPhysicalLengthDoesNotNeedAnAdvertisedDuration() {
+        assertEquals(88_200, capacity(44_100))
+    }
+
+    @Test fun unavailableOrEmptyPhysicalLengthKeepsSmallFallback() {
         assertEquals(16_384, capacity(0))
-        assertEquals(16_384, initialPcmCapacity(1_000_000, 44_100, 2,
+        assertEquals(16_384, initialPcmCapacity(44_100, 2,
             AudioInspection.Rejected(AudioExclusion.READ_FAILURE)))
     }
 
-    @Test fun interleavedCapacityUsesPhysicalChannelsWithoutUpsamplingOrStereoPadding() {
+    @Test fun layoutAndAdmissionAreCheckedBeforeMultiplication() {
         assertEquals(44_100, capacity(44_100, channels = 1))
-        assertEquals(48_000 * 6, capacity(48_000, 48_000, 6))
-    }
-
-    @Test fun fractionalMicrosecondDurationStillFitsEveryFrame() {
-        assertEquals(88_202, capacity(44_101))
-    }
-
-    @Test fun understatedDurationKeepsTheExistingGrowthSequenceAndPeak() {
-        // Understated lengths keep the same starting size and every subsequent copy.
-        val initial = capacity(44_100 * 10L, durationUs = 453_515)
-        assertEquals(16_384, initial)
-        for (samples in listOf(40_001, 65_536, 65_537, 131_073, 882_000)) {
-            assertTrue("$samples samples", peak(initial, samples) <= peak(16_384, samples))
-        }
-    }
-
-    @Test fun largeDecoderPacketsDoNotIncreaseTheUnderstatedDurationPeak() {
-        val initial = capacity(50_000, durationUs = 453_515)
-        val packets = listOf(50_000, 50_000)
-        assertTrue("large packets must keep the old peak", packetPeak(initial, packets) <= packetPeak(16_384, packets))
-    }
-
-    @Test fun mismatchedOrInvalidLayoutDoesNotTrustDuration() {
+        assertEquals(288_000, capacity(48_000, 48_000, 6))
         assertEquals(16_384, capacity(-1))
-        assertEquals(16_384, capacity(100_000, rate = 0, durationUs = 1_000_000))
+        assertEquals(16_384, capacity(100_000, rate = 0))
         assertEquals(16_384, capacity(100_000, channels = Int.MAX_VALUE))
-        assertEquals(16_384, initialPcmCapacity(1_000_000, 48_000, 2,
+        assertEquals(16_384, initialPcmCapacity(48_000, 2,
             AudioInspection.Readable(AudioFileFacts(44_100, 2, 44_100))))
     }
 
-    private fun capacity(frames: Long, rate: Int = 44_100, channels: Int = 2,
-        durationUs: Long = if (frames in 0..230_400_000L) frames * 1_000_000 / rate else Long.MAX_VALUE) =
-        initialPcmCapacity(durationUs, rate, channels,
-            AudioInspection.Readable(AudioFileFacts(rate, channels, frames, "wav")))
-
-    private fun packetPeak(initial: Int, packets: List<Int>): Int {
-        var size = initial
-        var peak = size
-        var total = 0
-        for (packet in packets) {
-            total += packet
-            if (total > size) {
-                val next = maxOf(size * 2, total)
-                peak = maxOf(peak, size + next)
-                size = next
-            }
-        }
-        return peak
+    @Test fun trimmedOpusGranulesCannotPredictDecoderCapacity() {
+        assertEquals(16_384, capacity(144_000, 48_000, 6, "opus"))
     }
 
-    private fun peak(initial: Int, samples: Int): Int {
-        var size = initial
-        var peak = size
-        while (size < samples) {
-            peak = maxOf(peak, size * 3)
-            size *= 2
+    @Test fun physicalCapacityFitsWithoutAnyGrowingCopy() {
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val buffer = PcmBuffer(capacity(50_000)) { old, new -> allocations += old to new }
+        append(buffer, 100_000, 50_000)
+        assertEquals(listOf(0 to 100_000), allocations)
+        assertEquals(100_000, buffer.sampleCount)
+    }
+
+    @Test fun opusOverflowNeverExceedsThePreviousGrowthPeak() {
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val buffer = PcmBuffer(capacity(144_000, 48_000, 6, "opus")) { old, new -> allocations += old to new }
+        append(buffer, 867_888, 5_760)
+        assertEquals(1_572_864, allocations.maxOf { (old, new) -> old + new })
+        assertEquals(1_048_576, buffer.pcm!!.size)
+    }
+
+    @Test fun growthUsesRealPacketSizesAndPreservesSamples() {
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val buffer = PcmBuffer(2) { old, new -> allocations += old to new }
+        buffer.append(ShortBuffer.wrap(shortArrayOf(1, 2)))
+        buffer.append(ShortBuffer.wrap(shortArrayOf(3, 4, 5)))
+        assertEquals(listOf(0 to 2, 2 to 5), allocations)
+        assertArrayEquals(shortArrayOf(1, 2, 3, 4, 5), buffer.pcm)
+    }
+
+    @Test fun noLargeArrayIsAllocatedUntilFirstPcmOutput() {
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val buffer = PcmBuffer(100_000) { old, new -> allocations += old to new }
+        buffer.append(ShortBuffer.allocate(0))
+        assertTrue(allocations.isEmpty())
+        assertNull(buffer.pcm)
+        buffer.append(ShortBuffer.wrap(shortArrayOf(7)))
+        assertEquals(listOf(0 to 100_000), allocations)
+        assertEquals(7, buffer.pcm!![0].toInt())
+    }
+
+    private fun capacity(frames: Long, rate: Int = 44_100, channels: Int = 2, format: String = "wav") =
+        initialPcmCapacity(rate, channels, AudioInspection.Readable(AudioFileFacts(rate, channels, frames, format)))
+
+    private fun append(buffer: PcmBuffer, total: Int, packet: Int) {
+        while (buffer.sampleCount < total) {
+            buffer.append(ShortBuffer.allocate(minOf(packet, total - buffer.sampleCount)))
         }
-        return peak
     }
 }

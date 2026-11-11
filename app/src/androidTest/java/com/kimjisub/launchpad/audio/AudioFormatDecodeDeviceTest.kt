@@ -49,6 +49,40 @@ class AudioFormatDecodeDeviceTest {
     }
 
     @Test
+    fun mp3UsesPhysicalCapacityForAllSpellings() {
+        for (name in listOf("tone.mp3", "mp3-named.wav", "mp3-id3-named.wav")) {
+            val file = File(dir.root, name)
+            val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+            val allocations = mutableListOf<Pair<Int, Int>>()
+            val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+                ?: throw AssertionError("$name did not decode")
+            val physical = (facts.frames * facts.channels).toInt()
+            assertEquals(name, listOf(0 to physical), allocations)
+            assertEquals(name, physical, decoded.pcm.size)
+            assertTrue(name, decoded.numFrames * decoded.channels <= physical)
+        }
+    }
+
+    @Test
+    fun opusDoesNotExceedLegacyPcmPeak() {
+        val file = dir.newFile("surround.opus")
+        instrumentation.context.assets.open("audio-multichannel/surround.opus").use { input ->
+            file.outputStream().use(input::copyTo)
+        }
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+            ?: throw AssertionError("Opus did not decode")
+        assertEquals(0 to 16_384, allocations.first())
+        val growthPeak = allocations.maxOf { (old, new) -> old + new }
+        // The raw six-channel array also coexists with the final stereo down-mix.
+        val downmixPeak = allocations.last().second + decoded.pcm.size
+        assertTrue("Opus PCM peak: growth=$growthPeak downmix=$downmixPeak",
+            maxOf(growthPeak, downmixPeak) <= 1_572_864)
+        assertEquals(48_000, decoded.sampleRate)
+        assertEquals(2, decoded.channels)
+    }
+
+    @Test
     fun decodesMp3() = assertTone("tone.mp3")
 
     @Test
