@@ -27,6 +27,7 @@ class ZipThemeResources(
 
 	override var playbg: Drawable? = null
 	override var customLogo: Drawable? = null
+	override var logoLed: Drawable? = null
 	override var btn: Drawable? = null
 	override var btnPressed: Drawable? = null
 	override var chainled: Drawable? = null
@@ -59,6 +60,7 @@ class ZipThemeResources(
 		if (fullLoad) {
 			playbg = loadPng("playbg") ?: defaultDrawable(R.drawable.playbg)
 			customLogo = loadPng("custom_logo")
+			logoLed = loadLogoLed(context) { java.io.File(themeDir, it).inputStream() }
 			btn = loadPng("btn") ?: defaultDrawable(R.drawable.btn)
 			btnPressed = loadPng("btn_") ?: defaultDrawable(R.drawable.btn_)
 

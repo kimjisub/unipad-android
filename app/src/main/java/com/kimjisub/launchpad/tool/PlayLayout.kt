@@ -15,6 +15,9 @@ object PlayLayout {
 
 	private const val CHAIN_COLUMNS = 2
 
+	// The default round artwork is 150 px across in a 180 px touch cell.
+	private const val LOGO_LED_SCALE = 0.7f * (150f / 180f)
+
 	/** Chain buttons on each side of the grid: 8 above, right, below and left of it. */
 	const val CHAINS_PER_SIDE = 8
 
@@ -107,6 +110,38 @@ object PlayLayout {
 			bottom = IntOffset(padLeft(width, bottom.width), y + pads.height),
 			left = IntOffset(x - left.width, (height - left.height) / 2),
 		)
+	}
+
+	/**
+	 * A non-interactive mask near the top/right corner, at most 70% of the drawn round button.
+	 * Unusually shaped grids can extend a strip past that corner. Fit the largest clear square
+	 * nearest that corner without moving any pads or chain buttons.
+	 */
+	fun logoLedBounds(width: Int, height: Int, at: Placement, pads: IntSize, top: IntSize, right: IntSize): IntRect {
+		val preferredSide = (min(top.height, right.width) * LOGO_LED_SCALE).toInt().coerceAtLeast(0)
+		val obstacles = listOf(IntRect(at.pads, pads), IntRect(at.top, top), IntRect(at.right, right),
+			IntRect(at.bottom, top), IntRect(at.left, right))
+		// A smaller free square is limited by a gap between obstacle or screen edges.
+		val edges = listOf(listOf(0, width) + obstacles.flatMap { listOf(it.left, it.right) },
+			listOf(0, height) + obstacles.flatMap { listOf(it.top, it.bottom) })
+		val sizes = (listOf(preferredSide) + edges.flatMap { axis ->
+			axis.flatMap { start -> axis.map { end -> end - start } }
+		}).filter { it in 1..preferredSide }.distinct().sortedDescending()
+		for (side in sizes) {
+			val ideal = IntOffset(at.right.x + (right.width - side) / 2, at.top.y + (top.height - side) / 2)
+			val xs = listOf(ideal.x, 0, width - side) + obstacles.flatMap { listOf(it.left - side, it.right) }
+			val ys = listOf(ideal.y, 0, height - side) + obstacles.flatMap { listOf(it.top - side, it.bottom) }
+			val bounds = xs.flatMap { x -> ys.map { y -> IntRect(IntOffset(x, y), IntSize(side, side)) } }
+				.filter { it.left >= 0 && it.top >= 0 && it.right <= width && it.bottom <= height &&
+					obstacles.none(it::overlaps) }
+				.minByOrNull {
+					val dx = (it.left - ideal.x).toLong()
+					val dy = (it.top - ideal.y).toLong()
+					dx * dx + dy * dy
+				}
+			if (bounds != null) return bounds
+		}
+		return IntRect.Zero
 	}
 
 	/** Left edge of a [gridWidth] wide grid centred in an area [width] wide. */
