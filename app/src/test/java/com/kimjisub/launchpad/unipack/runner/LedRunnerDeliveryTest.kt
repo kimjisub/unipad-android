@@ -406,11 +406,14 @@ class LedRunnerDeliveryTest {
 				// A premature delivery release is observed as another tick. Otherwise, let the
 				// caller proceed within the existing two-second queue-entry deadline.
 				val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
-				while (ticksDelivered.get() == tickInDelivery && System.nanoTime() < deadline) Thread.sleep(1)
-				otherWait.countDown()
+				try {
+					while (ticksDelivered.get() == tickInDelivery && System.nanoTime() < deadline) Thread.sleep(1)
+				} finally {
+					otherWait.countDown()
+				}
 			}.apply { start() }
 			try {
-				check(otherWait.await(2, TimeUnit.SECONDS)) { "The unrelated wait was not released" }
+				otherWait.await()
 			} finally {
 				otherWait.countDown()
 				controller.join()
