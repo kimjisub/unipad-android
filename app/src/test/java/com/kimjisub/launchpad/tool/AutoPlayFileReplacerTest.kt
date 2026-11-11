@@ -198,6 +198,30 @@ class AutoPlayFileReplacerTest {
 	}
 
 	@Test
+	fun legacyBackupUsesTheHistoricalPrefixForEveryAutoPlayFileCasing() {
+		for ((index, name) in listOf("autoplay", "Autoplay", "AutoPlay").withIndex()) {
+			val root = tmp.newFolder("case-$index")
+			val current = File(root, name).apply { writeText("mapped") }
+			val legacy = File(root, "autoPlay_2026_09_01-12_30_00").apply { writeText("original") }
+			val modified = legacy.lastModified()
+			val previous = File(root, name + "_previous")
+			val replacer = AutoPlayFileReplacer()
+
+			assertTrue("Legacy backup must be available for $name", replacer.hasBackup(current))
+			replacer.restore(current)
+			assertEquals("original", current.readText())
+			assertEquals("mapped", previous.readText())
+
+			replacer.restore(current)
+			assertEquals("mapped", current.readText())
+			assertEquals("original", previous.readText())
+			assertEquals("original", legacy.readText())
+			assertEquals(modified, legacy.lastModified())
+			assertEquals(listOf(name, previous.name, legacy.name).sorted(), root.list()!!.sorted())
+		}
+	}
+
+	@Test
 	fun oldestLegacyBackupUsesParsedDigitsAndSequenceInsteadOfModificationTime() {
 		createAutoPlay()
 		val names = listOf(

@@ -36,7 +36,8 @@ class AutoPlayFileReplacer(
 	private fun restoreSource(autoPlay: File): File? {
 		val previous = backupFile(autoPlay)
 		if (previous.exists()) return previous.takeIf { it.isFile }
-		val prefix = autoPlay.name + "_"
+		// Older releases used this fixed prefix even when the pack used another file casing.
+		val prefix = "autoPlay_"
 		return autoPlay.absoluteFile.parentFile?.listFiles().orEmpty().asSequence()
 			.filter { it.name.startsWith(prefix) && it.isFile && it.length() > 0 }
 			.mapNotNull { file ->
