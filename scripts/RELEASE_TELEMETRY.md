@@ -21,8 +21,9 @@ python3 scripts/check_debug_telemetry_manifest.py \
 `observe_release_telemetry.py` observes an APK built in release mode on an
 explicitly rented, rooted Android emulator. It records the first screen press's
 Analytics event, the current Crashlytics session's screen context and the
-advertising ID fields of every Analytics upload. It never triggers a crash or
-decides whether the observations satisfy a data-safety declaration.
+advertising ID fields of the Analytics uploads read while it waits for those.
+It never triggers a crash. The advertising ID is the only value it judges: a run
+fails when an upload carries it. Everything else is recorded, not judged.
 
 Rent a fresh Android 15 emulator with the device rental tool, then read its lease:
 

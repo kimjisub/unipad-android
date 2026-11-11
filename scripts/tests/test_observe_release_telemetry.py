@@ -84,16 +84,18 @@ class ParsingTest(unittest.TestCase):
                 observe.parse_session(text, b'')
 
 
-def upload_log(app_id, device_id, limited=None):
+def upload_log(app_id, device_id, limited=None, first_input=True):
     """An upload as FA-SVC logs it, with nested blocks that must not be read as bundle fields."""
     lines = ['batch {', '  bundle {', '    protocol_version: 1', f'    app_id: {app_id}',
              '    app_instance_id: 9cf651561f543aaaca6dc5584c61f107',
              f'    resettable_device_id: {device_id}', '    ds_id: ']
     if limited is not None:
         lines.append(f'    limited_ad_tracking: {limited}')
-    lines += ['    user_property {', '      name: resettable_device_id', '      string_value: nested', '    }',
-              '    event {', '      name: play_first_input', '      params {', '        name: input_source',
-              '        string_value: screen', '      }', '    }', '  }', '}']
+    lines += ['    user_property {', '      name: resettable_device_id', '      string_value: nested', '    }']
+    if first_input:
+        lines += ['    event {', '      name: play_first_input', '      params {', '        name: input_source',
+                  '        string_value: screen', '      }', '    }']
+    lines += ['  }', '}']
     return '\n'.join(f'11-11 14:50:10.629  5324 11021 V FA-SVC  : {line}' for line in lines)
 
 
@@ -303,6 +305,8 @@ class CollectionTest(unittest.TestCase):
         for log, previous in (
                 ('Logging event: origin=app,name=play_first_input,params=Bundle[{_dbg=1}]', set()),
                 ('Logging event: origin=app,name=play_first_input,params=Bundle[{input_source=screen}]', {'old'})):
+            # An upload is present, so only the stale session or the missing input_source can fail it.
+            log += '\n' + upload_log(observe.PACKAGE, '', first_input=False)
             adb = Mock()
             adb.shell.side_effect = lambda *args, **kwargs: ('old' if args[0] == 'ls' else '{"screen":"MainActivity"}')
             adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'

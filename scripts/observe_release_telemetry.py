@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Observe release telemetry on one explicitly rented, rooted Android emulator.
 
-No crash is triggered and no data-safety judgement is made. Unknown event values
+No crash is triggered. Only the advertising ID is judged: an Analytics upload that
+carries it fails the run; every other value is recorded, not judged. Unknown event values
 are retained. The caller rents/returns the device; screen actions use its UI entry.
 """
 import argparse
