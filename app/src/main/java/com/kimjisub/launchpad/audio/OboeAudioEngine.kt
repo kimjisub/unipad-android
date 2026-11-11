@@ -86,6 +86,8 @@ object OboeAudioEngine {
 		if (interrupted()) throw DecodeInterruptedException()
 		var source: AudioPacketSource? = null
 		try {
+			val inspection = AudioFileInspector.inspect(file)
+			if (interrupted()) throw DecodeInterruptedException()
 			source = openAudioPacketSource(file) ?: return null
 			val format = source.format
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
@@ -96,8 +98,12 @@ object OboeAudioEngine {
 			// asShortBuffer() would read as noise.
 			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
 
-			// Displayed duration is untrusted. Start small and grow from actual decoder output.
-			// The shared structural inspection has already decided which files may be decoded.
+			// Use duration only within the physically inspected audio budget. A valid long
+			// sound then needs one PCM array instead of overlapping arrays during growth.
+			val initialCapacity = initialPcmCapacity(
+				if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0L,
+				sampleRate, channels, inspection,
+			)
 
 			if (interrupted()) throw DecodeInterruptedException()
 			val codec = MediaCodec.createDecoderByType(mime)
@@ -106,7 +112,7 @@ object OboeAudioEngine {
 			codec.start()
 
 			// Single growing array instead of chunk list
-			var pcm = ShortArray(16_384)
+			var pcm = ShortArray(initialCapacity)
 			var totalSamples = 0
 			val bufferInfo = MediaCodec.BufferInfo()
 			var inputDone = false

@@ -40,6 +40,15 @@ class AudioFormatDecodeDeviceTest {
     fun decodesPcmWav() = assertTone("tone.wav")
 
     @Test
+    fun pcmWavUsesAnExactlySizedArray() {
+        val file = File(dir.root, "tone.wav")
+        val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+        val decoded = OboeAudioEngine.decodeOnly(file) ?: throw AssertionError("WAV did not decode")
+        assertEquals((facts.frames * facts.channels).toInt(), decoded.pcm.size)
+        assertEquals(facts.frames.toInt(), decoded.numFrames)
+    }
+
+    @Test
     fun decodesMp3() = assertTone("tone.mp3")
 
     @Test
