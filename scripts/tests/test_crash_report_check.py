@@ -1,14 +1,17 @@
 """Offline checks for the crash report check: report parsing, matching, waiting and verdicts."""
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import Mock
+import unittest.mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import crash_report_check as crc
-from release_store_check import CheckFailed
+from release_store_check import CheckFailed, Screen, ScreenTimeout
 
 CRASH_MS = 1794379190000
 
@@ -20,7 +23,8 @@ def event(name, installation, issue_id, title, subtitle, error_type, keys, versi
              f"    displayName: {version}", '  customKeys: |']
     for key, value in keys.items():
         lines += value if isinstance(value, list) else [f'    {key}: {value}']
-    lines += ['  installationUuid: |', f'    {installation}']
+    if installation is not None:
+        lines += ['  installationUuid: |', f'    {installation}']
     return '\n'.join(lines)
 
 
@@ -34,8 +38,8 @@ EXIT_KEYS = {'exit_background_ms': "'8006'", 'exit_last_screen': 'PlayActivity',
                                '      0x29ee0 (Linux_kill+36)']}
 
 
-def native(**changes):
-    return event('n1', 'INSTALL-A', 'f4e2', '[libc.so]', 'SIGSEGV', 'FATAL', dict(NATIVE_KEYS, **changes))
+def native(installation='INSTALL-A', **changes):
+    return event('n1', installation, 'f4e2', '[libc.so]', 'SIGSEGV', 'FATAL', dict(NATIVE_KEYS, **changes))
 
 
 def exit_event(installation='INSTALL-A', **changes):
@@ -106,6 +110,17 @@ class JudgeTest(unittest.TestCase):
                          'exit_timestamp', 'system exit report: no install_source'):
             self.assertIn(expected, text)
 
+    def test_reports_without_an_installation_id_are_never_paired(self):
+        # Without the installation the exit report (which has no check id) could be anyone's.
+        found = self.judge(native(installation=None), exit_event(installation=None))
+        self.assertTrue(found['native'])
+        self.assertIsNone(found['exit'])
+        self.assertTrue(found['settled'])
+        self.assertIn('no installationUuid', '\n'.join(found['problems']))
+        verdict, reason = crc.server_verdict(found, [dict(seconds=0, events=2)], 300)
+        self.assertEqual(verdict, crc.FAILED)
+        self.assertIn('no installationUuid', reason)
+
     def test_wrong_version_is_a_problem(self):
         found = crc.judge(crc.parse_events(native() + '\n' + exit_event()), 'run-1', '4.2.3 (122)', CRASH_MS)
         self.assertEqual(len(found['problems']), 2)
@@ -124,8 +139,10 @@ class WaitTest(unittest.TestCase):
 
         def sleep(seconds):
             now[0] += seconds
-        return crc.wait_for_reports(read, 'run-1', '4.2.2 (121)', CRASH_MS, timeout, interval,
-                                    sleep=sleep, clock=lambda: now[0])
+        polls = []
+        found = crc.wait_for_reports(read, 'run-1', '4.2.2 (121)', CRASH_MS, timeout, interval, polls,
+                                     sleep=sleep, clock=lambda: now[0])
+        return found, polls
 
     def test_waits_until_the_exit_report_arrives(self):
         found, polls = self.run_wait(['', native(), crc.NotChecked('429'), native() + '\n' + exit_event()])
@@ -152,6 +169,109 @@ class WaitTest(unittest.TestCase):
         self.assertEqual(crc.server_verdict(found, polls, 300)[0], crc.FAILED)
 
 
+    def test_interrupted_wait_keeps_the_reads_made(self):
+        result = dict(check_id='run-1', apk=dict(version='4.2.2 (121)'), crash_requested_ms=CRASH_MS)
+
+        def interrupt(seconds):
+            raise KeyboardInterrupt('Signal 15')
+        with tempfile.TemporaryDirectory() as folder, self.assertRaises(KeyboardInterrupt):
+            crc.check_server(result, lambda: crc.parse_events(native()), Path(folder), 300, 60, sleep=interrupt)
+        self.assertEqual(result['server_polls'], [dict(seconds=0, events=1, native=True, exit=False)])
+
+    def test_check_server_writes_both_reports(self):
+        result = dict(check_id='run-1', apk=dict(version='4.2.2 (121)'), crash_requested_ms=CRASH_MS)
+        with tempfile.TemporaryDirectory() as folder:
+            verdict = crc.check_server(result, lambda: crc.parse_events(native() + '\n' + exit_event()),
+                                       Path(folder), 300, 60)
+            self.assertTrue((Path(folder) / 'server-exit.txt').read_text().startswith('- name:'))
+        self.assertEqual(verdict[0], crc.PASSED)
+        self.assertEqual(result['server']['system_exit']['installation'], 'INSTALL-A')
+
+
+# A stand-in for `firebase mcp`: answers `initialize`, then each tools/call per its mode, and keeps a count of
+# how many times it was started.
+FAKE_CLI = textwrap.dedent('''\
+    import json, sys
+    from pathlib import Path
+    count = Path(sys.argv[0] + '.starts')
+    starts = int(count.read_text()) + 1 if count.exists() else 1
+    count.write_text(str(starts))
+    mode = Path(sys.argv[0] + '.mode').read_text().split(',')[starts - 1]
+    for line in sys.stdin:
+        message = json.loads(line)
+        if message.get('method') == 'initialize':
+            print(json.dumps({'jsonrpc': '2.0', 'id': message['id'], 'result': {}}), flush=True)
+        elif message.get('method') == 'tools/call':
+            if mode == 'exit':
+                sys.exit(1)
+            text = 'not logged in' if mode == 'error-then-exit' else 'name: projects/1/reports/topIssues'
+            print(json.dumps({'jsonrpc': '2.0', 'id': message['id'], 'result': {
+                'isError': mode == 'error-then-exit', 'content': [{'type': 'text', 'text': text}]}}), flush=True)
+            if mode == 'error-then-exit':
+                sys.exit(1)
+''')
+
+
+class FirebaseCliTest(unittest.TestCase):
+    def cli(self, folder, modes):
+        script = Path(folder) / 'firebase'
+        script.write_text(f'#!{sys.executable}\n' + FAKE_CLI)
+        script.chmod(0o755)
+        Path(str(script) + '.mode').write_text(','.join(modes))
+        return crc.FirebaseMcp(str(script), folder, Path(folder) / 'firebase-mcp.log', timeout=20)
+
+    def test_a_cli_that_ended_is_started_again_and_never_breaks_the_pipe(self):
+        with tempfile.TemporaryDirectory() as folder:
+            mcp = self.cli(folder, ['error-then-exit', 'error-then-exit', 'answer'])
+            try:
+                with self.assertRaisesRegex(crc.NotChecked, 'not logged in'):
+                    mcp.call('crashlytics_get_report', {})
+                mcp.process.wait(timeout=20)
+                with self.assertRaisesRegex(crc.NotChecked, 'not logged in'):
+                    mcp.call('crashlytics_get_report', {})
+                mcp.process.wait(timeout=20)
+                self.assertIn('topIssues', mcp.call('crashlytics_get_report', {}))
+                self.assertEqual(mcp.starts, 3)
+            finally:
+                mcp.close()
+
+    def test_a_cli_that_ends_mid_call_is_not_checked_and_replaced(self):
+        with tempfile.TemporaryDirectory() as folder:
+            mcp = self.cli(folder, ['exit', 'answer'])
+            try:
+                with self.assertRaisesRegex(crc.NotChecked, 'exited'):
+                    mcp.call('crashlytics_get_report', {})
+                self.assertIsNone(mcp.process)
+                self.assertIn('topIssues', mcp.call('crashlytics_get_report', {}))
+                self.assertEqual(mcp.starts, 2)
+            finally:
+                mcp.close()
+
+    def test_a_cli_that_ends_between_calls_breaks_no_pipe_and_is_replaced(self):
+        with tempfile.TemporaryDirectory() as folder:
+            mcp = self.cli(folder, ['answer', 'answer'])
+            try:
+                mcp.call('crashlytics_get_report', {})
+                process = mcp.process
+                process.kill()
+                process.wait(timeout=20)
+                # It ends after the liveness check and before the request is written.
+                process.poll = lambda: None
+                with self.assertRaisesRegex(crc.NotChecked, 'stopped taking requests \\(BrokenPipeError\\)'):
+                    mcp.call('crashlytics_get_report', {})
+                self.assertIn('topIssues', mcp.call('crashlytics_get_report', {}))
+                self.assertEqual(mcp.starts, 2)
+            finally:
+                mcp.close()
+
+    def test_issue_listed_without_readable_events_is_not_checked(self):
+        mcp = Mock()
+        mcp.call.side_effect = ['groups: |\n  - metrics:\n      - eventsCount: 1\n    issue:\n      id: f4e2\n',
+                                'events: []']
+        with self.assertRaisesRegex(crc.NotChecked, 'f4e2'):
+            crc.read_check_events(mcp, 'dev', crc.datetime.now(crc.timezone.utc))
+
+
 class DeviceVerdictTest(unittest.TestCase):
     def check(self):
         check = crc.CrashReportCheck(Mock(), Mock(), Path('app.apk'), Path('.'))
@@ -175,19 +295,31 @@ class DeviceVerdictTest(unittest.TestCase):
 
     def test_app_failure_stays_failed_when_cleanup_also_fails(self):
         check = self.check()
-        check.crash_in_background.side_effect = CheckFailed('The app was still running')
+        check.crash_in_background.side_effect = crc.AppFailed('The app was still running')
         check.adb.shell.side_effect = CheckFailed('adb gone')
         check.screen.ui.side_effect = CheckFailed('ui gone')
         self.assertEqual(crc.run_device(check, 'run-1'), (crc.FAILED, 'The app was still running'))
         self.assertEqual(len(check.result['cleanup_errors']), 2)
         check.send_reports.assert_not_called()
 
-    def test_prepare_turns_device_errors_into_not_checked(self):
+    def test_preparation_device_errors_are_not_checked(self):
         adb = Mock()
         adb.root.side_effect = CheckFailed('adb root is not available')
         check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'))
-        with self.assertRaises(crc.NotChecked):
-            check.prepare()
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.NOT_CHECKED)
+        self.assertIn('adb root is not available', reason)
+
+    def test_installed_app_that_differs_is_not_checked(self):
+        adb = Mock()
+        adb.shell.side_effect = lambda *args, **kwargs: {'getprop': '34', 'pm': 'package:/data/app/base.apk'}.get(
+            args[0], 'other-hash  /data/app/base.apk')
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'))
+        check.result['apk'] = dict(sha256='apk-hash')
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.NOT_CHECKED)
+        self.assertIn('does not match', reason)
+        check.screen.launch.assert_not_called()
 
     def test_prepare_refuses_android_10(self):
         adb = Mock()
@@ -201,8 +333,18 @@ class DeviceVerdictTest(unittest.TestCase):
         adb = Mock()
         adb.run.return_value = b'11-11 06:40:01 D SomethingElse: started\n'
         check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), launch_seconds=0)
-        with self.assertRaisesRegex(CheckFailed, 'did not record the native crash exit'):
+        with self.assertRaisesRegex(crc.AppFailed, 'did not record the native crash exit'):
             check.send_reports()
+
+    def test_check_id_is_quoted_for_the_device_shell(self):
+        adb = Mock()
+        pids = iter(['123', 'stopped'])
+        adb.shell.side_effect = lambda *args, **kwargs: (next(pids) if args[0] == 'pidof' else
+                                                         '1794379190' if args[0] == 'date' else '')
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), background_seconds=0)
+        check.crash_in_background('a;b c')
+        broadcast = next(call.args for call in adb.shell.call_args_list if call.args[:2] == ('am', 'broadcast'))
+        self.assertEqual(broadcast[-2:], ('check_id', "'a;b c'"))
 
     def test_exit_codes(self):
         self.assertEqual(crc.exit_code(crc.PASSED, []), 0)
@@ -213,3 +355,95 @@ class DeviceVerdictTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DeviceErrorKindTest(unittest.TestCase):
+    """Only what the app did fails the run; tool, adb and rental errors after preparation are not checked."""
+
+    def device(self, pids, broadcast=None, logcat=b'SystemExitReporter: Recorded system exit reason=5'):
+        adb = Mock()
+        pids = iter(pids)
+
+        def shell(*args, **kwargs):
+            if args[0] == 'pidof':
+                answer = next(pids)
+                if isinstance(answer, Exception):
+                    raise answer
+                return answer
+            if args[:2] == ('am', 'broadcast') and broadcast:
+                raise broadcast
+            return '1794379190' if args[0] == 'date' else ''
+        adb.shell.side_effect = shell
+        adb.run.return_value = logcat
+        check = crc.CrashReportCheck(adb, Mock(), Path('app.apk'), Path('.'), timeout=0, background_seconds=0,
+                                     launch_seconds=0, crash_seconds=0)
+        check.prepare = Mock()
+        return check
+
+    def test_ui_command_time_out_is_not_checked(self):
+        check = self.device(['123', 'stopped'])
+
+        def run(*args, **kwargs):
+            raise subprocess.TimeoutExpired('devices.py ui', 660)
+        check.screen = Screen(Path('devices.py'), 'emulator-5574', 'g1', Path('.'), run=run)
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.NOT_CHECKED)
+        self.assertIn('TimeoutExpired', reason)
+
+    def test_adb_lost_while_waiting_for_the_crash_is_not_checked(self):
+        check = self.device(['123', CheckFailed('adb shell pidof failed: device offline')])
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.NOT_CHECKED)
+        self.assertIn('device offline', reason)
+
+    def test_failed_broadcast_is_not_checked(self):
+        check = self.device(['123'], broadcast=CheckFailed('adb shell am broadcast failed: closed'))
+        self.assertEqual(crc.run_device(check, 'run-1')[0], crc.NOT_CHECKED)
+
+    def test_empty_pidof_answer_is_not_read_as_ended(self):
+        check = self.device(['123', ''])
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.NOT_CHECKED)
+        self.assertIn("answered ''", reason)
+
+    def test_screen_that_never_appears_fails(self):
+        check = self.device(['123', 'stopped'])
+        check.screen.wait.side_effect = ScreenTimeout('The play screen did not appear within 60 s')
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.FAILED)
+        self.assertIn('did not appear', reason)
+
+    def test_app_still_running_after_the_crash_request_fails(self):
+        check = self.device(['123'] * 50)
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.FAILED)
+        self.assertIn('still running', reason)
+
+    def test_app_gone_before_the_crash_request_fails(self):
+        check = self.device(['stopped'])
+        self.assertEqual(crc.run_device(check, 'run-1')[0], crc.FAILED)
+
+    def test_missing_exit_record_fails(self):
+        check = self.device(['123', 'stopped'], logcat=b'nothing recorded')
+        verdict, reason = crc.run_device(check, 'run-1')
+        self.assertEqual(verdict, crc.FAILED)
+        self.assertIn('did not record', reason)
+
+    def test_normal_path_reaches_the_server_part(self):
+        check = self.device(['123', 'stopped'])
+        self.assertEqual(crc.run_device(check, 'run-1'), (None, None))
+        self.assertEqual(check.result['crash_requested_ms'], 1794379190000)
+
+
+class CommandLineTest(unittest.TestCase):
+    def test_check_id_with_spaces_or_shell_characters_is_refused_at_start(self):
+        for value in ('release 4.2.2', 'x;id', '', 'a' * 81):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as folder:
+                with self.assertRaises(SystemExit) as stop, unittest.mock.patch('sys.stderr'):
+                    crc.main(['--apk', 'app.apk', '--serial', 's', '--generation', 'g', '--devices-tool', __file__,
+                              '--out', folder, '--check-id', value])
+                self.assertEqual(stop.exception.code, 2)
+                self.assertEqual(list(Path(folder).iterdir()), [])
+
+    def test_plain_check_id_is_accepted(self):
+        self.assertEqual(crc.check_id_argument('release-4.2.2_121'), 'release-4.2.2_121')

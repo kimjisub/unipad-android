@@ -9,6 +9,7 @@ Crashlytics is read until both reports of this check are there or the time limit
 See CRASH_REPORT_CHECK.md.
 """
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -16,14 +17,15 @@ import os
 from pathlib import Path
 import re
 import select
+import shlex
 import signal
 import subprocess
 import sys
 import time
 import uuid
 
-from observe_release_telemetry import push_fixture_pack
-from release_store_check import Adb, CheckFailed, Screen, find, verify_rental
+from release_store_check import (Adb, CheckFailed, Screen, ScreenTimeout, device_facts, find, open_play_screen,
+                                 push_fixture_pack, verify_installed, verify_rental)
 from upgrade_check import build_tool
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +37,8 @@ CRASH_NATIVE = '5'
 PLAY_KEYS = ('play_window_mode', 'play_orientation', 'play_screen_short_side')
 INSTALL_KEYS = ('install_source', 'install_splits')
 DEBUG_APK = ROOT / 'app/build/outputs/apk/debug/app-debug.apk'
+# The check id travels through a device shell and into report keys, so it is kept to plain characters.
+CHECK_ID = re.compile(r'[A-Za-z0-9._-]{1,80}')
 
 PASSED, FAILED, NOT_CHECKED = 'passed', 'failed', 'not_checked'
 EXIT_CODES = {PASSED: 0, FAILED: 1, NOT_CHECKED: 2}
@@ -43,6 +47,10 @@ CLEANUP_FAILED = 3
 
 class NotChecked(Exception):
     """The check could not be made (build, device, tools or server reading), which says nothing about the app."""
+
+
+class AppFailed(Exception):
+    """The app did not do its part on the device: a screen did not appear, it did not crash or record the exit."""
 
 
 # Crashlytics (server) --------------------------------------------------------------------------------------------
@@ -59,33 +67,39 @@ def crashlytics_app_id(google_services, package):
 
 
 class FirebaseMcp:
-    """Crashlytics through the Firebase CLI's MCP server, with the CLI's own login (`firebase login`)."""
+    """Crashlytics through the Firebase CLI's MCP server, with the CLI's own login (`firebase login`).
+
+    A CLI that ends, stops answering or stops taking input is stopped and the call is `NotChecked`; the next
+    call starts a new one.
+    """
     def __init__(self, firebase, directory, log, timeout=120):
+        self.command = [firebase, 'mcp', '--only', 'crashlytics', '--dir', str(directory)]
         self.timeout = timeout
-        self.buffer = b''
-        self.next_id = 1
+        self.process, self.buffer, self.next_id, self.starts = None, b'', 1, 0
         self.log = open(log, 'ab')
+
+    def _start(self):
+        self.starts += 1
         try:
-            self.process = subprocess.Popen([firebase, 'mcp', '--only', 'crashlytics', '--dir', str(directory)],
-                                            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.log)
+            self.process = subprocess.Popen(self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                            stderr=self.log)
         except OSError as error:
-            self.log.close()
             raise NotChecked(f'Cannot start the Firebase CLI: {error}')
+        self.buffer = b''
+        self._request('initialize', {'protocolVersion': '2024-11-05', 'capabilities': {},
+                                     'clientInfo': {'name': 'crash-report-check', 'version': '1'}})
+        self._send({'jsonrpc': '2.0', 'method': 'notifications/initialized'})
+
+    def _send(self, message):
         try:
-            self.request('initialize', {'protocolVersion': '2024-11-05', 'capabilities': {},
-                                        'clientInfo': {'name': 'crash-report-check', 'version': '1'}})
-            self.send({'jsonrpc': '2.0', 'method': 'notifications/initialized'})
-        except BaseException:
-            self.close()
-            raise
+            self.process.stdin.write((json.dumps(message) + '\n').encode())
+            self.process.stdin.flush()
+        except (OSError, ValueError) as error:
+            raise NotChecked(f'Firebase CLI stopped taking requests ({type(error).__name__}); see firebase-mcp.log')
 
-    def send(self, message):
-        self.process.stdin.write((json.dumps(message) + '\n').encode())
-        self.process.stdin.flush()
-
-    def request(self, method, params):
+    def _request(self, method, params):
         self.next_id += 1
-        self.send({'jsonrpc': '2.0', 'id': self.next_id, 'method': method, 'params': params})
+        self._send({'jsonrpc': '2.0', 'id': self.next_id, 'method': method, 'params': params})
         deadline = time.monotonic() + self.timeout
         fd = self.process.stdout.fileno()
         while True:
@@ -106,7 +120,14 @@ class FirebaseMcp:
             self.buffer += chunk
 
     def call(self, tool, arguments):
-        answer = self.request('tools/call', {'name': tool, 'arguments': arguments})
+        try:
+            if self.process is None or self.process.poll() is not None:
+                self._stop()
+                self._start()
+            answer = self._request('tools/call', {'name': tool, 'arguments': arguments})
+        except NotChecked:
+            self._stop()
+            raise
         result = answer.get('result') if isinstance(answer.get('result'), dict) else {}
         text = '\n'.join(part.get('text', '') for part in result.get('content', [])
                          if isinstance(part, dict) and part.get('type') == 'text')
@@ -114,12 +135,25 @@ class FirebaseMcp:
             raise NotChecked(f'{tool}: {text.strip() or answer.get("error") or "no answer"}'[:600])
         return text
 
+    def _stop(self):
+        process, self.process = self.process, None
+        if process is None:
+            return
+        try:
+            process.terminate()
+            process.wait(timeout=10)
+        except (subprocess.TimeoutExpired, OSError):
+            process.kill()
+            process.wait(timeout=10)
+        for stream in (process.stdin, process.stdout):
+            try:
+                stream.close()
+            except OSError:
+                pass
+
     def close(self):
         try:
-            self.process.terminate()
-            self.process.wait(timeout=10)
-        except (subprocess.TimeoutExpired, OSError):
-            self.process.kill()
+            self._stop()
         finally:
             self.log.close()
 
@@ -183,10 +217,13 @@ def judge(events, check_id, version, crash_requested_ms):
     """Find this check's two reports and list every expected value they lack."""
     native = next((e for e in events if e['keys'].get('check_id') == check_id and e['error_type'] == 'FATAL'), None)
     exit_report = None
-    if native:
+    problems = []
+    # The system exit report carries no check id: only the installation of this run's crash ties it to the run.
+    if native and not native['installation']:
+        problems.append('native crash: no installationUuid, so its system exit report cannot be told apart')
+    elif native:
         exit_report = next((e for e in events if e is not native and e['installation'] == native['installation']
                             and e['keys'].get('exit_reason') == CRASH_NATIVE), None)
-    problems = []
     if native:
         keys = native['keys']
         if keys.get('test_crash') != 'true':
@@ -217,7 +254,9 @@ def judge(events, check_id, version, crash_requested_ms):
         problems += [f'system exit report: no {key}' for key in INSTALL_KEYS if not keys.get(key)]
         if exit_report['version'] != version:
             problems.append(f'system exit report: version {exit_report["version"]!r}, expected {version!r}')
-    return dict(native=native, exit=exit_report, problems=problems)
+    # Settled: nothing a later read can add, either because both are there or because they cannot be paired.
+    settled = bool(native and (exit_report or not native['installation']))
+    return dict(native=native, exit=exit_report, problems=problems, settled=settled)
 
 
 def iso(moment):
@@ -233,15 +272,22 @@ def read_check_events(mcp, app_id, since):
     for issue_id in parse_issue_ids(report):
         text = mcp.call('crashlytics_list_events', {'appId': app_id, 'pageSize': 50,
                                                     'filter': dict(window, issueId=issue_id)})
-        events += parse_events(text)
+        issue_events = parse_events(text)
+        if not issue_events:
+            # An issue listed in the window has events; none read means the answer's format is not understood.
+            raise NotChecked(f'No events could be read for issue {issue_id}: {text.strip()[:300]!r}')
+        events += issue_events
     return events
 
 
-def wait_for_reports(read, check_id, version, crash_requested_ms, timeout, interval, sleep=time.sleep,
+def wait_for_reports(read, check_id, version, crash_requested_ms, timeout, interval, polls, sleep=time.sleep,
                      clock=time.monotonic):
-    """Read until both reports are there or `timeout` passes; reading errors are retried at the next poll."""
+    """Read until both reports are there or `timeout` passes; reading errors are retried at the next poll.
+
+    Each read is appended to `polls` as it happens, so an interruption keeps the reads made until then.
+    """
     begin = clock()
-    polls, found = [], dict(native=None, exit=None, problems=[])
+    found = dict(native=None, exit=None, problems=[], settled=False)
     while True:
         at = round(clock() - begin)
         try:
@@ -250,8 +296,8 @@ def wait_for_reports(read, check_id, version, crash_requested_ms, timeout, inter
             polls.append(dict(seconds=at, events=len(events), native=bool(found['native']), exit=bool(found['exit'])))
         except NotChecked as error:
             polls.append(dict(seconds=at, error=str(error)))
-        if (found['native'] and found['exit']) or clock() + interval > begin + timeout:
-            return found, polls
+        if found['settled'] or clock() + interval > begin + timeout:
+            return found
         sleep(interval)
 
 
@@ -263,10 +309,25 @@ def server_verdict(found, polls, timeout):
         last = polls[-1]['error'] if polls else 'no read'
         return NOT_CHECKED, f'Crashlytics could not be read at the end ({last}); missing then: {", ".join(missing)}'
     if missing:
-        return FAILED, f'Not on the server {timeout:.0f} s after reopening: {", ".join(missing)}'
+        return FAILED, '; '.join([f'Not on the server {timeout:.0f} s after reopening: {", ".join(missing)}']
+                                 + found['problems'])
     if found['problems']:
         return FAILED, '; '.join(found['problems'])
     return PASSED, 'both reports arrived with the expected values'
+
+
+def check_server(result, read, out, timeout, interval, sleep=time.sleep, clock=time.monotonic):
+    """Wait for this run's reports and keep what the server returned; `result` holds every read as it happens."""
+    polls = result['server_polls'] = []
+    found = wait_for_reports(read, result['check_id'], result['apk']['version'], result['crash_requested_ms'],
+                             timeout, interval, polls, sleep, clock)
+    result['server'] = {kind: event and {k: v for k, v in event.items() if k != 'raw'}
+                        for kind, event in (('native_crash', found['native']), ('system_exit', found['exit']))}
+    for kind, event in (('native', found['native']), ('exit', found['exit'])):
+        if event:
+            (out / f'server-{kind}.txt').write_text(event['raw'] + '\n')
+    result['server_problems'] = found['problems']
+    return server_verdict(found, polls, timeout)
 
 
 def exit_code(verdict, cleanup_errors):
@@ -296,10 +357,20 @@ def crash_reports_on(manifest):
     return bool(match) and match[1] == 'true'
 
 
+@contextmanager
+def app_must_show():
+    """A screen read in time that never showed what was waited for is the app's failure, not the tools'."""
+    try:
+        yield
+    except ScreenTimeout as error:
+        raise AppFailed(str(error)) from error
+
+
 class CrashReportCheck:
-    def __init__(self, adb, screen, apk, out, timeout=60, background_seconds=8, launch_seconds=20):
+    def __init__(self, adb, screen, apk, out, timeout=60, background_seconds=8, launch_seconds=20, crash_seconds=30):
         self.adb, self.screen, self.apk, self.out = adb, screen, apk, out
         self.timeout, self.background_seconds, self.launch_seconds = timeout, background_seconds, launch_seconds
+        self.crash_seconds = crash_seconds
         self.result = dict(package=PACKAGE, steps=[], local={})
         self.data = f'/data/user/0/{PACKAGE}'
 
@@ -313,54 +384,51 @@ class CrashReportCheck:
 
     def prepare(self):
         """Fresh installation with the test pack. Everything here is preparation, not the app's behaviour."""
-        try:
-            self.adb.root()
-            sdk = int(self.adb.shell('getprop', 'ro.build.version.sdk'))
-            self.result['device'] = {key: self.adb.shell('getprop', prop) for key, prop in (
-                ('model', 'ro.product.model'), ('os', 'ro.build.version.release'),
-                ('api', 'ro.build.version.sdk'), ('fingerprint', 'ro.build.fingerprint'))}
-            if sdk < 30:
-                raise NotChecked(f'API {sdk}: the app reports system exits from Android 11 (API 30)')
-            # Uninstalling clears a crash collection choice saved by an earlier run and gives a new installation id,
-            # which ties the system exit report to this run's crash.
-            self.adb.run('uninstall', PACKAGE, check=False)
-            self.adb.run('install', str(self.apk), timeout=300)
-            paths = self.adb.shell('pm', 'path', PACKAGE).splitlines()
-            installed = self.adb.shell('sha256sum', paths[0].removeprefix('package:')).split() if paths else []
-            if len(paths) != 1 or not installed or installed[0] != self.result['apk']['sha256']:
-                raise NotChecked('The installed app does not match the supplied APK')
-            self.result['local']['fixture_directory_listing'] = push_fixture_pack(self.adb, PACKAGE, PACK)
-            self.adb.run('logcat', '-c')
-        except CheckFailed as error:
-            raise NotChecked(str(error))
+        self.adb.root()
+        self.result['device'] = device_facts(self.adb)
+        sdk = int(self.result['device']['api'])
+        if sdk < 30:
+            raise NotChecked(f'API {sdk}: the app reports system exits from Android 11 (API 30)')
+        # Uninstalling clears a crash collection choice saved by an earlier run and gives a new installation id,
+        # which ties the system exit report to this run's crash.
+        self.adb.run('uninstall', PACKAGE, check=False)
+        self.adb.run('install', str(self.apk), timeout=300)
+        verify_installed(self.adb, PACKAGE, self.result['apk']['sha256'])
+        self.result['local']['fixture_directory_listing'] = push_fixture_pack(self.adb, PACKAGE, PACK)
+        self.adb.run('logcat', '-c')
         self.step('prepare', f'{PACKAGE} installed fresh on API {sdk}; test pack {PACK} added')
 
     def open_play_screen(self):
-        self.screen.launch(PACKAGE)
-        row = self.screen.wait(lambda root: find(root, identifier=f'main_pack_{PACK}'), self.timeout,
-                               'The test pack in the library', 'library')
-        self.screen.tap(row)
-        play = self.screen.wait(lambda root: find(root, text='Play') or find(root, text='연주'), self.timeout,
-                                'The Play button', 'play-button')
-        self.screen.tap(play)
-        self.screen.wait(lambda root: find(root, identifier='play_logo'), self.timeout, 'The play screen', 'play')
+        with app_must_show():
+            open_play_screen(self.screen, PACKAGE, PACK, self.timeout)
         self.screen.capture('play')
         self.step('play', 'play screen open')
+
+    def app_pid(self):
+        """The app's pid, or '' when it is not running. An answer that is neither is a tool error."""
+        answer = self.adb.shell('pidof', PACKAGE, '||', 'echo', 'stopped')
+        if answer == 'stopped':
+            return ''
+        if not re.fullmatch(r'\d+( \d+)*', answer):
+            raise NotChecked(f'pidof {PACKAGE} answered {answer!r}')
+        return answer
 
     def crash_in_background(self, check_id):
         self.screen.ui('home')
         time.sleep(self.background_seconds)
         self.result['local']['background_record'] = self.adb.shell(
             'cat', f'{self.data}/shared_prefs/system_exit_diagnostics.xml', check=False)
-        pid = self.adb.shell('pidof', PACKAGE, check=False)
+        pid = self.app_pid()
         if not pid:
-            raise CheckFailed(f'The app was not running {self.background_seconds} s after going to the background')
+            raise AppFailed(f'The app was not running {self.background_seconds} s after going to the background')
         self.result['crash_requested_ms'] = self.device_ms()
-        self.adb.shell('am', 'broadcast', '-n', f'{PACKAGE}/{RECEIVER}', '--es', 'check_id', check_id)
-        deadline = time.monotonic() + 30
-        while self.adb.shell('pidof', PACKAGE, check=False) == pid:
+        # adb joins its arguments into one device shell command line.
+        self.adb.shell('am', 'broadcast', '-n', f'{PACKAGE}/{RECEIVER}', '--es', 'check_id', shlex.quote(check_id))
+        deadline = time.monotonic() + self.crash_seconds
+        while self.app_pid() == pid:
             if time.monotonic() > deadline:
-                raise CheckFailed(f'The app (pid {pid}) was still running 30 s after the crash was requested')
+                raise AppFailed(f'The app (pid {pid}) was still running {self.crash_seconds} s after the crash was '
+                                f'requested')
             time.sleep(0.5)
         self.result['local']['exit_info'] = self.adb.shell('dumpsys', 'activity', 'exit-info', PACKAGE)[:6000]
         self.step('crash', f'pid {pid} ended after the native crash request ({self.background_seconds} s in the '
@@ -368,8 +436,9 @@ class CrashReportCheck:
 
     def open_and_wait(self, name):
         self.screen.launch(PACKAGE)
-        self.screen.wait(lambda root: find(root, identifier=f'main_pack_{PACK}'), self.timeout,
-                         'The library after reopening', name)
+        with app_must_show():
+            self.screen.wait(lambda root: find(root, identifier=f'main_pack_{PACK}'), self.timeout,
+                             'The library after reopening', name)
         time.sleep(self.launch_seconds)
 
     def send_reports(self):
@@ -378,7 +447,7 @@ class CrashReportCheck:
         log = self.adb.run('logcat', '-d', '-v', 'threadtime').decode(errors='replace')
         recorded = [line for line in log.splitlines() if 'Recorded system exit reason=5' in line]
         if not recorded:
-            raise CheckFailed(f'The app did not record the native crash exit within {self.launch_seconds} s of '
+            raise AppFailed(f'The app did not record the native crash exit within {self.launch_seconds} s of '
                               f'reopening')
         self.step('reopen-1', recorded[-1].split('SystemExitReporter', 1)[-1].strip(' :'))
         self.adb.shell('am', 'force-stop', PACKAGE)
@@ -400,18 +469,23 @@ class CrashReportCheck:
 
 
 def run_device(check, check_id):
-    """The device part; returns its verdict and cleans up whatever happened."""
+    """The device part: (None, None) when the app did its part, otherwise its verdict; cleans up whatever happened.
+
+    Only what the app did (`AppFailed`) fails the run. adb, the rental's UI entry or any other tool going wrong
+    says nothing about the app and leaves it not checked.
+    """
     try:
         check.prepare()
-        try:
-            check.open_play_screen()
-            check.crash_in_background(check_id)
-            check.send_reports()
-        except CheckFailed as error:
-            return FAILED, str(error)
+        check.open_play_screen()
+        check.crash_in_background(check_id)
+        check.send_reports()
         return None, None
+    except AppFailed as error:
+        return FAILED, str(error)
     except NotChecked as error:
         return NOT_CHECKED, str(error)
+    except Exception as error:
+        return NOT_CHECKED, f'Device or tool error: {type(error).__name__}: {error}'
     finally:
         check.clean_up()
 
@@ -431,6 +505,12 @@ def build_apk(out):
     return DEBUG_APK, dict(commit=commit, uncommitted_changes=dirty)
 
 
+def check_id_argument(value):
+    if not CHECK_ID.fullmatch(value):
+        raise argparse.ArgumentTypeError('use 1 to 80 letters, digits, ".", "_" or "-"')
+    return value
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     source = parser.add_mutually_exclusive_group(required=True)
@@ -440,9 +520,10 @@ def main(argv=None):
     parser.add_argument('--generation', required=True, help="the rental's generation (`devices.py lease DEVICE`)")
     parser.add_argument('--devices-tool', required=True, type=Path, help='the device rental tool, devices.py')
     parser.add_argument('--out', required=True, type=Path, help='new folder for the verdict and evidence')
-    parser.add_argument('--check-id', help='tag of this run in the reports (default: crash-check-<time>-<random>)')
-    parser.add_argument('--server-timeout', type=float, default=1800, help='seconds to wait for both reports')
-    parser.add_argument('--poll-seconds', type=float, default=60, help='seconds between Crashlytics reads')
+    parser.add_argument('--check-id', type=check_id_argument,
+                        help='tag of this run in the reports (default: crash-check-<time>-<random>)')
+    parser.add_argument('--server-timeout', type=float, default=360, help='seconds to wait for both reports')
+    parser.add_argument('--poll-seconds', type=float, default=45, help='seconds between Crashlytics reads')
     parser.add_argument('--firebase', default='firebase', help='Firebase CLI, logged in to the project')
     parser.add_argument('--google-services', type=Path, default=ROOT / 'app/google-services.json')
     parser.add_argument('--adb', default='adb')
@@ -461,8 +542,10 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, interrupted)
 
     started = datetime.now(timezone.utc)
+    # Crashlytics keeps whole seconds; a minute of margin covers clock differences.
+    since = started - timedelta(minutes=1)
     result = dict(check_id=check_id, started_at=started.isoformat())
-    verdict, reason = None, None
+    verdict, reason, mcp = None, None, None
     try:
         verify_rental(args.devices_tool, args.serial, args.generation)
         result['app_id'] = crashlytics_app_id(args.google_services, PACKAGE)
@@ -476,6 +559,13 @@ def main(argv=None):
         if not result['apk']['crash_reports_on'] or not result['apk']['crash_receiver']:
             raise NotChecked('The APK does not send crash reports or lacks the crash receiver; '
                              'build it with -PcrashReportCheck')
+        mcp = FirebaseMcp(args.firebase, ROOT, args.out / 'firebase-mcp.log')
+        read = lambda: read_check_events(mcp, result['app_id'], since)
+        try:
+            # A login or permission problem ends the run here, before the device is touched.
+            read()
+        except NotChecked as error:
+            raise NotChecked(f'Crashlytics could not be read before the device run: {error}')
         check = CrashReportCheck(Adb(args.adb, args.serial),
                                  Screen(args.devices_tool.resolve(), args.serial, args.generation, args.out),
                                  apk, args.out)
@@ -483,30 +573,17 @@ def main(argv=None):
         result = check.result
         verdict, reason = run_device(check, check_id)
         if verdict is None:
-            # Crashlytics keeps whole seconds; a minute of margin covers clock differences.
-            since = started - timedelta(minutes=1)
-            mcp = FirebaseMcp(args.firebase, ROOT, args.out / 'firebase-mcp.log')
-            try:
-                found, result['server_polls'] = wait_for_reports(
-                    lambda: read_check_events(mcp, result['app_id'], since), check_id, result['apk']['version'],
-                    result['crash_requested_ms'], args.server_timeout, args.poll_seconds)
-            finally:
-                mcp.close()
-            result['server'] = {kind: event and {k: v for k, v in event.items() if k != 'raw'}
-                                for kind, event in (('native_crash', found['native']), ('system_exit', found['exit']))}
-            for kind, event in (('native', found['native']), ('exit', found['exit'])):
-                if event:
-                    (args.out / f'server-{kind}.txt').write_text(event['raw'] + '\n')
-            result['server_problems'] = found['problems']
-            verdict, reason = server_verdict(found, result['server_polls'], args.server_timeout)
-    except NotChecked as error:
-        verdict, reason = NOT_CHECKED, str(error)
-    except CheckFailed as error:
+            verdict, reason = check_server(result, read, args.out, args.server_timeout, args.poll_seconds)
+    except (NotChecked, CheckFailed) as error:
         verdict, reason = NOT_CHECKED, str(error)
     except KeyboardInterrupt as error:
         verdict, reason = NOT_CHECKED, f'Interrupted: {error}'
     except Exception as error:
         verdict, reason = NOT_CHECKED, f'Tool error: {type(error).__name__}: {error}'
+    finally:
+        if mcp:
+            result['firebase_cli_starts'] = mcp.starts
+            mcp.close()
     result.update(verdict=verdict, reason=reason, finished_at=datetime.now(timezone.utc).isoformat())
     (args.out / 'crash-report-check.json').write_text(json.dumps(result, indent=2, ensure_ascii=False) + '\n')
     print(f'{verdict}: {reason} ({args.out / "crash-report-check.json"})')

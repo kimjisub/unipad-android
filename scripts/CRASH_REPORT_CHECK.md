@@ -7,7 +7,8 @@ that both reports about it carry the keys that explain it:
   keys (`play_window_mode`, `play_orientation`, `play_screen_short_side`) and the install keys
   (`install_source`, `install_splits`);
 - the app's own system exit report (`SystemExitReporter$NativeCrashExit`) from the same
-  installation: `exit_reason` 5, `harness_test`, `exit_last_screen` (`PlayActivity`),
+  installation (it carries no `check_id`, so the native crash's non-empty `installationUuid` is
+  what ties it to the run; a crash report without one is a value problem): `exit_reason` 5, `harness_test`, `exit_last_screen` (`PlayActivity`),
   `exit_pack_open` (`true`), a positive `exit_background_ms`, an `exit_timestamp` after the crash
   was requested, and the install keys.
 
@@ -35,7 +36,16 @@ python3 "$HARNESS/devices.py" down
 and records the commit and whether the checkout had uncommitted changes. Pass `--apk` instead to
 use a debug APK already built with `-PcrashReportCheck`; an APK without crash reports switched on
 or without `NativeCrashCheckReceiver` is refused. The Firebase CLI (`--firebase`, default
-`firebase`) must be logged in to an account that can read the project's Crashlytics.
+`firebase`) must be logged in to an account that can read the project's Crashlytics; the
+command reads Crashlytics once before touching the device, so a login problem ends it within
+seconds as `not_checked`.
+
+`--check-id` takes 1 to 80 letters, digits, `.`, `_` or `-`; anything else is refused at start,
+because the value passes through the device shell.
+
+The defaults (`--server-timeout 360`, `--poll-seconds 45`) keep one run under about seven minutes,
+inside the ten minutes one agent command may take. Both reports usually show within a minute of
+reopening (47 s on the first run).
 
 The command does not rent or return devices. Return the rental as soon as it finishes, including
 after a failure.
@@ -47,12 +57,15 @@ after a failure.
    test pack from `app/src/androidTest/assets/audio-output`.
 2. Opens the pack's play screen, goes Home and waits 8 s.
 3. Sends `NativeCrashCheckReceiver` a new `check_id` (default `crash-check-<UTC time>-<random>`),
-   which crashes the app with SIGSEGV, and waits up to 30 s for the process to end.
+   which crashes the app with SIGSEGV, and waits up to 30 s for the process to end (`pidof`; an
+   answer that is neither a pid nor "not running" is a tool error, never "ended").
 4. Opens the app, waits 20 s and requires the app's log line recording the native crash exit;
    stops it, opens it again and waits 20 s so the recorded report is sent.
-5. Reads Crashlytics every `--poll-seconds` (60) until both reports of this `check_id` are there
-   or `--server-timeout` (1800 s) passes. Crashlytics lists events only per issue, so each read
-   takes the issues since the run started and their events.
+5. Reads Crashlytics every `--poll-seconds` (45) until both reports of this `check_id` are there
+   or `--server-timeout` (360 s) passes. Crashlytics lists events only per issue, so each read
+   takes the issues since the run started and their events (up to 50 issues and 50 events each;
+   only this check sends reports from the debug app). A read that fails, including a Firebase
+   CLI that ended or stopped answering, is recorded and retried at the next poll with a new CLI.
 
 The device is left with the debug app installed and stopped; the UI session is closed.
 
@@ -60,15 +73,16 @@ The device is left with the debug app installed and stopped; the UI session is c
 
 `--out` must be a new folder. It receives `crash-report-check.json` (verdict, reason, check id,
 APK hash and version, device, steps with times, local evidence, each server read, both reports'
-fields and keys, and every value problem), `server-native.txt` and `server-exit.txt` (the
+fields and keys, and every value problem; the server reads are written as they happen, so an
+interrupted run keeps them), `server-native.txt` and `server-exit.txt` (the
 reports as Crashlytics returned them), `logcat.txt`, `play.png`, `firebase-mcp.log`, and on a
 screen that did not appear, its snapshot and screenshot.
 
 | Exit | Verdict | Meaning |
 |------|---------|---------|
 | 0 | `passed` | Both reports arrived with the expected values |
-| 1 | `failed` | The app did not do its part (play screen, crash, recorded exit), a report did not arrive in time, or a value is wrong |
-| 2 | `not_checked` | Nothing was learned about the app: rental, build, APK, install, root, Android 10 or older, interrupted, or Crashlytics could not be read at the end |
+| 1 | `failed` | The app did not do its part (the library, Play button or play screen did not appear in time, it was not running in the background, it was still running 30 s after the crash request, or it did not log the recorded exit), a report did not arrive in time, or a value is wrong |
+| 2 | `not_checked` | Nothing was learned about the app: rental, build, APK, install, root, Android 10 or older, an adb or UI command that failed or timed out at any step, interrupted, or Crashlytics could not be read at the start or at the end |
 | 3 | `passed` | Passed, but stopping the app or closing the UI session failed (`cleanup_errors`) |
 
 A cleanup failure is recorded beside the verdict and never replaces it. A report that is missing
