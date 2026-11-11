@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Observe release telemetry on one explicitly rented, rooted Android emulator.
 
-No crash is triggered and no data-safety judgement is made. Unknown event values
+No crash is triggered. Only the advertising ID is judged: an Analytics upload that
+carries it fails the run; every other value is recorded, not judged. Unknown event values
 are retained. The caller rents/returns the device; screen actions use its UI entry.
 """
 import argparse
@@ -23,6 +24,8 @@ PACKAGE = 'com.kimjisub.launchpad'
 DEBUG_PROP = 'debug.firebase.analytics.app'
 LOG_PROP = 'log.tag.FA-SVC'
 PACK = 'telemetry-observer'
+# Upload bundle fields that carry the advertising ID; the app turns its collection off.
+AD_ID_FIELDS = ('resettable_device_id', 'limited_ad_tracking')
 
 
 def split_values(text):
@@ -51,6 +54,45 @@ def brace_blocks(text, label):
                 break
 
 
+def upload_text(log):
+    """logcat prefixes each line of a multi-line upload. Remove just that prefix."""
+    return re.sub(r'^.*?\b(?:FA-SVC|FA)\s*:\s?', '', log, flags=re.M)
+
+
+def top_level_fields(body):
+    """Read `key: value` lines of a block, skipping its nested blocks."""
+    fields, depth = {}, 0
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.endswith('{'):
+            depth += 1
+        elif stripped == '}':
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            match = re.fullmatch(r'(\w+):\s?(.*)', stripped)
+            if match:
+                fields.setdefault(match[1], match[2].strip())
+    return fields
+
+
+def parse_uploads(log):
+    """Each uploaded bundle's app and advertising ID fields; an absent field is None."""
+    uploads = []
+    for body, _ in brace_blocks(upload_text(log), 'bundle'):
+        fields = top_level_fields(body)
+        uploads.append(dict(app_id=fields.get('app_id'), **{key: fields.get(key) for key in AD_ID_FIELDS}))
+    return uploads
+
+
+def advertising_id_report(uploads):
+    """Summarise the app's own bundles; a bundle with either field not empty sent the advertising ID."""
+    own = [upload for upload in uploads if upload['app_id'] == PACKAGE]
+    sent = [upload for upload in own if any(upload[key] not in (None, '') for key in AD_ID_FIELDS)]
+    values = sorted({tuple((key, upload[key]) for key in AD_ID_FIELDS) for upload in own}, key=str)
+    return dict(bundles=len(own), bundles_with_advertising_id=len(sent),
+                values=[dict(value) for value in values])
+
+
 def event_record(name, parameters, raw):
     debug = next((value for key, value in parameters.items() if key == '_dbg' or key.endswith('(_dbg)')), None)
     return dict(name=name, parameters=parameters, debug=None if debug is None else debug == '1', raw=raw)
@@ -66,9 +108,7 @@ def parse_events(log):
         if match:
             parameters = dict(part.split('=', 1) for part in split_values(match[2]) if '=' in part)
             events.append(event_record(match[1], parameters, line))
-    # logcat prefixes each line of a multi-line upload. Remove just that prefix.
-    plain = re.sub(r'^.*?\b(?:FA-SVC|FA)\s*:\s?', '', log, flags=re.M)
-    for body, raw in brace_blocks(plain, 'event'):
+    for body, raw in brace_blocks(upload_text(log), 'event'):
         name = re.search(r'^\s*name:\s*(.+)', body, re.M)
         if not name:
             continue
@@ -121,9 +161,9 @@ def first_pad(root):
 
 
 class Observer:
-    def __init__(self, adb, screen, apk, timeout=60):
-        self.adb, self.ui, self.apk, self.timeout = adb, screen, apk, timeout
-        self.result = dict(package=PACKAGE, status='not_observed', events=[], sessions=[],
+    def __init__(self, adb, screen, apk, timeout=60, installer=None):
+        self.adb, self.ui, self.apk, self.timeout, self.installer = adb, screen, apk, timeout, installer
+        self.result = dict(package=PACKAGE, status='not_observed', events=[], sessions=[], failures=[],
                            observer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
 
     def prepare(self):
@@ -132,7 +172,8 @@ class Observer:
         self.result['apk_sha256'] = hashlib.sha256(self.apk.read_bytes()).hexdigest()
         # Stop an existing installation before replacement; never clear its data.
         self.adb.shell('am', 'force-stop', PACKAGE)
-        self.adb.run('install', '-r', str(self.apk), timeout=180)
+        installer = ['-i', self.installer] if self.installer else []
+        self.adb.run('install', '-r', *installer, str(self.apk), timeout=180)
         verify_installed(self.adb, PACKAGE, self.result['apk_sha256'])
         package = self.adb.shell('dumpsys', 'package', PACKAGE)
         version = re.search(r'versionCode=(\d+).*?\n\s*versionName=(\S+)', package, re.S)
@@ -141,6 +182,10 @@ class Observer:
         if re.search(r'\bDEBUGGABLE\b', package):
             raise CheckFailed('The installed candidate is debuggable; use a release APK')
         self.result['app'] = dict(version_code=int(version[1]), version_name=version[2])
+        of_record = re.search(r'installerPackageName=(\S+)', package)
+        self.result['installer'] = dict(requested=self.installer, of_record=of_record[1] if of_record else None)
+        if self.installer and self.result['installer']['of_record'] != self.installer:
+            raise CheckFailed(f'Installer of record is not {self.installer}')
         self.adb.shell('am', 'force-stop', PACKAGE)
         self.adb.shell('setprop', DEBUG_PROP, PACKAGE)
         self.adb.shell('setprop', LOG_PROP, 'VERBOSE')
@@ -166,6 +211,7 @@ class Observer:
             log = self.adb.run('logcat', '-d', '-v', 'threadtime', 'FA:V', 'FA-SVC:V', '*:S').decode(errors='replace')
             self.result['analytics_log'] = log
             self.result['events'] = parse_events(log)
+            self.result['advertising_id'] = advertising_id_report(parse_uploads(log))
             sessions, read_errors = [], []
             for session in self.adb.shell('ls', '-1', self.sessions_path, check=False).splitlines():
                 if session in self.previous_sessions or not re.fullmatch(r'[A-Za-z0-9_-]+', session):
@@ -183,14 +229,24 @@ class Observer:
             first = [event for event in self.result['events'] if event['name'] == 'play_first_input']
             # Presence, not a whitelist of expected values. Unknown values remain evidence.
             complete = (any('input_source' in event['parameters'] for event in first)
-                        and any(session['screen'] is not None and session['transitions'] for session in sessions))
+                        and any(session['screen'] is not None and session['transitions'] for session in sessions)
+                        and self.result['advertising_id']['bundles'] > 0)
             debug = [event['debug'] for event in first if event['debug'] is not None]
             self.result['first_input_debug'] = any(debug) if debug else None
             if complete and (debug or time.monotonic() >= deadline):
+                self.judge()
                 return
             if time.monotonic() >= deadline:
-                raise CheckFailed('Not observed before timeout: first input with input_source and/or screen key with lifecycle lines')
+                raise CheckFailed('Not observed before timeout: first input with input_source, screen key with '
+                                  'lifecycle lines and/or an Analytics upload bundle of the app')
             time.sleep(1)
+
+    def judge(self):
+        # Recorded as found; only the advertising ID is judged.
+        self.result['install_source'] = [session['keys'].get('install_source') for session in self.result['sessions']]
+        sent = self.result['advertising_id']['bundles_with_advertising_id']
+        if sent:
+            self.result['failures'].append(f'Advertising ID fields were not empty in {sent} upload bundle(s)')
 
 
 def run_and_record(observer, output):
@@ -203,7 +259,7 @@ def run_and_record(observer, output):
         observer.prepare()
         observer.drive()
         observer.collect()
-        result['status'] = 'observed'
+        result['status'] = 'failed' if result['failures'] else 'observed'
     except (Exception, KeyboardInterrupt) as error:
         result['error'] = f'{type(error).__name__}: {error}'
     finally:
@@ -246,6 +302,7 @@ def main(argv=None):
     parser.add_argument('--out', required=True, type=Path, help='Output JSON file; use a new filename for each round')
     parser.add_argument('--timeout', type=float, default=60)
     parser.add_argument('--adb', default='adb')
+    parser.add_argument('--installer', help='Install as this installer package, e.g. com.android.vending for Play')
     args = parser.parse_args(argv)
     if not args.apk.is_file() or not args.devices_tool.is_file() or args.timeout <= 0:
         parser.error('An existing APK, device tool and positive timeout are required')
@@ -257,7 +314,8 @@ def main(argv=None):
         parser.error(str(error))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     observer = Observer(Adb(args.adb, args.serial),
-                        Screen(args.devices_tool, args.serial, args.generation, args.out.parent), args.apk, args.timeout)
+                        Screen(args.devices_tool, args.serial, args.generation, args.out.parent), args.apk, args.timeout,
+                        args.installer)
     observer.result['serial'] = args.serial
     # SIGTERM also takes the ordinary cleanup path when the caller cancels a run.
     def interrupted(signum, frame):
