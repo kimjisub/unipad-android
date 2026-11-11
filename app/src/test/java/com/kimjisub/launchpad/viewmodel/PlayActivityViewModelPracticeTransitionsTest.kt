@@ -233,6 +233,9 @@ class PlayActivityViewModelPracticeTransitionsTest {
         assertTrue(vm.autoPlayRunner!!.suspended)
         assertEquals(progress, vm.autoPlayRunner!!.progress)
         assertEquals(2, sounds.size)
+        vm.autoPlayResume()
+        scheduler.runCurrent()
+        assertGuides(2 to 0)
         val replayAt = scheduler.currentTime
         vm.switchPlayMode(PlayMode.AutoPlay)
         scheduler.runCurrent()
