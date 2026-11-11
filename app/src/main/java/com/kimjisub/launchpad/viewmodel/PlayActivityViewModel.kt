@@ -972,14 +972,10 @@ class PlayActivityViewModel(
 				runner.startAutoPlay()
 			}
 			PlayMode.GuidePlay -> {
-				runner.practiceGuide = true
-				runner.stepMode = false
-				runner.resetStepState()
 				autoPlayRemoveGuide()
-				runner.playmode = true
 				isPracticeMode = true
 				isAutoPlayPlaying = true
-				runner.beforeStartPlaying = true
+				runner.startGuidePlay()
 			}
 			PlayMode.StepPractice -> {
 				runner.practiceGuide = true

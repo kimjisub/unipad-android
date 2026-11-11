@@ -40,8 +40,12 @@ class HeldPadAudioPreparationTest : HeldPadTest() {
         assertFalse("The real decoder must observe the changed sample", original.pcm.contentEquals(changed.pcm))
     }
 
-    @Test(expected = OboeAudioEngine.DecodeInterruptedException::class)
-    fun cachedSilenceStillHonorsInterruption() {
-        audio.decode(File(screen.pack(), "sounds/loop-1-1.wav")) { true }
+    @Test fun cachedSilenceStillHonorsInterruption() {
+        var polls = 0
+        assertThrows(OboeAudioEngine.DecodeInterruptedException::class.java) {
+            audio.decode(File(screen.pack(), "sounds/loop-1-1.wav")) { ++polls == 2 }
+        }
+        assertEquals("Cancellation must reach the reuse path after its initial check", 2, polls)
+        assertTrue("Interrupted preparation must not load a sound", audio.loaded.isEmpty())
     }
 }

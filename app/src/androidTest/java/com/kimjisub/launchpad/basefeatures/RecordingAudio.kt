@@ -10,8 +10,10 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Decodes the real fixture WAVs, records the actual runner requests, and never opens a speaker. */
-class RecordingAudio : SoundRunner.Engine {
+/** By default decodes real fixture WAVs, records runner requests, and never opens a speaker. */
+class RecordingAudio(
+    private val fixtureDecoder: (File, () -> Boolean) -> OboeAudioEngine.DecodedAudio? = OboeAudioEngine::decodeOnly,
+) : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
     val loops = CopyOnWriteArrayList<Int>()
     val stoppedVoices = CopyOnWriteArrayList<Int>()
@@ -25,27 +27,13 @@ class RecordingAudio : SoundRunner.Engine {
     private var silencedThrough = 0
     // Equal PCM can belong to different files; the load token, not its value, identifies a file.
     private val decodedFiles = Collections.synchronizedMap(IdentityHashMap<OboeAudioEngine.DecodedAudio, String>())
-    private data class ReusableFixture(val bytes: ByteArray, val decoded: OboeAudioEngine.DecodedAudio)
-    @Volatile private var reusableFixture: ReusableFixture? = null
-
-    /** Opts a fixture into one real decode; only byte-identical copies may reuse its PCM. */
-    fun reuseDecodedFixture(file: File) {
-        reusableFixture = ReusableFixture(file.readBytes(), checkNotNull(OboeAudioEngine.decodeOnly(file)))
-    }
     override fun start(): Boolean {
         starts.incrementAndGet()
         return true
     }
     override fun stop() { stops.incrementAndGet() }
-    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? {
-        if (interrupted()) throw OboeAudioEngine.DecodeInterruptedException()
-        val fixture = reusableFixture
-        val decoded = if (fixture != null && file.readBytes().contentEquals(fixture.bytes)) {
-            if (interrupted()) throw OboeAudioEngine.DecodeInterruptedException()
-            fixture.decoded.copy()
-        } else OboeAudioEngine.decodeOnly(file, interrupted) ?: return null
-        decodedFiles[decoded] = file.name
-        return decoded
+    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = fixtureDecoder(file, interrupted)?.also {
+        decodedFiles[it] = file.name
     }
     override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = nextId.incrementAndGet().also {
         loaded[decodedFiles.getValue(decoded)] = it

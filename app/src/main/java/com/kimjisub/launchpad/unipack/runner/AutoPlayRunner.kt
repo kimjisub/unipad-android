@@ -649,6 +649,21 @@ class AutoPlayRunner(
 		wake()
 	}
 
+	/**
+	 * Switches to timed guidance. A step left from here is handed to the loop like a resume, so a shown
+	 * note stays owed instead of being cleared under a scan that may already be running.
+	 */
+	fun startGuidePlay() {
+		synchronized(progressValue) {
+			if (active && stepMode) pendingResume.set(true) else resetStepState()
+			beforeStartPlaying = true
+			practiceGuide = true
+			stepMode = false
+			playmode = true
+		}
+		wake()
+	}
+
 	/** Publishes a complete timed resume before waking the loop that owns pending steps. */
 	fun resume() {
 		synchronized(progressValue) {

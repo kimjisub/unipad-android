@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.basefeatures
 
+import com.kimjisub.launchpad.audio.OboeAudioEngine
 import org.junit.After
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import java.io.File
@@ -24,8 +26,18 @@ abstract class HeldPadTest : MultiTouchPlaybackTest(slideMode = false) {
             File(pack, "sounds/${loopFile(x, y)}").writeBytes(silence)
             "1 $x $y ${loopFile(x, y)} 0"
         } + "\n")
-        // Keep every pad's file and sound ID, but do not open a codec for each copy of silence.
-        audio.reuseDecodedFixture(File(pack, "sounds/silence.wav"))
+        // Validate the initial fixture, then share one real decode across all held-pad tests.
+        keySound.readLines().filter(String::isNotBlank).map { it.split(" ")[3] }.distinct().forEach { name ->
+            assertArrayEquals("Held-pad sound fixtures must start with identical PCM input", silence,
+                File(pack, "sounds/$name").readBytes())
+        }
+        val decoded = requireNotNull(OboeAudioEngine.decodeOnly(File(pack, "sounds/silence.wav")))
+        audio = RecordingAudio { file, interrupted ->
+            if (interrupted()) throw OboeAudioEngine.DecodeInterruptedException()
+            val identical = file.readBytes().contentEquals(silence)
+            if (interrupted()) throw OboeAudioEngine.DecodeInterruptedException()
+            if (identical) decoded.copy() else OboeAudioEngine.decodeOnly(file, interrupted)
+        }
     }
 
     @After fun detachReceived() {
