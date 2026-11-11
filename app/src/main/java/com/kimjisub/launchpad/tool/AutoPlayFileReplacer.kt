@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.tool
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.math.BigInteger
 
 /**
  * Saves the current autoplay and its single previous version as one recoverable transaction.
@@ -23,15 +24,35 @@ class AutoPlayFileReplacer(
 
 	fun restore(autoPlayFile: File, validate: () -> Unit) = synchronized(lock) {
 		recover(autoPlayFile)
-		val backup = backupFile(autoPlayFile)
-		if (!backup.isFile) throw IOException("No previous autoplay")
+		val backup = restoreSource(autoPlayFile) ?: throw IOException("No previous autoplay")
 		transact(autoPlayFile, { next -> copy(backup, next) }, validate)
 	}
 
 	fun hasBackup(autoPlayFile: File): Boolean = synchronized(lock) {
 		recover(autoPlayFile)
-		backupFile(autoPlayFile).isFile
+		restoreSource(autoPlayFile) != null
 	}
+
+	private fun restoreSource(autoPlay: File): File? {
+		val previous = backupFile(autoPlay)
+		if (previous.exists()) return previous.takeIf { it.isFile }
+		val prefix = autoPlay.name + "_"
+		return autoPlay.absoluteFile.parentFile?.listFiles().orEmpty().asSequence()
+			.filter { it.name.startsWith(prefix) && it.isFile && it.length() > 0 }
+			.mapNotNull { file ->
+				val match = legacyBackupName.matchEntire(file.name.removePrefix(prefix))
+					?: return@mapNotNull null
+				val timestamp = (1..6).joinToString("") { decimalDigits(match.groupValues[it]) }.toLong()
+				val sequence = decimalDigits(match.groupValues[7].ifEmpty { "1" }).toBigInteger()
+				LegacyBackup(file, timestamp, sequence)
+			}
+			// Renaming in older releases preserved the original modification time. Only the
+			// parsed name orders mappings correctly, including names using different digit sets.
+			.minWithOrNull(compareBy<LegacyBackup> { it.timestamp }.thenBy { it.sequence }.thenBy { it.file.name })
+			?.file
+	}
+
+	private data class LegacyBackup(val file: File, val timestamp: Long, val sequence: BigInteger)
 
 	/** Must run before parsing a pack after an interrupted save or restore. Safe to repeat. */
 	fun recover(autoPlayFile: File) = synchronized(lock) {
@@ -106,6 +127,12 @@ class AutoPlayFileReplacer(
 
 	companion object {
 		private val lock = Any()
+		private val legacyBackupName = Regex(
+			"""(\p{Nd}{4})_(\p{Nd}{2})_(\p{Nd}{2})-(\p{Nd}{2})_(\p{Nd}{2})_(\p{Nd}{2})(?:-(\p{Nd}+))?""",
+		)
+
+		private fun decimalDigits(value: String) = value.codePoints().toArray()
+			.joinToString("") { Character.digit(it, 10).toString() }
 		const val TEMP_SUFFIX = ".tmp"
 		private const val PREPARING = ".preparing"
 		private const val JOURNAL = ".transaction"

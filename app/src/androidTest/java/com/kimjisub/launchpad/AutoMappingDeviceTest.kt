@@ -69,6 +69,45 @@ class AutoMappingDeviceTest : BaseUITest() {
     }
 
     @Test
+    fun legacyBackupEnablesRestoreAndCanBeUndoneAfterReopening() {
+        launchToMainScreen()
+        val root = TestUniPack.folder(context)
+        val file = File(root, "autoPlay")
+        val legacy = File(root, "autoPlay_۲۰۲۶_۰۹_۰۱-۱۲_۳۰_۰۰")
+        val mapped = "d 1000\nt 1 1\nd 100\nt 2 1\nd 100\nt 3 1\n"
+        file.writeText(mapped)
+        legacy.writeText(original)
+        fun assertFiles(current: String, previous: String?) {
+            assertEquals(current, file.readText())
+            assertEquals(original, legacy.readText())
+            val backup = File(root, "autoPlay_previous")
+            if (previous == null) assertTrue(!backup.exists()) else assertEquals(previous, backup.readText())
+            println("Legacy restore files: " + root.listFiles()!!.sortedBy { it.name }
+                .joinToString { "${it.name}(${it.length()})" })
+        }
+        assertFiles(mapped, null)
+        openTestPackInPlay()
+        openPlayOptions()
+        takeScreenshot("legacy_autoplay_before_restore")
+        assertTrue("Legacy backup must enable restore", device.findObject(By.text(restoreLabel)).isEnabled)
+        clickRow(restoreLabel)
+        clickRow("Restore")
+        assertTrue("Legacy restore did not persist", waitUntil(30_000L) { file.readText() == original })
+        assertTrue("Restore did not finish", waitUntil(30_000L) { device.hasObject(By.text(str(R.string.autoMapping))) })
+        assertFiles(original, mapped)
+        takeScreenshot("legacy_autoplay_restored")
+        quitPlayToMain()
+        openTestPackInPlay()
+        openPlayOptions()
+        clickRow(restoreLabel)
+        clickRow("Restore")
+        assertTrue("Undo did not persist", waitUntil(30_000L) { file.readText() == mapped })
+        assertTrue("Undo did not finish", waitUntil(30_000L) { device.hasObject(By.text(str(R.string.autoMapping))) })
+        assertFiles(mapped, original)
+        takeScreenshot("legacy_autoplay_undone")
+    }
+
+    @Test
     fun returningThroughTheLauncherIcon_savesWhileThePackListCoversPlay() {
         // An explicit open has a different task-root intent from the launcher. Returning through
         // the real icon then opens a new list above PlayActivity instead of resuming Play directly.
