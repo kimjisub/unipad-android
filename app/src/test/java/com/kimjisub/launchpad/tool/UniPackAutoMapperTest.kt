@@ -98,6 +98,28 @@ class UniPackAutoMapperTest {
 		assertEquals(delaysBefore, pack.autoPlayTable!!.elements.filterIsInstance<AutoPlay.Element.Delay>().map { it.delay })
 	}
 
+	/** Long autoplays press the same sounds over and over; each file costs one media read. */
+	@Test
+	fun eachSoundFileIsMeasuredOnce_evenWhenItsLengthCannotBeRead() {
+		createPack()
+		File(root, "autoPlay").writeText("t 1 1\nd 50\nt 1 4\nd 60\n".repeat(3) + "t 1 2\nd 70\nt 1 1\nd 80\n")
+		pack.reloadAutoPlay()
+		val reads = mutableListOf<String>()
+		val counting = object : SoundDurationReader {
+			override fun durationMs(file: File) = lengths[file.name]?.toDouble().also { reads.add(file.name) }
+			override fun close() {}
+		}
+		val waits = mutableListOf<String>()
+
+		runBlocking {
+			UniPackAutoMapper(pack, { counting }).run(noProgress, awaitScreenVisible = { waits.add("wait") })
+		}
+
+		assertEquals(listOf("a.wav", "c.wav", "b.wav"), reads)
+		assertEquals("Only a new read waits for the screen", 3, waits.size)
+		assertEquals("d 1000\n" + "t 1 1\nd 400\nt 1 4\nd 60\n".repeat(3) + "t 1 2\nd 250\nt 1 1\n", autoPlay())
+	}
+
 	@Test
 	fun aFailedWrite_isReportedAndLeavesThePackAsItWas() {
 		createPack()
