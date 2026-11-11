@@ -26,3 +26,18 @@ bundled-theme fallback.
 | Before | After: default logo, unlit |
 | --- | --- |
 | ![Before](before-pro.png) | ![After](after-pro.png) |
+
+
+## Small packs and the menu
+
+These captures use the same 1×5 pack on a 720×1280 display at density 320
+(360dp wide). The before build is `19f2f40b` with only test identifiers
+added; the after build is `c3ac4801`. Both use the default theme. The menu
+background is included in the exclusion area, whether autoplay controls are
+visible or hidden. The screen test also opens the menu to check it remains
+usable. Images are copied directly from the device capture output.
+
+| Controls | Before | After |
+| --- | --- | --- |
+| With autoplay | ![Before, autoplay visible](small-pack-before-autoplay-true.png) | ![After, autoplay visible](small-pack-after-autoplay-true.png) |
+| Menu only | ![Before, menu only](small-pack-before-autoplay-false.png) | ![After, menu only](small-pack-after-autoplay-false.png) |
