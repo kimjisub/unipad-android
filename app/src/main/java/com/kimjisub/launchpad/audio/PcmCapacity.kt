@@ -17,9 +17,7 @@ internal fun initialPcmCapacity(durationUs: Long, sampleRate: Int, channels: Int
     val physicalSamples = (facts.frames * channels).toInt()
     if (durationUs >= facts.frames * 1_000_000 / sampleRate) return physicalSamples
 
-    // A short duration still needs growth. Start on the existing doubling grid rather
-    // than an arbitrary size, so old + new arrays never exceed the previous growth peak.
-    val frames = (durationUs * sampleRate + 999_999) / 1_000_000
-    val estimate = (frames * channels).toInt()
-    return maxOf(MIN_PCM_CAPACITY, Integer.highestOneBit(estimate))
+    // An understated duration still needs growth. Keep the exact old starting size:
+    // even power-of-two estimates can increase the peak when a decoder emits large packets.
+    return MIN_PCM_CAPACITY
 }

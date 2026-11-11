@@ -34,13 +34,18 @@ class PcmCapacityTest {
     }
 
     @Test fun understatedDurationKeepsTheExistingGrowthSequenceAndPeak() {
-        // Starting an arbitrary 40,000-sample array would make its first copy larger
-        // than the old 32,768 + 65,536-sample peak. Keep the old power-of-two grid.
+        // Understated lengths keep the same starting size and every subsequent copy.
         val initial = capacity(44_100 * 10L, durationUs = 453_515)
-        assertEquals(32_768, initial)
+        assertEquals(16_384, initial)
         for (samples in listOf(40_001, 65_536, 65_537, 131_073, 882_000)) {
             assertTrue("$samples samples", peak(initial, samples) <= peak(16_384, samples))
         }
+    }
+
+    @Test fun largeDecoderPacketsDoNotIncreaseTheUnderstatedDurationPeak() {
+        val initial = capacity(50_000, durationUs = 453_515)
+        val packets = listOf(50_000, 50_000)
+        assertTrue("large packets must keep the old peak", packetPeak(initial, packets) <= packetPeak(16_384, packets))
     }
 
     @Test fun mismatchedOrInvalidLayoutDoesNotTrustDuration() {
@@ -55,6 +60,21 @@ class PcmCapacityTest {
         durationUs: Long = if (frames in 0..230_400_000L) frames * 1_000_000 / rate else Long.MAX_VALUE) =
         initialPcmCapacity(durationUs, rate, channels,
             AudioInspection.Readable(AudioFileFacts(rate, channels, frames, "wav")))
+
+    private fun packetPeak(initial: Int, packets: List<Int>): Int {
+        var size = initial
+        var peak = size
+        var total = 0
+        for (packet in packets) {
+            total += packet
+            if (total > size) {
+                val next = maxOf(size * 2, total)
+                peak = maxOf(peak, size + next)
+                size = next
+            }
+        }
+        return peak
+    }
 
     private fun peak(initial: Int, samples: Int): Int {
         var size = initial
