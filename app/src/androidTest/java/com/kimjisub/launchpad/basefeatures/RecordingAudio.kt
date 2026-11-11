@@ -4,6 +4,8 @@ import android.os.SystemClock
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import java.io.File
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,7 +25,8 @@ class RecordingAudio(
     val starts = AtomicInteger()
     private val nextId = AtomicInteger()
     private var silencedThrough = 0
-    private val decodedFiles = ConcurrentHashMap<OboeAudioEngine.DecodedAudio, String>()
+    // Equal PCM can belong to different files; the load token, not its value, identifies a file.
+    private val decodedFiles = Collections.synchronizedMap(IdentityHashMap<OboeAudioEngine.DecodedAudio, String>())
     override fun start(): Boolean {
         starts.incrementAndGet()
         return true
