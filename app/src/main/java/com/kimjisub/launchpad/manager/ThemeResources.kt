@@ -28,6 +28,7 @@ class DefaultThemeResources(
 
 	override var playbg: Drawable? = null
 	override var customLogo: Drawable? = null
+	override var logoLed: Drawable? = null
 	override var btn: Drawable? = null
 	override var btnPressed: Drawable? = null
 	override var chainled: Drawable? = null
@@ -46,6 +47,7 @@ class DefaultThemeResources(
 		if (fullLoad) {
 			playbg = ResourcesCompat.getDrawable(res, drawable.playbg, null)
 			customLogo = ResourcesCompat.getDrawable(res, drawable.custom_logo, null)
+			logoLed = ResourcesCompat.getDrawable(res, drawable.logo_led, null)
 			btn = ResourcesCompat.getDrawable(res, drawable.btn, null)
 			btnPressed = ResourcesCompat.getDrawable(res, drawable.btn_, null)
 			chainled = ResourcesCompat.getDrawable(res, drawable.chainled, null)

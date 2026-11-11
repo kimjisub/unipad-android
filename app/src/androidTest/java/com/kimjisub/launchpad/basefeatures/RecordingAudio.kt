@@ -4,12 +4,16 @@ import android.os.SystemClock
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import java.io.File
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Decodes the real fixture WAVs, records the actual runner requests, and never opens a speaker. */
-class RecordingAudio : SoundRunner.Engine {
+/** By default decodes real fixture WAVs, records runner requests, and never opens a speaker. */
+class RecordingAudio(
+    private val fixtureDecoder: (File, () -> Boolean) -> OboeAudioEngine.DecodedAudio? = OboeAudioEngine::decodeOnly,
+) : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
     val loops = CopyOnWriteArrayList<Int>()
     val stoppedVoices = CopyOnWriteArrayList<Int>()
@@ -21,13 +25,14 @@ class RecordingAudio : SoundRunner.Engine {
     val starts = AtomicInteger()
     private val nextId = AtomicInteger()
     private var silencedThrough = 0
-    private val decodedFiles = ConcurrentHashMap<OboeAudioEngine.DecodedAudio, String>()
+    // Equal PCM can belong to different files; the load token, not its value, identifies a file.
+    private val decodedFiles = Collections.synchronizedMap(IdentityHashMap<OboeAudioEngine.DecodedAudio, String>())
     override fun start(): Boolean {
         starts.incrementAndGet()
         return true
     }
     override fun stop() { stops.incrementAndGet() }
-    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = OboeAudioEngine.decodeOnly(file, interrupted)?.also {
+    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = fixtureDecoder(file, interrupted)?.also {
         decodedFiles[it] = file.name
     }
     override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = nextId.incrementAndGet().also {
