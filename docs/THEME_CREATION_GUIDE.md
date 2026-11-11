@@ -101,7 +101,8 @@ color (`o l a 5`, for example); `f l` and the Led option being off show the same
 shape in dark gray. No separate on/off images are needed.
 
 The image fits within a square about 70% of the adjacent round button's size,
-keeping its aspect ratio without cropping or stretching. Transparent padding
+keeping its aspect ratio without cropping or stretching. It may shrink further
+for unusually shaped grids to avoid covering the buttons. Transparent padding
 counts as image area. A non-square image fits inside that square. An opaque
 JPEG can light the whole rectangle; a fully transparent image intentionally
 hides the logo. Normal mode never shows this indicator, and Hide UI leaves it

@@ -11,6 +11,8 @@ import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.design.view.ChainView
+import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.LaunchpadColor
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -42,11 +44,13 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
         File(pack, "keyLED/1 1 1 1").writeText("o l a 5\nd 60000\n")
         File(pack, "keyLED/1 1 2 1").writeText("o l a 45\nd 60000\n")
         File(pack, "keyLED/1 1 3 1").writeText("f l\n")
+        File(pack, "keyLED/1 1 4 1").writeText("o mc 8 a 5\nd 60000\n")
         try {
             assertTrue(TestCaptures.save(screen.device, "logo-led/commands-pack.zip") { it.writeBytes(screen.zip()); true })
             prefs.selectedTheme = screen.context.packageName
             val scenario = screen.openPlay()
             screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
+            var restoreColor = false
             for ((name, size, orientation) in listOf(
                 Triple("phone-portrait", "720x1280", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
                 Triple("tablet-portrait", "1600x2560", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
@@ -65,6 +69,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 }
                 screen.instrumentation.waitForIdleSync()
                 screen.node(logo)
+                if (restoreColor) captureColor("$name-current-red-after-resize", palette(5))
                 screen.onMain { screen.vm().ledInit() }
                 captureColor("$name-default-off", off)
                 command(0, 5)
@@ -74,11 +79,14 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 screen.tapPad(2)
                 awaitChannel(null)
                 captureColor("$name-default-off-command", off)
+                command(0, 5)
+                restoreColor = true
                 val metrics = screen.onMain { screen.resumed().resources.displayMetrics }
                 println("Logo evidence: $name ${metrics.widthPixels}x${metrics.heightPixels}, densityDpi=${metrics.densityDpi}, widthDp=${screen.onMain { screen.resumed().resources.configuration.screenWidthDp }}, theme=${prefs.selectedTheme}, pack=${pack.name}, commands=o l a 5; o l a 45; f l, emulator display override")
             }
             command(0, 5)
             screen.onMain { screen.vm().scbHideUI.setChecked(true) }
+            screen.await("Hide UI did not hide the menu") { !screen.has(By.desc(screen.text(R.string.menu))) }
             captureColor("hidden-controls-red", palette(5))
             screen.onMain {
                 screen.vm().scbHideUI.setChecked(false)
@@ -92,6 +100,19 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             screen.onMain { screen.vm().scbLed.setChecked(true) }
             command(0, 5)
             captureColor("led-enabled-red", palette(5))
+            val chainBounds = screen.onMain {
+                val views = screen.views(screen.resumed().window.decorView)
+                val padRight = views.filterIsInstance<PadView>().maxOf { screen.bounds(it).right }
+                views.filterIsInstance<ChainView>().map(screen::bounds).filter { it.left >= padRight }.sortedBy { it.top }
+            }
+            assertEquals(8, chainBounds.size)
+            screen.device.click(chainBounds[1].centerX(), chainBounds[1].centerY())
+            screen.await("Second chain button did not work") { screen.onMain { screen.vm().chain.value == 1 } }
+            screen.device.click(chainBounds[0].centerX(), chainBounds[0].centerY())
+            screen.await("First chain button did not work") { screen.onMain { screen.vm().chain.value == 0 } }
+            screen.tapPad(3)
+            screen.await("Last top-row LED did not light") { screen.onMain { screen.vm().channelManager.get(-1, 7)?.color == palette(5) } }
+            screen.capture("top-row-last-and-logo-red")
             val plays = audio.plays.size
             val point = screen.node(logo).visibleCenter
             screen.device.click(point.x, point.y)
@@ -128,6 +149,19 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
             captureColor("theme-damaged-fallback", off)
             damaged.close()
+            assertTrue(File(themeDir, "logo_led.png").delete())
+            val absent = screen.openPlay()
+            screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
+            captureColor("theme-absent-fallback", off)
+            absent.close()
+            prefs.selectedTheme = "asset://sskin"
+            val bundled = screen.openPlay()
+            screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
+            captureColor("theme-bundled-off", off)
+            command(0, 5)
+            captureColor("theme-bundled-red", palette(5))
+            bundled.close()
+            prefs.selectedTheme = screen.context.packageName
             pack.copyRecursively(noLogoFolder)
             File(noLogoFolder, "keyLED").deleteRecursively()
             val noLogoPack = screen.openPlay(noLogoFolder)

@@ -26,7 +26,8 @@ class LogoLedResourcesTest {
             image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             val theme = ZipThemeResources(context, folder, fullLoad = true)
             val drawable = requireNotNull(theme.logoLed)
-            val decoded = drawable.toBitmap()
+            assertEquals(drawable.intrinsicWidth * 2, drawable.intrinsicHeight)
+            val decoded = drawable.toBitmap(width = 64, height = 128)
             assertEquals(64, decoded.width)
             assertEquals(128, decoded.height)
             assertEquals(0, Color.alpha(decoded.getPixel(0, 0)))

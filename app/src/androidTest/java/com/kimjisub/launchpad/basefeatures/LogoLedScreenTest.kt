@@ -17,11 +17,13 @@ class LogoLedScreenTest : PlaybackScreenTest() {
         assertFalse(screen.has(By.res("play_logo_led")))
         screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
         screen.await("Pro mode was not applied") { screen.onMain { screen.vm().scbProLightMode.checked } }
-        screen.capture("logo-pro-off")
         val logo = screen.node(By.res("play_logo_led"))
+        screen.instrumentation.waitForIdleSync()
+        screen.capture("logo-pro-off")
         assertFalse("Logo must not be an input button", logo.isClickable)
         assertTrue("Logo must have visible bounds", !logo.visibleBounds.isEmpty)
         screen.onMain { screen.vm().scbHideUI.setChecked(true) }
+        screen.await("Hide UI did not hide the menu") { !screen.has(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu))) }
         assertTrue("Hide UI must retain the logo LED", screen.has(By.res("play_logo_led")))
         screen.onMain {
             screen.vm().scbHideUI.setChecked(false)
