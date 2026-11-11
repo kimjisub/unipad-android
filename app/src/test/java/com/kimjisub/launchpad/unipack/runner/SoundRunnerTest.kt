@@ -423,6 +423,8 @@ class SoundRunnerTest {
 		runner.destroy()
 
 		runBlocking { withTimeout(5_000) { scopeJob.children.toList().joinAll() } }
+		// Destruction is queued separately from the loader coroutine.
+		assertTrue(runner.awaitStreamThread())
 		assertEquals(0, listener.failureCount.get())
 		assertEquals(1L, listener.ended.count)
 		assertTrue(engine.liveIds.isEmpty())

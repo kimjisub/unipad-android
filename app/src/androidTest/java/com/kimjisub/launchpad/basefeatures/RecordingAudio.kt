@@ -8,8 +8,10 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Decodes the real fixture WAVs, records the actual runner requests, and never opens a speaker. */
-class RecordingAudio : SoundRunner.Engine {
+/** By default decodes real fixture WAVs, records runner requests, and never opens a speaker. */
+class RecordingAudio(
+    private val fixtureDecoder: (File, () -> Boolean) -> OboeAudioEngine.DecodedAudio? = OboeAudioEngine::decodeOnly,
+) : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
     val loops = CopyOnWriteArrayList<Int>()
     val stoppedVoices = CopyOnWriteArrayList<Int>()
@@ -27,7 +29,7 @@ class RecordingAudio : SoundRunner.Engine {
         return true
     }
     override fun stop() { stops.incrementAndGet() }
-    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = OboeAudioEngine.decodeOnly(file, interrupted)?.also {
+    override fun decode(file: File, interrupted: () -> Boolean): OboeAudioEngine.DecodedAudio? = fixtureDecoder(file, interrupted)?.also {
         decodedFiles[it] = file.name
     }
     override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = nextId.incrementAndGet().also {
