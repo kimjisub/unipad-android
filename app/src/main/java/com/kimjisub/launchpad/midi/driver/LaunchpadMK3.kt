@@ -42,11 +42,11 @@ class LaunchpadMK3 : DriverRef() {
 
 	override fun getInitSysEx(): Pair<List<ByteArray>, Int> {
 		// Launchpad Pro MK3 (product ID 291) uses SysEx header 02 0E
-		// Standalone mode + Programmer mode, sent via DAW port (port 1)
+		// Standalone mode + Programmer mode, sent via MIDI (cable 0; DIN is 1, DAW is 2)
 		return Pair(listOf(
 			byteArrayOf(0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0E, 0x10, 0x00, 0xF7.toByte()),
 			byteArrayOf(0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0E, 0x0E, 0x01, 0xF7.toByte()),
-		), 1)
+		), 0)
 	}
 
 	override fun initialize() {
