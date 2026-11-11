@@ -753,30 +753,31 @@ class PlayActivity : BaseActivity() {
 							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
 							(padY + (padPlaceable.height - chromePlaceable.height) / 2).coerceAtLeast(0),
 						)
-						// The logo keeps its place in the window's top-right corner, outside this padded
-						// area, and gives up width only where chains or the menu would cover it.
-						val logoRight = constraints.maxWidth + paddingPx - LOGO_INSET.roundToPx()
-						val logoTop = LOGO_INSET.roundToPx() - topInsetPx - paddingPx
-						val logoPlaceable = logoBitmap?.let { bitmap ->
-							val aspect = bitmap.width.toFloat() / bitmap.height
-							val obstacles = listOf(
-								IntRect(IntOffset(padX, padY), IntSize(padPlaceable.width, padPlaceable.height)),
-								IntRect(leftPos, IntSize(leftPlaceable.width, leftPlaceable.height)),
-								IntRect(rightPos, IntSize(rightPlaceable.width, rightPlaceable.height)),
-								IntRect(topPos, IntSize(topPlaceable.width, topPlaceable.height)),
-								IntRect(bottomPos, IntSize(bottomPlaceable.width, bottomPlaceable.height)),
-								IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
-							).filter { it.width > 0 && it.height > 0 }
-							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
-							if (width < LOGO_MIN_WIDTH.roundToPx()) null
-							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
-						}
 						val logoLedBounds = PlayLayout.logoLedBounds(
 							constraints.maxWidth, constraints.maxHeight, placement,
 							IntSize(padPlaceable.width, padPlaceable.height),
 							IntSize(topPlaceable.width, topPlaceable.height),
 							IntSize(rightPlaceable.width, rightPlaceable.height),
 						)
+						// The logo keeps its place in the window's top-right corner, outside this padded
+						// area, and gives up width where chains, the logo LED or the menu would cover it.
+						val logoRight = constraints.maxWidth + paddingPx - LOGO_INSET.roundToPx()
+						val logoTop = LOGO_INSET.roundToPx() - topInsetPx - paddingPx
+						val logoPlaceable = logoBitmap?.let { bitmap ->
+							val aspect = bitmap.width.toFloat() / bitmap.height
+							val obstacles = (listOf(
+								IntRect(IntOffset(padX, padY), IntSize(padPlaceable.width, padPlaceable.height)),
+								IntRect(leftPos, IntSize(leftPlaceable.width, leftPlaceable.height)),
+								IntRect(rightPos, IntSize(rightPlaceable.width, rightPlaceable.height)),
+								IntRect(topPos, IntSize(topPlaceable.width, topPlaceable.height)),
+								IntRect(bottomPos, IntSize(bottomPlaceable.width, bottomPlaceable.height)),
+								IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
+							) + if (vm.scbProLightMode.checked && logoLedBitmap != null) listOf(logoLedBounds) else emptyList()
+							).filter { it.width > 0 && it.height > 0 }
+							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
+							if (width < LOGO_MIN_WIDTH.roundToPx()) null
+							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
+						}
 						val logoLedPlaceable = measurables[8].measure(Constraints.fixed(logoLedBounds.width, logoLedBounds.height))
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							padPlaceable.place(padX, padY)

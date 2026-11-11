@@ -6,6 +6,8 @@ import androidx.compose.ui.unit.IntSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
+import javax.imageio.ImageIO
 
 class PlayLayoutTest {
 
@@ -260,7 +262,11 @@ class PlayLayoutTest {
 		assertTrue("logo $logo touches $obstacle", !logo.overlaps(IntRect(obstacle.left - margin, obstacle.top - margin, obstacle.right + margin, obstacle.bottom + margin)))
 	}
     @Test
-    fun logoLedUsesSeventyPercentOfTheCornerWithoutMovingTheStrips() {
+    fun logoLedUsesSeventyPercentOfTheDrawnCircleWithoutMovingTheStrips() {
+        val relativePath = "src/main/res/drawable-nodpi/chain.png"
+        val art = ImageIO.read(File(relativePath).takeIf { it.isFile } ?: File("app/$relativePath"))
+        val paintedColumns = (0 until art.width).filter { x -> (0 until art.height).any { y -> art.getRGB(x, y).ushr(24) > 0 } }
+        val scale = 0.7f * ((paintedColumns.last() - paintedColumns.first() + 1).toFloat() / art.width)
         for ((w, h) in shapes + listOf(344 to 624, 624 to 344)) for (square in listOf(true, false)) {
             val size = PlayLayout.buttonSize(PlayLayout.Area(w, h, strip), 8, 8, square, PlayLayout.chainSides(true, 8))
             val pads = IntSize(size.x * 8, size.y * 8)
@@ -268,7 +274,7 @@ class PlayLayoutTest {
             val right = IntSize(size.chain, size.chain * 8)
             val at = PlayLayout.place(w, h, pads, top, right, top, right)
             val bounds = PlayLayout.logoLedBounds(w, h, at, pads, top, right)
-            val side = (size.chain * 0.7f).toInt()
+            val side = (size.chain * scale).toInt()
             assertEquals(IntRect(IntOffset(at.right.x + (size.chain - side) / 2,
                 at.top.y + (size.chain - side) / 2), IntSize(side, side)), bounds)
             assertTrue(bounds.right <= w && bounds.top >= 0)

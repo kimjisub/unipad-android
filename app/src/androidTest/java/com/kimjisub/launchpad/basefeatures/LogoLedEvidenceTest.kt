@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.Paint
 import android.graphics.Path
 import android.view.View
@@ -56,6 +57,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             var restoreColor = false
             for ((name, size, orientation) in listOf(
                 Triple("phone-portrait", "720x1280", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
+                Triple("compact-landscape", "720x840", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE),
                 Triple("tablet-portrait", "1600x2560", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
                 Triple("tablet-landscape", "1600x2560", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE),
             )) {
@@ -71,7 +73,9 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
                 screen.instrumentation.waitForIdleSync()
-                screen.node(logo)
+                val logoBounds = screen.node(logo).visibleBounds
+                val decorativeBounds = screen.node(By.res("play_logo")).visibleBounds
+                assertFalse("Logo LED overlaps the decorative logo in $name", Rect.intersects(logoBounds, decorativeBounds))
                 if (restoreColor) captureColor("$name-current-red-after-resize", palette(5))
                 screen.onMain { screen.vm().ledInit() }
                 captureColor("$name-default-off", off)
