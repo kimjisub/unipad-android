@@ -34,7 +34,6 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
         val prefs = PreferenceManager(screen.context)
         val originalTheme = prefs.selectedTheme
         val originalWatermark = prefs.watermark
-        prefs.watermark = false
         val originalSize = overrideValue(screen.device.executeShellCommand("wm size"))
         val originalDensity = overrideValue(screen.device.executeShellCommand("wm density"))
         val themeDir = File(screen.context.getExternalFilesDir(null), "themes/logo-led-example")
@@ -48,6 +47,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
         File(pack, "keyLED/1 1 3 1").writeText("f l\n")
         File(pack, "keyLED/1 1 4 1").writeText("o mc 8 a 5\nd 60000\n")
         try {
+            prefs.watermark = false
             assertTrue(TestCaptures.save(screen.device, "logo-led/commands-pack.zip") { it.writeBytes(screen.zip()); true })
             prefs.selectedTheme = screen.context.packageName
             val scenario = screen.openPlay()
