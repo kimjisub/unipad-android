@@ -132,6 +132,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(3000)
         file.writeText(input)
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
@@ -191,6 +193,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(1000)
         file.writeText(input)
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
@@ -259,5 +263,9 @@ class AutoMappingDeviceTest : BaseUITest() {
         assertTrue("No-backup explanation missing", device.wait(Until.hasObject(By.text("No saved backup")), 5000L))
         assertTrue("Restore must be disabled", !menuRow(restoreLabel).isEnabled)
         takeScreenshot("automapping_cancelled_no_backup")
+    }
+
+    private companion object {
+        const val SOUND_FILES = 500
     }
 }
