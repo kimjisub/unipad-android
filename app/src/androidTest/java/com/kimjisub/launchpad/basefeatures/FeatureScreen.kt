@@ -222,12 +222,38 @@ class FeatureScreen {
         assertTrue("Recent apps key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_APP_SWITCH))
         val identity = By.pkg(launcher).desc(cardLabel)
         // Newer launchers label the snapshot inside the clickable task card.
-        val card = if (node(identity).isClickable) identity.clickable(true)
+        val card = if (recentAppsNode(launcher, identity).isClickable) identity.clickable(true)
         else By.pkg(launcher).clickable(true).hasDescendant(identity)
         capture("recent-apps-before-return-${SystemClock.uptimeMillis()}")
         click(card)
         awaitActivity(activity.javaClass)
         assertSame("Recent apps must return to the same activity", activity, resumed())
+    }
+    /**
+     * [selector] in recent apps. Some openings of recent apps show a launcher tip (Pixel launcher:
+     * "Select text and images to copy, share, and more"). While it is open the launcher exposes only
+     * the tip to accessibility, so no card can be found, and a tap anywhere passes through to whatever
+     * lies under it. The tip closes by itself about 10 s later; the usual wait starts again from then.
+     */
+    private fun recentAppsNode(launcher: String, selector: BySelector): UiObject2 {
+        val tip = By.pkg(launcher).hasChild(By.res(launcher, "arrow"))
+        var tipShownAt = 0L
+        var deadline = SystemClock.elapsedRealtime() + 10000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            freshNode(selector)?.let { return it }
+            if (freshNode(tip) != null) {
+                val now = SystemClock.elapsedRealtime()
+                if (tipShownAt == 0L) {
+                    tipShownAt = now
+                    capture("recent-apps-launcher-tip-${SystemClock.uptimeMillis()}")
+                    println("Recent apps opened under a launcher tip; waiting for it to close")
+                }
+                if (now - tipShownAt < LAUNCHER_TIP_MS) deadline = now + 10000
+            }
+            SystemClock.sleep(25)
+        }
+        capture("missing-node-${SystemClock.uptimeMillis()}")
+        throw AssertionError("Missing $selector" + if (tipShownAt != 0L) " after a launcher tip covered recent apps" else "")
     }
     fun padBounds(): List<Rect> = onMain {
         views(resumed().window.decorView).filterIsInstance<PadView>().map(::bounds)
@@ -403,6 +429,8 @@ class FeatureScreen {
         private const val CAPTURES = "basefeatures-captures"
         // Allows rounding of a colour channel in the screenshot; the default theme's pressed and dark pads differ by 16 or more.
         private const val PIXEL_TOLERANCE = 3
+        // The launcher tip over recent apps closes by itself after 10 s; this leaves room for its fade.
+        private const val LAUNCHER_TIP_MS = 15000L
         const val TITLE = "Base Features Synthetic Pack"
         const val STORE_ID = "basefeatures-store"
         // Earlier versions of this suite installed a pack here; a device they stopped on still has it.
