@@ -7,7 +7,8 @@ tap-order setting (absent, on, off):
 
 1. installs the older build on a clean slate and opens it, so it creates its
    own pack rows and settings file;
-2. adds three packs, a bookmark, a play count and list/slide settings in the
+2. adds three packs (including mapped autoplay files and their backups), a
+   bookmark, a play count and list/slide settings in the
    formats the older build uses, and opens it again to read them back;
 3. installs the newer build over it (`adb install -r`), opens it twice;
 4. compares pack files, database rows, settings values and the packs listed
@@ -49,9 +50,14 @@ SEEDED_PREFS = {'SortMethod': ('int', 0), 'SortOrder': ('boolean', False), 'Slid
 SCENARIOS = {'trace-absent': None, 'trace-on': True, 'trace-off': False}
 PACKS = [
     dict(id='upgrade_check_a', title='Upgrade Check A', bookmark=True, open_count=0, opened=False),
-    dict(id='upgrade_check_b', title='Upgrade Check B', bookmark=False, open_count=3, opened=True),
-    dict(id='upgrade_check_c', title='Upgrade Check C', bookmark=False, open_count=0, opened=False),
+    dict(id='upgrade_check_b', title='Upgrade Check B', bookmark=False, open_count=3, opened=True,
+         autoplay_backup='autoPlay_2026_11_11-15_32_39'),
+    dict(id='upgrade_check_c', title='Upgrade Check C', bookmark=False, open_count=0, opened=False,
+         autoplay_backup='autoPlay_previous'),
 ]
+ORIGINAL_AUTOPLAY = 'o 1 1\nd 100\nf 1 1\nc 2\no 2 2\nd 100\nf 2 2\n'
+# Mapping the 10 ms silent sound replaces waits and renders presses as taps.
+MAPPED_AUTOPLAY = 'd 1000\nt 1 1\nd 10\nc 2\nt 2 2\n'
 # Fixed so the before/after rows are comparable by value.
 OPENED_AT_MS = 1_790_000_000_000
 LAUNCH_TIMEOUT_S = 90
@@ -77,7 +83,7 @@ def silent_wav(frames: int = 441) -> bytes:
     return header + data
 
 
-def write_pack(root: Path, title: str) -> None:
+def write_pack(root: Path, title: str, autoplay_backup: str | None = None) -> None:
     """A two-chain 8x8 pack with silent sounds, an LED and an autoplay, readable by 4.x builds."""
     (root / 'sounds').mkdir(parents=True)
     (root / 'keyLED').mkdir()
@@ -87,7 +93,27 @@ def write_pack(root: Path, title: str) -> None:
     (root / 'keySound').write_text(''.join(
         f'{c} {x} {y} silence.wav\n' for c in (1, 2) for x in range(1, 9) for y in range(1, 9)))
     (root / 'keyLED/1 1 1 1').write_text('o 1 1 a 5\nd 100\nf 1 1\n')
-    (root / 'autoPlay').write_text('o 1 1\nd 100\nf 1 1\nc 2\no 2 2\nd 100\nf 2 2\n')
+    for name, content in autoplay_files(autoplay_backup).items():
+        (root / name).write_bytes(content)
+
+
+def autoplay_files(backup: str | None) -> dict[str, bytes]:
+    """The file layout after mapping: a changed autoplay and the untouched original."""
+    if backup is None:
+        return {'autoPlay': ORIGINAL_AUTOPLAY.encode()}
+    return {'autoPlay': MAPPED_AUTOPLAY.encode(), backup: ORIGINAL_AUTOPLAY.encode()}
+
+
+def autoplay_seed_mismatches(files: dict[str, str]) -> list[str]:
+    """Do not accept a baseline whose autoplay or backup was never seeded, or was rewritten."""
+    wrong = []
+    for pack in PACKS:
+        for name, content in autoplay_files(pack.get('autoplay_backup')).items():
+            path = f'{pack["id"]}/{name}'
+            expected = hashlib.sha256(content).hexdigest()
+            if files.get(path) != expected:
+                wrong.append(f'{path}: seeded {expected}, read {files.get(path)}')
+    return wrong
 
 
 def parse_prefs(xml_text: str | None) -> dict[str, tuple[str, object]]:
@@ -366,6 +392,8 @@ class UpgradeRun:
             raise SetupError(f'{name}: the older build changed the seeded rows: {before["db"]["rows"]}')
         if wrong := seed_mismatches(before['prefs'], trace):
             raise SetupError(f'{name}: the older build does not hold the seeded settings: {"; ".join(wrong)}')
+        if wrong := autoplay_seed_mismatches(before['files']):
+            raise SetupError(f'{name}: the older build does not hold the seeded autoplay files: {"; ".join(wrong)}')
         if missing := {p['title'] for p in PACKS} - set(before['titles']):
             raise SetupError(f'{name}: the older build does not list the packs {sorted(missing)}; see before/screen.xml')
         if events := self.events(started):
@@ -409,7 +437,7 @@ class UpgradeRun:
         """Adds the packs and waits until the older build has made a row for each."""
         with tempfile.TemporaryDirectory() as tmp:
             for pack in PACKS:
-                write_pack(Path(tmp) / pack['id'], pack['title'])
+                write_pack(Path(tmp) / pack['id'], pack['title'], pack.get('autoplay_backup'))
                 self.d.put(Path(tmp) / pack['id'], f'{self.packs_dir}/{pack["id"]}', owner_of=self.packs_dir)
         self.stop()
         self.launch()
