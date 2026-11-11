@@ -33,6 +33,8 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
     @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() {
         val prefs = PreferenceManager(screen.context)
         val originalTheme = prefs.selectedTheme
+        val originalWatermark = prefs.watermark
+        prefs.watermark = false
         val originalSize = overrideValue(screen.device.executeShellCommand("wm size"))
         val originalDensity = overrideValue(screen.device.executeShellCommand("wm density"))
         val themeDir = File(screen.context.getExternalFilesDir(null), "themes/logo-led-example")
@@ -82,7 +84,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 command(0, 5)
                 restoreColor = true
                 val metrics = screen.onMain { screen.resumed().resources.displayMetrics }
-                println("Logo evidence: $name ${metrics.widthPixels}x${metrics.heightPixels}, densityDpi=${metrics.densityDpi}, widthDp=${screen.onMain { screen.resumed().resources.configuration.screenWidthDp }}, theme=${prefs.selectedTheme}, pack=${pack.name}, commands=o l a 5; o l a 45; f l, emulator display override")
+                println("Logo evidence: $name ${metrics.widthPixels}x${metrics.heightPixels}, densityDpi=${metrics.densityDpi}, widthDp=${screen.onMain { screen.resumed().resources.configuration.screenWidthDp }}, theme=${prefs.selectedTheme}, pack=${pack.name}, commands=o l a 5; o l a 45; f l, emulator display override, watermark=false")
             }
             command(0, 5)
             screen.onMain { screen.vm().scbHideUI.setChecked(true) }
@@ -170,6 +172,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             noLogoPack.close()
         } finally {
             prefs.selectedTheme = originalTheme
+            prefs.watermark = originalWatermark
             themeDir.deleteRecursively()
             noLogoFolder.deleteRecursively()
             screen.repo.delete(noLogoFolder.name)

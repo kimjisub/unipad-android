@@ -198,6 +198,7 @@ full-theme.zip
 ├── phantom.png
 ├── phantom_.png
 ├── custom_logo.png
+├── logo_led.png
 └── chainled.png
 ```
 
