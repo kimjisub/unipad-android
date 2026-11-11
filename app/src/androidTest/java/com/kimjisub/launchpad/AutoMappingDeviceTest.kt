@@ -31,23 +31,6 @@ class AutoMappingDeviceTest : BaseUITest() {
         openPlayOptions()
     }
 
-    /**
-     * Mapping reads each sound file's length once, so presses of one file finish at once. Pad 1 1
-     * of chain 1 cycles through [SOUND_FILES] silent copies instead, each needing its own media
-     * read; the mapping is still reading when the test leaves the app.
-     */
-    private fun cycleFirstPadThroughSoundFiles() {
-        val root = TestUniPack.folder(context)
-        val silence = File(root, "sounds/silence.wav")
-        val keySound = File(root, "keySound")
-        val others = keySound.readLines().filter { it != "1 1 1 silence.wav" }
-        val firstPad = (0 until SOUND_FILES).map { i ->
-            silence.copyTo(File(root, "sounds/silence_$i.wav"), overwrite = true)
-            "1 1 1 silence_$i.wav"
-        }
-        keySound.writeText((firstPad + others).joinToString("\n", postfix = "\n"))
-    }
-
     private fun clickRow(label: String) {
         val selector = By.text(label)
         val row = device.wait(Until.findObject(selector), 2000L)
@@ -93,7 +76,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(3000)
         file.writeText(input)
-        cycleFirstPadThroughSoundFiles()
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
@@ -153,7 +137,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(1000)
         file.writeText(input)
-        cycleFirstPadThroughSoundFiles()
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
