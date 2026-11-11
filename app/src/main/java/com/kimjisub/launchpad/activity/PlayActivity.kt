@@ -716,7 +716,7 @@ class PlayActivity : BaseActivity() {
 									bitmap = logoLedBitmap,
 									contentDescription = null,
 									contentScale = ContentScale.Fit,
-									colorFilter = ColorFilter.tint(Color(if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else 0xFF222222.toInt())),
+									colorFilter = ColorFilter.tint(Color(if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else LOGO_LED_OFF_COLOR)),
 									modifier = Modifier.testTag("play_logo_led").semantics { testTagsAsResourceId = true },
 								)
 							} else {
@@ -1615,3 +1615,5 @@ private val LOGO_MIN_WIDTH = 24.dp
 
 /** Auto Mapping row colours, each kept readable on the option panel. */
 private data class AutoMappingColors(val label: Color, val arrow: Color, val progress: Color)
+
+private val LOGO_LED_OFF_COLOR = 0xFF333333.toInt()

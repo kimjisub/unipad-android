@@ -28,7 +28,7 @@ import java.util.zip.ZipOutputStream
 @RunWith(AndroidJUnit4::class)
 class LogoLedEvidenceTest : PlaybackScreenTest() {
     private val logo = By.res("play_logo_led")
-    private val off = 0xFF222222.toInt()
+    private val off = 0xFF333333.toInt()
 
     @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() {
         val prefs = PreferenceManager(screen.context)
@@ -44,7 +44,8 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
         File(pack, "keyLED").listFiles().orEmpty().forEach { it.delete() }
         File(pack, "keyLED/1 1 1 1").writeText("o l a 5\nd 60000\n")
         File(pack, "keyLED/1 1 2 1").writeText("o l a 45\nd 60000\n")
-        File(pack, "keyLED/1 1 3 1").writeText("f l\n")
+        // An animation can turn off only LEDs it owns; acquire the logo before releasing it.
+        File(pack, "keyLED/1 1 3 1").writeText("o l a 45\nf l\n")
         File(pack, "keyLED/1 1 4 1").writeText("o mc 8 a 5\nd 60000\n")
         try {
             prefs.watermark = false
