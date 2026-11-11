@@ -55,6 +55,7 @@ class LogoLedScreenTest : PlaybackScreenTest() {
                 screen.onMain {
                     screen.resumed().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     screen.vm().scbProLightMode.setChecked(true)
+                    screen.vm().autoPlayControlVisible = autoplay
                 }
                 screen.await("Portrait display did not settle") {
                     screen.onMain { screen.resumed().resources.configuration.screenWidthDp <= 360 &&
@@ -64,6 +65,13 @@ class LogoLedScreenTest : PlaybackScreenTest() {
                 screen.instrumentation.waitForIdleSync()
                 val logo = screen.node(By.res("play_logo_led")).visibleBounds
                 val menu = screen.node(By.desc(screen.text(R.string.menu))).visibleBounds
+                assertTrue("Transport visibility did not match fixture", screen.has(By.desc(screen.text(R.string.cd_autoplay_next))) == autoplay)
+                if (autoplay) {
+                    for (control in listOf(R.string.cd_autoplay_prev, R.string.cd_autoplay_play, R.string.cd_autoplay_next)) {
+                        val bounds = screen.node(By.desc(screen.text(control))).visibleBounds
+                        if (Rect.intersects(logo, bounds)) overlaps += "logo=$logo covers transport=$bounds"
+                    }
+                }
                 screen.capture("small-pack-logo-autoplay-$autoplay")
                 if (Rect.intersects(logo, menu)) overlaps += "autoplay=$autoplay, logo=$logo, menu=$menu"
                 screen.clickDescription(R.string.menu)
