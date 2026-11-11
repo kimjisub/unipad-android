@@ -10,6 +10,7 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.drawable
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.tool.ZipThemeImporter
 
 /**
  * 기본 테마: 앱 자체 리소스를 직접 사용 (PackageManager 불필요)
@@ -70,13 +71,14 @@ fun IThemeResources.applyTraceLogTextStyle(pad: PadView) {
 }
 
 fun loadTheme(context: Context, themeId: String, fullLoad: Boolean = false): IThemeResources {
+	val resolvedId = resolveBundledThemeId(themeId) { ZipThemeImporter.isBundled(context, it) }
 	return when {
-		themeId.startsWith("asset://") -> {
-			val themeName = themeId.removePrefix("asset://")
+		resolvedId.startsWith("asset://") -> {
+			val themeName = resolvedId.removePrefix("asset://")
 			AssetThemeResources(context, "themes/$themeName", fullLoad)
 		}
-		themeId.startsWith("zip://") -> {
-			val folderName = themeId.removePrefix("zip://")
+		resolvedId.startsWith("zip://") -> {
+			val folderName = resolvedId.removePrefix("zip://")
 			val themesDir = context.getExternalFilesDir(null)?.let { java.io.File(it, "themes/$folderName") }
 				?: throw java.io.FileNotFoundException("External files dir not available")
 			ZipThemeResources(context, themesDir, fullLoad)
