@@ -57,8 +57,12 @@ LOADING_CASE = case('nextSoundAfterLoadingIsHeard', [0], [6], 'loading', alterna
 CASE_BY_NAME = {c['name']:c for c in [*CASES, LOADING_CASE]}
 # Observed stream timestamp jitter is up to 36 ms in either direction.
 PACKET_UNCERTAINTY_S = .036
-# Stream time a case window may hold without samples; the recorder's own break tolerance.
-MAX_STREAM_SHORTFALL_S = .1
+# Recorded passing Android 14 windows retain >=84.35%; Android 11 retains ~82.6%
+# and joins a one-second sound into 0.8 s. Require 84% for both sound and silence:
+# missing output can hide unexpected sound just as it can damage expected sound.
+MIN_STREAM_DELIVERED_RATIO = .84
+# Preserve the existing sanity check for timestamps advancing too little.
+MAX_STREAM_EXCESS_S = .1
 
 
 
@@ -160,7 +164,8 @@ def stream_shortfall(log: dict, start: int, end: int) -> dict:
     stream = (inside[-1]['timestamp_us']-inside[0]['timestamp_us'])/1_000_000
     delivered = sum(p['frames'] for p in inside[1:])/log['sample_rate']
     return {'stream_seconds':round(stream,6),'delivered_seconds':round(delivered,6),
-            'missing_seconds':round(stream-delivered,6)}
+            'missing_seconds':round(stream-delivered,6),
+            'delivered_ratio':delivered/stream}
 
 
 def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
@@ -179,7 +184,14 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
             raise ValueError('packet timeline does not cover the entire recording')
         start, frames = round(pressed-.75*rate), 4*rate
         if released < pressed or start < round(.2*rate) or start+frames > reader.getnframes():
-            raise ValueError('four-second case baseline/postroll is outside recorded PCM')
+            reason = 'four-second case baseline/postroll is outside recorded PCM'
+            if len(log['packets']) >= 2:
+                whole = stream_shortfall(log,0,reader.getnframes())
+                if whole['delivered_ratio'] < MIN_STREAM_DELIVERED_RATIO:
+                    reason += (f"; emulator sent fewer samples than stream time, shortening the recording "
+                               f"({whole['delivered_seconds']:.3f} s over {whole['stream_seconds']:.3f} s, "
+                               f"delivered ratio {whole['delivered_ratio']:.3f} < {MIN_STREAM_DELIVERED_RATIO:.2f})")
+            raise ValueError(reason)
         gaps = overlapping_gaps(log,start,start+frames)
         stream = stream_shortfall(log,start,start+frames)
         reader.setpos(start)
@@ -193,9 +205,12 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
               'input_uncertainty_s':(latest_press-pressed)/rate}
     if gaps:
         result['environment_error'] = 'managed recorder inserted silence inside this case window'
-    elif abs(stream['missing_seconds']) > MAX_STREAM_SHORTFALL_S:
+    elif (stream['delivered_ratio'] < MIN_STREAM_DELIVERED_RATIO or
+          stream['missing_seconds'] < -MAX_STREAM_EXCESS_S):
         result['environment_error'] = (f"emulator streamed {stream['delivered_seconds']:.3f} s of samples over "
                                        f"{stream['stream_seconds']:.3f} s of its stream time in this case window; "
+                                       f"delivered ratio {stream['delivered_ratio']:.3f} "
+                                       f"(minimum {MIN_STREAM_DELIVERED_RATIO:.2f}); "
                                        'the output it did not stream cannot be judged')
     return result
 
