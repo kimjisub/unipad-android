@@ -26,19 +26,26 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
         val elapsed = screen.onMain {
             val started = SystemClock.elapsedRealtime()
             vm.padTouch(0, 0, true)
+            // Main also delivers the delayed move. Keeping these calls in one Main turn
+            // proves the control precedes delivery even when rendering takes over 100 ms.
+            assertEquals("The manual move must still be pending before the control", 0, vm.chain.value)
             control()
             SystemClock.elapsedRealtime() - started
         }
         try {
-            SystemClock.sleep(300)
-            val chain = screen.onMain { vm.chain.value }
-            screen.capture(name)
-            assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") {
-                it.writeText("control_elapsed_ms=$elapsed\nfinal_chain=$chain\nsound_requests=${audio.plays.size}\n")
-                true
-            })
-            assertTrue("The control must run within the pad move's 100 ms", elapsed < 100)
-            assertEquals("A playback control must preserve the manual pad's chain move", 1, chain)
+            try {
+                screen.await({ "The manual chain move did not arrive after the control: ${screen.onMain { vm.chain.value }}" }) {
+                    screen.onMain { vm.chain.value == 1 }
+                }
+            } finally {
+                val chain = screen.onMain { vm.chain.value }
+                screen.capture(name)
+                assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") {
+                    it.writeText("control_elapsed_ms=$elapsed\nfinal_chain=$chain\nsound_requests=${audio.plays.size}\n")
+                    true
+                })
+            }
+            assertEquals("A playback control must preserve the manual pad's chain move", 1, screen.onMain { vm.chain.value })
         } finally {
             screen.onMain {
                 vm.padTouch(0, 0, false)
