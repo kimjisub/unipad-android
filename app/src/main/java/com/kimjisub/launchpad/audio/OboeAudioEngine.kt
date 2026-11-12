@@ -89,6 +89,7 @@ object OboeAudioEngine {
 			source = openAudioPacketSource(file) ?: return null
 			val format = source.format
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
+			val codecConfig = format.getByteBuffer("csd-0")?.duplicate()
 			var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 			var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
 			var channelMask = if (format.containsKey(MediaFormat.KEY_CHANNEL_MASK)) format.getInteger(MediaFormat.KEY_CHANNEL_MASK) else 0
@@ -186,6 +187,8 @@ object OboeAudioEngine {
 			if (numFrames <= 0) return null
 			val speakers = if (decoderEmitsVorbisOrder(mime, codec.name, channels)) {
 				vorbisOrderToChannelMask(pcm, channels, totalSamples)
+			} else if (decoderEmitsLegacyQuadAacOrder(mime, codec.name, channels, android.os.Build.VERSION.SDK_INT, codecConfig)) {
+				legacyQuadAacOrderToChannelMask(pcm, totalSamples)
 			} else decoderChannelMask(channels, channelMask)
 			return DecodedAudio(stereoPcm(pcm, channels, speakers, totalSamples),
 				numFrames, minOf(channels, 2), sampleRate)
