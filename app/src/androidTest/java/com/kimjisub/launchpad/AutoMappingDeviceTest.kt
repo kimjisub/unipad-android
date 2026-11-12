@@ -13,6 +13,7 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -259,6 +260,14 @@ class AutoMappingDeviceTest : BaseUITest() {
         clickRow(str(R.string.autoMapping))
         assertTrue("Mapping confirmation missing", device.wait(Until.hasObject(By.text(confirmation)), 5000L))
         clickRow(str(R.string.cancel))
+        // Mapping changes the file only seconds after it starts. The question leaves once the app has
+        // handled the tap, and mapping started by it would be running or already saved by then.
+        assertTrue("Cancel did not close the confirmation", device.wait(Until.gone(By.text(confirmation)), 5000L))
+        val screen = FeatureScreen()
+        screen.onMain {
+            val vm = screen.vm()
+            assertFalse("Cancel started mapping", vm.autoMappingActive || vm.autoPlayBackupAvailable)
+        }
         assertEquals(original, File(TestUniPack.folder(context), "autoPlay").readText())
         assertTrue("No-backup explanation missing", device.wait(Until.hasObject(By.text("No saved backup")), 5000L))
         assertTrue("Restore must be disabled", !menuRow(restoreLabel).isEnabled)

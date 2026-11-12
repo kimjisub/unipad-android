@@ -2,12 +2,15 @@ package com.kimjisub.launchpad
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.PlayAppUpdateSource
 import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import org.junit.After
@@ -19,6 +22,7 @@ import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * The pack list's new-version notice against Play's own fake update manager, through the real
@@ -223,9 +227,35 @@ class AppUpdateNoticeTest : BaseUITest() {
 		val bounds = findTestPackRow().visibleBounds
 		device.click(bounds.left + (50 * context.resources.displayMetrics.density).toInt(), bounds.centerY())
 		assertTrue("Play screen did not open", waitForPlayScreen())
-		tapPad(0, 0)
-		assertTrue("first pad touch left the play screen", isOnPlayScreen())
+		assertPadTapKeepsPlayScreen()
 		takeScreenshot("update_play_first_pad")
+	}
+
+	/**
+	 * The play screen is still on screen for a while after the app starts leaving it, so reading it
+	 * straight after the first pad tap passes either way. The tap is followed by input only a play
+	 * screen in front can take, opening and closing its option panel, and PlayActivity must stay
+	 * resumed from the tap until the panel has closed.
+	 */
+	private fun assertPadTapKeepsPlayScreen() {
+		val play = onMain {
+			ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+				.filterIsInstance<PlayActivity>().single()
+		}
+		val stagesAfterTap = CopyOnWriteArrayList<Stage>()
+		withLifecycleCallback({ activity, stage -> if (activity === play) stagesAfterTap += stage }) {
+			tapPad(0, 0)
+			try {
+				openPlayOptions()
+				closePlayOptions()
+			} catch (e: AssertionError) {
+				if (stagesAfterTap.isEmpty()) throw e
+				throw AssertionError("first pad touch left the play screen: $stagesAfterTap", e)
+			}
+		}
+		assertEquals("first pad touch left the play screen", emptyList<Stage>(), stagesAfterTap.toList())
+		assertFalse("first pad touch finished the play screen", onMain { play.isFinishing })
+		assertTrue("first pad touch left the play screen", isOnPlayScreen())
 	}
 
 	private fun reachInstallFailure() {
