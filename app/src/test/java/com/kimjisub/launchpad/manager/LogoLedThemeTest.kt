@@ -3,7 +3,9 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.R
@@ -14,6 +16,7 @@ import io.mockk.verify
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,6 +42,7 @@ class LogoLedThemeTest {
         every { resources.getString(any()) } returns "Test"
         every { ResourcesCompat.getDrawable(resources, any(), null) } returns mockk<Drawable>()
         every { ResourcesCompat.getDrawable(resources, R.drawable.logo_led, null) } returns fallback
+        every { ResourcesCompat.getDrawable(resources, R.drawable.btn, null) } returns pad(0xFF2A3A52.toInt())
         every { ResourcesCompat.getColor(resources, any(), null) } returns 0
         every { BitmapFactory.decodeStream(any()) } returns null
         every { BitmapFactory.decodeFile(any()) } returns null
@@ -80,6 +84,26 @@ class LogoLedThemeTest {
         verify(exactly = 1) { BitmapFactory.decodeFile(png.absolutePath) }
         verify(exactly = 0) { BitmapFactory.decodeFile(webp.absolutePath) }
         verify(exactly = 0) { BitmapFactory.decodeStream(any()) }
+    }
+    @Test fun missingOrUnreadablePadUsesDefaultPadColorInEveryProvider() {
+        val folder = zipTheme()
+        File(folder, "btn.png").writeText("damaged")
+        val themes = listOf(DefaultThemeResources(context, true), AssetThemeResources(context, "themes/test", true), ZipThemeResources(context, folder, true))
+        themes.forEach { assertEquals(0xFF2A3A52.toInt(), it.logoLedOffColor) }
+        assertEquals(0xFF2A3A52.toInt(), loadPadOffColor(context, null))
+    }
+    @Test fun transparentPadFallsBackButSolidPadKeepsItsColor() {
+        assertEquals(0xFF2A3A52.toInt(), loadPadOffColor(context, pad(0x00FFFFFF)))
+        assertEquals(0xFF787878.toInt(), loadPadOffColor(context, pad(0xFF787878.toInt())))
+    }
+    private fun pad(color: Int): Drawable {
+        val bitmap = mockk<Bitmap>()
+        every { bitmap.width } returns 1
+        every { bitmap.height } returns 1
+        every { bitmap.getPixels(any(), any(), any(), any(), any(), any(), any()) } answers {
+            firstArg<IntArray>()[0] = color
+        }
+        return mockk<BitmapDrawable>().also { every { it.bitmap } returns bitmap }
     }
     private fun zipTheme(): File = temporary.newFolder().also {
         File(it, "theme.json").writeText(metadata)
