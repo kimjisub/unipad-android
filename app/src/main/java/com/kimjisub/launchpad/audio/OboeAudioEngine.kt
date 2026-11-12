@@ -81,11 +81,17 @@ object OboeAudioEngine {
 	/** A decode given up because its caller asked it to stop; the file itself may be fine. */
 	class DecodeInterruptedException : Exception("Decode interrupted")
 
-	private fun decodeAudioFile(file: File, interrupted: () -> Boolean): DecodedAudio? {
+	internal fun decodeObservingPcm(file: File, onAllocation: (Int, Int) -> Unit): DecodedAudio? =
+		decodeAudioFile(file, { false }, onAllocation)
+
+	private fun decodeAudioFile(file: File, interrupted: () -> Boolean,
+		onAllocation: ((Int, Int) -> Unit)? = null): DecodedAudio? {
 		// Opening the file is already a call into the media service.
 		if (interrupted()) throw DecodeInterruptedException()
 		var source: AudioPacketSource? = null
 		try {
+			val decodeInspection = AudioFileInspector.inspectForDecode(file)
+			if (interrupted()) throw DecodeInterruptedException()
 			source = openAudioPacketSource(file) ?: return null
 			val format = source.format
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
@@ -96,9 +102,6 @@ object OboeAudioEngine {
 			// asShortBuffer() would read as noise.
 			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
 
-			// Displayed duration is untrusted. Start small and grow from actual decoder output.
-			// The shared structural inspection has already decided which files may be decoded.
-
 			if (interrupted()) throw DecodeInterruptedException()
 			val codec = MediaCodec.createDecoderByType(mime)
 			try {
@@ -106,8 +109,7 @@ object OboeAudioEngine {
 			codec.start()
 
 			// Single growing array instead of chunk list
-			var pcm = ShortArray(16_384)
-			var totalSamples = 0
+			var pcmBuffer: PcmBuffer? = null
 			val bufferInfo = MediaCodec.BufferInfo()
 			var inputDone = false
 			var outputDone = false
@@ -161,17 +163,11 @@ object OboeAudioEngine {
 						outputBuffer.position(bufferInfo.offset)
 						outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
 						val shortBuf = outputBuffer.asShortBuffer()
-						val numShorts = bufferInfo.size / 2
-
-						// Grow array if needed
-						val needed = totalSamples.toLong() + numShorts
-						if (needed > Int.MAX_VALUE - 8L) throw OutOfMemoryError("Decoded PCM exceeds array capacity")
-						if (needed > pcm.size) {
-							val capacity = maxOf(pcm.size.toLong() * 2, needed).coerceAtMost(Int.MAX_VALUE - 8L)
-							pcm = pcm.copyOf(capacity.toInt())
-						}
-						shortBuf.get(pcm, totalSamples, numShorts)
-						totalSamples += numShorts
+						// Wait for real PCM and the decoder's output layout before allocating.
+						val buffer = pcmBuffer ?: PcmBuffer(
+							initialPcmCapacity(sampleRate, channels, decodeInspection.inspection, decodeInspection.fullPacketFrames), onAllocation,
+						).also { pcmBuffer = it }
+						buffer.append(shortBuf)
 					}
 
 					codec.releaseOutputBuffer(outputIndex, false)
@@ -180,7 +176,9 @@ object OboeAudioEngine {
 
 			codec.stop()
 
-			if (totalSamples == 0) return null
+			val buffer = pcmBuffer ?: return null
+			val totalSamples = buffer.sampleCount
+			val pcm = buffer.pcm ?: return null
 
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null
