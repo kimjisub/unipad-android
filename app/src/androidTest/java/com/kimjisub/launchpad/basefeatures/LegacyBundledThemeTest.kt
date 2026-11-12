@@ -7,6 +7,7 @@ import androidx.test.uiautomator.By
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.ThemeActivity
+import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.loadTheme
 import org.junit.Assert.*
@@ -26,9 +27,13 @@ class LegacyBundledThemeTest : PlaybackScreenTest() {
             prefs.selectedTheme = "zip://sskin"
             val expected = loadTheme(screen.context, "asset://sskin", fullLoad = true)
             screen.launch(ThemeActivity::class.java).use {
-                screen.node(By.text(expected.name)).click()
-                assertFalse("The saved bundled skin was not shown as selected",
-                    screen.device.hasObject(By.text(screen.text(R.string.apply))))
+                // Neither the default skin, which an unresolved selection falls back to, nor the expected one.
+                val other = ThemeTool.getThemePackList(screen.context)
+                    .first { it.id != "asset://sskin" && it.id != screen.context.packageName }
+                screen.assertAppliedSkinOffersNoApply(
+                    applied = expected.name, other = other.name,
+                    message = "The saved bundled skin was not shown as selected",
+                )
                 screen.capture("legacy-bundled-theme-selected")
             }
             screen.openPlay()
