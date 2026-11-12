@@ -149,14 +149,16 @@ class PerformanceChoicesTest : PlaybackScreenTest() {
             assertEquals("Opening trace controls must not shrink the pads", padBounds, screen.padBounds())
             screen.capture("trace-menu-before-clear")
             assertTrue("A separate clear action must be discoverable", screen.device.hasObject(By.text(screen.text(R.string.trace_clear_all))))
+            // A click returns once its touch is injected, not once the app has handled it: a busy main
+            // thread handles the release later. Each choice is checked once the app has applied it.
             screen.click(By.text(screen.text(R.string.trace_lines)))
-            assertFalse(prefs.traceLogClassic)
+            screen.await("Lines and dots was not saved") { !prefs.traceLogClassic }
             screen.click(By.text(screen.text(R.string.trace_numbers)))
-            assertTrue(prefs.traceLogClassic)
+            screen.await("Numbers was not saved") { prefs.traceLogClassic }
             assertEquals(listOf(0 to 0, 0 to 1, 0 to 0), screen.onMain { vm.traceLogSequence[0].toList() })
             assertEquals(listOf(0 to 2), screen.onMain { vm.traceLogSequence[1].toList() })
             screen.click(By.text(screen.text(R.string.trace_clear_all)))
-            assertTrue(screen.onMain { vm.traceLogSequence.all { it.isEmpty() } })
+            screen.await("Clear did not remove traces while recording was on") { screen.onMain { vm.traceLogSequence.all { it.isEmpty() } } }
             assertTrue("Clear must preserve recording on", screen.onMain { vm.scbTraceLog.checked })
             screen.device.pressBack()
             screen.await("Options did not close") { !screen.has(By.res("play_options")) }
