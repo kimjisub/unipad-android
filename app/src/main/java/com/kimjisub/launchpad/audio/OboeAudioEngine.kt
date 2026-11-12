@@ -90,7 +90,7 @@ object OboeAudioEngine {
 		if (interrupted()) throw DecodeInterruptedException()
 		var source: AudioPacketSource? = null
 		try {
-			val inspection = AudioFileInspector.inspect(file)
+			val decodeInspection = AudioFileInspector.inspectForDecode(file)
 			if (interrupted()) throw DecodeInterruptedException()
 			source = openAudioPacketSource(file) ?: return null
 			val format = source.format
@@ -101,7 +101,6 @@ object OboeAudioEngine {
 			// Ask for 16-bit PCM explicitly; FLAC/WAV tracks can otherwise decode to float, which
 			// asShortBuffer() would read as noise.
 			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
-
 
 			if (interrupted()) throw DecodeInterruptedException()
 			val codec = MediaCodec.createDecoderByType(mime)
@@ -166,7 +165,7 @@ object OboeAudioEngine {
 						val shortBuf = outputBuffer.asShortBuffer()
 						// Wait for real PCM and the decoder's output layout before allocating.
 						val buffer = pcmBuffer ?: PcmBuffer(
-							initialPcmCapacity(sampleRate, channels, inspection), onAllocation,
+							initialPcmCapacity(sampleRate, channels, decodeInspection.inspection, decodeInspection.fullPacketFrames), onAllocation,
 						).also { pcmBuffer = it }
 						buffer.append(shortBuf)
 					}
@@ -180,7 +179,6 @@ object OboeAudioEngine {
 			val buffer = pcmBuffer ?: return null
 			val totalSamples = buffer.sampleCount
 			val pcm = buffer.pcm ?: return null
-			if (totalSamples == 0) return null
 
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null

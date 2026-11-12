@@ -1,10 +1,32 @@
 package com.kimjisub.launchpad.audio
 
 import java.nio.ShortBuffer
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.Assert.*
 import org.junit.Test
 
 class PcmCapacityTest {
+    @get:Rule val temporary = TemporaryFolder()
+
+    @Test fun aacInspectionKeepsAdmissionAndReservesTheWholeFinalPacket() {
+        val file = temporary.newFile()
+        javaClass.getResourceAsStream("/audio-safety/tone.m4a")!!.use { input -> file.outputStream().use(input::copyTo) }
+        val result = AudioFileInspector.inspectForDecode(file)
+        assertEquals(AudioFileInspector.inspect(file), result.inspection)
+        assertEquals(14_254L, (result.inspection as AudioInspection.Readable).facts.frames)
+        assertEquals(14_336L, result.fullPacketFrames)
+    }
+
+    @Test fun untrimmedAacOutputFitsWithoutGrowingACopy() {
+        val inspection = AudioInspection.Readable(AudioFileFacts(44_100, 1, 14_254, "m4a"))
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val buffer = PcmBuffer(initialPcmCapacity(44_100, 1, inspection, 14_336)) { old, new -> allocations += old to new }
+        append(buffer, 14_336, 1_024)
+        assertEquals(listOf(0 to 14_336), allocations)
+        assertEquals(14_336, buffer.sampleCount)
+    }
+
     @Test fun longStereoSoundNeedsOnlyOneExactlySizedArray() {
         assertEquals(22_020_096, capacity(11_010_048))
     }
@@ -19,8 +41,18 @@ class PcmCapacityTest {
         assertEquals(16_384, capacity(600L * 384_000, 384_000, 8))
     }
 
-    @Test fun knownPhysicalLengthDoesNotNeedAnAdvertisedDuration() {
-        assertEquals(88_200, capacity(44_100))
+    @Test fun nonAacTracksKeepTheExistingReservation() {
+        val file = temporary.newFile()
+        javaClass.getResourceAsStream("/audio-safety/libopus-48000-1.m4a")!!.use { input -> file.outputStream().use(input::copyTo) }
+        val result = AudioFileInspector.inspectForDecode(file)
+        assertEquals(AudioFileInspector.inspect(file), result.inspection)
+        assertNull(result.fullPacketFrames)
+        assertEquals(96_960, initialPcmCapacity(48_000, 1, result.inspection, result.fullPacketFrames))
+    }
+
+    @Test fun wholePacketBoundCannotBypassTheSingleSoundBudget() {
+        val inspection = AudioInspection.Readable(AudioFileFacts(44_100, 1, 14_254, "m4a"))
+        assertEquals(16_384, initialPcmCapacity(44_100, 1, inspection, Long.MAX_VALUE))
     }
 
     @Test fun unavailableOrEmptyPhysicalLengthKeepsSmallFallback() {

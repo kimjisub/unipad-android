@@ -83,6 +83,29 @@ class AudioFormatDecodeDeviceTest {
     }
 
     @Test
+    fun aacReservesWholePacketsOnOldAndNewDecoders() {
+        val fixtures = listOf(
+            Triple("audio-formats/tone.m4a", 14_336, 16_384),
+            Triple("audio-output/aac.m4a", 98_304, 196_608),
+            Triple("audio-multichannel/quad.m4a", 360_448, 786_432),
+            Triple("audio-multichannel/surround.m4a", 804_864, 1_572_864),
+        )
+        for ((index, fixture) in fixtures.withIndex()) {
+            val (asset, capacity, legacyPeak) = fixture
+            val file = dir.newFile("aac-$index.m4a")
+            instrumentation.context.assets.open(asset).use { input -> file.outputStream().use(input::copyTo) }
+            val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+            val allocations = mutableListOf<Pair<Int, Int>>()
+            val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+                ?: throw AssertionError("$asset did not decode")
+            assertEquals(asset, listOf(0 to capacity), allocations)
+            assertTrue(asset, decoded.numFrames.toLong() * facts.channels <= capacity)
+            val peak = if (facts.channels > 2) capacity + decoded.pcm.size else capacity
+            assertTrue("$asset PCM peak $peak exceeds $legacyPeak", peak <= legacyPeak)
+        }
+    }
+
+    @Test
     fun decodesMp3() = assertTone("tone.mp3")
 
     @Test
