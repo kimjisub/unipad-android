@@ -1,6 +1,7 @@
-"""Check resolved Maven release dependencies against OSV, without extra packages."""
+"""Check resolved Maven release dependencies against OSV and security version floors."""
 import argparse
 import json
+import re
 from pathlib import Path
 import sys
 import time
@@ -81,6 +82,21 @@ def audit(dependencies, query=query_osv):
     return findings
 
 
+def check_minimum_versions(dependencies):
+    # OSV does not list OkHttp's compromised intermediate certificate blocklist.
+    # Inspect release versions so test-only okhttp-tls cannot mask a downgrade.
+    violations = []
+    for dependency in dependencies:
+        if dependency['name'] != 'com.squareup.okhttp3:okhttp':
+            continue
+        version = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', dependency['version'])
+        if version is None or tuple(map(int, version.groups())) < (5, 5, 1):
+            violations.append(dict(
+                dependency, minimum='5.5.1',
+                reason='Requires compromised intermediate certificate blocking'))
+    return violations
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dependencies', type=Path, default=Path('build/security/release-dependencies.json'))
@@ -88,14 +104,20 @@ def main():
     args = parser.parse_args()
     try:
         dependencies = read_dependencies(args.dependencies)
+        policy_violations = check_minimum_versions(dependencies)
         findings = audit(dependencies)
-        report = {'status': 'vulnerable' if findings else 'clean',
-                  'dependencies': dependencies, 'findings': findings}
+        report = {'status': 'vulnerable' if findings or policy_violations else 'clean',
+                  'dependencies': dependencies, 'findings': findings,
+                  'policy_violations': policy_violations}
+        for violation in policy_violations:
+            print(f'{violation["name"]}:{violation["version"]}: requires a stable version '
+                  f'>= {violation["minimum"]}: {violation["reason"]}')
         for finding in findings:
             print(f'{finding["name"]}:{finding["version"]}: https://osv.dev/vulnerability/{finding["id"]}')
         print(f'Checked {len(dependencies)} resolved Maven release dependencies; '
-              f'{len(findings)} vulnerability matches')
-        code = 1 if findings else 0
+              f'{len(findings)} vulnerability matches; '
+              f'{len(policy_violations)} security version violations')
+        code = 1 if findings or policy_violations else 0
     except (OSError, ValueError, urllib.error.URLError) as error:
         report = {'status': 'error', 'error': str(error)}
         print(f'Dependency audit failed: {error}', file=sys.stderr)
