@@ -40,6 +40,72 @@ class AudioFormatDecodeDeviceTest {
     fun decodesPcmWav() = assertTone("tone.wav")
 
     @Test
+    fun pcmWavUsesAnExactlySizedArray() {
+        val file = File(dir.root, "tone.wav")
+        val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+        val decoded = OboeAudioEngine.decodeOnly(file) ?: throw AssertionError("WAV did not decode")
+        assertEquals((facts.frames * facts.channels).toInt(), decoded.pcm.size)
+        assertEquals(facts.frames.toInt(), decoded.numFrames)
+    }
+
+    @Test
+    fun mp3UsesPhysicalCapacityForAllSpellings() {
+        for (name in listOf("tone.mp3", "mp3-named.wav", "mp3-id3-named.wav")) {
+            val file = File(dir.root, name)
+            val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+            val allocations = mutableListOf<Pair<Int, Int>>()
+            val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+                ?: throw AssertionError("$name did not decode")
+            val physical = (facts.frames * facts.channels).toInt()
+            assertEquals(name, listOf(0 to physical), allocations)
+            assertEquals(name, physical, decoded.pcm.size)
+            assertTrue(name, decoded.numFrames * decoded.channels <= physical)
+        }
+    }
+
+    @Test
+    fun opusDoesNotExceedLegacyPcmPeak() {
+        val file = dir.newFile("surround.opus")
+        instrumentation.context.assets.open("audio-multichannel/surround.opus").use { input ->
+            file.outputStream().use(input::copyTo)
+        }
+        val allocations = mutableListOf<Pair<Int, Int>>()
+        val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+            ?: throw AssertionError("Opus did not decode")
+        assertEquals(0 to 16_384, allocations.first())
+        val growthPeak = allocations.maxOf { (old, new) -> old + new }
+        // The raw six-channel array also coexists with the final stereo down-mix.
+        val downmixPeak = allocations.last().second + decoded.pcm.size
+        assertTrue("Opus PCM peak: growth=$growthPeak downmix=$downmixPeak",
+            maxOf(growthPeak, downmixPeak) <= 1_572_864)
+        assertEquals(48_000, decoded.sampleRate)
+        assertEquals(2, decoded.channels)
+    }
+
+    @Test
+    fun aacReservesWholePacketsOnOldAndNewDecoders() {
+        val fixtures = listOf(
+            Triple("audio-formats/tone.m4a", 14_336, 16_384),
+            Triple("audio-output/aac.m4a", 98_304, 196_608),
+            Triple("audio-multichannel/quad.m4a", 360_448, 786_432),
+            Triple("audio-multichannel/surround.m4a", 804_864, 1_572_864),
+        )
+        for ((index, fixture) in fixtures.withIndex()) {
+            val (asset, capacity, legacyPeak) = fixture
+            val file = dir.newFile("aac-$index.m4a")
+            instrumentation.context.assets.open(asset).use { input -> file.outputStream().use(input::copyTo) }
+            val facts = (AudioFileInspector.inspect(file) as AudioInspection.Readable).facts
+            val allocations = mutableListOf<Pair<Int, Int>>()
+            val decoded = OboeAudioEngine.decodeObservingPcm(file) { old, new -> allocations += old to new }
+                ?: throw AssertionError("$asset did not decode")
+            assertEquals(asset, listOf(0 to capacity), allocations)
+            assertTrue(asset, decoded.numFrames.toLong() * facts.channels <= capacity)
+            val peak = if (facts.channels > 2) capacity + decoded.pcm.size else capacity
+            assertTrue("$asset PCM peak $peak exceeds $legacyPeak", peak <= legacyPeak)
+        }
+    }
+
+    @Test
     fun decodesMp3() = assertTone("tone.mp3")
 
     @Test
