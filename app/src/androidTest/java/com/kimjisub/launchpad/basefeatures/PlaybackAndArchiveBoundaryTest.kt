@@ -11,6 +11,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -39,6 +41,12 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
                 }
             } finally {
                 val chain = screen.onMain { vm.chain.value }
+                val drawn = CountDownLatch(1)
+                screen.onMain {
+                    val view = screen.resumed().window.decorView
+                    view.postOnAnimation { view.postOnAnimation { drawn.countDown() } }
+                }
+                assertTrue("The moved chain must reach a rendered frame", drawn.await(10, TimeUnit.SECONDS))
                 screen.capture(name)
                 assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") {
                     it.writeText("control_elapsed_ms=$elapsed\nfinal_chain=$chain\nsound_requests=${audio.plays.size}\n")
