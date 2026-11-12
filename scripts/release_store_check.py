@@ -7,7 +7,8 @@ outside, with the device online:
 
 1. the Store screen lists every pack the Store database lists (count and title/producer pairs);
 2. one pack — by default the smallest file in the list — downloads, and on a first download
-   on Android 13+ the notification permission dialog appears;
+   on Android 13+ the notification permission dialog appears, closes when Allow is pressed and
+   leaves the permission granted;
 3. the pack is then on disk, in the library, and its record starts without history or bookmark.
 
 Every run downloads one pack from the production file host, which adds one to that pack's
@@ -28,6 +29,10 @@ one fails, and a failure there is listed in `cleanup_errors` without changing th
 used only to inspect and prepare the app: root, API level, package flags and notification
 permission state, the app language and analytics property (set and restored), stopping the app
 before launch, the pack folders, and a copy of the app database.
+
+Controls are pressed only once two snapshots in a row show them in the same place: the main
+screen turns to landscape after launch and the permission dialog slides in, and a snapshot taken
+meanwhile reports where a control is mid-move.
 
 Results, screenshots and screen snapshots go to `--out`; `store-check.json` holds the verdict.
 """
@@ -382,6 +387,32 @@ class Screen:
                 raise ScreenTimeout(f"{what} did not appear within {timeout} s (see {name}.png)")
             time.sleep(0.5)
 
+    def settled(self, locate, timeout, what, name):
+        """The node `locate` finds once two snapshots in a row show it in the same place.
+
+        A window sliding in (the system permission dialog does) is reported where it is at that
+        moment, so a press at a node read mid-slide lands beside it once the window comes to rest."""
+        previous = None
+
+        def at_rest(root):
+            nonlocal previous
+            node, last = locate(root), previous
+            previous = node
+            return node if node and last and node.bounds == last.bounds else None
+        return self.wait(at_rest, timeout, f"{what} at rest", name)
+
+    def gone(self, locate, timeout, what, name):
+        """Wait until `locate` finds nothing on the screen."""
+        deadline = time.monotonic() + timeout
+        while True:
+            if locate(self.screen()) is None:
+                return
+            if time.monotonic() >= deadline:
+                self.screen(name)
+                self.capture(name)
+                raise ScreenTimeout(f"{what} was still open {timeout} s after the press (see {name}.png)")
+            time.sleep(0.5)
+
 
 # Shared by the device checks that install a build and play the small test pack ----------------------------
 
@@ -525,8 +556,9 @@ class StoreCheck:
     def open_store(self):
         self.adb.shell("am", "force-stop", self.package)
         self.screen.launch(self.package)
-        entry = self.screen.wait(lambda root: find(root, text=STORE_BUTTON_DESCRIPTION)
-                                 or find(root, text=DOWNLOAD_NEW_PACKS), SCREEN_TIMEOUT, "The main screen's Store entry", "main-screen")
+        # A launch from the portrait home screen turns the screen to landscape after the entry is first drawn.
+        entry = self.screen.settled(lambda root: find(root, text=STORE_BUTTON_DESCRIPTION)
+                                    or find(root, text=DOWNLOAD_NEW_PACKS), SCREEN_TIMEOUT, "The main screen's Store entry", "main-screen")
         self.screen.capture("main-screen")
         self.screen.tap(entry)
 
@@ -586,17 +618,12 @@ class StoreCheck:
 
     def download(self, pack, permission_before):
         self.screen.tap(self.find_row(pack))
-        button = self.screen.wait(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
+        button = self.screen.settled(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
         self.screen.capture("store-detail")
         started = time.monotonic()
         self.screen.tap(button)
         expect_dialog = not permission_before[0] and not permission_before[1]
-        dialog = None
-        if expect_dialog:
-            dialog = self.screen.wait(lambda root: find(root, identifier=PERMISSION_ALLOW), DIALOG_TIMEOUT,
-                                      "The notification permission dialog", "notification-permission")
-            self.screen.capture("notification-permission")
-            self.screen.tap(dialog)
+        dialog = self.allow_notifications() if expect_dialog else None
         state = self.screen.wait(lambda root: (find(root, text=DOWNLOADED) and DOWNLOADED) or (find(root, text=FAILED) and FAILED),
                                  DOWNLOAD_TIMEOUT, "The download result", "download-result")
         seconds = round(time.monotonic() - started, 1)
@@ -604,9 +631,34 @@ class StoreCheck:
         if state == FAILED:
             raise CheckFailed(f"The app showed \"{FAILED}\" for {pack['code']} after {seconds} s")
         self.screen.screen("store-downloaded")
-        self.result["download"] = {"seconds": seconds, "notification_dialog": bool(dialog)}
+        self.result["download"] = {"seconds": seconds, "notification_dialog": dialog}
         self.step("download", f"{DOWNLOADED} after {seconds} s; notification permission dialog "
                               f"{'shown and allowed' if dialog else 'not asked (already answered)'}")
+
+    def allow_notifications(self):
+        """Press Allow on the notification permission dialog once it has come to rest, then require
+        the dialog to close and the permission to be granted; returns where it was read and pressed."""
+        def allow(root):
+            return find(root, identifier=PERMISSION_ALLOW)
+        first = self.screen.wait(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
+        button = self.screen.settled(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
+        self.screen.screen("notification-permission")
+        self.screen.capture("notification-permission")
+        # Kept in the result before the press, so a dialog that stays open still shows where it was read and pressed.
+        dialog = self.result["notification_dialog"] = {
+            "first_seen": list(first.bounds), "pressed_bounds": list(button.bounds), "pressed": list(button.center)}
+        self.screen.tap(button)
+        pressed = time.monotonic()
+        self.screen.gone(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission-open")
+        granted, answered = notification_permission(self.adb.shell("dumpsys", "package", self.package))
+        dialog.update(closed_after=round(time.monotonic() - pressed, 1),
+                      permission_after={"granted": granted, "answered": answered})
+        self.step("notification permission", f"dialog first read at {dialog['first_seen']}, Allow pressed at "
+                                             f"{dialog['pressed']} once at rest, closed after {dialog['closed_after']} s; "
+                                             f"granted={granted} answered={answered}")
+        if not (granted and answered):
+            raise CheckFailed(f"Notification permission is not granted after Allow (granted={granted}, answered={answered})")
+        return dialog
 
     def check_library(self, pack):
         code = pack["code"]
