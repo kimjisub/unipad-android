@@ -38,20 +38,26 @@ class UniPackAutoMapper(
 
 		val result = ArrayList<AutoPlay.Element>()
 		openDurationReader().use { reader ->
+			// Each media read takes tens of milliseconds and packs press the same sound many times,
+			// so a file is read once; an unreadable file is not retried either.
+			val durations = HashMap<File, Int?>()
+			suspend fun durationOf(file: File): Int? {
+				if (file in durations) return durations[file]
+				// Repeated media calls prevent Android from freezing a cached process.
+				// Finish the current read, then wait for the caller before starting another.
+				awaitScreenVisible()
+				return withContext(Dispatchers.IO) {
+					reader.durationMs(file)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt()
+				}.also { durations[file] = it }
+			}
+
 			// null: the sound's length is unknown, so the pack's own wait is kept.
 			var nextDuration: Int? = FIRST_DELAY_MS
 			var waitReplaced = false
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						nextDuration = soundFile(e)?.let { file ->
-							// Repeated media calls prevent Android from freezing a cached process.
-							// Finish the current read, then wait for the caller before starting another.
-							awaitScreenVisible()
-							withContext(Dispatchers.IO) {
-								reader.durationMs(file)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt()
-							}
-						}
+						nextDuration = soundFile(e)?.let { durationOf(it) }
 						waitReplaced = false
 						result.add(e)
 					}

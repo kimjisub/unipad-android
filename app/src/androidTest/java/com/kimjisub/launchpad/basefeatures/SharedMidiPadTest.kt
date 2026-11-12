@@ -22,7 +22,9 @@ class SharedMidiPadTest : HeldPadTest() {
         fun midi(down: Boolean) = screen.onMain { launchpad.driver.getSignal(9, -112, 34, if (down) 127 else 0) }
         val label = InstrumentationRegistry.getArguments().getString("captureLabel") ?: "after"
         val order = if (controllerFirst) "controller-first" else "screen-first"
-        fun capture(stage: String) = screen.capture("shared-midi-$label-$order-$stage")
+        fun capture(stage: String, held: Boolean = true) = screen.capturePads(
+            "shared-midi-$label-$order-$stage", if (held) setOf(pad.x * 8 + pad.y) else emptySet()
+        )
         try {
             val finger = fingers.down(center(pad))
             awaitPlays("Screen press did not play", 1)
@@ -45,7 +47,7 @@ class SharedMidiPadTest : HeldPadTest() {
             screen.await("Last release did not send the controller LED-off packet") {
                 packets.contains(listOf(9, 144, 34, 0))
             }
-            capture("both-released")
+            capture("both-released", held = false)
         } finally {
             fingers.cancelRemaining()
             launchpad.close()

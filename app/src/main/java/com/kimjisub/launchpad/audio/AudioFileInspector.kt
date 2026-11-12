@@ -7,16 +7,26 @@ import java.io.RandomAccessFile
 
 internal val AAC_SAMPLE_RATES = intArrayOf(96_000,88_200,64_000,48_000,44_100,32_000,24_000,22_050,16_000,12_000,11_025,8_000,7_350)
 
+internal data class AudioDecodeInspection(val inspection: AudioInspection, val fullPacketFrames: Long?)
+
 /** Reads physical audio structure, never a player's advertised duration or a file extension. */
 object AudioFileInspector {
-    fun inspect(file: File): AudioInspection = try {
+    fun inspect(file: File): AudioInspection = inspect(file, null)
+
+    internal fun inspectForDecode(file: File): AudioDecodeInspection {
+        var fullPacketFrames: Long? = null
+        val inspection = inspect(file) { fullPacketFrames = it }
+        return AudioDecodeInspection(inspection, fullPacketFrames)
+    }
+
+    private fun inspect(file: File, onFullPacketFrames: ((Long) -> Unit)?): AudioInspection = try {
         AudioData(file).use { input ->
             val facts = when {
                 input.matches(0, "RIFF") -> inspectWave(input)
                 input.matches(0, "OggS") -> inspectOgg(input)
                 input.matches(0, "fLaC") -> inspectFlac(input)
-                input.matches(4, "ftyp") || input.matches(4, "moov") || input.matches(4, "mdat") -> inspectMp4(input)
-                else -> try { inspectMpegOrAdts(input) } catch (_: InvalidAudio) { inspectMp4(input) }
+                input.matches(4, "ftyp") || input.matches(4, "moov") || input.matches(4, "mdat") -> inspectMp4(input, onFullPacketFrames)
+                else -> try { inspectMpegOrAdts(input) } catch (_: InvalidAudio) { inspectMp4(input, onFullPacketFrames) }
             }
             AudioInspection.Readable(facts)
         }

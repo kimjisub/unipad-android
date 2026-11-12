@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack.conformance
 
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonElement
 
 private const val CORPUS_RESOURCE = "/unipack-conformance/corpus.json"
@@ -15,6 +16,7 @@ fun loadCorpus(): Corpus {
 data class Outcome(
 	val status: String, val unexpected: Boolean, val detail: String, val storedInputPaths: List<String>? = null,
 	val operationAdapter: String? = null, val inputAdapter: String? = null,
+	val identityEvidence: JsonObject? = null,
 )
 
 fun classify(c: CorpusCase, actual: JsonElement, platform: String = PLATFORM): Outcome {

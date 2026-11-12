@@ -775,7 +775,10 @@ object MidiConnection {
 					"manufacturer=${props.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER)}, " +
 					"product=${props.getString(MidiDeviceInfo.PROPERTY_PRODUCT)}, " +
 					"inputPorts=${info.inputPortCount}, outputPorts=${info.outputPortCount}")
-				info.inputPortCount > 0
+				// The service can list virtual devices and other pads before this USB device.
+				@Suppress("DEPRECATION")
+				val midiUsbDevice = props.getParcelable<UsbDevice>(MidiDeviceInfo.PROPERTY_USB_DEVICE)
+				info.inputPortCount > 0 && midiUsbDevice == usbDevice
 			}
 		} catch (e: RuntimeException) {
 			Log.err("MIDI API: enumeration failed, claiming USB interface directly", e)

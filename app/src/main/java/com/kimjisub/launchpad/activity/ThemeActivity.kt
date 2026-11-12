@@ -82,6 +82,7 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.ThemeType
+import com.kimjisub.launchpad.manager.resolveBundledThemeId
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -156,7 +157,9 @@ class ThemeActivity : BaseActivity() {
 	}
 
 	private fun getSavedTheme(themes: List<ThemeItem>): Int {
-		val selectedThemeId: String = p.selectedTheme
+		val selectedThemeId = resolveBundledThemeId(p.selectedTheme) { name ->
+			themes.any { it.id == "asset://$name" }
+		}
 		val index = themes.indexOfFirst { it.id == selectedThemeId }
 		return if (index >= 0) index else 0
 	}

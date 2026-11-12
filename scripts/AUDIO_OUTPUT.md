@@ -132,12 +132,19 @@ errors; the connection closes during cleanup on success and failure.
   quiet baseline or postroll, is environment unconfirmed (exit 3). The original
   samples are retained without removing or joining gaps. Missing/invalid timing or incomplete baseline/postroll
   means environment unconfirmed. A missing packet stream is never silence.
-  Inside each case window the packet timestamps must advance by the samples
-  delivered after the window's first packet, within 0.1 seconds (the recorder's
-  own break tolerance). An emulator that discards output keeps its timestamps on
-  time but streams fewer samples, in breaks too short to be reported as gaps; the
-  window is then environment unconfirmed and `capture.stream` records its stream,
-  delivered and missing seconds. Usual windows miss under 0.03 seconds.
+  Inside each case window the samples delivered after the first packet must
+  cover at least 84% of the stream time between its first and last timestamps.
+  Recorded passing Android 14 windows retain at least 84.35%; the Android 11
+  image that shortens a one-second sound to 0.8 seconds retains about 82.6%.
+  The same minimum applies to sound and silence: discarded output can also hide
+  unexpected sound. Any inserted gap still makes either condition unconfirmed.
+  An emulator that discards output keeps its timestamps on time but streams fewer
+  samples, in breaks too short to be reported as gaps; the window is then
+  environment unconfirmed and `capture.stream` records its stream, delivered and
+  missing seconds, plus `delivered_ratio`. More than 0.1 seconds of excess samples
+  remains invalid timing. If the four-second window falls outside the recording,
+  the error also reports the whole-stream ratio when it is below 84%, explaining
+  that missing output shortened the recording. No samples are filled in.
 - After two seconds of quiet preparation, the stream gets nine seconds to
   establish its packet connection, then screen commands run 2.5 seconds apart
   after each completed gesture. The manager captures at most 120 seconds;

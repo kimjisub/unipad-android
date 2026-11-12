@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.StrictMode
-import androidx.core.content.edit
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.activity.PlayActivity
@@ -15,6 +14,7 @@ import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.AppVisibility
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.resolveBundledThemeId
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.FirebaseCrashContext
@@ -183,37 +183,39 @@ class BaseApplication : Application() {
 	}
 
 	private fun setupBundledThemes() {
-		migrateBundledThemePreference()
-		// Deleting whole theme folders on the first launch after an update froze startup (ANR).
-		ioScope.launch { cleanupLegacyExtractedThemes() }
-	}
-
-	private fun migrateBundledThemePreference() {
-		try {
-			val pref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-			val selectedTheme = pref.getString(KEY_SELECTED_THEME, null) ?: return
-
+		// Neither preference loading nor asset enumeration may hold up Application.onCreate.
+		ioScope.launch {
 			val bundledNames = getBundledAssetThemeNames()
-			if (bundledNames.isEmpty()) return
-
-			for (name in bundledNames) {
-				if (selectedTheme == "zip://$name") {
-					pref.edit { putString(KEY_SELECTED_THEME, "asset://$name") }
-					Log.log("Migrated theme preference: zip://$name → asset://$name")
-					break
-				}
+			if (migrateBundledThemePreference(bundledNames)) {
+				cleanupLegacyExtractedThemes(bundledNames)
 			}
-		} catch (e: Exception) {
-			Log.err("Theme preference migration failed", e)
 		}
 	}
 
-	private fun cleanupLegacyExtractedThemes() {
+	private fun migrateBundledThemePreference(bundledNames: Set<String>): Boolean {
+		return try {
+			val pref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+			// Read after asset enumeration so a choice made during that slow work stays current.
+			val selectedTheme = pref.getString(KEY_SELECTED_THEME, null) ?: return true
+			val migratedTheme = resolveBundledThemeId(selectedTheme) { it in bundledNames }
+			if (migratedTheme == selectedTheme) return true
+
+			// apply() can still be writing when deletion starts. Keep the files on a failed write.
+			val saved = pref.edit().putString(KEY_SELECTED_THEME, migratedTheme).commit()
+			if (saved) Log.log("Migrated theme preference: $selectedTheme → $migratedTheme")
+			else Log.err("Could not persist bundled theme selection; keeping legacy files")
+			saved
+		} catch (e: Exception) {
+			Log.err("Theme preference migration failed", e)
+			false
+		}
+	}
+
+	private fun cleanupLegacyExtractedThemes(bundledNames: Set<String>) {
 		try {
 			val themesDir = getExternalFilesDir(null)?.let { File(it, "themes") } ?: return
 			if (!themesDir.exists()) return
 
-			val bundledNames = getBundledAssetThemeNames()
 			for (name in bundledNames) {
 				val legacyDir = File(themesDir, name)
 				if (legacyDir.exists() && legacyDir.isDirectory) {

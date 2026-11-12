@@ -33,7 +33,8 @@ private fun AudioData.child(parent: AudioBox, type: String): AudioBox {
 }
 
 /** Checks sample counts, timing and every referenced sample's physical mdat extent. */
-internal fun inspectMp4(d: AudioData): AudioFileFacts = inspectMp4Track(d, null)
+internal fun inspectMp4(d: AudioData, onFullPacketFrames: ((Long) -> Unit)? = null): AudioFileFacts =
+    inspectMp4Track(d, null, onFullPacketFrames)
 
 /**
  * Opus packets of an MP4 sound track in decoding order, with the RFC 7845 identification
@@ -65,7 +66,8 @@ private class Mp4OpusPackets {
     }
 }
 
-private fun inspectMp4Track(d: AudioData, opus: Mp4OpusPackets?): AudioFileFacts {
+private fun inspectMp4Track(d: AudioData, opus: Mp4OpusPackets?,
+    onFullPacketFrames: ((Long) -> Unit)? = null): AudioFileFacts {
     val top = d.boxes(0, d.size).toList()
     val media = top.filter { it.type == "mdat" }
     audioRequire(media.isNotEmpty())
@@ -211,6 +213,11 @@ private fun inspectMp4Track(d: AudioData, opus: Mp4OpusPackets?): AudioFileFacts
             // the independently counted physical reservation, even for the final packet.
             val timeline = numerator / clock + if (numerator % clock == 0L) 0 else 1
             maxOf(physicalFrames, timeline)
+        }
+        if (aacPacketFrames != null) {
+            // Older decoders output complete AAC blocks, including priming and the final
+            // packet. Keep this decode bound separate from the shared admission timeline.
+            onFullPacketFrames?.invoke(audioMultiply(samples, aacPacketFrames.toLong()))
         }
         return AudioFileFacts(rate, channels, frames, "m4a")
     }

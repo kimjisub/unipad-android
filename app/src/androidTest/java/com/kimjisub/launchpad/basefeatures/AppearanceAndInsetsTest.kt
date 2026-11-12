@@ -72,8 +72,10 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             assertEquals(selected.id, prefs.selectedTheme)
             screen.device.pressBack()
             screen.clickText(R.string.settings_theme)
-            screen.node(By.text(selected.name)).click()
-            assertFalse("Applied skin offered Apply again", screen.device.hasObject(By.text(screen.text(R.string.apply))))
+            screen.assertAppliedSkinOffersNoApply(
+                applied = selected.name, other = choices.first { it.id != selected.id }.name,
+                message = "Applied skin offered Apply again",
+            )
             screen.capture("selected-skin")
             screen.device.pressBack()
             settings.close()

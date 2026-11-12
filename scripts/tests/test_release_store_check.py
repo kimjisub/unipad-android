@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+import unittest.mock
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("release_store_check", SCRIPTS / "release_store_check.py")
@@ -358,6 +359,170 @@ class UiEntryTest(unittest.TestCase):
 
     def test_a_ui_command_may_run_longer_than_the_rentals_own_limit(self):
         self.assertGreater(check.UI_COMMAND_TIMEOUT, 600)
+
+
+PERMISSION_ALLOWED = """
+      android.permission.POST_NOTIFICATIONS: granted=true, flags=[ USER_SET|USER_SENSITIVE_WHEN_GRANTED]
+"""
+
+
+def permission_dialog(lift):
+    """The notification permission dialog as a snapshot answer, `lift` pixels below where it comes to rest.
+
+    The entries are the ones the rental's snapshot gave for the dialog on a 2400x1080 Android 15
+    emulator; while the dialog slides in, the snapshot reports each node where it is at that moment."""
+    def moved(left, top, width, height):
+        return rect(left, top + lift, width, height)
+    return {"success": True, "data": {"nodes": [
+        {"index": 0, "rect": moved(488, 124, 1559, 769)},
+        {"index": 1, "parentIndex": 0, "identifier": "com.android.permissioncontroller:id/grant_dialog",
+         "hittable": True, "rect": moved(488, 124, 1559, 769)},
+        {"index": 2, "parentIndex": 1, "label": "Allow UniPad to send you notifications?",
+         "identifier": "com.android.permissioncontroller:id/permission_message", "rect": moved(593, 345, 1349, 71)},
+        {"index": 3, "parentIndex": 1, "label": "Allow", "identifier": check.PERMISSION_ALLOW, "hittable": True,
+         "rect": moved(593, 484, 1349, 147)},
+        {"index": 4, "parentIndex": 1, "label": "Don’t allow", "hittable": True,
+         "identifier": "com.android.permissioncontroller:id/permission_deny_button", "rect": moved(593, 641, 1349, 147)},
+    ]}}
+
+
+def store_detail(label):
+    return {"success": True, "data": {"nodes": [
+        {"index": 0, "rect": rect(0, 0, 2400, 1080)},
+        {"index": 1, "parentIndex": 0, "label": label, "hittable": True, "rect": rect(220, 840, 780, 82)},
+    ]}}
+
+
+class PermissionDialogDevice:
+    """A device whose permission dialog slides up over several snapshots and closes only on a press
+    on its Allow button where the button really is; a press anywhere else in the dialog does nothing."""
+    SLIDE = (309, 120, 30)  # how far below its resting place the dialog is on each snapshot while it moves
+
+    def __init__(self):
+        self.state = "detail"
+        self.slide = list(self.SLIDE)
+        self.lift = 0
+        self.presses = []
+        self.allowed = False
+
+    def run(self, command, **kwargs):
+        action = command[command.index("--") + 1:]
+        answer = {"success": True, "data": {}}
+        if action[0] == "snapshot":
+            answer = self.snapshot()
+        elif action[0] == "press":
+            self.press(int(action[1]), int(action[2]))
+        return check.subprocess.CompletedProcess(command, 0, json.dumps(answer).encode(), b"")
+
+    def snapshot(self):
+        if self.state == "detail":
+            return store_detail(check.DOWNLOAD)
+        if self.state == "dialog":
+            self.lift = self.slide.pop(0) if self.slide else 0
+            return permission_dialog(self.lift)
+        return store_detail(check.DOWNLOADED)
+
+    def press(self, x, y):
+        self.presses.append((x, y))
+        if self.state == "detail" and 840 <= y < 922:
+            self.state = "dialog"
+        elif self.state == "dialog" and 593 <= x < 1942 and 484 + self.lift <= y < 631 + self.lift:
+            self.allowed = True
+            self.state = "downloaded"
+
+
+class Clock:
+    """A clock for `Screen.wait` that advances only by the time slept, so a timeout costs no real time."""
+    def __init__(self):
+        self.now = 0.0
+
+    def monotonic(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.now += seconds
+
+
+class PermissionDialogTest(unittest.TestCase):
+    def download(self, device):
+        class Adb(FakeDevice):
+            def shell(self, *args, **kwargs):
+                if args[0] == "dumpsys":
+                    return PACKAGE + (PERMISSION_ALLOWED if device.allowed else PERMISSION_UNANSWERED)
+                return super().shell(*args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            screen = check.Screen(Path("/tools/devices.py"), "emulator-5560", "gen1", Path(directory), run=device.run)
+            store_check = self.store_check = check.StoreCheck(Adb(), screen, check.RELEASE_PACKAGE, "unused")
+            store_check.find_row = lambda pack: check.Node("", "", True, (1084, 179, 2358, 337))
+            try:
+                with unittest.mock.patch.object(check, "time", Clock()):
+                    store_check.download({"code": "_Joanna"}, (False, False))
+            finally:
+                self.saved = sorted(path.name for path in Path(directory).iterdir())
+        return store_check.result
+
+    def test_allow_is_pressed_where_the_dialog_comes_to_rest_not_where_it_was_first_read(self):
+        device = PermissionDialogDevice()
+        result = self.download(device)
+        self.assertEqual(device.presses[-1], (1267, 557))
+        self.assertTrue(device.allowed)
+        dialog = result["download"]["notification_dialog"]
+        self.assertEqual(dialog["first_seen"], [593, 793, 1942, 940])
+        self.assertEqual(dialog["pressed"], [1267, 557])
+        self.assertEqual(dialog["permission_after"], {"granted": True, "answered": True})
+        self.assertIn("notification-permission.json", self.saved)
+
+    def test_a_dialog_still_open_after_the_press_fails_within_the_dialog_limit(self):
+        device = PermissionDialogDevice()
+        press = device.press
+        device.press = lambda x, y: press(x, y) if device.state == "detail" else device.presses.append((x, y))
+        with self.assertRaisesRegex(check.ScreenTimeout, f"permission dialog was still open {check.DIALOG_TIMEOUT} s "):
+            self.download(device)
+        self.assertIn("notification-permission-open.json", self.saved)
+        self.assertEqual(self.store_check.result["notification_dialog"]["pressed"], [1267, 557])
+
+    def test_a_closed_dialog_without_the_permission_granted_fails(self):
+        device = PermissionDialogDevice()
+        press = device.press
+
+        def deny(x, y):
+            press(x, y)
+            device.allowed = False
+        device.press = deny
+        with self.assertRaisesRegex(check.CheckFailed, "not granted after Allow"):
+            self.download(device)
+
+
+class TurningMainScreenDevice:
+    """A main screen that first draws its Store entry where it lies before the screen turns to landscape,
+    as a launch from the portrait home screen does; only a press on the entry at rest opens the Store."""
+    def __init__(self):
+        self.places = [(915, 790), (1148, 776)]
+        self.place = None
+        self.presses = []
+
+    def run(self, command, **kwargs):
+        action = command[command.index("--") + 1:]
+        answer = {"success": True, "data": {}}
+        if action[0] == "snapshot":
+            self.place = self.places.pop(0) if len(self.places) > 1 else self.places[0]
+            answer = {"success": True, "data": {"nodes": [
+                {"index": 0, "rect": rect(0, 0, 2400, 1080)},
+                {"index": 1, "parentIndex": 0, "label": check.DOWNLOAD_NEW_PACKS, "rect": rect(*self.place, 286, 63)}]}}
+        elif action[0] == "press":
+            self.presses.append((int(action[1]), int(action[2])))
+        return check.subprocess.CompletedProcess(command, 0, json.dumps(answer).encode(), b"")
+
+
+class OpenStoreTest(unittest.TestCase):
+    def test_the_store_entry_is_pressed_where_the_turned_main_screen_shows_it(self):
+        device = TurningMainScreenDevice()
+        with tempfile.TemporaryDirectory() as directory:
+            screen = check.Screen(Path("/tools/devices.py"), "emulator-5560", "gen1", Path(directory), run=device.run)
+            with unittest.mock.patch.object(check, "time", Clock()):
+                check.StoreCheck(FakeDevice(), screen, check.RELEASE_PACKAGE, "unused").open_store()
+        self.assertEqual(device.presses, [(1291, 807)])
 
 
 class VerdictTest(unittest.TestCase):

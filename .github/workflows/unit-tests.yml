@@ -50,7 +50,13 @@ jobs:
       - uses: ./.github/actions/setup-android
       - name: Run all app and design unit tests
         timeout-minutes: 12
-        run: ./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain
+        env:
+          UNIPACK_REQUIRE_FILE_CASES: '1'
+          UNIPACK_CONFORMANCE_OUT: ${{ github.workspace }}/build/unipack-conformance
+        run: ./gradlew :app:testDebugUnitTest --rerun :design:testDebugUnitTest --no-daemon --console=plain
+      - name: Require observed file identity cases
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check_unipack_conformance.py build/unipack-conformance/android.json --require-file-cases
       # The UI suite runs on the Mac before push; its pass/fail verdict script is checked here with fake adb and Gradle.
       - name: Check the UI test runner verdict
         if: ${{ !cancelled() }}
@@ -62,6 +68,7 @@ jobs:
         with:
           name: android-unit-test-results
           path: |
+            build/unipack-conformance/android.json
             app/build/test-results/testDebugUnitTest/
             app/build/reports/tests/testDebugUnitTest/
             design/build/test-results/testDebugUnitTest/

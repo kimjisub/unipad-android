@@ -56,6 +56,26 @@ object TestUniPack {
         return root
     }
 
+    /**
+     * Gives every pad its own copy of the silent sound, and chain 1's pad 1 1 [firstPadSounds] copies
+     * that its repeated presses cycle through. Auto mapping reads each sound file's length once, so
+     * a test that must see mapping in progress needs its presses to use different files.
+     */
+    fun giveEachPressItsOwnSound(context: Context, firstPadSounds: Int = 1) {
+        val root = folder(context)
+        val silence = File(root, "sounds/silence.wav")
+        val lines = File(root, "keySound").readLines().filter { it.isNotBlank() }.flatMap { line ->
+            val pad = line.substringBeforeLast(' ')
+            val copies = if (pad == "1 1 1") firstPadSounds else 1
+            (0 until copies).map { i ->
+                val name = "silence_${pad.replace(' ', '_')}_$i.wav"
+                silence.copyTo(File(root, "sounds/$name"), overwrite = true)
+                "$pad $name"
+            }
+        }
+        File(root, "keySound").writeText(lines.joinToString("\n", postfix = "\n"))
+    }
+
     fun remove(context: Context) {
         clear(folder(context))
     }

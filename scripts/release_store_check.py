@@ -7,7 +7,8 @@ outside, with the device online:
 
 1. the Store screen lists every pack the Store database lists (count and title/producer pairs);
 2. one pack — by default the smallest file in the list — downloads, and on a first download
-   on Android 13+ the notification permission dialog appears;
+   on Android 13+ the notification permission dialog appears, closes when Allow is pressed and
+   leaves the permission granted;
 3. the pack is then on disk, in the library, and its record starts without history or bookmark.
 
 Every run downloads one pack from the production file host, which adds one to that pack's
@@ -28,6 +29,10 @@ one fails, and a failure there is listed in `cleanup_errors` without changing th
 used only to inspect and prepare the app: root, API level, package flags and notification
 permission state, the app language and analytics property (set and restored), stopping the app
 before launch, the pack folders, and a copy of the app database.
+
+Controls are pressed only once two snapshots in a row show them in the same place: the main
+screen turns to landscape after launch and the permission dialog slides in, and a snapshot taken
+meanwhile reports where a control is mid-move.
 
 Results, screenshots and screen snapshots go to `--out`; `store-check.json` holds the verdict.
 """
@@ -78,6 +83,10 @@ UNCHANGED_SCREENS = 2
 
 class CheckFailed(Exception):
     pass
+
+
+class ScreenTimeout(CheckFailed):
+    """The screen could be read, but what was waited for did not appear on it in time."""
 
 
 def normalized(text):
@@ -302,6 +311,18 @@ class Adb:
         return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
 
 
+def verify_rental(devices_tool, serial, generation, run=subprocess.run):
+    """Refuse a device the caller does not hold: the lease must name this Android device and generation."""
+    lease = run([sys.executable, str(devices_tool), "lease", serial], capture_output=True, text=True, timeout=30)
+    try:
+        identity = json.loads(lease.stdout)
+    except ValueError:
+        raise CheckFailed("The rental lease could not be read")
+    if (lease.returncode or not isinstance(identity, dict) or identity.get("device") != serial
+            or identity.get("generation") != generation or identity.get("platform") != "android"):
+        raise CheckFailed("The Android rental device or generation does not match")
+
+
 class Screen:
     """The rented device's screen, through the rental's UI entry (`devices.py ui`)."""
     def __init__(self, devices_tool, serial, generation, out, run=subprocess.run):
@@ -363,8 +384,102 @@ class Screen:
             if time.monotonic() >= deadline:
                 self.screen(name)
                 self.capture(name)
-                raise CheckFailed(f"{what} did not appear within {timeout} s (see {name}.png)")
+                raise ScreenTimeout(f"{what} did not appear within {timeout} s (see {name}.png)")
             time.sleep(0.5)
+
+    def settled(self, locate, timeout, what, name):
+        """The node `locate` finds once two snapshots in a row show it in the same place.
+
+        A window sliding in (the system permission dialog does) is reported where it is at that
+        moment, so a press at a node read mid-slide lands beside it once the window comes to rest."""
+        previous = None
+
+        def at_rest(root):
+            nonlocal previous
+            node, last = locate(root), previous
+            previous = node
+            return node if node and last and node.bounds == last.bounds else None
+        return self.wait(at_rest, timeout, f"{what} at rest", name)
+
+    def gone(self, locate, timeout, what, name):
+        """Wait until `locate` finds nothing on the screen."""
+        deadline = time.monotonic() + timeout
+        while True:
+            if locate(self.screen()) is None:
+                return
+            if time.monotonic() >= deadline:
+                self.screen(name)
+                self.capture(name)
+                raise ScreenTimeout(f"{what} was still open {timeout} s after the press (see {name}.png)")
+            time.sleep(0.5)
+
+
+# Shared by the device checks that install a build and play the small test pack ----------------------------
+
+FIXTURE_PACK = Path(__file__).resolve().parents[1] / "app/src/androidTest/assets/audio-output"
+DEVICE_PROPS = (("model", "ro.product.model"), ("os", "ro.build.version.release"),
+                ("api", "ro.build.version.sdk"), ("fingerprint", "ro.build.fingerprint"))
+
+
+def device_facts(adb):
+    return {key: adb.shell("getprop", prop) for key, prop in DEVICE_PROPS}
+
+
+def verify_installed(adb, package, sha256):
+    """The one APK file installed for `package` must be the supplied APK."""
+    paths = adb.shell("pm", "path", package).splitlines()
+    if len(paths) != 1 or not paths[0].startswith("package:/"):
+        raise CheckFailed(f"Expected one APK file installed for {package}, found {paths}")
+    installed = adb.shell("sha256sum", paths[0].removeprefix("package:")).split()
+    if not installed or installed[0] != sha256:
+        raise CheckFailed(f"The installed {package} does not match the supplied APK")
+
+
+def push_fixture_pack(adb, package, pack):
+    """Put the small audio-output test pack in the app's library and return the ownership listing.
+
+    The app must be installed and stopped; adb must be root.
+    """
+    base = f"/data/user/0/{package}"
+    # Keep the app's numeric uid/gid on everything pushed as root.
+    owner = adb.shell("stat", "-c", "%u:%g", base)
+    if not re.fullmatch(r"\d+:\d+", owner):
+        raise CheckFailed(f"Cannot read app ownership: {owner!r}")
+    destination = f"{base}/files/UniPack/{pack}"
+    adb.shell("mkdir", "-p", destination)
+    adb.shell("mkdir", "-p", f"{destination}/sounds")
+    for name in ("info", "keySound"):
+        adb.run("push", str(FIXTURE_PACK / name), f"{destination}/{name}")
+    for sound in sorted(FIXTURE_PACK.iterdir()):
+        if sound.suffix in (".wav", ".mp3", ".ogg", ".m4a"):
+            adb.run("push", str(sound), f"{destination}/sounds/{sound.name}")
+    # mkdir -p also creates files/ on a first install. Repair that ancestor
+    # itself: fixing only UniPack leaves root ownership and a generic label.
+    adb.shell("chown", owner, f"{base}/files")
+    adb.shell("chmod", "700", f"{base}/files")
+    adb.shell("restorecon", "-F", f"{base}/files")
+    adb.shell("chown", "-R", owner, f"{base}/files/UniPack")
+    adb.shell("chmod", "-R", "u=rwX,go=", f"{base}/files/UniPack")
+    adb.shell("restorecon", "-RF", f"{base}/files/UniPack")
+    return adb.shell("ls", "-ldZ", f"{base}/files", f"{base}/files/UniPack")
+
+
+def play_screen_shown(root):
+    return find(root, identifier="play_logo")
+
+
+def open_play_screen(screen, package, pack, timeout, ready=play_screen_shown, what="The play screen",
+                     name="missing-play-screen"):
+    """Launch the app, select `pack` in the library, press its Play button and return `ready`'s answer."""
+    screen.launch(package)
+    row = screen.wait(lambda root: find(root, identifier=f"main_pack_{pack}"), timeout, "The local test pack",
+                      "missing-pack")
+    screen.tap(row)
+    # Selecting a pack exposes its Play control in the row.
+    play = screen.wait(lambda root: find(root, text="Play") or find(root, text="연주"), timeout, "The Play button",
+                       "missing-play")
+    screen.tap(play)
+    return screen.wait(ready, timeout, what, name)
 
 
 class StoreCheck:
@@ -441,8 +556,9 @@ class StoreCheck:
     def open_store(self):
         self.adb.shell("am", "force-stop", self.package)
         self.screen.launch(self.package)
-        entry = self.screen.wait(lambda root: find(root, text=STORE_BUTTON_DESCRIPTION)
-                                 or find(root, text=DOWNLOAD_NEW_PACKS), SCREEN_TIMEOUT, "The main screen's Store entry", "main-screen")
+        # A launch from the portrait home screen turns the screen to landscape after the entry is first drawn.
+        entry = self.screen.settled(lambda root: find(root, text=STORE_BUTTON_DESCRIPTION)
+                                    or find(root, text=DOWNLOAD_NEW_PACKS), SCREEN_TIMEOUT, "The main screen's Store entry", "main-screen")
         self.screen.capture("main-screen")
         self.screen.tap(entry)
 
@@ -502,17 +618,12 @@ class StoreCheck:
 
     def download(self, pack, permission_before):
         self.screen.tap(self.find_row(pack))
-        button = self.screen.wait(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
+        button = self.screen.settled(lambda root: find(root, text=DOWNLOAD), SCREEN_TIMEOUT, "The Download button", "store-detail")
         self.screen.capture("store-detail")
         started = time.monotonic()
         self.screen.tap(button)
         expect_dialog = not permission_before[0] and not permission_before[1]
-        dialog = None
-        if expect_dialog:
-            dialog = self.screen.wait(lambda root: find(root, identifier=PERMISSION_ALLOW), DIALOG_TIMEOUT,
-                                      "The notification permission dialog", "notification-permission")
-            self.screen.capture("notification-permission")
-            self.screen.tap(dialog)
+        dialog = self.allow_notifications() if expect_dialog else None
         state = self.screen.wait(lambda root: (find(root, text=DOWNLOADED) and DOWNLOADED) or (find(root, text=FAILED) and FAILED),
                                  DOWNLOAD_TIMEOUT, "The download result", "download-result")
         seconds = round(time.monotonic() - started, 1)
@@ -520,9 +631,34 @@ class StoreCheck:
         if state == FAILED:
             raise CheckFailed(f"The app showed \"{FAILED}\" for {pack['code']} after {seconds} s")
         self.screen.screen("store-downloaded")
-        self.result["download"] = {"seconds": seconds, "notification_dialog": bool(dialog)}
+        self.result["download"] = {"seconds": seconds, "notification_dialog": dialog}
         self.step("download", f"{DOWNLOADED} after {seconds} s; notification permission dialog "
                               f"{'shown and allowed' if dialog else 'not asked (already answered)'}")
+
+    def allow_notifications(self):
+        """Press Allow on the notification permission dialog once it has come to rest, then require
+        the dialog to close and the permission to be granted; returns where it was read and pressed."""
+        def allow(root):
+            return find(root, identifier=PERMISSION_ALLOW)
+        first = self.screen.wait(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
+        button = self.screen.settled(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
+        self.screen.screen("notification-permission")
+        self.screen.capture("notification-permission")
+        # Kept in the result before the press, so a dialog that stays open still shows where it was read and pressed.
+        dialog = self.result["notification_dialog"] = {
+            "first_seen": list(first.bounds), "pressed_bounds": list(button.bounds), "pressed": list(button.center)}
+        self.screen.tap(button)
+        pressed = time.monotonic()
+        self.screen.gone(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission-open")
+        granted, answered = notification_permission(self.adb.shell("dumpsys", "package", self.package))
+        dialog.update(closed_after=round(time.monotonic() - pressed, 1),
+                      permission_after={"granted": granted, "answered": answered})
+        self.step("notification permission", f"dialog first read at {dialog['first_seen']}, Allow pressed at "
+                                             f"{dialog['pressed']} once at rest, closed after {dialog['closed_after']} s; "
+                                             f"granted={granted} answered={answered}")
+        if not (granted and answered):
+            raise CheckFailed(f"Notification permission is not granted after Allow (granted={granted}, answered={answered})")
+        return dialog
 
     def check_library(self, pack):
         code = pack["code"]

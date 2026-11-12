@@ -84,6 +84,43 @@ class ParsingTest(unittest.TestCase):
                 observe.parse_session(text, b'')
 
 
+def upload_log(app_id, device_id, limited=None, first_input=True):
+    """An upload as FA-SVC logs it, with nested blocks that must not be read as bundle fields."""
+    lines = ['batch {', '  bundle {', '    protocol_version: 1', f'    app_id: {app_id}',
+             '    app_instance_id: 9cf651561f543aaaca6dc5584c61f107',
+             f'    resettable_device_id: {device_id}', '    ds_id: ']
+    if limited is not None:
+        lines.append(f'    limited_ad_tracking: {limited}')
+    lines += ['    user_property {', '      name: resettable_device_id', '      string_value: nested', '    }']
+    if first_input:
+        lines += ['    event {', '      name: play_first_input', '      params {', '        name: input_source',
+                  '        string_value: screen', '      }', '    }']
+    lines += ['  }', '}']
+    return '\n'.join(f'11-11 14:50:10.629  5324 11021 V FA-SVC  : {line}' for line in lines)
+
+
+class AdvertisingIdTest(unittest.TestCase):
+    def test_reads_bundle_fields_not_nested_blocks(self):
+        upload, = observe.parse_uploads(upload_log(observe.PACKAGE, 'efb9b76f-0742', 'false'))
+        self.assertEqual(upload, dict(app_id=observe.PACKAGE, resettable_device_id='efb9b76f-0742',
+                                      limited_ad_tracking='false'))
+
+    def test_empty_and_absent_fields_pass_and_any_value_fails(self):
+        cases = (((upload_log(observe.PACKAGE, ''),), 0),
+                 ((upload_log(observe.PACKAGE, '', ''),), 0),
+                 ((upload_log(observe.PACKAGE, ''), upload_log(observe.PACKAGE, 'efb9b76f-0742', 'false')), 1),
+                 ((upload_log(observe.PACKAGE, '', 'true'),), 1))
+        for logs, sent in cases:
+            with self.subTest(logs=logs):
+                report = observe.advertising_id_report(observe.parse_uploads('\n'.join(logs)))
+                self.assertEqual(report['bundles'], len(logs))
+                self.assertEqual(report['bundles_with_advertising_id'], sent)
+
+    def test_other_apps_bundles_are_not_counted(self):
+        report = observe.advertising_id_report(observe.parse_uploads(upload_log('other.app', 'efb9b76f-0742')))
+        self.assertEqual((report['bundles'], report['bundles_with_advertising_id']), (0, 0))
+
+
 class ScreenTest(unittest.TestCase):
     def test_chain_touch_space_before_grid_is_not_selected_as_a_pad(self):
         from release_store_check import Node
@@ -192,6 +229,45 @@ class PreparationTest(unittest.TestCase):
         self.assertEqual(observer.result['fixture_directory_listing'],
                          'app-owned private directories with app security categories')
 
+    def prepare_with_installer(self, installer, of_record):
+        adb = Mock()
+        def shell(*args, **kwargs):
+            if args[0] == 'dumpsys':
+                return f'versionCode=121\n versionName=4.2.2\n installerPackageName={of_record}\n flags=[ HAS_CODE ]'
+            if args[0] == 'pm':
+                return 'package:/data/app/base.apk'
+            if args[0] == 'sha256sum':
+                return hashlib.sha256(b'apk').hexdigest() + '  /data/app/base.apk'
+            if args[0] == 'stat':
+                return '10207:10207'
+            if args[:2] == ('getprop', observe.DEBUG_PROP):
+                return observe.PACKAGE
+            return ''
+        adb.shell.side_effect = shell
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'apk')
+            observer = observe.Observer(adb, Mock(), apk, installer=installer)
+            try:
+                observer.prepare()
+            finally:
+                install, = [call.args for call in adb.run.call_args_list if call.args[0] == 'install']
+        return observer, install
+
+    def test_installs_as_the_requested_installer_and_records_it(self):
+        observer, install = self.prepare_with_installer('com.android.vending', 'com.android.vending')
+        self.assertEqual(install[:4], ('install', '-r', '-i', 'com.android.vending'))
+        self.assertEqual(observer.result['installer'], dict(requested='com.android.vending',
+                                                            of_record='com.android.vending'))
+        observer, install = self.prepare_with_installer(None, 'null')
+        self.assertEqual(install[:2], ('install', '-r'))
+        self.assertNotIn('-i', install)
+        self.assertEqual(observer.result['installer'], dict(requested=None, of_record='null'))
+
+    def test_installer_that_did_not_take_fails(self):
+        with self.assertRaisesRegex(observe.CheckFailed, 'Installer of record'):
+            self.prepare_with_installer('com.android.vending', 'null')
+
     def test_different_installed_apk_is_not_reported_as_the_candidate(self):
         adb = Mock()
         adb.shell.side_effect = lambda *args, **kwargs: ('package:/data/app/base.apk' if args[0] == 'pm' else 'different')
@@ -215,7 +291,8 @@ class CollectionTest(unittest.TestCase):
         adb = Mock()
         adb.shell.side_effect = lambda *args, **kwargs: ('new' if args[0] == 'ls' else '{"screen":"MainActivity"}')
         log = ('Logging event: origin=app,name=play_first_input,'
-               'params=Bundle[{input_source=future-controller, new_value=keep, _dbg=1}]')
+               'params=Bundle[{input_source=future-controller, new_value=keep, _dbg=1}]\n'
+               + upload_log(observe.PACKAGE, ''))
         adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'
         observer = observe.Observer(adb, Mock(), Path('candidate.apk'), timeout=0)
         observer.sessions_path, observer.previous_sessions = '/sessions', {'old'}
@@ -228,6 +305,8 @@ class CollectionTest(unittest.TestCase):
         for log, previous in (
                 ('Logging event: origin=app,name=play_first_input,params=Bundle[{_dbg=1}]', set()),
                 ('Logging event: origin=app,name=play_first_input,params=Bundle[{input_source=screen}]', {'old'})):
+            # An upload is present, so only the stale session or the missing input_source can fail it.
+            log += '\n' + upload_log(observe.PACKAGE, '', first_input=False)
             adb = Mock()
             adb.shell.side_effect = lambda *args, **kwargs: ('old' if args[0] == 'ls' else '{"screen":"MainActivity"}')
             adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'
@@ -237,8 +316,34 @@ class CollectionTest(unittest.TestCase):
                 observer.collect()
 
 
+    def collect(self, log, keys='{"screen":"MainActivity","install_source":"play"}'):
+        adb = Mock()
+        adb.shell.side_effect = lambda *args, **kwargs: ('new' if args[0] == 'ls' else keys)
+        adb.run.side_effect = lambda *args, **kwargs: log.encode() if args[0] == 'logcat' else b'1 PlayActivity paused\n'
+        observer = observe.Observer(adb, Mock(), Path('candidate.apk'), timeout=0)
+        observer.sessions_path, observer.previous_sessions = '/sessions', set()
+        observer.collect()
+        return observer.result
+
+    def test_advertising_id_in_an_upload_is_a_failure_and_install_source_is_recorded(self):
+        first = 'Logging event: origin=app,name=play_first_input,params=Bundle[{input_source=screen, _dbg=1}]\n'
+        result = self.collect(first + upload_log(observe.PACKAGE, ''))
+        self.assertEqual(result['failures'], [])
+        self.assertEqual(result['install_source'], ['play'])
+        result = self.collect(first + upload_log(observe.PACKAGE, 'efb9b76f-0742', 'false'), keys='{"screen":"x"}')
+        self.assertEqual(len(result['failures']), 1)
+        self.assertEqual(result['advertising_id']['values'],
+                         [dict(resettable_device_id='efb9b76f-0742', limited_ad_tracking='false')])
+        self.assertEqual(result['install_source'], [None])
+
+    def test_no_upload_bundle_of_the_app_is_not_observed(self):
+        first = 'Logging event: origin=app,name=play_first_input,params=Bundle[{input_source=screen, _dbg=1}]\n'
+        with self.assertRaisesRegex(observe.CheckFailed, 'upload bundle'):
+            self.collect(first + upload_log('other.app', ''))
+
+
 class CleanupTest(unittest.TestCase):
-    def run_observer(self, failure=None, cleanup_failure=False, ui=None):
+    def run_observer(self, failure=None, cleanup_failure=False, ui=None, collect=None):
         props = {observe.DEBUG_PROP: 'old.app', observe.LOG_PROP: 'WARN'}
         adb = Mock()
         def shell(*args, **kwargs):
@@ -253,11 +358,18 @@ class CleanupTest(unittest.TestCase):
         observer = observe.Observer(adb, ui if ui is not None else Mock(), Path('candidate.apk'), timeout=0)
         observer.prepare = Mock(side_effect=failure)
         observer.drive = Mock()
-        observer.collect = Mock()
+        observer.collect = Mock(side_effect=None if collect is None else lambda: collect(observer))
         with tempfile.TemporaryDirectory() as directory:
             code = observe.run_and_record(observer, Path(directory) / 'result.json')
             result = json.loads((Path(directory) / 'result.json').read_text())
         return code, result, props, adb
+
+    def test_judged_failure_is_nonzero_after_cleanup(self):
+        def judged(observer):
+            observer.result['failures'].append('Advertising ID sent')
+        code, result, props, _ = self.run_observer(collect=judged)
+        self.assertEqual((code, result['status'], result['failures']), (1, 'failed', ['Advertising ID sent']))
+        self.assertEqual(props, {observe.DEBUG_PROP: '.none.', observe.LOG_PROP: 'WARN'})
 
     def test_success_resets_and_reads_both_properties(self):
         code, result, props, _ = self.run_observer()

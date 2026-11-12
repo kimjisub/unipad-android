@@ -100,9 +100,11 @@ class PlayActivityViewModelAutoMappingTest {
 	private fun openPack(lengths: SoundDurationReader = FixedLengths, engine: SoundRunner.Engine = SoundRunner.OboeEngine): PlayActivityViewModel {
 		root = tmp.newFolder("pack")
 		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
-		File(root, "keySound").writeText("1 1 1 a.wav\n")
+		// Two sounds on the pad: a file is measured once, so the second press must be a new read.
+		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 1 b.wav\n")
 		File(root, "sounds").mkdir()
 		File(root, "sounds/a.wav").writeText("")
+		File(root, "sounds/b.wav").writeText("")
 		File(root, "autoPlay").writeText(original)
 		val vm = PlayActivityViewModel(
 			mockk<UnipackRepository>(relaxed = true),

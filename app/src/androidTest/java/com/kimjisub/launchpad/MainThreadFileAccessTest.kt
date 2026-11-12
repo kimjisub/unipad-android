@@ -128,6 +128,8 @@ class MainThreadFileAccessTest : BaseUITest() {
     @Test
     fun autoMappingReadsTheAutoPlayFileOffTheMainThread() {
         launchToMainScreen()
+        // The test waits for the progress readout, so mapping must last longer than one sound read.
+        TestUniPack.giveEachPressItsOwnSound(context)
         openTestPackInPlay()
         openPlayOptions()
         val autoMapping = By.text(str(R.string.autoMapping))

@@ -149,7 +149,7 @@ class CaptureWindowTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             result=self.extract_with_packet_spacing(temp,10_070)
         self.assertNotIn('environment_error',result)
-        self.assertLess(result['stream']['missing_seconds'],runner.MAX_STREAM_SHORTFALL_S)
+        self.assertGreaterEqual(result['stream']['delivered_ratio'],runner.MIN_STREAM_DELIVERED_RATIO)
 
     def test_refuses_missing_pre_input_postroll_and_zero_timestamp(self):
         with tempfile.TemporaryDirectory() as temp:

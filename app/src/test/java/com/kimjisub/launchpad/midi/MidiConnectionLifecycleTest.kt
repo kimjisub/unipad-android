@@ -11,6 +11,7 @@ import android.hardware.usb.UsbManager
 import android.media.midi.MidiDevice
 import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiManager
+import android.os.Bundle
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
@@ -95,9 +96,9 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_midiServiceOpenDeviceNpe_fallsBackToUsbClaim() {
-		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo())
-		every { midiManager.openDevice(any(), any(), any()) } throws NullPointerException("MidiManager.openDevice")
 		val (device, connection) = launchpad(deviceId = 1)
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo(device))
+		every { midiManager.openDevice(any(), any(), any()) } throws NullPointerException("MidiManager.openDevice")
 
 		attach(device)
 
@@ -107,12 +108,12 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_openDeviceCallbackAfterDeviceReplaced_releasesMidiDeviceWithoutOpeningPorts() {
-		val info = midiDeviceInfo()
+		val (first, firstConnection) = launchpad(deviceId = 1)
+		val (second, _) = launchpad(deviceId = 2)
+		val info = midiDeviceInfo(first)
 		midiManager.stubDeviceList() returns arrayOf(info)
 		val callback = slot<MidiManager.OnDeviceOpenedListener>()
 		every { midiManager.openDevice(info, capture(callback), any()) } returns Unit
-		val (first, firstConnection) = launchpad(deviceId = 1)
-		val (second, _) = launchpad(deviceId = 2)
 
 		attach(first)
 		val lateCallback = callback.captured
@@ -392,11 +393,15 @@ class MidiConnectionLifecycleTest {
 		return device to connection
 	}
 
-	private fun midiDeviceInfo(): MidiDeviceInfo {
+	@Suppress("DEPRECATION")
+	private fun midiDeviceInfo(device: UsbDevice): MidiDeviceInfo {
+		val properties = mockk<Bundle>(relaxed = true)
+		every { properties.getParcelable<UsbDevice>(MidiDeviceInfo.PROPERTY_USB_DEVICE) } returns device
 		val port = mockk<MidiDeviceInfo.PortInfo>(relaxed = true)
 		every { port.type } returns MidiDeviceInfo.PortInfo.TYPE_INPUT
 		every { port.portNumber } returns 0
 		val info = mockk<MidiDeviceInfo>(relaxed = true)
+		every { info.properties } returns properties
 		every { info.inputPortCount } returns 1
 		every { info.ports } returns arrayOf(port)
 		return info

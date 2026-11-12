@@ -107,6 +107,62 @@ class ConformanceReportTest(unittest.TestCase):
                 self.report["cases"][0].update(status="pass", actual={"loaded": True})
                 self.corpus["cases"][0].pop(field)
 
+    def test_faithful_host_identity_observation_is_checked(self):
+        case = self.corpus["cases"][0]
+        case.update(soundIdentity=True, files=[{"path": "sounds/a.wav"}])
+        result = self.report["cases"][0]
+        result.update(identityAdapter="host-archive-runner", storedInputPaths=["sounds/a.wav"],
+                      identityEvidence={"identityTraced": True, "contentsPreserved": True, "storageEntries": 1})
+        self.assertEqual([], self.check())
+        for field, value in [("identityTraced", False), ("contentsPreserved", False), ("storageEntries", 0)]:
+            with self.subTest(field=field):
+                saved = copy.deepcopy(result["identityEvidence"])
+                result["identityEvidence"][field] = value
+                self.assertTrue(self.check())
+                result["identityEvidence"] = saved
+        result["storedInputPaths"] = ["sounds/A.wav"]
+        self.assertTrue(self.check())
+
+    def test_case_sensitive_host_lifts_only_the_file_name_restriction(self):
+        case = self.corpus["cases"][0]
+        case.update(requiresCaseSensitiveFiles=True, unobserved={"android": checker.CASE_INSENSITIVE_HOST})
+        self.report["caseSensitiveFileSystem"] = True
+        self.assertEqual([], self.check())
+        case["unobserved"]["android"] = "needs a speaker"
+        self.assertTrue(self.check())
+
+    def test_required_file_cases_cannot_be_missing_unverified_or_wrong(self):
+        self.assertTrue(checker.check_report(self.corpus, self.report, "digest", require_file_cases=True))
+        self.corpus["cases"][0]["id"] = "KS-G601"
+        self.report["cases"][0].update(id="KS-G601", status="unverified", actual=None)
+        problems = checker.check_report(self.corpus, self.report, "digest", require_file_cases=True)
+        self.assertIn("KS-G601: required file case was not observed and passed on the host", problems)
+
+    def test_required_file_gate_accepts_complete_host_evidence_and_rejects_each_gap(self):
+        # Validator fixtures only: actual observations are produced by the JVM suite.
+        path = Path(__file__).resolve().parents[2] / "app/src/test/resources/unipack-conformance/corpus.json"
+        cases = [case for case in json.loads(path.read_bytes())["cases"]
+                 if case["id"] in checker.REQUIRED_FILE_CASE_IDS]
+        self.assertEqual(13, len(cases))
+        results = []
+        for case in cases:
+            result = {"id": case["id"], "fingerprint": case["fingerprint"], "status": "pass", "actual": case["expected"]}
+            if case.get("soundIdentity"):
+                result.update(identityAdapter="host-archive-runner", storedInputPaths=[f["path"] for f in case["files"]],
+                              identityEvidence={"identityTraced": True, "contentsPreserved": True,
+                                                "storageEntries": len(case["files"])})
+            results.append(result)
+        corpus = {"cases": cases}
+        report = dict(self.report, caseSensitiveFileSystem=True, cases=results)
+        self.assertEqual([], checker.check_report(corpus, report, "digest", require_file_cases=True))
+        for index, case in enumerate(cases):
+            for mutation in ({"actual": None, "status": "unverified"}, {"actual": {"wrong": True}},
+                             {"observedOn": "device"}):
+                with self.subTest(case=case["id"], mutation=mutation):
+                    changed = copy.deepcopy(report)
+                    changed["cases"][index].update(mutation)
+                    self.assertTrue(checker.check_report(corpus, changed, "digest", require_file_cases=True))
+
     def test_every_registered_g6_case_rejects_missing_wrong_and_unknown_results(self):
         corpus_path = Path(__file__).resolve().parents[2] / "app/src/test/resources/unipack-conformance/corpus.json"
         added = json.loads(corpus_path.read_bytes())["cases"]
