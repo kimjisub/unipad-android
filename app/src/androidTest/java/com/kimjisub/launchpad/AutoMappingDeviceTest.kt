@@ -10,6 +10,7 @@ import com.kimjisub.launchpad.activity.SplashActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -31,13 +32,15 @@ class AutoMappingDeviceTest : BaseUITest() {
         openPlayOptions()
     }
 
-    private fun clickRow(label: String) {
+    private fun menuRow(label: String): UiObject2 {
         val selector = By.text(label)
         val row = device.wait(Until.findObject(selector), 2000L)
             ?: device.findObject(By.res("play_options"))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
         assertNotNull("Menu row missing: $label", row)
-        row!!.click()
+        return row!!
     }
+
+    private fun clickRow(label: String) = menuRow(label).click()
 
     @Test
     fun confirmingAndRestoringKeepsBothVersionsAcrossReopening() {
@@ -69,6 +72,59 @@ class AutoMappingDeviceTest : BaseUITest() {
     }
 
     @Test
+    fun legacyBackupEnablesRestoreAndCanBeUndoneAfterReopening() {
+        assertLegacyRestore("autoPlay")
+    }
+
+    @Test
+    fun legacyBackupWithLowercaseAutoPlayRestoresAndCanBeUndone() {
+        assertLegacyRestore("autoplay")
+    }
+
+    private fun assertLegacyRestore(autoPlayName: String) {
+        launchToMainScreen()
+        val root = TestUniPack.folder(context)
+        val file = File(root, autoPlayName)
+        val capturePrefix = if (autoPlayName == "autoPlay") "legacy_canonical" else "legacy_lowercase"
+        if (autoPlayName != "autoPlay") {
+            assertTrue("Could not rename autoplay", File(root, "autoPlay").renameTo(file))
+        }
+        val legacy = File(root, "autoPlay_۲۰۲۶_۰۹_۰۱-۱۲_۳۰_۰۰")
+        val mapped = "d 1000\nt 1 1\nd 100\nt 2 1\nd 100\nt 3 1\n"
+        file.writeText(mapped)
+        legacy.writeText(original)
+        fun assertFiles(current: String, previous: String?) {
+            assertEquals(current, file.readText())
+            assertEquals(original, legacy.readText())
+            val backup = File(root, autoPlayName + "_previous")
+            if (previous == null) assertTrue(!backup.exists()) else assertEquals(previous, backup.readText())
+            println("Legacy restore files: " + root.listFiles()!!.sortedBy { it.name }
+                .joinToString { "${it.name}(${it.length()})" })
+        }
+        assertFiles(mapped, null)
+        openTestPackInPlay()
+        openPlayOptions()
+        val restoreRow = menuRow(restoreLabel)
+        takeScreenshot("${capturePrefix}_before_restore")
+        assertTrue("Legacy backup must enable restore", restoreRow.isEnabled)
+        clickRow(restoreLabel)
+        clickRow("Restore")
+        assertTrue("Legacy restore did not persist", waitUntil(30_000L) { file.readText() == original })
+        assertTrue("Restore did not finish", waitUntil(30_000L) { device.hasObject(By.text(str(R.string.autoMapping))) })
+        assertFiles(original, mapped)
+        takeScreenshot("${capturePrefix}_restored")
+        quitPlayToMain()
+        openTestPackInPlay()
+        openPlayOptions()
+        clickRow(restoreLabel)
+        clickRow("Restore")
+        assertTrue("Undo did not persist", waitUntil(30_000L) { file.readText() == mapped })
+        assertTrue("Undo did not finish", waitUntil(30_000L) { device.hasObject(By.text(str(R.string.autoMapping))) })
+        assertFiles(mapped, original)
+        takeScreenshot("${capturePrefix}_undone")
+    }
+
+    @Test
     fun returningThroughTheLauncherIcon_savesWhileThePackListCoversPlay() {
         // An explicit open has a different task-root intent from the launcher. Returning through
         // the real icon then opens a new list above PlayActivity instead of resuming Play directly.
@@ -76,6 +132,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(3000)
         file.writeText(input)
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
@@ -135,6 +193,8 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(1000)
         file.writeText(input)
+        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
+        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
@@ -201,7 +261,11 @@ class AutoMappingDeviceTest : BaseUITest() {
         clickRow(str(R.string.cancel))
         assertEquals(original, File(TestUniPack.folder(context), "autoPlay").readText())
         assertTrue("No-backup explanation missing", device.wait(Until.hasObject(By.text("No saved backup")), 5000L))
-        assertTrue("Restore must be disabled", !device.findObject(By.text(restoreLabel)).isEnabled)
+        assertTrue("Restore must be disabled", !menuRow(restoreLabel).isEnabled)
         takeScreenshot("automapping_cancelled_no_backup")
+    }
+
+    private companion object {
+        const val SOUND_FILES = 500
     }
 }

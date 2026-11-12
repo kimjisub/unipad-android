@@ -104,6 +104,8 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         prefs.edit().putString(KEY_SELECTED_THEME, themeId).commit()
 
         launchToMainScreen()
+        // The progress readout is measured below, so mapping must last longer than one sound read.
+        TestUniPack.giveEachPressItsOwnSound(context)
         openTestPackInPlay()
         openPlayOptions()
         Thread.sleep(PANEL_SETTLE_MS)

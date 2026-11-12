@@ -20,8 +20,10 @@ python3 scripts/check_debug_telemetry_manifest.py \
 
 `observe_release_telemetry.py` observes an APK built in release mode on an
 explicitly rented, rooted Android emulator. It records the first screen press's
-Analytics event and the current Crashlytics session's screen context. It never
-triggers a crash or decides whether the observations satisfy a data-safety declaration.
+Analytics event, the current Crashlytics session's screen context and the
+advertising ID fields of the Analytics uploads read while it waits for those.
+It never triggers a crash. The advertising ID is the only value it judges: a run
+fails when an upload carries it. Everything else is recorded, not judged.
 
 Rent a fresh Android 15 emulator with the device rental tool, then read its lease:
 
@@ -43,7 +45,13 @@ archive. Root must work; a production image that refuses `adb root` fails before
 installation. The command uses only the named device and validates its rental
 generation before changing it. All screen actions use the rental's UI entry.
 
-The candidate is installed with `adb install -r`. Its installed package hash must
+The candidate is installed with `adb install -r`. `--installer <package>` adds
+`-i <package>`, so the installer of record is that package, and the command fails
+unless `dumpsys package` reads it back. Use `--installer com.android.vending` to
+see the value an install from Google Play records; without it an adb install
+records no installer. The JSON keeps the requested installer and the one read back
+under `installer`, and each new session's `install_source` key (or `null`) under
+`install_source`. The value is recorded, not judged. Its installed package hash must
 match the supplied APK. Existing application data is
 kept, and the reserved `telemetry-observer` pack is populated from the existing
 audio-output fixture (sound files go in `sounds/`, owned by the app). This pack
@@ -63,8 +71,20 @@ complete logged Analytics events and parameters, raw Analytics log, `_dbg`
 observation, each new Crashlytics session's keys, lifecycle lines and raw userlog
 as hexadecimal. Unknown values are retained. A missing debug field is `null`,
 not evidence that debug marking was absent. Presence checks require an
-`input_source` parameter and a new session's `screen` key plus lifecycle lines;
-they impose no whitelist on the observed values. Session files prove local
+`input_source` parameter, a new session's `screen` key plus lifecycle lines, and
+at least one Analytics upload bundle of the app; they impose no whitelist on the
+observed values.
+
+The advertising ID is the one judged value. Each upload bundle's top-level
+`resettable_device_id` and `limited_ad_tracking` are read from the verbose upload
+log (nested user properties and events are skipped); an absent field is `null`.
+`advertising_id` records the number of the app's bundles, how many carried either
+field with a value, and each distinct pair of values. A bundle with either field
+not empty sets `status` to `failed`, adds the reason to `failures` and exits
+nonzero, after the same cleanup. A build without the opt-out sends the device's
+advertising ID with `limited_ad_tracking: false`; with the opt-out the ID is empty
+and `limited_ad_tracking` is absent. Bundles of other apps uploaded in the same
+log are not counted. Session files prove local
 context collection, not server receipt of an actual crash report; that is checked
 with a debug build by `crash_report_check.py` ([CRASH_REPORT_CHECK.md](CRASH_REPORT_CHECK.md)).
 

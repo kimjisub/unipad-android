@@ -46,7 +46,7 @@ class AutoPlayRunnerSeekTest {
 	private fun await(message: String, check: () -> Boolean) {
 		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
 		while (!check() && System.nanoTime() < deadline) Thread.sleep(1)
-		assertTrue(message, check())
+		assertTrue("$message; progress=${if (::runner.isInitialized) runner.progress else -1}, guides=$guides", check())
 	}
 
 	private fun runsInRunner(stack: Array<StackTraceElement>) = stack.any {
@@ -157,20 +157,43 @@ class AutoPlayRunnerSeekTest {
 		assertTrue("Seeking practice must not play sounds", presses.isEmpty())
 	}
 
-	@Test fun seekInStepPracticeRebasesTheCurrentPositionWhenContinuousPracticeResumes() {
+	/**
+	 * Leaves a step shown after a seek while the loop is inside step handling, before it drains input.
+	 * Clearing the shown step on the caller would let that in-flight pass scan the following pad.
+	 */
+	private fun leaveStepDuringAStepPass(leave: AutoPlayRunner.() -> Unit) {
 		start(practice = true)
 		await("Initial guide missing") { guides.contains(0 to 500L) }
 		runner.playmode = false
 		runner.stepMode = true
 		runner.progressOffset(2)
 		await("Step seek did not guide the new pad") { guides.contains(1 to 0L) && runner.progress == 5 }
-		clock.set(10000)
-		runner.stepMode = false
-		runner.resetStepState()
-		runner.playmode = true
-		await("Resume did not keep the delay after the step hint") { runner.progress == 6 }
+		val pressedKeysLock = checkNotNull(AutoPlayRunner::class.java.getDeclaredField("pressedKeysLock")
+			.apply { isAccessible = true }.get(runner))
+		synchronized(pressedKeysLock) {
+			runner.stepMode = true
+			await("Runner did not reach step input handling") {
+				Thread.getAllStackTraces().any { (thread, stack) ->
+					thread.state == Thread.State.BLOCKED && stack.any {
+						it.className == AutoPlayRunner::class.java.name && it.methodName == "drainPressedKeys"
+					}
+				}
+			}
+			clock.set(10000)
+			runner.leave()
+		}
+		await("Leaving the step did not keep the delay after the step hint") { runner.progress == 6 }
+		assertTrue("Leaving the step skipped the shown pad to guide the following one", guides.none { it == 2 to 0L })
 		clock.set(19200)
 		await("Step seek kept the old continuous guide clock") { guides.contains(2 to 20000L) }
+	}
+
+	@Test fun seekInStepPracticeRebasesTheCurrentPositionWhenContinuousPracticeResumes() {
+		leaveStepDuringAStepPass { resume() }
+	}
+
+	@Test fun choosingGuidePlayDuringAStepPassKeepsTheShownStepOwed() {
+		leaveStepDuringAStepPass { startGuidePlay() }
 	}
 
 	@Test fun stepSeekDuringAStepScanGuidesTheStepAtTheNewPosition() {

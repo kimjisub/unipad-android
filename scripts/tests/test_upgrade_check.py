@@ -1,6 +1,7 @@
 """Verify the upgrade check's seeding and its verdict on before/after snapshots."""
 import contextlib
 import copy
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -196,6 +197,21 @@ class FakeDevice:
 
 
 class ScenarioTest(unittest.TestCase):
+    def test_missing_seeded_backup_cannot_become_the_upgrade_baseline(self):
+        before = snapshot()
+        before['files'] = {f'{pack["id"]}/{name}': hashlib.sha256(content).hexdigest()
+                           for pack in uc.PACKS
+                           for name, content in uc.autoplay_files(pack.get('autoplay_backup')).items()}
+        del before['files']['upgrade_check_b/autoPlay_2026_11_11-15_32_39']
+        created = {key: row['createdAt'] for key, row in before['db']['rows'].items()}
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            with mock.patch.object(run, 'launch'), mock.patch.object(run, 'wait_for_rows', return_value=created), \
+                    mock.patch.object(run, 'seed'), mock.patch.object(run, 'snapshot', return_value=before), \
+                    mock.patch.object(run, 'events', return_value=[]):
+                with self.assertRaisesRegex(uc.SetupError, 'seeded autoplay files: upgrade_check_b/autoPlay_'):
+                    run.prepare(Path(tmp) / 'trace-absent', None)
+
     def test_a_newer_build_that_crashes_at_start_fails_the_check(self):
         with tempfile.TemporaryDirectory() as tmp:
             run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'com.kimjisub.launchpad', Path(tmp))
@@ -290,6 +306,95 @@ class MainTest(unittest.TestCase):
 
 
 class PackTest(unittest.TestCase):
+    def test_device_seeding_includes_and_validates_every_autoplay_file(self):
+        files = {}
+
+        def put(local, remote, owner_of):
+            files.update({f'{local.name}/{p.name}': hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in local.iterdir() if p.is_file()})
+
+        device = FakeDevice()
+        device.put = put
+        run = uc.UpgradeRun(device, Path('old.apk'), Path('new.apk'), 'p', Path('.'))
+        with mock.patch.object(run, 'launch'), mock.patch.object(run, 'pull_db', return_value=snapshot()['db']):
+            run.wait_for_rows(Path('.'))
+        self.assertEqual(uc.autoplay_seed_mismatches(files), [])
+        paths = sorted(p for p in files if Path(p).name.startswith('autoPlay'))
+        self.assertEqual(len(paths), 5)
+        for path in paths:
+            for digest in (None, 'changed'):
+                with self.subTest(file=path, digest=digest):
+                    damaged = dict(files)
+                    if digest is None:
+                        del damaged[path]
+                    else:
+                        damaged[path] = digest
+                    wrong = uc.autoplay_seed_mismatches(damaged)
+                    self.assertEqual(len(wrong), 1, wrong)
+                    self.assertIn(path, wrong[0])
+
+    def test_mapping_fixtures_keep_the_original_in_both_backup_formats(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = Path(tmp) / 'original'
+            uc.write_pack(original, 'Original')
+            original_bytes = (original / 'autoPlay').read_bytes()
+            backups = set()
+            for pack in uc.PACKS:
+                root = Path(tmp) / pack['id']
+                if backup := pack.get('autoplay_backup'):
+                    uc.write_pack(root, pack['title'], backup)
+                else:
+                    uc.write_pack(root, pack['title'])
+                if backup := pack.get('autoplay_backup'):
+                    backups.add(backup)
+                    self.assertEqual((root / backup).read_bytes(), original_bytes)
+                    self.assertNotEqual((root / 'autoPlay').read_bytes(), original_bytes)
+            self.assertEqual(backups, {'autoPlay_2026_11_11-15_32_39', 'autoPlay_previous'})
+
+    def test_real_autoplay_file_changes_and_deletions_fail_the_upgrade(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'packs'
+            for pack in uc.PACKS:
+                if backup := pack.get('autoplay_backup'):
+                    uc.write_pack(root / pack['id'], pack['title'], backup)
+                else:
+                    uc.write_pack(root / pack['id'], pack['title'])
+
+            def files():
+                return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+                        for p in root.rglob('*') if p.is_file()}
+
+            before = snapshot()
+            before['files'] = files()
+            targets = sorted(p for p in before['files'] if Path(p).name.startswith('autoPlay'))
+            self.assertEqual(len(targets), 5)
+            self.assertEqual(uc.compare(before, copy.deepcopy(before), None), [])
+            for target in targets:
+                path = root / target
+                saved = path.read_bytes()
+                for action in ('changed', 'lost'):
+                    with self.subTest(file=target, action=action):
+                        if action == 'changed':
+                            path.write_bytes(b'c 2\no 8 8\n')
+                        else:
+                            path.unlink()
+                        after = copy.deepcopy(before)
+                        after['files'] = files()
+                        problems = uc.compare(before, after, None)
+                        self.assertEqual(len(problems), 1, problems)
+                        self.assertIn(f"{action} ['{target}']", problems[0])
+                        run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp) / 'results')
+                        name = f'{action}-{target.replace("/", "-")}'
+                        with mock.patch.object(run, 'prepare', return_value=before), \
+                                mock.patch.object(run, 'upgrade', return_value=[]), \
+                                mock.patch.object(run, 'snapshot', return_value=after), \
+                                mock.patch.object(run, 'events', return_value=[]):
+                            result = run.scenario(name, None)
+                        report = json.loads((run.out / name / 'result.json').read_text())
+                        self.assertFalse(result['passed'])
+                        self.assertEqual(report['problems'], problems)
+                        path.write_bytes(saved)
+
     def test_pack_has_the_files_a_pack_needs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'pack'
