@@ -366,7 +366,7 @@ Release builds use multiple ProGuard configs:
 - **Koin 4.2.2**: Dependency injection
 - **Firebase BOM 34.18.0**: Firestore, Realtime Database, Messaging, Analytics, Crashlytics, Performance, Remote Config
 - **Compose BOM 2026.08.00**: Material3, UI, Runtime
-- **Retrofit 3.0.0** + OkHttp 5.5.0: API networking (logging interceptor stays at HEADERS, see BaseApiService)
+- **Retrofit 3.0.0** + OkHttp 5.5.1: API networking (logging interceptor stays at HEADERS, see BaseApiService)
 - **Material 1.14.0**: Material Design components
 - **Splitties 3.0.0**: Android utilities
 - **zip4j 2.11.6**: UniPack archive handling
