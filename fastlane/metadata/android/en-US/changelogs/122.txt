@@ -1,0 +1,6 @@
+• Fixed Android closing UniPad if you left while sounds were loading. Loading resumes when you return.
+• UniPad loads the sounds it can and tells you which files failed and why.
+• Auto Mapping keeps chain order and timing. Restore your previous AutoPlay from the play menu.
+• A move or backup fails and keeps the original if a folder can't be read or made.
+• Surround Opus sounds play in the correct channels.
+• Android 7 can import zip packs from a folder. Untitled packs show their folder name.
