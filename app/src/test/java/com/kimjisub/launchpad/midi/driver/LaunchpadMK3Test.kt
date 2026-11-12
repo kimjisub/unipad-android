@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.midi.driver
 
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -18,6 +19,11 @@ class LaunchpadMK3Test {
 		sendListener = mockk(relaxed = true)
 		driver.setOnGetSignalListener(receiveListener)
 		driver.setOnSendSignalListener(sendListener)
+	}
+
+	@Test
+	fun getInitSysEx_usesMidiCable() {
+		assertEquals(0, driver.getInitSysEx().second)
 	}
 
 	// --- getSignal: pad touch (cmd=9) ---
