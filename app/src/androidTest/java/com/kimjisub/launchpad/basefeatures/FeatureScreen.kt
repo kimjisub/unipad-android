@@ -113,10 +113,15 @@ class FeatureScreen {
             }
             SystemClock.sleep(25)
         }
+        // The last scroll can end past the deadline; what it brought into view still counts.
+        freshNode(selector)?.let { return it }
         capture("missing-scroll-node-${SystemClock.uptimeMillis()}")
         throw AssertionError("Missing $selector after scrolling $direction")
     }
-    /** Reacquire only if the window replaced the node before input was injected. */
+    /**
+     * Reacquire only if the window replaced the node before input was injected. Returns once the touch
+     * is injected, not once the app has handled it: a check of what the click changed waits for it.
+     */
     fun click(selector: BySelector) = withResponsiveInput {
         val deadline = SystemClock.elapsedRealtime() + 10000
         do {
@@ -133,6 +138,18 @@ class FeatureScreen {
     /** Whether [selector] is on screen now; unlike [UiDevice.hasObject] it waits at most 0.5 s for idle and reads a fresh tree. */
     fun has(selector: BySelector): Boolean = freshNode(selector) != null
     fun clickText(id: Int) = click(By.text(text(id)))
+    /**
+     * On the skin screen, selecting the applied skin [applied] must not offer Apply. Tapping the skin
+     * already selected changes nothing on screen, so the tap is proven handled by first selecting
+     * [other], whose Apply must appear, and then waiting for the applied skin to take that Apply away.
+     */
+    fun assertAppliedSkinOffersNoApply(applied: String, other: String, message: String) {
+        val apply = By.text(text(R.string.apply))
+        node(By.text(other)).click()
+        await("Skin $other did not offer Apply") { has(apply) }
+        node(By.text(applied)).click()
+        await(message) { !has(apply) }
+    }
     fun clickDescription(id: Int) = click(By.desc(text(id)))
     fun awaitActivity(type: Class<out Activity>, language: String? = null) {
         ActivityReadiness.await(context, device, 10000, type, language)
