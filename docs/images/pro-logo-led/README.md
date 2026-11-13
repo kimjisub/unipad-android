@@ -1,9 +1,12 @@
 # Pro Light Mode logo examples
 
 These are unmodified captures from the running app on an Android 15 emulator.
-The logo and theme examples were captured with `LogoLedEvidenceTest` on
-`26d5665b`. The before image is from `f59cb45c`; the after image uses the same
-2400×1080 display. There are no overlays or simulated app drawings.
+The unlit logo and theme examples were captured with `LogoLedEvidenceTest` on
+`7d63ad14`; the red examples are from `26d5665b`. The unlit logo uses the default
+pad color, including when the theme supplies its own logo mask. The mode
+comparison's before image is from `f59cb45c`; its after image was captured with
+`LogoLedScreenTest` on `7d63ad14`, using the same 2400×1080 display. There are no
+overlays or simulated app drawings.
 
 The same emulator was resized for each layout, at density 320 (two pixels per
 dp). These are layout checks, not physical tablet or Launchpad tests. The
