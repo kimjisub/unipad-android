@@ -395,15 +395,26 @@ def store_detail(label):
 
 class PermissionDialogDevice:
     """A device whose permission dialog slides up over several snapshots and closes only on a press
-    on its Allow button where the button really is; a press anywhere else in the dialog does nothing."""
+    on its Allow button where the button really is; a press anywhere else in the dialog does nothing.
+
+    `dropped` presses on Allow at rest are lost, as when the dialog does not take input yet (seen on
+    an Android 15 emulator: the dialog stayed until Allow was pressed again by hand). `lingers` keeps
+    the dialog on that many snapshots after the press that closes it. `reopens` shows the dialog gone
+    on one snapshot after that press and back on every later one."""
     SLIDE = (309, 120, 30)  # how far below its resting place the dialog is on each snapshot while it moves
 
-    def __init__(self):
+    def __init__(self, dropped=0, lingers=0, reopens=False):
         self.state = "detail"
         self.slide = list(self.SLIDE)
         self.lift = 0
         self.presses = []
         self.allowed = False
+        self.dropped = dropped
+        self.lingers = None
+        self.linger = lingers
+        self.reopens = reopens
+        self.reopen_after_closing = False
+        self.screenshots = []
 
     def run(self, command, **kwargs):
         action = command[command.index("--") + 1:]
@@ -412,9 +423,17 @@ class PermissionDialogDevice:
             answer = self.snapshot()
         elif action[0] == "press":
             self.press(int(action[1]), int(action[2]))
+        elif action[0] == "screenshot":
+            self.screenshots.append(Path(action[1]).name)
         return check.subprocess.CompletedProcess(command, 0, json.dumps(answer).encode(), b"")
 
     def snapshot(self):
+        if self.lingers:
+            self.lingers -= 1
+            return permission_dialog(0)
+        if self.reopen_after_closing:
+            self.reopen_after_closing = False
+            return store_detail(check.DOWNLOAD)
         if self.state == "detail":
             return store_detail(check.DOWNLOAD)
         if self.state == "dialog":
@@ -427,8 +446,15 @@ class PermissionDialogDevice:
         if self.state == "detail" and 840 <= y < 922:
             self.state = "dialog"
         elif self.state == "dialog" and 593 <= x < 1942 and 484 + self.lift <= y < 631 + self.lift:
+            if self.dropped:
+                self.dropped -= 1
+                return
             self.allowed = True
             self.state = "downloaded"
+            self.lingers = self.linger
+            if self.reopens:
+                self.state = "dialog"
+                self.reopen_after_closing = True
 
 
 class Clock:
@@ -444,7 +470,7 @@ class Clock:
 
 
 class PermissionDialogTest(unittest.TestCase):
-    def download(self, device):
+    def download(self, device, permission_before=(False, False)):
         class Adb(FakeDevice):
             def shell(self, *args, **kwargs):
                 if args[0] == "dumpsys":
@@ -457,7 +483,7 @@ class PermissionDialogTest(unittest.TestCase):
             store_check.find_row = lambda pack: check.Node("", "", True, (1084, 179, 2358, 337))
             try:
                 with unittest.mock.patch.object(check, "time", Clock()):
-                    store_check.download({"code": "_Joanna"}, (False, False))
+                    store_check.download({"code": "_Joanna"}, permission_before)
             finally:
                 self.saved = sorted(path.name for path in Path(directory).iterdir())
         return store_check.result
@@ -473,14 +499,43 @@ class PermissionDialogTest(unittest.TestCase):
         self.assertEqual(dialog["permission_after"], {"granted": True, "answered": True})
         self.assertIn("notification-permission.json", self.saved)
 
-    def test_a_dialog_still_open_after_the_press_fails_within_the_dialog_limit(self):
-        device = PermissionDialogDevice()
-        press = device.press
-        device.press = lambda x, y: press(x, y) if device.state == "detail" else device.presses.append((x, y))
-        with self.assertRaisesRegex(check.ScreenTimeout, f"permission dialog was still open {check.DIALOG_TIMEOUT} s "):
+    def test_allow_is_pressed_again_while_the_dialog_at_rest_stays_open(self):
+        device = PermissionDialogDevice(dropped=1)
+        result = self.download(device)
+        self.assertTrue(device.allowed)
+        dialog = result["download"]["notification_dialog"]
+        self.assertEqual(dialog["presses"], [[1267, 557], [1267, 557]])
+        self.assertEqual(dialog["permission_after"], {"granted": True, "answered": True})
+        self.assertIn("Allow pressed 2 time(s)", self.store_check.result["steps"][-2]["detail"])
+
+    def test_a_dialog_that_drops_every_press_fails_as_not_closed_after_the_press_limit(self):
+        device = PermissionDialogDevice(dropped=check.ALLOW_PRESSES)
+        with self.assertRaisesRegex(check.DialogNotClosed,
+                                    f"permission dialog was still open after {check.ALLOW_PRESSES} presses on Allow"):
             self.download(device)
+        self.assertEqual(device.presses[2:], [(1267, 557)] * check.ALLOW_PRESSES)  # after the row and Download
         self.assertIn("notification-permission-open.json", self.saved)
-        self.assertEqual(self.store_check.result["notification_dialog"]["pressed"], [1267, 557])
+        self.assertIn("notification-permission-open.png", device.screenshots)
+        self.assertEqual(len(self.store_check.result["notification_dialog"]["presses"]), check.ALLOW_PRESSES)
+
+    def test_a_dialog_that_closes_just_after_the_wait_gave_up_is_not_pressed_again(self):
+        device = PermissionDialogDevice(lingers=int(check.DIALOG_TIMEOUT / 0.5) + 1)
+        result = self.download(device)
+        self.assertEqual(result["download"]["notification_dialog"]["presses"], [[1267, 557]])
+        self.assertEqual(len(device.presses), 3)
+
+    def test_a_dialog_back_on_the_screen_while_awaiting_the_result_fails_as_not_closed_not_as_no_result(self):
+        device = PermissionDialogDevice(reopens=True)
+        with self.assertRaises(check.DialogNotClosed) as failure:
+            self.download(device)
+        self.assertRegex(str(failure.exception), "permission dialog did not close: it was pressed but opened again")
+        self.assertNotIn("did not appear", str(failure.exception))
+        self.assertIn("download-result.json", self.saved)
+
+    def test_an_unexpected_dialog_while_awaiting_the_result_fails_as_not_closed(self):
+        device = PermissionDialogDevice()
+        with self.assertRaisesRegex(check.DialogNotClosed, "was not expected \\(already answered\\) but opened"):
+            self.download(device, permission_before=(False, True))
 
     def test_a_closed_dialog_without_the_permission_granted_fails(self):
         device = PermissionDialogDevice()
