@@ -32,7 +32,10 @@ before launch, the pack folders, and a copy of the app database.
 
 Controls are pressed only once two snapshots in a row show them in the same place: the main
 screen turns to landscape after launch and the permission dialog slides in, and a snapshot taken
-meanwhile reports where a control is mid-move.
+meanwhile reports where a control is mid-move. A dialog at rest can still drop a press that comes
+too early, so Allow is pressed again, up to `ALLOW_PRESSES` times, while the dialog stays open; a
+dialog still on the screen while the download result is awaited fails the check as a dialog that
+did not close, not as a missing result.
 
 Results, screenshots and screen snapshots go to `--out`; `store-check.json` holds the verdict.
 """
@@ -73,6 +76,7 @@ INDICATOR_SUFFIX = " ●"
 LIST_TIMEOUT = 30
 DOWNLOAD_TIMEOUT = 180
 DIALOG_TIMEOUT = 10
+ALLOW_PRESSES = 3
 SCREEN_TIMEOUT = 20
 # Longer than the rental's own limit for one UI command (600 s), so the rental ends a stuck command
 # and cleans up after it; this limit only catches the rental itself hanging.
@@ -87,6 +91,10 @@ class CheckFailed(Exception):
 
 class ScreenTimeout(CheckFailed):
     """The screen could be read, but what was waited for did not appear on it in time."""
+
+
+class DialogNotClosed(CheckFailed):
+    """The notification permission dialog stayed on the screen, covering what the check reads."""
 
 
 def normalized(text):
@@ -155,6 +163,22 @@ def value_after(root, label):
         if node.text == label:
             return nodes[index + 1].text
     return None
+
+
+def allow_button(root):
+    return find(root, identifier=PERMISSION_ALLOW)
+
+
+DIALOG_OPEN = "permission dialog open"
+
+
+def download_state(root):
+    """What the Store detail shows of the download: its result, or the permission dialog covering it."""
+    if find(root, text=DOWNLOADED):
+        return DOWNLOADED
+    if find(root, text=FAILED):
+        return FAILED
+    return DIALOG_OPEN if allow_button(root) else None
 
 
 def store_list(root):
@@ -401,16 +425,14 @@ class Screen:
             return node if node and last and node.bounds == last.bounds else None
         return self.wait(at_rest, timeout, f"{what} at rest", name)
 
-    def gone(self, locate, timeout, what, name):
-        """Wait until `locate` finds nothing on the screen."""
+    def gone(self, locate, timeout):
+        """Whether `locate` finds nothing on the screen within `timeout` seconds."""
         deadline = time.monotonic() + timeout
         while True:
             if locate(self.screen()) is None:
-                return
+                return True
             if time.monotonic() >= deadline:
-                self.screen(name)
-                self.capture(name)
-                raise ScreenTimeout(f"{what} was still open {timeout} s after the press (see {name}.png)")
+                return False
             time.sleep(0.5)
 
 
@@ -624,9 +646,14 @@ class StoreCheck:
         self.screen.tap(button)
         expect_dialog = not permission_before[0] and not permission_before[1]
         dialog = self.allow_notifications() if expect_dialog else None
-        state = self.screen.wait(lambda root: (find(root, text=DOWNLOADED) and DOWNLOADED) or (find(root, text=FAILED) and FAILED),
-                                 DOWNLOAD_TIMEOUT, "The download result", "download-result")
+        state = self.screen.wait(download_state, DOWNLOAD_TIMEOUT, "The download result", "download-result")
         seconds = round(time.monotonic() - started, 1)
+        if state == DIALOG_OPEN:
+            self.screen.screen("download-result")
+            self.screen.capture("download-result")
+            reason = "was pressed but opened again" if dialog else "was not expected (already answered) but opened"
+            raise DialogNotClosed(f"The notification permission dialog did not close: it {reason} and covered the "
+                                  f"screen {seconds} s after Download was pressed (see download-result.png)")
         self.screen.capture("store-downloaded")
         if state == FAILED:
             raise CheckFailed(f"The app showed \"{FAILED}\" for {pack['code']} after {seconds} s")
@@ -636,25 +663,42 @@ class StoreCheck:
                               f"{'shown and allowed' if dialog else 'not asked (already answered)'}")
 
     def allow_notifications(self):
-        """Press Allow on the notification permission dialog once it has come to rest, then require
-        the dialog to close and the permission to be granted; returns where it was read and pressed."""
-        def allow(root):
-            return find(root, identifier=PERMISSION_ALLOW)
-        first = self.screen.wait(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
-        button = self.screen.settled(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission")
+        """Press Allow on the notification permission dialog once it has come to rest, pressing again
+        while the dialog stays open, then require the permission to be granted; returns where the
+        dialog was read and each press landed."""
+        what = "The notification permission dialog"
+        first = self.screen.wait(allow_button, DIALOG_TIMEOUT, what, "notification-permission")
+        button = self.screen.settled(allow_button, DIALOG_TIMEOUT, what, "notification-permission")
         self.screen.screen("notification-permission")
         self.screen.capture("notification-permission")
-        # Kept in the result before the press, so a dialog that stays open still shows where it was read and pressed.
+        # Kept in the result before each press, so a dialog that stays open still shows where it was read and pressed.
         dialog = self.result["notification_dialog"] = {
-            "first_seen": list(first.bounds), "pressed_bounds": list(button.bounds), "pressed": list(button.center)}
-        self.screen.tap(button)
-        pressed = time.monotonic()
-        self.screen.gone(allow, DIALOG_TIMEOUT, "The notification permission dialog", "notification-permission-open")
+            "first_seen": list(first.bounds), "pressed_bounds": list(button.bounds), "pressed": list(button.center),
+            "presses": []}
+        while True:
+            dialog["presses"].append(list(button.center))
+            self.screen.tap(button)
+            pressed = time.monotonic()
+            if self.screen.gone(allow_button, DIALOG_TIMEOUT):
+                break
+            if len(dialog["presses"]) >= ALLOW_PRESSES:
+                self.screen.screen("notification-permission-open")
+                self.screen.capture("notification-permission-open")
+                raise DialogNotClosed(f"{what} was still open after {ALLOW_PRESSES} presses on Allow, each followed by "
+                                      f"{DIALOG_TIMEOUT} s (see notification-permission-open.png)")
+            try:
+                button = self.screen.settled(allow_button, DIALOG_TIMEOUT, what, "notification-permission-retry")
+            except ScreenTimeout:
+                # It closed just after the wait above gave up.
+                if allow_button(self.screen.screen()) is None:
+                    break
+                raise
         granted, answered = notification_permission(self.adb.shell("dumpsys", "package", self.package))
         dialog.update(closed_after=round(time.monotonic() - pressed, 1),
                       permission_after={"granted": granted, "answered": answered})
-        self.step("notification permission", f"dialog first read at {dialog['first_seen']}, Allow pressed at "
-                                             f"{dialog['pressed']} once at rest, closed after {dialog['closed_after']} s; "
+        self.step("notification permission", f"dialog first read at {dialog['first_seen']}, Allow pressed "
+                                             f"{len(dialog['presses'])} time(s) at {dialog['presses']} once at rest, "
+                                             f"closed {dialog['closed_after']} s after the last press; "
                                              f"granted={granted} answered={answered}")
         if not (granted and answered):
             raise CheckFailed(f"Notification permission is not granted after Allow (granted={granted}, answered={answered})")
