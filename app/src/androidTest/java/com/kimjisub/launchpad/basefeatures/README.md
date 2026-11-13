@@ -384,6 +384,16 @@ reads those with `cmd overlay lookup` and `dumpsys window displays`. Android 10 
 so there a navigation overlay is switched without waiting, as before; of the tests that switch one,
 only `transferScreenSearchResultsScrollAboveKeyboardOnTablet` runs below API 33. Switching only the
 cutout (the play screen's window-change tests, which run on every version) does not wait.
+A navigation overlay change also relaunches the home app. On a busy emulator that took several
+seconds, and opening the main screen meanwhile made the system time out pausing the home app and
+show its "isn't responding" dialog, which then held the input focus the main screen's readiness
+check waits for. So, while the home app is in front, a navigation overlay change first waits for it
+to settle from any earlier change and afterwards until it has the new resources, is resumed with no
+relaunch pending, has drawn its window and holds focus (`SystemWindowState`, read from
+`dumpsys activity activities` and `dumpsys window windows`). This waits on the system, not on the
+app, and leaves every check of the app's screens as it was. When the system's "isn't responding"
+dialog is on screen, the failure of that wait, of the navigation bar wait and of the screen readiness
+check names the process it is for; the dialog is never answered or closed.
 `midiSelectRotatesAfterReopeningFromReverseLandscape` repeats that sequence ten times;
 `midiSelectRotatesWithExistingNavigationSettings` rotates the same screens ten times without
 changing any overlay, in whatever navigation mode the device has (it prints `navigation_mode` and

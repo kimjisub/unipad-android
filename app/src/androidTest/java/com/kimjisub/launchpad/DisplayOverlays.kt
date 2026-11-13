@@ -2,6 +2,7 @@ package com.kimjisub.launchpad
 
 import android.os.Build
 import android.os.SystemClock
+import android.util.Log
 import androidx.test.uiautomator.UiDevice
 import kotlin.math.roundToInt
 
@@ -17,6 +18,13 @@ import kotlin.math.roundToInt
  * has the mode and size the enabled overlays define. That wait reads the overlays' values with
  * `cmd overlay lookup`, which Android 11 added, so below it a navigation overlay is switched without
  * waiting, as before. Switching only the cutout does not wait on any version.
+ *
+ * A navigation overlay change also makes the home app relaunch, and with a busy device that takes
+ * several seconds. Opening an app screen while it is relaunching made the system time out pausing
+ * it and show its "isn't responding" dialog over the app. So whenever the home app is in front, the
+ * navigation wait first lets it settle from any earlier change, and after the change waits until it
+ * has relaunched and drawn again (see [SystemWindowState.home]). A home app behind another screen
+ * relaunches only when it comes back to the front, which the next navigation change waits for.
  */
 object DisplayOverlays {
     private const val NAVIGATION = "com.android.internal.systemui.navbar."
@@ -26,6 +34,8 @@ object DisplayOverlays {
     const val HOLE_CUTOUT = CUTOUT + "hole"
     private const val APPLY_TIMEOUT_MS = 10000L
     private const val POLL_MS = 100L
+    private const val HOME_STEADY_MS = 500L
+    private const val TAG = "DisplayOverlays"
     private val CAN_LOOK_UP_OVERLAYS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
     private val NAVIGATION_BAR_SOURCE =
         Regex("""InsetsSource [^\n]*type=(?:ITYPE_NAVIGATION_BAR|navigationBars) frame=\[(-?\d+),(-?\d+)]\[(-?\d+),(-?\d+)]""")
@@ -33,9 +43,16 @@ object DisplayOverlays {
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {
         val previous = overlays.map(::categoryOf).associateWith { enabledIn(device, it) }
-        val awaitApplied = { if (NAVIGATION in previous && CAN_LOOK_UP_OVERLAYS) awaitNavigationBar(device) }
+        val waits = NAVIGATION in previous && CAN_LOOK_UP_OVERLAYS
+        val awaitApplied = {
+            if (waits) {
+                awaitNavigationBar(device)
+                awaitHomeSettled(device)
+            }
+        }
         var failure: Throwable? = null
         try {
+            if (waits) awaitHomeSettled(device)
             overlays.forEach {
                 val result = device.executeShellCommand("cmd overlay enable-exclusive --category $it")
                 check(result.isBlank()) { "Could not enable $it: $result" }
@@ -92,7 +109,44 @@ object DisplayOverlays {
         } while (SystemClock.elapsedRealtime() < deadline)
         throw AssertionError(
             "Navigation bar did not reach mode $mode (height ${heightDp}dp, landscape ${landscapeHeightDp}dp, " +
-                "width ${widthDp}dp) within ${APPLY_TIMEOUT_MS}ms: $state",
+                "width ${widthDp}dp) within ${APPLY_TIMEOUT_MS}ms: $state" + SystemWindowState.describeNotResponding(device),
+        )
+    }
+
+    /**
+     * Waits, when the home app is in front, until it has stayed settled for [HOME_STEADY_MS]: a
+     * relaunch the overlay change caused may start a moment after the navigation bar has changed.
+     * Its "isn't responding" dialog is never answered; the wait fails naming it instead.
+     */
+    private fun awaitHomeSettled(device: UiDevice) {
+        val home = SystemWindowState.homeActivity(device) ?: return
+        var steadySince: Long? = null
+        var detail = ""
+        val start = SystemClock.elapsedRealtime()
+        val deadline = start + APPLY_TIMEOUT_MS
+        do {
+            val state = SystemWindowState.home(
+                home,
+                device.executeShellCommand("dumpsys activity activities"),
+                device.executeShellCommand("dumpsys window windows"),
+            )
+            if (!state.inFront) return
+            detail = state.detail
+            val now = SystemClock.elapsedRealtime()
+            if (!state.settled) {
+                steadySince = null
+            } else {
+                val since = steadySince ?: now.also { steadySince = it }
+                if (now - since >= HOME_STEADY_MS) {
+                    Log.i(TAG, "Home app $home settled ${since - start}ms after the wait began")
+                    return
+                }
+            }
+            SystemClock.sleep(POLL_MS)
+        } while (SystemClock.elapsedRealtime() < deadline)
+        throw AssertionError(
+            "Home app $home did not settle within ${APPLY_TIMEOUT_MS}ms around a navigation overlay change " +
+                "(a wait on the system, not on the app under test): $detail" + SystemWindowState.describeNotResponding(device),
         )
     }
 
