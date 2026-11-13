@@ -11,6 +11,7 @@ interface IThemeResources {
 	val playbg: Drawable?
 	val customLogo: Drawable?
 	val logoLed: Drawable?
+	val logoLedOffColor: Int?
 	val btn: Drawable?
 	val btnPressed: Drawable?
 	val chainled: Drawable?

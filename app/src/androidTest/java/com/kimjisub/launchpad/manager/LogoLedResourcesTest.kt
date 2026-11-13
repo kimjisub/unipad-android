@@ -12,6 +12,36 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class LogoLedResourcesTest {
+    @Test fun padOffColorsUseDecodedImagesAndAreCachedWithTheTheme() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val default = 0xFF2A3A52.toInt()
+        assertEquals(default, DefaultThemeResources(context, true).logoLedOffColor)
+        assertEquals(0xFF787878.toInt(), AssetThemeResources(context, "themes/midifighter", true).logoLedOffColor)
+        assertEquals(0xFFBEBEBE.toInt(), AssetThemeResources(context, "themes/sskin", true).logoLedOffColor)
+        val folder = File(context.cacheDir, "pad-color-fixture")
+        assertFalse(folder.exists())
+        folder.mkdirs()
+        try {
+            File(folder, "theme.json").writeText("""{"name":"Pad color","author":"Tester"}""")
+            val image = File(folder, "btn.png")
+            assertEquals(default, ZipThemeResources(context, folder, true).logoLedOffColor)
+            image.writeText("damaged image")
+            assertEquals(default, ZipThemeResources(context, folder, true).logoLedOffColor)
+            val bitmap = Bitmap.createBitmap(2, 1, Bitmap.Config.ARGB_8888)
+            try {
+                image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                assertEquals(default, ZipThemeResources(context, folder, true).logoLedOffColor)
+                bitmap.eraseColor(0xFF356789.toInt())
+                image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                val loaded = ZipThemeResources(context, folder, true)
+                assertEquals(0xFF356789.toInt(), loaded.logoLedOffColor)
+                image.writeText("damaged after loading")
+                repeat(5) { assertEquals(0xFF356789.toInt(), loaded.logoLedOffColor) }
+                assertEquals(default, ZipThemeResources(context, folder, true).logoLedOffColor)
+            } finally { bitmap.recycle() }
+        } finally { folder.deleteRecursively() }
+    }
+
     @Test fun zipMaskRetainsAlphaAndAspectAndIsDecodedOnlyWhenLoading() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val folder = File(context.cacheDir, "logo-resource-fixture")

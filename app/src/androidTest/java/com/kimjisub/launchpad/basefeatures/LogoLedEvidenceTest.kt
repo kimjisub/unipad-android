@@ -29,7 +29,7 @@ import java.util.zip.ZipOutputStream
 @RunWith(AndroidJUnit4::class)
 class LogoLedEvidenceTest : PlaybackScreenTest() {
     private val logo = By.res("play_logo_led")
-    private val off = 0xFF333333.toInt()
+    private val off = 0xFF2A3A52.toInt()
 
     @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() {
         val prefs = PreferenceManager(screen.context)
@@ -164,7 +164,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             prefs.selectedTheme = "asset://sskin"
             val bundled = screen.openPlay()
             screen.onMain { screen.vm().scbProLightMode.setChecked(true) }
-            captureColor("theme-bundled-off", off)
+            captureColor("theme-bundled-off", 0xFFBEBEBE.toInt())
             command(0, 5)
             captureColor("theme-bundled-red", palette(5))
             bundled.close()

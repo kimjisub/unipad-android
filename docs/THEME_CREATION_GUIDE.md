@@ -98,7 +98,13 @@ Use **one square image with a transparent background**, preferably at least
 uses its alpha mask: original RGB colors are ignored, while transparent pixels
 and soft edges are preserved. The entire shape receives the pack's logo LED
 color (`o l a 5`, for example); `f l` and the Led option being off show the same
-shape in dark gray. No separate on/off images are needed.
+shape in the unlit pad color. This is the average RGB color of the theme's
+`btn` image, weighted by each pixel's alpha and made opaque. Fully transparent
+pixels do not contribute. If `btn` is missing, unreadable, or entirely
+transparent, the default theme's `btn` color is used. Patterned pad images use
+their average color rather than reproducing the pattern inside the logo.
+The color is calculated once when loading the theme and follows the selected
+theme when reopening the play screen. No separate on/off images are needed.
 
 The image fits within a square about 70% of the adjacent round button's size,
 keeping its aspect ratio without cropping or stretching. It may shrink further
@@ -125,7 +131,7 @@ diamond-theme.zip
 ```
 
 The diamond will turn red for palette color 5, follow other pack logo colors,
-and return to dark gray on `f l`. Chain Mode A and B use the same logo rules.
+and return to the unlit pad color on `f l`. Chain Mode A and B use the same logo rules.
 
 See the [actual logo and diamond-mask screenshots](images/pro-logo-led/README.md)
 for phone and tablet layouts, including the unlit state.

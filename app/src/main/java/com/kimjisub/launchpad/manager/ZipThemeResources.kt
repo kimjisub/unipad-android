@@ -28,6 +28,8 @@ class ZipThemeResources(
 	override var playbg: Drawable? = null
 	override var customLogo: Drawable? = null
 	override var logoLed: Drawable? = null
+	override var logoLedOffColor: Int? = null
+		private set
 	override var btn: Drawable? = null
 	override var btnPressed: Drawable? = null
 	override var chainled: Drawable? = null
@@ -62,6 +64,7 @@ class ZipThemeResources(
 			customLogo = loadPng("custom_logo")
 			logoLed = loadPng("logo_led") ?: defaultDrawable(R.drawable.logo_led)
 			btn = loadPng("btn") ?: defaultDrawable(R.drawable.btn)
+			logoLedOffColor = loadPadOffColor(context, btn)
 			btnPressed = loadPng("btn_") ?: defaultDrawable(R.drawable.btn_)
 
 			val chainledDrawable = loadPng("chainled")

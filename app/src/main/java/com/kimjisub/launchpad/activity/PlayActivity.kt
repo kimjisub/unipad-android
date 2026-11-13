@@ -713,7 +713,7 @@ class PlayActivity : BaseActivity() {
 							}
 							if (logoLedBitmap != null) {
 								LogoLedImage(logoLedBitmap) {
-									if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else LOGO_LED_OFF_COLOR
+									if (vm.scbLed.checked && logoLedColor != 0) logoLedColor else theme?.logoLedOffColor ?: 0
 								}
 							} else {
 								Spacer(Modifier.size(0.dp))
@@ -1613,5 +1613,3 @@ private val LOGO_MIN_WIDTH = 24.dp
 
 /** Auto Mapping row colours, each kept readable on the option panel. */
 private data class AutoMappingColors(val label: Color, val arrow: Color, val progress: Color)
-
-private val LOGO_LED_OFF_COLOR = 0xFF333333.toInt()
