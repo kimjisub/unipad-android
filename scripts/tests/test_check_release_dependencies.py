@@ -14,7 +14,7 @@ spec = importlib.util.spec_from_file_location('check_release_dependencies', CHEC
 checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 
-CURRENT = {'name': 'com.squareup.okhttp3:okhttp', 'version': '5.5.0'}
+CURRENT = {'name': 'com.squareup.okhttp3:okhttp', 'version': '5.5.1'}
 OLD = dict(CURRENT, version='4.9.0')
 
 
@@ -87,13 +87,47 @@ class ReleaseDependencyAuditTest(unittest.TestCase):
                 checker.query_osv([])
             self.assertEqual(call.call_count, 3)
 
+    def test_cli_rejects_unsafe_release_okhttp_even_when_osv_is_clean(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            dependencies = path / 'dependencies.json'
+            report = path / 'report.json'
+            args = ['audit', '--dependencies', str(dependencies), '--report', str(report)]
+            for version in ('4.12.0', '5.5.0', '5.5.1-alpha.1', 'unrecognized'):
+                with self.subTest(version=version):
+                    # Test-only okhttp-tls is absent from the resolved release graph.
+                    dependencies.write_text(json.dumps([dict(CURRENT, version=version)]))
+                    with patch('sys.argv', args), patch.object(checker, 'audit', return_value=[]), \
+                            contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(checker.main(), 1)
+                    result = json.loads(report.read_text())
+                    self.assertEqual(result['status'], 'vulnerable')
+                    self.assertEqual(result['findings'], [])
+                    self.assertEqual(result['policy_violations'], [dict(
+                        CURRENT, version=version, minimum='5.5.1',
+                        reason='Requires compromised intermediate certificate blocking')])
+
+    def test_cli_accepts_safe_release_okhttp_versions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            dependencies = path / 'dependencies.json'
+            report = path / 'report.json'
+            args = ['audit', '--dependencies', str(dependencies), '--report', str(report)]
+            for version in ('5.5.1', '5.5.2', '5.10.0', '6.0.0'):
+                with self.subTest(version=version):
+                    dependencies.write_text(json.dumps([dict(CURRENT, version=version)]))
+                    with patch('sys.argv', args), patch.object(checker, 'audit', return_value=[]), \
+                            contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(checker.main(), 0)
+                    self.assertEqual(json.loads(report.read_text())['policy_violations'], [])
+
     def test_cli_exit_codes_and_saved_evidence(self):
         with tempfile.TemporaryDirectory() as directory, \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             path = Path(directory)
             dependencies = path / 'dependencies.json'
             report = path / 'report.json'
-            dependencies.write_text(json.dumps([OLD]))
+            dependencies.write_text(json.dumps([CURRENT]))
             args = ['audit', '--dependencies', str(dependencies), '--report', str(report)]
             for findings, code, status in (([], 0, 'clean'), ([dict(OLD, id='GHSA-test')], 1, 'vulnerable')):
                 with patch('sys.argv', args), patch.object(checker, 'audit', return_value=findings):
