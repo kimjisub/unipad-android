@@ -390,3 +390,11 @@ UniPacks are ZIP archives containing:
 - `sound/`: Audio files organized by chain/position
 - `led/`: LED animation definitions
 - `autoplay/`: Autoplay sequence data
+
+### Theme ZIP Format
+The public theme guide is <https://unipad.io/docs/theme> (English and Korean), kept in the
+[unipad.io repository](https://github.com/kimjisub/unipad.io) under `content/docs/{en,ko}/theme.mdx`;
+the in-app "create theme" button opens it. When a change alters which files a theme ZIP may
+contain or how the app reads them (`ZipThemeImporter`, `ZipThemeResources`, `ThemeAdapter`, the
+play screen's use of theme images), update both language versions of that page in the same week.
+`docs/THEME_CREATION_GUIDE.md` only points to it.
