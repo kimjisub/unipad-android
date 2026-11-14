@@ -9,8 +9,8 @@ import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import com.google.firebase.crashlytics.CustomKeysAndValues
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.BuildConfig
+import com.kimjisub.launchpad.tool.FirebaseServices
 
 @RequiresApi(Build.VERSION_CODES.R)
 internal object SystemExitReporter {
@@ -20,6 +20,8 @@ internal object SystemExitReporter {
 
 	/** Must run on an IO dispatcher: the system history, native crash records and checkpoint use disk. */
 	fun collect(context: Context, sdkInt: Int = Build.VERSION.SDK_INT) {
+		// Without Firebase the checkpoint stays put, so a later launch reports these exits.
+		val crashlytics = FirebaseServices.crashlytics() ?: return
 		val now = System.currentTimeMillis()
 		val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 		val lastProcessed = if (preferences.contains(CHECKPOINT))
@@ -36,7 +38,7 @@ internal object SystemExitReporter {
 			val nativeTrace = if (exit.reason == SystemExitPolicy.CRASH_NATIVE)
 				nativeTrace(records[history.indexOfFirst { it === exit }], sdkInt) else null
 			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background), nativeTrace)
-			FirebaseCrashlytics.getInstance().recordException(exceptionFor(exit), keys)
+			crashlytics.recordException(exceptionFor(exit), keys)
 			Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}" +
 				(nativeTrace?.let { " native=$it" } ?: ""))
 		}

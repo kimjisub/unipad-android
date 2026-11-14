@@ -2,15 +2,15 @@ package com.kimjisub.launchpad.db.repository
 
 import android.database.sqlite.SQLiteException
 import androidx.lifecycle.LiveData
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.ent.Unipack
+import com.kimjisub.launchpad.tool.FirebaseServices
 import com.kimjisub.launchpad.tool.Log
 import java.util.Date
 
 class UnipackRepository(
 	private val unipackDao: UnipackDao,
-	private val reportWriteFailure: (SQLiteException) -> Unit = { FirebaseCrashlytics.getInstance().recordException(it) },
+	private val reportWriteFailure: (SQLiteException) -> Unit = { FirebaseServices.crashlytics()?.recordException(it) },
 ) {
 	fun find(id: String): LiveData<Unipack> {
 		return unipackDao.find(id)

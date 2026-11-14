@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Build
 import android.os.StrictMode
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.di.appModule
 import com.kimjisub.launchpad.diagnostics.BackgroundScreenRecorder
@@ -120,7 +119,7 @@ class BaseApplication : Application() {
 		val names = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) applicationInfo.splitNames
 		else applicationInfo.splitSourceDirs?.map { File(it).name }?.toTypedArray()
 		val splits = names?.joinToString(",") ?: "none"
-		FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SPLITS, splits)
+		FirebaseCrashContext.setKey(CRASH_KEY_INSTALL_SPLITS, splits)
 		Log.log("Install splits: $splits")
 	}
 
@@ -135,11 +134,7 @@ class BaseApplication : Application() {
 				packageManager.getInstallerPackageName(packageName)
 			}
 		}
-		try {
-			FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SOURCE, source)
-		} catch (_: Exception) {
-			// Optional diagnostics must not prevent launch or expose install information in logs.
-		}
+		FirebaseCrashContext.setKey(CRASH_KEY_INSTALL_SOURCE, source)
 	}
 
 	// Debug builds log file access on the main thread (`adb logcat -s StrictMode`), where a slow
