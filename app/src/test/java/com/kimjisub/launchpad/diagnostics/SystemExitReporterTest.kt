@@ -7,10 +7,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.firebase.crashlytics.CustomKeysAndValues
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.kimjisub.launchpad.tool.FirebaseServices
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
@@ -37,9 +40,10 @@ class SystemExitReporterTest {
 	private var backgroundScreen: String? = null
 
 	@Before fun setUp() {
-		mockkStatic(ActivityManager::class, FirebaseCrashlytics::class)
+		mockkStatic(ActivityManager::class)
+		mockkObject(FirebaseServices)
 		every { ActivityManager.isLowMemoryKillReportSupported() } returns true
-		every { FirebaseCrashlytics.getInstance() } returns crashlytics
+		every { FirebaseServices.crashlytics() } returns crashlytics
 		every { context.packageName } returns "com.example.app"
 		every { context.getSharedPreferences(any(), Context.MODE_PRIVATE) } returns preferences
 		every { context.getSystemService(ActivityManager::class.java) } returns manager
@@ -59,7 +63,8 @@ class SystemExitReporterTest {
 	}
 
 	@After fun tearDown() {
-		unmockkStatic(ActivityManager::class, FirebaseCrashlytics::class)
+		unmockkStatic(ActivityManager::class)
+		unmockkObject(FirebaseServices)
 	}
 
 	@Test fun firstCollectionPersistsBaselineWithoutReportingOldExits() {

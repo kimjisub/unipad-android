@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.tool
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /** The context attached to the next crash report. */
 interface CrashContext {
@@ -12,8 +11,13 @@ interface CrashContext {
 }
 
 object FirebaseCrashContext : CrashContext {
-	override fun setKey(key: String, value: String) = FirebaseCrashlytics.getInstance().setCustomKey(key, value)
-	override fun log(message: String) = FirebaseCrashlytics.getInstance().log(message)
+	override fun setKey(key: String, value: String) {
+		FirebaseServices.crashlytics()?.setCustomKey(key, value)
+	}
+
+	override fun log(message: String) {
+		FirebaseServices.crashlytics()?.log(message)
+	}
 }
 
 // Activities keep their names in release builds because the manifest declares them.

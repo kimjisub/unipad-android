@@ -2,14 +2,13 @@ package com.kimjisub.launchpad.network
 
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.kimjisub.launchpad.tool.FirebaseServices
 
 object Networks {
 
 	class FirebaseManager(key: String) {
-		private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-		private val myRef: DatabaseReference = database.getReference(key)
+		private val myRef: DatabaseReference? = FirebaseServices.database()?.getReference(key)
 		private var childEventListener: ChildEventListener? = null
 		private var valueEventListener: ValueEventListener? = null
 		fun setEventListener(childEventListener: ChildEventListener): FirebaseManager {
@@ -23,6 +22,7 @@ object Networks {
 		}
 
 		fun attachEventListener(bool: Boolean): FirebaseManager {
+			val myRef = myRef ?: return this
 			childEventListener?.let {
 				if (bool) myRef.addChildEventListener(it) else myRef.removeEventListener(it)
 			}
