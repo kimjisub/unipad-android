@@ -99,6 +99,11 @@ import kotlinx.coroutines.withContext
 
 class ThemeActivity : BaseActivity() {
 
+	companion object {
+		/** Shared with the iOS app; the site picks English or Korean from the browser language. */
+		private const val THEME_GUIDE_URL = "https://unipad.io/docs/theme"
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
@@ -124,7 +129,7 @@ class ThemeActivity : BaseActivity() {
 					}
 				},
 				onCreateGuide = {
-					browse("https://github.com/kimjisub/unipad-android/blob/main/docs/THEME_CREATION_GUIDE.md")
+					browse(THEME_GUIDE_URL)
 				},
 				onImport = { uri ->
 					// Copying and extracting the ZIP used to run inside the click handler on main.
