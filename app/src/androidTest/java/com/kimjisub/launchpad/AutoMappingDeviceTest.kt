@@ -170,6 +170,7 @@ class AutoMappingDeviceTest : BaseUITest() {
             // for other window changes. The launcher need not be the root of the entire window tree.
             val launcher = screen.node(By.pkg(launcherPackage))
             val bounds = launcher.visibleBounds
+            println("Launcher $homeActivity bounds=$bounds display=${device.displayWidth}x${device.displayHeight}")
             // Inject one timed gesture on the device. Stepwise UiDevice input opened the
             // launcher's long-press menu on API 29 instead of opening the app drawer.
             device.executeShellCommand(
