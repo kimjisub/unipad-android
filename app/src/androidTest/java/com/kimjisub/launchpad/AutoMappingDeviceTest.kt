@@ -170,8 +170,12 @@ class AutoMappingDeviceTest : BaseUITest() {
             // for other window changes. The launcher need not be the root of the entire window tree.
             val launcher = screen.node(By.pkg(launcherPackage))
             val bounds = launcher.visibleBounds
-            device.swipe(bounds.centerX(), bounds.bottom - bounds.height() / 10,
-                bounds.centerX(), bounds.top + bounds.height() / 4, 20)
+            // Inject one timed gesture on the device. Stepwise UiDevice input opened the
+            // launcher's long-press menu on API 29 instead of opening the app drawer.
+            device.executeShellCommand(
+                "input swipe ${bounds.centerX()} ${bounds.bottom - bounds.height() / 10} " +
+                    "${bounds.centerX()} ${bounds.top + bounds.height() / 4} 150",
+            )
             val label = context.applicationInfo.loadLabel(context.packageManager).toString()
             val selector = By.pkg(launcherPackage).text(label)
             if (!screen.has(selector)) {
