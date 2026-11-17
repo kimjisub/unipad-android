@@ -43,7 +43,12 @@ class SoundDurationDeviceTest : BaseUITest() {
         File(root, "keySound").writeText(names.mapIndexed { i, name -> "1 1 ${i + 1} $name\n" }.joinToString(""))
         val original = "t 1 1\nd 47\nt 1 2\nd 67\nt 1 3\nd 89\nt 1 4\nd 101\nt 1 5\nd 131\nt 1 6\nd 149\nt 1 7\n"
         val file = File(root, "autoPlay").apply { writeText(original) }
-        openTestPackInPlay()
+        pressTestPackPlayFlag()
+        val closeWarning = device.wait(Until.findObject(By.text(str(R.string.audio_load_close))), PLAY_TIMEOUT)
+        checkNotNull(closeWarning) { "Unreadable sound notice missing" }
+        takeScreenshot("mixed_duration_load_warning")
+        closeWarning.click()
+        assertTrue("Play screen did not open after dismissing the notice", waitForPlayScreen())
         openPlayOptions()
         takeScreenshot("mixed_duration_before")
         val selector = By.text(str(R.string.autoMapping))
