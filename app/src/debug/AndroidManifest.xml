@@ -17,5 +17,10 @@
             android:name=".tool.NativeCrashCheckReceiver"
             android:exported="true"
             android:permission="android.permission.DUMP" />
+        <provider
+            android:name=".tool.ProcessRecoveryProbe"
+            android:authorities="${applicationId}.process-recovery-probe"
+            android:enabled="false"
+            android:exported="false" />
     </application>
 </manifest>

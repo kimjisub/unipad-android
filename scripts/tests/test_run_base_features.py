@@ -31,7 +31,7 @@ def instrumentation(tests, footer=None, status_codes=()):
 
 class BaseFeaturesRunnerTest(unittest.TestCase):
     def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n",
-                   earlier=None, kill_during_suite=False, serial="emulator-5678"):
+                   earlier=None, kill_during_suite=False, serial="emulator-5678", recovery="PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: -1\n"):
         """Run the script against fake adb/Gradle; `am instrument` prints `output`.
 
         `earlier` maps result file names to contents a previous run left behind. With
@@ -53,6 +53,7 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             (suite_dir / f"{name}.kt").write_text(test_class(name, tests))
         (root / "instrumentation.txt").write_text(output)
         (root / "probe.txt").write_text(probe_output)
+        (root / "recovery.txt").write_text(recovery)
         for name, content in (earlier or {}).items():
             path = root / ".ci-results/base-features" / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,6 +65,7 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
                        "  *getprop*) echo 34 ;;\n"
                        "  *airplane_mode_on*) echo 1 ;;\n"
                        "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
+                       "  *ProcessRecoveryDriver*) touch recovery-ran; cat recovery.txt ;;\n"
                        "  *'am instrument'*) touch suite-ran; [[ -n \"${HANG:-}\" ]] && sleep 60; cat instrumentation.txt ;;\n"
                        "esac\n")
         adb.chmod(0o755)
@@ -78,6 +80,19 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             return root, kill_once_started(command, root, env, "suite-ran")
         result = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True)
         return root, result
+
+    def test_process_recovery_is_required_after_the_in_process_suite(self):
+        root, result = self.run_runner(instrumentation(5))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((root / "recovery-ran").exists())
+
+    def test_process_recovery_failure_or_missing_verdict_fails_preflight(self):
+        for recovery in ("PROCESS_RECOVERY_FAILED\n", "INSTRUMENTATION_CODE: 0\n",
+                         "PROCESS_RECOVERY_PASSED\n", "PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: 0\n",
+                         "PROCESS_RECOVERY_PASSED\nPROCESS_RECOVERY_FAILED\n"):
+            with self.subTest(recovery=recovery):
+                _, result = self.run_runner(instrumentation(5), recovery=recovery)
+                self.assertNotEqual(result.returncode, 0)
 
     def test_unconfirmed_app_settings_stop_before_running_the_suite(self):
         root, result = self.run_runner(instrumentation(5), probe_output="INSTRUMENTATION_CODE: -1\n")

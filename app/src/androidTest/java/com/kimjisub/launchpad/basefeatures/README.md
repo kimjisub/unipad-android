@@ -548,3 +548,37 @@ python3 devices.py down
   the device under test; a rectangular emulator cannot prove behavior around a notch.
 - Live store servers: this suite never contacts them; the release candidate check above reads the
   real list and downloads one pack.
+
+## Returning after real background process death
+
+`run-base-features.sh` also runs `ProcessRecoveryDriver` after the in-process suite. This is a
+second instrumentation entry targeting the **test APK itself**, not UniPad. Its process survives
+`am kill com.kimjisub.launchpad.dev`, so it can press Recents, select the retained task and verify
+cold application startup and restoration without starting another target instrumentation.
+Run on a clean, offline API 33+ emulator in English, with no screen-lock PIN.
+
+The driver installs a generated silent pack, opens it through the library, presses a pad, goes
+Home and waits for the play activity to stop. It requires the old PID to disappear after `am kill`,
+then returns through Recents. The restored PID must differ, the play activity must receive a saved
+state Bundle, the same pack path/title must finish loading and another pad must reach the audio
+engine. Returning to a fresh launcher screen cannot pass. It checks system exit history and the
+crash/events logs for Java/native crashes and ANRs. The fixture has only silence; real audible
+output, OEM eviction decisions and actual memory pressure remain separate checks.
+
+`ProcessRecoveryProbe` exists only in `src/debug`. Its component is disabled by default; the driver
+enables it before startup and disables it again in cleanup. On both process starts it adds an observer through the existing
+optional audio engine binding; all calls still delegate to the normal decoder/native engine.
+Lifecycle observations record PID, saved state, loaded pack and pad coordinates, writing on a
+background thread. In `finally` the driver removes its fixture, disables the observer and stops the
+app. A killed driver can leave its fixture and observer enabled; the base runner restores the
+disabled default and removes this fixture before its next suite. Use a disposable installation. It never clears all app data. Screenshots, hierarchies, events,
+logcat and system exit history are copied to `<results>/process-recovery`; the runner refuses failed,
+missing or incomplete verdicts. Archive a failed round before rerunning it.
+
+For a focused run after building and installing both debug APKs:
+
+```bash
+adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoveryDriver
+adb -s "$ANDROID_SERIAL" pull /data/local/tmp/unipad_tests/process-recovery <round-output>
+```

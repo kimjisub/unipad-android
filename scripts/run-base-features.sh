@@ -52,6 +52,12 @@ device_settings prepare
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain 2>&1 | tee "$results/gradle-ui.txt"
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+# Restore the debug probe's disabled default after an interrupted external driver;
+# remove only its owned fixture/observation files before target instrumentation.
+"$adb_bin" -s "$serial" shell am force-stop com.kimjisub.launchpad.dev
+"$adb_bin" -s "$serial" shell pm disable com.kimjisub.launchpad.dev/com.kimjisub.launchpad.tool.ProcessRecoveryProbe
+"$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev sh -c \
+  "'rm -f files/process-recovery-events.jsonl; rm -rf /storage/emulated/0/Android/data/com.kimjisub.launchpad.dev/files/UniPack/process-recovery-pack'"
 device_settings verify
 # Match the merged debug-test preparation before the target process starts.
 # Direct am instrument bypasses Gradle's force-aot-compilation setup.
@@ -75,5 +81,17 @@ if grep -q 'INSTRUMENTATION_STATUS_CODE: -4' "$output"; then
 fi
 if ! grep -Eq "^OK \\($expected tests\\)" "$output"; then
   echo "Base features did not pass all $expected tests declared by the classes in BaseFeaturesSuite; inspect the instrumentation output above." >&2
+  exit 1
+fi
+# This instrumentation targets the test APK itself, so am kill can end the app while
+# the driver survives to restore its recent task and verify a genuinely new process.
+output="$results/process-recovery.txt"
+"$adb_bin" -s "$serial" shell am instrument -w -r \
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoveryDriver | tee "$output"
+"$adb_bin" -s "$serial" pull /data/local/tmp/unipad_tests/process-recovery "$results/process-recovery"
+if grep -Eq 'PROCESS_RECOVERY_FAILED|INSTRUMENTATION_FAILED|Process crashed' "$output" || \
+    ! grep -q '^PROCESS_RECOVERY_PASSED$' "$output" || \
+    ! grep -q '^INSTRUMENTATION_CODE: -1$' "$output"; then
+  echo 'Background process recovery failed or did not finish; inspect process-recovery.txt and its captures.' >&2
   exit 1
 fi
