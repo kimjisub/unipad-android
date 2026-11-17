@@ -158,8 +158,8 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
         change()
         screen.await(message) { screen.ready() && screen.padBounds().let { it.size == before.size && it != before } }
         screen.instrumentation.waitForIdleSync()
-        // Pad layout can precede the system window transaction. Starting the next DOWN then
-        // lets the system cancel it before the change this test intends to exercise.
+        // Pad layout can precede the system window transaction. Match the new window before
+        // checking the held state or injecting the next press in this layout.
         screen.freshControls()
     }
 

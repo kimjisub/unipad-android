@@ -11,15 +11,26 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class VirtualMidiTest : PlaybackScreenTest() {
     @Test fun virtualLaunchpadReconnectsWhilePlayingAndRestoresInputAndLights() {
+        val ledOn = listOf(9, 144, 0, 2)
+        val ledOff = listOf(9, 144, 0, 0)
         screen.openPlay()
         val activity = screen.resumed()
         val vm = screen.vm()
         val first = VirtualLaunchpad(screen)
         try {
             screen.node(By.text("Virtual Launchpad"))
-            screen.onMain { first.driver.getSignal(9, -112, 0, 127) }
+            screen.onMain {
+                first.packets.clear()
+                first.driver.getSignal(9, -112, 0, 127)
+            }
             screen.await("First connection did not request sound") { audio.plays.size == 1 }
+            screen.await("First connection keyLED on packet missing") { first.packets.contains(ledOn) }
+            val firstOn = first.packets.indexOf(ledOn)
             screen.onMain { first.driver.getSignal(9, -112, 0, 0) }
+            // Finish this animation before attaching another output, so its delayed off cannot
+            // satisfy the reconnected pad's off check.
+            screen.await("First connection keyLED off after on missing") { first.packets.drop(firstOn + 1).contains(ledOff) }
+            println("First connection keyLED cycle before detach: ${first.packets}")
         } finally {
             first.close()
         }
@@ -34,13 +45,17 @@ class VirtualMidiTest : PlaybackScreenTest() {
             screen.node(By.text("Virtual Launchpad"))
             assertSame("Reconnecting replaced the play activity", activity, screen.resumed())
             assertSame("Reconnecting replaced the loaded pack", vm, screen.vm())
-            second.packets.clear()
-            screen.onMain { second.driver.getSignal(9, -112, 0, 127) }
+            screen.onMain {
+                second.packets.clear()
+                second.driver.getSignal(9, -112, 0, 127)
+            }
             screen.await("Reconnected pad did not request sound") { audio.plays.size == before + 1 }
             assertEquals(audio.loaded.getValue("silence.wav"), audio.plays.last())
-            screen.await("Reconnected keyLED on packet missing") { second.packets.contains(listOf(9, 144, 0, 2)) }
+            screen.await("Reconnected keyLED on packet missing") { second.packets.contains(ledOn) }
+            val onIndex = second.packets.indexOf(ledOn)
             screen.onMain { second.driver.getSignal(9, -112, 0, 0) }
-            screen.await("Reconnected keyLED off packet missing") { second.packets.contains(listOf(9, 144, 0, 0)) }
+            screen.await("Reconnected keyLED off after on missing") { second.packets.drop(onIndex + 1).contains(ledOff) }
+            println("Reconnected keyLED on at $onIndex, later packets: ${second.packets.drop(onIndex + 1)}")
             val after = audio.plays.size
             screen.onMain { first.driver.getSignal(9, -112, 0, 127) }
             assertEquals("Old device delivers input after reconnection", after, audio.plays.size)

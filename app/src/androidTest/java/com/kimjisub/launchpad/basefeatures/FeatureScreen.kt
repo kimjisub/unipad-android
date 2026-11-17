@@ -229,8 +229,9 @@ class FeatureScreen {
         assertTrue("Home key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
         await("Home did not show the launcher and leave the app") { device.currentPackageName == launcher && left() }
     }
-    /** Selects the app's card in the system's recent-apps UI; a background app cannot move its own task. */
-    fun bringToFront(activity: Activity) {
+    /** Selects the task's recent-apps card and checks whether its activity should survive or be rebuilt. */
+    fun bringToFront(activity: Activity, expectSameInstance: Boolean = true) {
+        if (!expectSameInstance) assertTrue("The previous activity must be destroyed before returning", onMain { activity.isDestroyed })
         val launcher = launcherPackage()
         val label = context.packageManager.getApplicationLabel(activity.applicationInfo).toString()
         // Instrumented tasks can be described by their application/activity classes instead.
@@ -244,7 +245,8 @@ class FeatureScreen {
         capture("recent-apps-before-return-${SystemClock.uptimeMillis()}")
         click(card)
         awaitActivity(activity.javaClass)
-        assertSame("Recent apps must return to the same activity", activity, resumed())
+        if (expectSameInstance) assertSame("Recent apps must return to the same activity", activity, resumed())
+        else assertNotSame("Recent apps must rebuild the destroyed activity", activity, resumed())
     }
     /**
      * [selector] in recent apps. Some openings of recent apps show a launcher tip (Pixel launcher:
