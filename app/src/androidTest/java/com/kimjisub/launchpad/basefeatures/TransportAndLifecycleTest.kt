@@ -231,6 +231,43 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         screen.capture("step-practice-complete")
     }
 
+    /** Drop activity-scoped state before rebuilding the stopped window; instrumentation survives. */
+    @Test fun playingReturnsAfterBackgroundActivityDestruction() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        screen.openPlay()
+        pressPad(0)
+        val original = screen.resumed() as PlayActivity
+        val vm = screen.vm()
+        val pack = screen.onMain { vm.unipack }
+        val loadedBefore = audio.loaded.toMap()
+        screen.capture("play-before-background-destruction")
+        screen.goHome { screen.onMain { !vm.screenVisible } }
+        screen.onMain {
+            // A configuration recreation alone retains the store. Clear it to exercise the
+            // cold viewmodel/pack loading path without killing the instrumented process.
+            original.viewModelStore.clear()
+            original.recreate()
+        }
+        screen.await("Stopped play activity was not destroyed behind Home") { screen.onMain { original.isDestroyed } }
+        screen.bringToFront(original, expectSameInstance = false)
+        val restored = screen.resumed()
+        val restoredVm = screen.vm()
+        assertNotSame("Returning kept the destroyed activity's viewmodel", vm, restoredVm)
+        screen.await("Restored play screen did not finish loading", screen::ready)
+        assertNotSame("Returning reused the old pack instead of loading it", pack, screen.onMain { restoredVm.unipack })
+        assertEquals(FeatureScreen.TITLE, screen.onMain { restoredVm.unipack.title })
+        assertEquals(screen.pack().path, screen.onMain { restored.intent.getStringExtra("path") })
+        screen.node(By.desc(screen.text(R.string.menu)))
+        screen.await("Restored play screen did not lay out all 64 pads") {
+            screen.padBounds().let { pads -> pads.size == 64 && pads.all { it.width() > 0 && it.height() > 0 } }
+        }
+        screen.freshControls()
+        pressPad(0)
+        assertEquals(audio.loaded.getValue("silence.wav"), audio.plays.last())
+        println("Background destruction returned with a new activity, viewmodel and pack; sounds before=$loadedBefore after=${audio.loaded}")
+        screen.capture("play-after-background-destruction")
+    }
+
     @Test fun playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.openPlay()

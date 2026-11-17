@@ -158,6 +158,9 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
         change()
         screen.await(message) { screen.ready() && screen.padBounds().let { it.size == before.size && it != before } }
         screen.instrumentation.waitForIdleSync()
+        // Pad layout can precede the system window transaction. Match the new window before
+        // checking the held state or injecting the next press in this layout.
+        screen.freshControls()
     }
 
     private fun windowBounds(): Rect = screen.onMain { screen.bounds(screen.resumed().window.decorView) }
