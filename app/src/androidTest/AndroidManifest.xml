@@ -11,6 +11,9 @@
     <instrumentation
         android:name="com.kimjisub.launchpad.DeviceSettingsProbe"
         android:targetPackage="com.kimjisub.launchpad.dev" />
+    <instrumentation
+        android:name="com.kimjisub.launchpad.ProcessRecoverySetup"
+        android:targetPackage="com.kimjisub.launchpad.dev" />
     <!-- Self-targeted: this driver survives the target app's process death. -->
     <instrumentation
         android:name="com.kimjisub.launchpad.ProcessRecoveryDriver"

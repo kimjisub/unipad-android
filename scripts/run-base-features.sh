@@ -85,6 +85,13 @@ if ! grep -Eq "^OK \\($expected tests\\)" "$output"; then
 fi
 # This instrumentation targets the test APK itself, so am kill can end the app while
 # the driver survives to restore its recent task and verify a genuinely new process.
+output="$results/process-recovery-setup.txt"
+"$adb_bin" -s "$serial" shell am instrument -w -r \
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoverySetup | tee "$output"
+if ! grep -q '^PROCESS_RECOVERY_PREPARED$' "$output" || ! grep -q '^INSTRUMENTATION_CODE: -1$' "$output"; then
+  echo 'Process recovery fixture preparation failed.' >&2
+  exit 1
+fi
 output="$results/process-recovery.txt"
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoveryDriver | tee "$output"

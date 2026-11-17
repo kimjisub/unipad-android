@@ -557,7 +557,10 @@ second instrumentation entry targeting the **test APK itself**, not UniPad. Its 
 cold application startup and restoration without starting another target instrumentation.
 Run on a clean, offline API 33+ emulator in English, with no screen-lock PIN.
 
-The driver installs a generated silent pack, opens it through the library, presses a pad, goes
+`ProcessRecoverySetup` first prepares the existing `TestUniPack` silent fixture in normal target
+instrumentation. The independent driver is Java using platform accessibility/input APIs only:
+AGP excludes the app's runtime dependencies (including Kotlin) from the test APK, so self-targeted
+instrumentation cannot use them. The driver opens the fixture through the library, presses a pad, goes
 Home and waits for the play activity to stop. It requires the old PID to disappear after `am kill`,
 then returns through Recents. The restored PID must differ, the play activity must receive a saved
 state Bundle, the same pack path/title must finish loading and another pad must reach the audio
@@ -578,6 +581,8 @@ missing or incomplete verdicts. Archive a failed round before rerunning it.
 For a focused run after building and installing both debug APKs:
 
 ```bash
+adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoverySetup
 adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
   com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoveryDriver
 adb -s "$ANDROID_SERIAL" pull /data/local/tmp/unipad_tests/process-recovery <round-output>
