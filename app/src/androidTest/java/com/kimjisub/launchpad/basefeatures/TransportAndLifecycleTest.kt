@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.basefeatures
 import android.os.Process
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.design.view.ChainView
@@ -233,21 +235,30 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
 
     /** Activity recreation exercises saved-state return without killing the instrumentation process. */
     @Test fun playingReturnsAfterBackgroundActivityRecreation() {
-        val scenario = screen.openPlay()
+        screen.openPlay()
         pressPad(0)
         val original = screen.resumed()
         val vm = screen.vm()
         screen.capture("play-before-background-recreation")
         screen.goHome { screen.onMain { !vm.screenVisible } }
-        scenario.recreate()
-        lateinit var recreated: PlayActivity
-        scenario.onActivity { recreated = it }
-        assertNotSame("Background recreation kept the old activity", original, recreated)
-        assertTrue("The old play activity was not destroyed", screen.onMain { original.isDestroyed })
-        screen.bringToFront(recreated)
+        // ActivityScenario.recreate first resumes the activity, which Android refuses behind Home.
+        // Request the same relaunch on the activity itself, without moving its task to the front.
+        screen.onMain { original.recreate() }
+        var recreated: PlayActivity? = null
+        screen.await("Stopped play activity was not recreated behind Home") {
+            screen.onMain {
+                recreated = Stage.values().flatMap {
+                    ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(it)
+                }.filterIsInstance<PlayActivity>().singleOrNull { it !== original && !it.isDestroyed }
+                original.isDestroyed && recreated != null
+            }
+        }
+        val restored = requireNotNull(recreated)
+        assertNotSame("Background recreation kept the old activity", original, restored)
+        screen.bringToFront(restored)
         screen.await("Recreated play screen did not finish loading", screen::ready)
         assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })
-        assertEquals(screen.pack().path, screen.onMain { recreated.intent.getStringExtra("path") })
+        assertEquals(screen.pack().path, screen.onMain { restored.intent.getStringExtra("path") })
         screen.node(By.desc(screen.text(R.string.menu)))
         assertEquals("Recreated play screen lost its pads", 64, screen.padBounds().size)
         pressPad(0)
