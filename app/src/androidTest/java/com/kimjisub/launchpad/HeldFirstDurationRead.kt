@@ -43,4 +43,3 @@ internal class HeldFirstDurationRead(private val vm: PlayActivityViewModel) : Au
         factory.set(vm, original)
     }
 }
-
