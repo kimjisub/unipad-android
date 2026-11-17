@@ -231,6 +231,30 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         screen.capture("step-practice-complete")
     }
 
+    /** Activity recreation exercises saved-state return without killing the instrumentation process. */
+    @Test fun playingReturnsAfterBackgroundActivityRecreation() {
+        val scenario = screen.openPlay()
+        pressPad(0)
+        val original = screen.resumed()
+        val vm = screen.vm()
+        screen.capture("play-before-background-recreation")
+        screen.goHome { screen.onMain { !vm.screenVisible } }
+        scenario.recreate()
+        lateinit var recreated: PlayActivity
+        scenario.onActivity { recreated = it }
+        assertNotSame("Background recreation kept the old activity", original, recreated)
+        assertTrue("The old play activity was not destroyed", screen.onMain { original.isDestroyed })
+        screen.bringToFront(recreated)
+        screen.await("Recreated play screen did not finish loading", screen::ready)
+        assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })
+        assertEquals(screen.pack().path, screen.onMain { recreated.intent.getStringExtra("path") })
+        screen.node(By.desc(screen.text(R.string.menu)))
+        assertEquals("Recreated play screen lost its pads", 64, screen.padBounds().size)
+        pressPad(0)
+        assertEquals(audio.loaded.getValue("silence.wav"), audio.plays.last())
+        screen.capture("play-after-background-recreation")
+    }
+
     @Test fun playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.openPlay()

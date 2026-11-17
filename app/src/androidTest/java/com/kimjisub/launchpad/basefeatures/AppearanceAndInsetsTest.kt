@@ -98,35 +98,39 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     @Test fun rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        screen.openPlay()
-        val vm = screen.vm()
-        screen.onMain { vm.chain.value = 1 }
-        val activity = screen.resumed()
-        val oldOrientation = screen.onMain { activity.requestedOrientation }
-        try {
-            for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
-                screen.onMain { activity.requestedOrientation = orientation }
-                screen.await("Requested rotation did not reach window") {
-                    val rotation = screen.onMain { activity.display!!.rotation }
-                    rotation == if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+            screen.openPlay()
+            val vm = screen.vm()
+            screen.onMain { vm.chain.value = 1 }
+            val activity = screen.resumed()
+            val oldOrientation = screen.onMain { activity.requestedOrientation }
+            try {
+                awaitSideBarAndCutout()
+                screen.freshControls()
+                for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+                    screen.onMain { activity.requestedOrientation = orientation }
+                    val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+                    awaitSideBarAndCutout(expected)
+                    screen.freshControls()
+                    screen.instrumentation.waitForIdleSync()
+                    assertSame(vm, screen.vm())
+                    assertEquals(FeatureScreen.TITLE, screen.onMain { vm.unipack.title })
+                    assertEquals(1, screen.onMain { vm.chain.value })
+                    screen.onMain {
+                        val decor = activity.window.decorView
+                        val safe = freeArea(decor)!!
+                        val controls = screen.views(decor).filter { it is PadView || it is ChainView }.filter { it.width > 0 && it.height > 0 }
+                        assertEquals("Incomplete pad grid", 64, controls.count { it is PadView })
+                        assertTrue("Chain buttons missing", controls.any { it is ChainView })
+                        controls.forEach { assertTrue("Control ${screen.bounds(it)} outside $safe", safe.contains(screen.bounds(it))) }
+                    }
+                    screen.node(By.desc(screen.text(R.string.menu)))
+                    screen.capture("rotation-$orientation")
                 }
-                screen.instrumentation.waitForIdleSync()
-                assertSame(vm, screen.vm())
-                assertEquals(FeatureScreen.TITLE, screen.onMain { vm.unipack.title })
-                assertEquals(1, screen.onMain { vm.chain.value })
-                screen.onMain {
-                    val decor = activity.window.decorView
-                    val safe = freeArea(decor)!!
-                    val controls = screen.views(decor).filter { it is PadView || it is ChainView }.filter { it.width > 0 && it.height > 0 }
-                    assertEquals("Incomplete pad grid", 64, controls.count { it is PadView })
-                    controls.forEach { assertTrue("Control ${screen.bounds(it)} outside $safe", safe.contains(screen.bounds(it))) }
-                }
-                screen.node(By.desc(screen.text(R.string.menu)))
-                screen.capture("rotation-$orientation")
+                pressPad(0)
+            } finally {
+                screen.onMain { activity.requestedOrientation = oldOrientation }
             }
-            pressPad(0)
-        } finally {
-            screen.onMain { activity.requestedOrientation = oldOrientation }
         }
     }
 
