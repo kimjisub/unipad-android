@@ -51,7 +51,10 @@ internal object ActivityReadiness {
             SystemClock.sleep(minOf(25L, (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0)))
         }
         capture(context, device, "missing-ready-${SystemClock.uptimeMillis()}")
-        throw AssertionError("${type?.simpleName ?: context.packageName} window did not become ready (language=$language)")
+        throw AssertionError(
+            "${type?.simpleName ?: context.packageName} window did not become ready (language=$language)" +
+                SystemWindowState.describeNotResponding(device),
+        )
     }
 
     /** A blocked main thread must not extend the launch or screen-readiness deadline. */
