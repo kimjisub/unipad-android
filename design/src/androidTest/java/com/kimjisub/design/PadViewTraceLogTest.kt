@@ -3,7 +3,9 @@ package com.kimjisub.design
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.SystemClock
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,6 +33,19 @@ class PadViewTraceLogTest {
 			assertEquals(0f, text.shadowDx, 0f)
 			assertEquals(0f, text.shadowDy, 0f)
 			assertEquals(Color.TRANSPARENT, text.shadowColor)
+		}
+	}
+
+	@Test
+	fun deferredNumberKeepsXmlTextSize() {
+		val instrumentation = InstrumentationRegistry.getInstrumentation()
+		instrumentation.runOnMainSync {
+			val context = instrumentation.targetContext
+			val original = LayoutInflater.from(context).inflate(R.layout.view_pad, FrameLayout(context), false)
+				.findViewById<TextView>(R.id.traceLog)
+			val pad = PadView(context).setTraceLogText("1 2 3 ")
+			val deferred = pad.findViewById<TextView>(R.id.traceLog)
+			assertEquals("XML and deferred number size in pixels", original.textSize, deferred.textSize, 0f)
 		}
 	}
 

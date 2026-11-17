@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -106,7 +107,8 @@ class PadView
 
 	private fun traceText(): TextView = traceLog ?: AppCompatTextView(context).apply {
 		id = R.id.traceLog
-		textSize = 10f
+		// Preserve the integer pixel rounding used by the original XML text size.
+		setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimensionPixelSize(R.dimen.text_small).toFloat())
 		traceColor?.let(::setTextColor)
 		applyTraceShadow(this)
 		val margin = (2 * resources.displayMetrics.density + 0.5f).toInt()
