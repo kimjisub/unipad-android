@@ -8,11 +8,6 @@ import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.AppVisibility
-import com.kimjisub.launchpad.tool.AudioTrackDurationReader
-import com.kimjisub.launchpad.tool.SoundDurationReader
-import com.kimjisub.launchpad.tool.UniPackAutoMapper
-import com.kimjisub.launchpad.unipack.UniPackFolder
-import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -25,9 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(AndroidJUnit4::class)
 class AutoMappingDeviceTest : BaseUITest() {
@@ -287,40 +280,6 @@ class AutoMappingDeviceTest : BaseUITest() {
         assertTrue("No-backup explanation missing", device.wait(Until.hasObject(By.text("No saved backup")), 5000L))
         assertTrue("Restore must be disabled", !menuRow(restoreLabel).isEnabled)
         takeScreenshot("automapping_cancelled_no_backup")
-    }
-
-    /** Hold the constructor-injected mapper's first real read until Home has hidden the app.
-     * File count and device speed must not decide whether this lifecycle path is exercised. */
-    private class HeldFirstDurationRead(private val vm: PlayActivityViewModel) : AutoCloseable {
-        val started = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val reads = AtomicInteger()
-        private val factory = vm.javaClass.getDeclaredField("autoMapper").apply { isAccessible = true }
-        private val original = factory.get(vm)
-
-        init {
-            val gated: (UniPackFolder) -> UniPackAutoMapper = { pack ->
-                UniPackAutoMapper(pack, {
-                    object : SoundDurationReader {
-                        private val reader = AudioTrackDurationReader()
-                        override fun durationMs(file: File): Double? {
-                            if (reads.incrementAndGet() == 1) {
-                                started.countDown()
-                                check(release.await(30, TimeUnit.SECONDS)) { "First duration read was not released" }
-                            }
-                            return reader.durationMs(file)
-                        }
-                        override fun close() = reader.close()
-                    }
-                })
-            }
-            factory.set(vm, gated)
-        }
-
-        override fun close() {
-            release.countDown()
-            factory.set(vm, original)
-        }
     }
 
     private companion object {
