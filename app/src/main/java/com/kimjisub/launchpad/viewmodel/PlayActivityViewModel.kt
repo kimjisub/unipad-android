@@ -1218,12 +1218,14 @@ class PlayActivityViewModel(
 
 		val previousTable = folder.autoPlayTable
 		viewModelScope.launch {
+			val operation = Any()
 			try {
 				if (restore) {
 					withContext(Dispatchers.IO) {
 						autoPlayFiles.restore(file) { folder.reloadAutoPlay() }
 					}
 				} else {
+					crashKeys.autoMappingStarted(operation)
 					// A launcher return may cover PlayActivity with the pack list. Only pause media
 					// reads when the whole app is hidden, so that return can still finish saving.
 					autoMapper(folder).run(object : UniPackAutoMapper.Listener {
@@ -1239,6 +1241,7 @@ class PlayActivityViewModel(
 				uiCallback?.showToast(if (restore) string.autoPlayRestoreFailed else string.autoMappingFailed)
 				return@launch
 			} finally {
+				if (!restore) crashKeys.autoMappingFinished(operation)
 				autoMappingActive = false
 			}
 			autoPlayBackupAvailable = true

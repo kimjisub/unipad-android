@@ -14,6 +14,19 @@ import com.kimjisub.launchpad.tool.CrashContext
 class PlayCrashKeys(private val crashContext: CrashContext) {
 	private var openScreen: Any? = null
 	private var written: ScreenLayout? = null
+	private var autoMapping: Any? = null
+
+	/** Only a running operation owns the flag, so an older screen cannot clear a newer run. */
+	fun autoMappingStarted(operation: Any) {
+		autoMapping = operation
+		crashContext.setKey(AUTO_MAPPING_ACTIVE, "true")
+	}
+
+	fun autoMappingFinished(operation: Any) {
+		if (operation !== autoMapping) return
+		autoMapping = null
+		crashContext.setKey(AUTO_MAPPING_ACTIVE, "false")
+	}
 
 	/** A null layout (a moment of undefined size) keeps the one known before. */
 	fun screenLayoutChanged(screen: Any, layout: ScreenLayout?) {
@@ -33,6 +46,7 @@ class PlayCrashKeys(private val crashContext: CrashContext) {
 
 	companion object {
 		const val KEY_PREFIX = "play_"
+		const val AUTO_MAPPING_ACTIVE = "play_auto_mapping_active"
 
 		// Crashlytics on Android has no call that removes a key; an empty value is the closest.
 		const val EMPTY = ""

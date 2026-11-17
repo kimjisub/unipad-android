@@ -1,27 +1,28 @@
 package com.kimjisub.launchpad.tool
 
-import android.media.MediaPlayer
+import android.media.MediaFormat
+import com.kimjisub.launchpad.audio.openAudioPacketSource
 import java.io.File
 
-/** Reads how long sound files play. Close it to free the player it holds. */
+/** Reads how long sound files play. Each read owns and closes its audio source. */
 interface SoundDurationReader : AutoCloseable {
 	/** The length in milliseconds, or null when the file cannot be read. */
 	fun durationMs(file: File): Double?
 }
 
-class MediaPlayerDurationReader : SoundDurationReader {
-	private val player = MediaPlayer()
-
+class AudioTrackDurationReader : SoundDurationReader {
 	override fun durationMs(file: File): Double? = try {
-		player.reset()
-		player.setDataSource(file.path)
-		player.prepare()
-		player.duration.takeIf { it >= 0 }?.toDouble()
+		openAudioPacketSource(file)?.use { source ->
+			val format = source.format
+			if (format.containsKey(MediaFormat.KEY_DURATION)) {
+				format.getLong(MediaFormat.KEY_DURATION).takeIf { it >= 0 }?.div(1000.0)
+			} else null
+		}
 	} catch (e: Exception) {
 		Log.err("Could not read the length of ${file.name}", e)
-		player.reset()
 		null
 	}
 
-	override fun close() = player.release()
+	// No player or other state survives a read, including a failed one.
+	override fun close() = Unit
 }
