@@ -110,6 +110,7 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
             zip.write(info)
             zip.closeEntry()
         }
+        var importedFolder: File? = null
         try {
             screen.launch(MainActivity::class.java)
             screen.onMain {
@@ -120,6 +121,7 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
             fun result() = screen.onMain { (field.get(screen.resumed()) as State<*>).value }
             screen.await("The import must finish") { result() != null }
             val result = result()
+            importedFolder = (result as? ImportResult.Success)?.folder
             screen.node(By.text(screen.text(if (result is ImportResult.Success) R.string.importComplete else R.string.importFailed)))
             screen.capture("nested-copy-import-$wrapped")
             assertTrue("A nested backup must not hide the outer pack: $result", result is ImportResult.Success)
@@ -128,6 +130,10 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
             assertTrue("The nested copy must remain inside the chosen pack", File(folder, "Backup/info").isFile)
             assertTrue("The source archive must remain", archive.isFile)
         } finally {
+            importedFolder?.let { folder ->
+                assertTrue("The imported test folder must be removed", folder.deleteRecursively())
+                screen.repo.delete(folder.name)
+            }
             archive.delete()
         }
     }
