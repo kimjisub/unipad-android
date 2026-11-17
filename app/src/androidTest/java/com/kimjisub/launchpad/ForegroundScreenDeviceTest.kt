@@ -38,7 +38,7 @@ class ForegroundScreenDeviceTest : BaseUITest() {
         assertEquals(play, SystemExitPolicy.foregroundScreenAt(exit, play))
         assertNull(SystemExitPolicy.foregroundScreenAt(exit.copy(importance = 230), play))
 
-        device.pressBack()
+        quitPlayToMain()
         val returned = awaitScreen("MainActivity", packOpen = false)
         assertFalse(returned.packOpen)
         assertEquals(main.processStartedAt, returned.processStartedAt)
