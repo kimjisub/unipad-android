@@ -156,4 +156,17 @@ class SystemExitPolicyTest {
 
 		assertNull(SystemExitPolicy.backgroundScreenAt(serviceProcess, record))
 	}
+	@Test fun foregroundScreenOnlyDescribesItsOwnProcessWhileVisible() {
+		val record = ForegroundScreen("MainActivity", false, 50, 7, 20)
+		val exit = SystemExit(3, timestamp = 60, importance = 100, pid = 7)
+		assertEquals(record, SystemExitPolicy.foregroundScreenAt(exit, record))
+		assertEquals(record, SystemExitPolicy.foregroundScreenAt(exit.copy(importance = 200), record))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit.copy(importance = 230), record))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit.copy(pid = 8), record))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit.copy(timestamp = 49), record))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit, record.copy(processStartedAt = 51)))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit, record.copy(processStartedAt = 0)))
+		assertNull(SystemExitPolicy.foregroundScreenAt(exit, null))
+	}
+
 }

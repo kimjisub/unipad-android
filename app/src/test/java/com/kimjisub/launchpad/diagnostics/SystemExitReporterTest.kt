@@ -38,6 +38,7 @@ class SystemExitReporterTest {
 	private var pendingCheckpoint = 0L
 	private var history = emptyList<ApplicationExitInfo>()
 	private var backgroundScreen: String? = null
+	private val foreground = mutableMapOf<String, Any>()
 
 	@Before fun setUp() {
 		mockkStatic(ActivityManager::class)
@@ -54,6 +55,15 @@ class SystemExitReporterTest {
 		every { preferences.getBoolean("background_pack_open", false) } returns true
 		every { preferences.getLong("background_since", 0) } returns 12
 		every { preferences.getInt("background_pid", 0) } returns EXIT_PID
+		every { preferences.contains(match { it != "last_processed_timestamp" }) } answers { firstArg<String>() in foreground }
+		every { preferences.getString("foreground_screen", null) } answers { foreground["foreground_screen"] as String? }
+		every { preferences.getBoolean("foreground_pack_open", false) } answers { foreground["foreground_pack_open"] as Boolean? ?: false }
+		for (key in listOf("foreground_since", "process_started_at")) {
+			every { preferences.getLong(key, 0) } answers { foreground[key] as Long? ?: 0L }
+		}
+		for (key in listOf("foreground_pid", "process_started_pid")) {
+			every { preferences.getInt(key, 0) } answers { foreground[key] as Int? ?: 0 }
+		}
 		every { preferences.edit() } returns editor
 		every { editor.putLong("last_processed_timestamp", any()) } answers {
 			pendingCheckpoint = secondArg()
@@ -219,6 +229,67 @@ class SystemExitReporterTest {
 		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
 		SystemExitReporter.collect(context)
 		assertFalse("exit_last_screen" in keys.captured.values())
+	}
+
+	private fun savedForeground() {
+		foreground.putAll(mapOf("foreground_screen" to "MainActivity", "foreground_pack_open" to false,
+			"foreground_since" to 14L, "foreground_pid" to EXIT_PID,
+			"process_started_at" to 11L, "process_started_pid" to EXIT_PID))
+	}
+
+	private fun reportedKeys(importance: Int = 100): Map<String, String> {
+		checkpoint = 10
+		history = listOf(exit(3, 20, importance = importance))
+		val keys = slot<CustomKeysAndValues>()
+		every { crashlytics.recordException(any<Throwable>(), capture(keys)) } returns Unit
+		SystemExitReporter.collect(context)
+		return keys.captured.values()
+	}
+
+	@Test fun foregroundLowMemoryExitCarriesItsOwnScreenAndElapsedTimes() {
+		savedForeground()
+		backgroundScreen = "PlayActivity"
+		for (importance in listOf(100, 200)) {
+			val values = reportedKeys(importance)
+			assertEquals("MainActivity", values["exit_foreground_screen"])
+			assertEquals("false", values["exit_foreground_pack_open"])
+			assertEquals("6", values["exit_foreground_ms"])
+			assertEquals("9", values["exit_process_ms"])
+			assertFalse("exit_last_screen" in values)
+			assertFalse("exit_background_ms" in values)
+		}
+	}
+
+	@Test fun foregroundContextNeverGuessesMissingMismatchedOrFutureRecords() {
+		val invalid = mapOf<String, Any>("foreground_pid" to 8, "process_started_pid" to 8,
+			"foreground_since" to 21L, "process_started_at" to 21L)
+		for ((key, value) in invalid) {
+			savedForeground()
+			foreground[key] = value
+			assertNoForegroundKeys(reportedKeys())
+		}
+		savedForeground()
+		for (key in foreground.keys.toList()) {
+			savedForeground()
+			foreground.remove(key)
+			assertNoForegroundKeys(reportedKeys())
+		}
+		foreground.clear()
+		assertNoForegroundKeys(reportedKeys())
+	}
+
+	@Test fun backgroundExitKeepsItsExistingKeysEvenWithAStoredForegroundScreen() {
+		savedForeground()
+		backgroundScreen = "PlayActivity"
+		val values = reportedKeys(230)
+		assertEquals("PlayActivity", values["exit_last_screen"])
+		assertEquals("true", values["exit_pack_open"])
+		assertEquals("8", values["exit_background_ms"])
+		assertNoForegroundKeys(values)
+	}
+
+	private fun assertNoForegroundKeys(values: Map<String, String>) {
+		assertFalse(values.keys.any { it.startsWith("exit_foreground_") || it == "exit_process_ms" })
 	}
 
 	@Test fun unavailableHistoryLeavesCheckpointForTheNextLaunch() {

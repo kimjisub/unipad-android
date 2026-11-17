@@ -34,10 +34,12 @@ internal object SystemExitReporter {
 		}
 		val batch = SystemExitPolicy.select(history, lastProcessed, now, lmkSupported)
 		val background = BackgroundScreenRecorder.read(preferences)
+		val foreground = ForegroundScreenRecorder.read(preferences)
 		for (exit in batch.reports) {
 			val nativeTrace = if (exit.reason == SystemExitPolicy.CRASH_NATIVE)
 				nativeTrace(records[history.indexOfFirst { it === exit }], sdkInt) else null
-			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background), nativeTrace)
+			val keys = keysFor(exit, lmkSupported, SystemExitPolicy.backgroundScreenAt(exit, background),
+				SystemExitPolicy.foregroundScreenAt(exit, foreground), nativeTrace)
 			crashlytics.recordException(exceptionFor(exit), keys)
 			Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}" +
 				(nativeTrace?.let { " native=$it" } ?: ""))
@@ -61,6 +63,7 @@ internal object SystemExitReporter {
 		exit: SystemExit,
 		lmkSupported: Boolean,
 		background: BackgroundScreen?,
+		foreground: ForegroundScreen?,
 		nativeTrace: NativeCrashTrace?,
 	) = CustomKeysAndValues.Builder()
 		.putInt("exit_reason", exit.reason)
@@ -78,6 +81,12 @@ internal object SystemExitReporter {
 				putString("exit_last_screen", it.screen)
 				putBoolean("exit_pack_open", it.packOpen)
 				putLong("exit_background_ms", exit.timestamp - it.since)
+			}
+			foreground?.let {
+				putString("exit_foreground_screen", it.screen)
+				putBoolean("exit_foreground_pack_open", it.packOpen)
+				putLong("exit_foreground_ms", exit.timestamp - it.since)
+				putLong("exit_process_ms", exit.timestamp - it.processStartedAt)
 			}
 			nativeTrace?.let {
 				putString("native_trace", it.status)
