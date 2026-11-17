@@ -166,16 +166,13 @@ class AutoMappingDeviceTest : BaseUITest() {
             ).trim()
             val launcherPackage = homeActivity.lineSequence().last().substringBefore('/')
             assertTrue("Could not resolve the default home activity: $homeActivity", '/' in homeActivity)
-            // Refresh accessibility after the app/launcher window transition, as FeatureScreen does
-            // for other window changes. The launcher need not be the root of the entire window tree.
-            val launcher = screen.node(By.pkg(launcherPackage))
-            val bounds = launcher.visibleBounds
-            println("Launcher $homeActivity bounds=$bounds display=${device.displayWidth}x${device.displayHeight}")
-            // Inject one timed gesture on the device. Stepwise UiDevice input opened the
-            // launcher's long-press menu on API 29 instead of opening the app drawer.
+            screen.node(By.pkg(launcherPackage))
+            // A package selector can match a small child such as the app-drawer indicator.
+            // Swipe across the display, not that child's bounds, with one device-timed gesture.
+            val width = device.displayWidth
+            val height = device.displayHeight
             device.executeShellCommand(
-                "input swipe ${bounds.centerX()} ${bounds.bottom - bounds.height() / 10} " +
-                    "${bounds.centerX()} ${bounds.top + bounds.height() / 4} 150",
+                "input swipe ${width / 2} ${height * 9 / 10} ${width / 2} ${height / 4} 150",
             )
             val label = context.applicationInfo.loadLabel(context.packageManager).toString()
             val selector = By.pkg(launcherPackage).text(label)
