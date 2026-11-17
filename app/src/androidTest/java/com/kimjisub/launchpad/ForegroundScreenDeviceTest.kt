@@ -37,20 +37,28 @@ class ForegroundScreenDeviceTest : BaseUITest() {
         val exit = SystemExit(SystemExitPolicy.LOW_MEMORY, timestamp = System.currentTimeMillis(), pid = play.pid)
         assertEquals(play, SystemExitPolicy.foregroundScreenAt(exit, play))
         assertNull(SystemExitPolicy.foregroundScreenAt(exit.copy(importance = 230), play))
+
+        device.pressBack()
+        val returned = awaitScreen("MainActivity", packOpen = false)
+        assertFalse(returned.packOpen)
+        assertEquals(main.processStartedAt, returned.processStartedAt)
+        assertEquals(main.pid, returned.pid)
+        assertTrue(returned.since >= play.since)
     }
 
-    private fun awaitScreen(name: String): ForegroundScreen {
+    private fun awaitScreen(name: String, packOpen: Boolean? = null): ForegroundScreen {
         val preferences = context.getSharedPreferences(SystemExitReporter.PREFS, Context.MODE_PRIVATE)
         var record: ForegroundScreen? = null
         assertTrue("Foreground record did not reach $name", waitUntil(10000) {
             record = ForegroundScreenRecorder.read(preferences)
-            record?.screen == name
+            record?.screen == name && (packOpen == null || record?.packOpen == packOpen)
         })
         // Reload from disk, independently of the SharedPreferences in-memory cache.
         val disk = java.io.File(context.applicationInfo.dataDir, "shared_prefs/${SystemExitReporter.PREFS}.xml")
         assertTrue("Foreground record was not committed to disk", waitUntil(10000) {
             val xml = runCatching { disk.readText() }.getOrDefault("")
-            xml.contains("value=\"${record!!.since}\"") && xml.contains(">$name</string>")
+            xml.contains("value=\"${record!!.since}\"") && xml.contains(">$name</string>") &&
+                xml.contains("name=\"foreground_pack_open\" value=\"${record!!.packOpen}\"")
         })
         return record!!
     }

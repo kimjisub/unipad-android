@@ -28,6 +28,7 @@ internal class ForegroundScreenRecorder(
 ) : Application.ActivityLifecycleCallbacks {
 	private val packScreens = mutableSetOf<Activity>()
 	private var resumed: Activity? = null
+	private var current: ForegroundScreen? = null
 	// Only the latest screen is needed if storage or collection is slow. Never retain activities on IO.
 	private val pending = Channel<ForegroundScreen>(Channel.CONFLATED)
 
@@ -71,7 +72,7 @@ internal class ForegroundScreenRecorder(
 	override fun onActivityResumed(activity: Activity) {
 		if (resumed === activity) return
 		resumed = activity
-		pending.trySend(ForegroundScreen(activity.screenName(), packScreens.isNotEmpty(), now(), pid, processStartedAt))
+		enqueue(ForegroundScreen(activity.screenName(), packScreens.isNotEmpty(), now(), pid, processStartedAt))
 	}
 
 	override fun onActivityPaused(activity: Activity) {
@@ -79,8 +80,17 @@ internal class ForegroundScreenRecorder(
 	}
 
 	override fun onActivityDestroyed(activity: Activity) {
-		packScreens.remove(activity)
+		val closed = packScreens.remove(activity) && !activity.isChangingConfigurations
 		if (resumed === activity) resumed = null
+		// Back can resume the list before the departing pack is destroyed. Keep its resume time.
+		if (closed && packScreens.isEmpty()) {
+			current?.takeIf { it.packOpen }?.let { enqueue(it.copy(packOpen = false)) }
+		}
+	}
+
+	private fun enqueue(record: ForegroundScreen) {
+		current = record
+		pending.trySend(record)
 	}
 
 	override fun onActivityStarted(activity: Activity) {}

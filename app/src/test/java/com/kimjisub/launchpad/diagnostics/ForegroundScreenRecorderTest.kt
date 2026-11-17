@@ -81,21 +81,88 @@ class ForegroundScreenRecorderTest {
 		assertEquals(200L, ForegroundScreenRecorder.read(preferences)!!.since)
 	}
 
-	@Test fun packBehindAnotherScreenCountsUntilItIsClosed() = runTest {
+	@Test fun returningToListBeforePackDestructionClearsPackWithoutRestartingTheStay() = runTest {
+		recorder.start(backgroundScope) {}
+		val list = mockk<Screen>()
+		val pack = mockk<PackScreen>()
+		every { pack.isChangingConfigurations } returns false
+		recorder.onActivityCreated(list, null)
+		recorder.onActivityStarted(list)
+		recorder.onActivityResumed(list)
+		recorder.onActivityPaused(list)
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityStarted(pack)
+		recorder.onActivityResumed(pack)
+		recorder.onActivityStopped(list)
+		runCurrent()
+
+		// Back resumes the list before stopping and destroying the departing pack activity.
+		recorder.onActivityPaused(pack)
+		recorder.onActivityStarted(list)
+		clock = 300
+		recorder.onActivityResumed(list)
+		recorder.onActivityStopped(pack)
+		runCurrent()
+		val beforeDestruction = ForegroundScreenRecorder.read(preferences)!!
+		assertTrue(beforeDestruction.packOpen)
+		clock = 400
+		recorder.onActivityDestroyed(pack)
+		runCurrent()
+		assertEquals(beforeDestruction.copy(packOpen = false), ForegroundScreenRecorder.read(preferences))
+	}
+
+	@Test fun lastPackClosingAlsoCorrectsAListRecordStillWaitingForStorage() = runTest {
 		recorder.start(backgroundScope) {}
 		val pack = mockk<PackScreen>()
-		val settings = mockk<Screen>()
+		every { pack.isChangingConfigurations } returns false
 		recorder.onActivityCreated(pack, null)
 		recorder.onActivityResumed(pack)
 		recorder.onActivityPaused(pack)
-		recorder.onActivityResumed(settings)
-		runCurrent()
-		assertTrue(ForegroundScreenRecorder.read(preferences)!!.packOpen)
+		clock = 300
+		recorder.onActivityResumed(mockk<Screen>())
+		recorder.onActivityStopped(pack)
+		clock = 400
 		recorder.onActivityDestroyed(pack)
-		recorder.onActivityPaused(settings)
-		recorder.onActivityResumed(settings)
 		runCurrent()
-		assertFalse(ForegroundScreenRecorder.read(preferences)!!.packOpen)
+		val record = ForegroundScreenRecorder.read(preferences)!!
+		assertFalse(record.packOpen)
+		assertEquals(300L, record.since)
+		verify(exactly = 2) { editor.commit() }
+	}
+
+	@Test fun closingOneOfTwoPacksKeepsTheRemainingPackOpen() = runTest {
+		recorder.start(backgroundScope) {}
+		val first = mockk<PackScreen>()
+		val second = mockk<PackScreen>()
+		every { first.isChangingConfigurations } returns false
+		every { second.isChangingConfigurations } returns false
+		recorder.onActivityCreated(first, null)
+		recorder.onActivityCreated(second, null)
+		recorder.onActivityResumed(mockk<Screen>())
+		runCurrent()
+		val record = ForegroundScreenRecorder.read(preferences)!!
+		recorder.onActivityDestroyed(first)
+		runCurrent()
+		assertEquals(record, ForegroundScreenRecorder.read(preferences))
+		verify(exactly = 2) { editor.commit() }
+		recorder.onActivityDestroyed(second)
+		runCurrent()
+		assertEquals(record.copy(packOpen = false), ForegroundScreenRecorder.read(preferences))
+	}
+
+	@Test fun rebuildingAPackDoesNotRecordItAsClosed() = runTest {
+		recorder.start(backgroundScope) {}
+		val pack = mockk<PackScreen>()
+		every { pack.isChangingConfigurations } returns true
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityResumed(pack)
+		recorder.onActivityPaused(pack)
+		runCurrent()
+		val record = ForegroundScreenRecorder.read(preferences)!!
+		recorder.onActivityDestroyed(pack)
+		runCurrent()
+		assertEquals(record, ForegroundScreenRecorder.read(preferences))
+		verify(exactly = 2) { editor.commit() }
 	}
 
 	@Test fun waitingForStorageKeepsOnlyTheLatestTransitionAndLeavesBackgroundKeysAlone() = runTest {
