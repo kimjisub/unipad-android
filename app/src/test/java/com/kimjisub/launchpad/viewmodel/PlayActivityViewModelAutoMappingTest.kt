@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.viewmodel
 import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
+import com.kimjisub.launchpad.tool.CrashContext
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.tool.SoundDurationReader
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
@@ -17,6 +19,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +56,7 @@ class PlayActivityViewModelAutoMappingTest {
 	private val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
 	private val store = ViewModelStore()
 	private val appVisible = MutableStateFlow(true)
+	private val crashContext = mockk<CrashContext>(relaxed = true)
 	private val original = "t 1 1\nd 100\nt 1 1\nd 100\n"
 	private lateinit var root: File
 
@@ -111,6 +115,7 @@ class PlayActivityViewModelAutoMappingTest {
 			UsageAnalytics { _, _ -> },
 			autoMapper = { UniPackAutoMapper(it, { lengths }) },
 			soundEngine = engine,
+			crashKeys = PlayCrashKeys(crashContext),
 			appVisible = appVisible,
 		)
 		store.put("play", vm)
@@ -169,6 +174,10 @@ class PlayActivityViewModelAutoMappingTest {
 		assertNotNull(reloadThread)
 		assertFalse(vm.autoMappingActive)
 		verify { ui.showToast(R.string.autoMappingFailed) }
+		verifyOrder {
+			crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "true")
+			crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "false")
+		}
 	}
 
 	@Test
@@ -192,6 +201,8 @@ class PlayActivityViewModelAutoMappingTest {
 
 		vm.autoMapping()
 		assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
+		verify(exactly = 1) { crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "true") }
+		verify(exactly = 0) { crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "false") }
 		store.clear()
 		lengths.release.countDown()
 		runUntil(1_000) { false }
@@ -199,6 +210,7 @@ class PlayActivityViewModelAutoMappingTest {
 		assertFalse(vm.autoMappingActive)
 		assertEquals(original, File(root, "autoPlay").readText())
 		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
+		verify(exactly = 1) { crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "false") }
 	}
 	@Test
 	fun coveringThePlayScreenWithAnotherAppScreen_doesNotStopMapping() {
@@ -312,6 +324,10 @@ class PlayActivityViewModelAutoMappingTest {
 		vm.autoMapping()
 		runUntil { !vm.autoMappingActive }
 		verify(exactly = 1) { ui.showToast(any()) }
+		verifyOrder {
+			crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "true")
+			crashContext.setKey(PlayCrashKeys.AUTO_MAPPING_ACTIVE, "false")
+		}
 	}
 
 	@Test

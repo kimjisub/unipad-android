@@ -15,6 +15,7 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
@@ -136,24 +137,28 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         takeScreenshot("option_panel_${name}_info")
         val info = measureAll(name, screenshot(), knownLimits, Triple(INFO_CARD_PRODUCER, By.text(TestUniPack.PRODUCER), text))
 
-        requireNotNull(panelItem(By.text(str(R.string.autoMapping))).first).click()
-        assertTrue("[$name] confirmation missing", clickFresh { device.findObject(By.text(str(R.string.autoMappingApply))) })
-        assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(autoMappingBusy)), 5000L))
-        val busyShot = shotAfterDialog(name, By.text(autoMappingBusy))
-        takeScreenshot("option_panel_${name}_automapping")
-        val busy = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(autoMappingBusy), text))
-        val finished = device.wait(Until.findObject(By.text(str(R.string.autoMapping))), AUTO_MAPPING_TIMEOUT_MS)
-        if (finished == null) {
-            val progress = runCatching {
-                ActivityReadiness.onMain(1000) {
-                    val activity = ActivityLifecycleMonitorRegistry.getInstance()
-                        .getActivitiesInStage(Stage.RESUMED).single() as PlayActivity
-                    val vm = ViewModelProvider(activity)[PlayActivityViewModel::class.java]
-                    "${vm.autoMappingProgress}/${vm.autoMappingMax}"
-                }
-            }.getOrElse { "unavailable ($it)" }
-            ActivityReadiness.capture(context, device, "missing-auto-mapping-$name")
-            fail("[$name] Auto Mapping did not finish (progress=$progress)")
+        val busy = HeldFirstDurationRead(FeatureScreen().vm()).use { firstRead ->
+            requireNotNull(panelItem(By.text(str(R.string.autoMapping))).first).click()
+            assertTrue("[$name] confirmation missing", clickFresh { device.findObject(By.text(str(R.string.autoMappingApply))) })
+            assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(autoMappingBusy)), 5000L))
+            val busyShot = shotAfterDialog(name, By.text(autoMappingBusy))
+            takeScreenshot("option_panel_${name}_automapping")
+            val measured = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(autoMappingBusy), text))
+            firstRead.release.countDown()
+            val finished = device.wait(Until.findObject(By.text(str(R.string.autoMapping))), AUTO_MAPPING_TIMEOUT_MS)
+            if (finished == null) {
+                val progress = runCatching {
+                    ActivityReadiness.onMain(1000) {
+                        val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                            .getActivitiesInStage(Stage.RESUMED).single() as PlayActivity
+                        val vm = ViewModelProvider(activity)[PlayActivityViewModel::class.java]
+                        "${vm.autoMappingProgress}/${vm.autoMappingMax}"
+                    }
+                }.getOrElse { "unavailable ($it)" }
+                ActivityReadiness.capture(context, device, "missing-auto-mapping-$name")
+                fail("[$name] Auto Mapping did not finish (progress=$progress)")
+            }
+            measured
         }
 
         (panel + info + busy).forEach { it.assertReadable(name) }

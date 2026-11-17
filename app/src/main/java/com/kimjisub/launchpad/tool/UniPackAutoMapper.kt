@@ -17,7 +17,7 @@ import kotlin.math.roundToInt
  */
 class UniPackAutoMapper(
 	private val unipack: UniPackFolder,
-	private val openDurationReader: () -> SoundDurationReader = ::MediaPlayerDurationReader,
+	private val openDurationReader: () -> SoundDurationReader = ::AudioTrackDurationReader,
 	private val replacer: AutoPlayFileReplacer = AutoPlayFileReplacer(),
 ) {
 	interface Listener {

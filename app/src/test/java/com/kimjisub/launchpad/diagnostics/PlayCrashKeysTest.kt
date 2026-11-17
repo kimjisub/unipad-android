@@ -32,6 +32,27 @@ class PlayCrashKeysTest {
 	private val noValues = keys("", "", "")
 
 	@Test
+	fun autoMappingReportsOnlyWhetherItIsRunning() {
+		val operation = Any()
+		crashKeys.autoMappingStarted(operation)
+		assertEquals(mapOf(PlayCrashKeys.AUTO_MAPPING_ACTIVE to "true"), context.keys)
+		crashKeys.autoMappingFinished(operation)
+		assertEquals(mapOf(PlayCrashKeys.AUTO_MAPPING_ACTIVE to "false"), context.keys)
+	}
+
+	@Test
+	fun anOlderOperationCannotClearTheNewerOperationsFlag() {
+		val first = Any()
+		val next = Any()
+		crashKeys.autoMappingStarted(first)
+		crashKeys.autoMappingStarted(next)
+		crashKeys.autoMappingFinished(first)
+		assertEquals("true", context.keys[PlayCrashKeys.AUTO_MAPPING_ACTIVE])
+		crashKeys.autoMappingFinished(next)
+		assertEquals("false", context.keys[PlayCrashKeys.AUTO_MAPPING_ACTIVE])
+	}
+
+	@Test
 	fun theKeysFollowTheWindow() {
 		crashKeys.screenLayoutChanged(screen, ScreenLayout.of(1_280, 800, false))
 		assertEquals(keys("landscape", "600dp_839dp", "full_screen"), context.keys)

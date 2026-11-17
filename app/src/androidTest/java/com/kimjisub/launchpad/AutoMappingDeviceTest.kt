@@ -7,6 +7,7 @@ import android.view.Surface
 import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SplashActivity
+import com.kimjisub.launchpad.manager.AppVisibility
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -19,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class AutoMappingDeviceTest : BaseUITest() {
@@ -133,59 +135,67 @@ class AutoMappingDeviceTest : BaseUITest() {
         val file = File(TestUniPack.folder(context), "autoPlay")
         val input = "t 1 1\nd 50\n".repeat(3000)
         file.writeText(input)
-        // Pad 1 1 cycles through these files, so the mapping is still reading when the test leaves.
-        TestUniPack.giveEachPressItsOwnSound(context, SOUND_FILES)
+        // Two distinct files let the in-flight read finish while the next waits for visibility.
+        TestUniPack.giveEachPressItsOwnSound(context, 2)
         openTestPackInPlay()
         openPlayOptions()
         val screen = FeatureScreen()
         val vm = screen.vm()
-        clickRow(str(R.string.autoMapping))
-        clickRow("Fit")
-        assertTrue("Mapping did not start", waitUntil(30_000L) {
-            screen.onMain { vm.autoMappingActive && vm.autoMappingProgress > 0 }
-        })
-        SystemClock.sleep(3000)
-        assertTrue("The input must still be mapping before leaving", screen.onMain { vm.autoMappingActive })
-        assertEquals("Mapping must not have saved before leaving", input, file.readText())
-        takeScreenshot("automapping_before_launcher_return")
-        device.pressHome()
-        assertTrue("Home did not hide PlayActivity", waitUntil(10_000L) {
-            screen.onMain { !vm.screenVisible }
-        })
-        // Use the real launcher icon: a bare activity intent does not reproduce its task flags.
-        // UiDevice's package-manager lookup can name Settings instead of the actual home app.
-        val homeActivity = device.executeShellCommand(
-            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME",
-        ).trim()
-        val launcherPackage = homeActivity.lineSequence().last().substringBefore('/')
-        assertTrue("Could not resolve the default home activity: $homeActivity", '/' in homeActivity)
-        // Refresh accessibility after the app/launcher window transition, as FeatureScreen does
-        // for other window changes. The launcher need not be the root of the entire window tree.
-        val launcher = screen.node(By.pkg(launcherPackage))
-        val bounds = launcher.visibleBounds
-        device.swipe(bounds.centerX(), bounds.bottom - bounds.height() / 10,
-            bounds.centerX(), bounds.top + bounds.height() / 4, 20)
-        val label = context.applicationInfo.loadLabel(context.packageManager).toString()
-        val selector = By.pkg(launcherPackage).text(label)
-        if (!screen.has(selector)) {
-            screen.node(By.pkg(launcherPackage).scrollable(true))
-                .scrollUntil(Direction.DOWN, Until.findObject(selector))
+        HeldFirstDurationRead(vm).use { firstRead ->
+            clickRow(str(R.string.autoMapping))
+            clickRow("Fit")
+            assertTrue("Mapping did not start reading", firstRead.started.await(30, TimeUnit.SECONDS))
+            assertTrue("The input must still be mapping before leaving", screen.onMain { vm.autoMappingActive })
+            assertEquals("Mapping must not have saved before leaving", input, file.readText())
+            takeScreenshot("automapping_before_launcher_return")
+            device.pressHome()
+            assertTrue("Home did not hide PlayActivity", waitUntil(10_000L) {
+                screen.onMain { !vm.screenVisible && !AppVisibility.process.visible.value }
+            })
+            firstRead.release.countDown()
+            assertTrue("The in-flight read did not finish", waitUntil(10_000L) {
+                screen.onMain { vm.autoMappingProgress >= 2 }
+            })
+            assertEquals("The next file must wait while the app is hidden", 1, firstRead.reads.get())
+            assertTrue("Mapping must remain pending while hidden", screen.onMain { vm.autoMappingActive })
+            assertEquals(input, file.readText())
+            // Use the real launcher icon: a bare activity intent does not reproduce its task flags.
+            // UiDevice's package-manager lookup can name Settings instead of the actual home app.
+            val homeActivity = device.executeShellCommand(
+                "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME",
+            ).trim()
+            val launcherPackage = homeActivity.lineSequence().last().substringBefore('/')
+            assertTrue("Could not resolve the default home activity: $homeActivity", '/' in homeActivity)
+            screen.node(By.pkg(launcherPackage))
+            // A package selector can match a small child such as the app-drawer indicator.
+            // Swipe across the display, not that child's bounds, with one device-timed gesture.
+            val width = device.displayWidth
+            val height = device.displayHeight
+            device.executeShellCommand(
+                "input swipe ${width / 2} ${height * 9 / 10} ${width / 2} ${height / 4} 150",
+            )
+            val label = context.applicationInfo.loadLabel(context.packageManager).toString()
+            val selector = By.pkg(launcherPackage).text(label)
+            if (!screen.has(selector)) {
+                screen.node(By.pkg(launcherPackage).scrollable(true))
+                    .scrollUntil(Direction.DOWN, Until.findObject(selector))
+            }
+            val icon = screen.node(selector)
+            takeScreenshot("automapping_launcher_icon")
+            icon.click()
+            screen.awaitActivity(MainActivity::class.java)
+            takeScreenshot("automapping_list_after_launcher_return")
+            assertTrue("The pack list must cover the same PlayActivity", screen.onMain {
+                !vm.screenVisible
+            })
+            assertTrue("Mapping did not save behind the pack list", waitUntil(120_000L) {
+                screen.onMain { !vm.autoMappingActive }
+            })
+            assertTrue(screen.resumed() is MainActivity)
+            assertEquals("d 1000\n" + "t 1 1\nd 100\n".repeat(2999) + "t 1 1\n", file.readText())
+            assertEquals(input, File(file.parentFile, "autoPlay_previous").readText())
+            takeScreenshot("automapping_saved_behind_list")
         }
-        val icon = screen.node(selector)
-        takeScreenshot("automapping_launcher_icon")
-        icon.click()
-        screen.awaitActivity(MainActivity::class.java)
-        takeScreenshot("automapping_list_after_launcher_return")
-        assertTrue("The pack list must cover the same PlayActivity", screen.onMain {
-            !vm.screenVisible
-        })
-        assertTrue("Mapping did not save behind the pack list", waitUntil(120_000L) {
-            screen.onMain { !vm.autoMappingActive }
-        })
-        assertTrue(screen.resumed() is MainActivity)
-        assertEquals("d 1000\n" + "t 1 1\nd 100\n".repeat(2999) + "t 1 1\n", file.readText())
-        assertEquals(input, File(file.parentFile, "autoPlay_previous").readText())
-        takeScreenshot("automapping_saved_behind_list")
     }
 
     @Test
