@@ -105,13 +105,36 @@ class PackArchiveTest {
 		assertEquals(selected, PackArchive.installationWorkspace(archive, selected) { error("Internal storage is unnecessary") })
 	}
 
-	@Test fun multiplePacksAtDifferentDepthsHaveAnExplicitReason() {
+	@Test fun siblingPacksAtDifferentDepthsHaveAnExplicitReason() {
 		for (entries in listOf(
 			mapOf("One/info" to "title=One", "Two/info" to "title=Two"),
-			mapOf("info" to "title=One", "Wrapper/Two/INFO" to "title=Two"),
+			mapOf("Wrapper/One/info" to "title=One", "Wrapper/Two/Deep/INFO" to "title=Two"),
 		)) {
 			assertThrows(PackArchive.MultiplePacksException::class.java) { extracted(zip(Charsets.UTF_8, entries)) }
 		}
+	}
+
+	@Test fun rootPackTakesPrecedenceOverItsNestedCopy() {
+		val entries = packFiles + mapOf("Wrapper/Two/INFO" to "title=Backup")
+		val dir = extracted(zip(Charsets.UTF_8, entries))
+		FileManager.removeDoubleFolder(dir.path)
+		assertKoreanSoundFound(dir)
+		assertEquals("title=Backup", File(dir, "Wrapper/Two/INFO").readText())
+	}
+
+	@Test fun wrappedPackTakesPrecedenceOverItsNestedCopy() {
+		val entries = packFiles.mapKeys { (name, _) -> "Wrapper/$name" } +
+			mapOf("Wrapper/Backup/INFO" to "title=Backup")
+		val dir = extracted(zip(Charsets.UTF_8, entries))
+		FileManager.removeDoubleFolder(dir.path)
+		assertKoreanSoundFound(dir)
+		assertEquals("title=Backup", File(dir, "Backup/INFO").readText())
+	}
+
+	@Test fun packTakesPrecedenceOverStrayMetadataInItsSoundFolder() {
+		val dir = extracted(zip(Charsets.UTF_8, packFiles + mapOf("sounds/unused/info" to "title=Unused")))
+		FileManager.removeDoubleFolder(dir.path)
+		assertKoreanSoundFound(dir)
 	}
 
 	@Test

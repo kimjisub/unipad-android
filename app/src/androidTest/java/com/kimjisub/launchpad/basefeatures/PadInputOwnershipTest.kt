@@ -23,6 +23,36 @@ class PadInputOwnershipTest : PlaybackScreenTest() {
         screen.openPlay()
     }
 
+    @Test fun successiveLedFilesCanSwitchOffTheFirstFilesLight() {
+        val pack = screen.pack()
+        File(pack, "keyLED").listFiles().orEmpty().forEach { it.delete() }
+        File(pack, "keyLED/1 1 1 1").writeText("o 2 2 a 7\n")
+        File(pack, "keyLED/1 1 1 1 b").writeText("f 2 2\n")
+        screen.openPlay()
+        fun light() = screen.onMain {
+            screen.vm().channelManager.get(1, 1)?.takeIf { it.channel == Channel.LED }?.code
+        }
+        fun captureLight(name: String) {
+            val drawn = CountDownLatch(1)
+            screen.onMain {
+                val decor = screen.resumed().window.decorView
+                decor.postOnAnimation { decor.postOnAnimation { drawn.countDown() } }
+            }
+            assertTrue("The light state must reach a rendered frame", drawn.await(10, TimeUnit.SECONDS))
+            screen.capture(name)
+        }
+        pressPad(0)
+        screen.await("The first file must leave its light on") { light() == 7 }
+        captureLight("successive-file-off-before")
+        pressPad(0)
+        try {
+            screen.await("The second file must turn off the first file's light") { light() == null }
+        } finally {
+            captureLight("successive-file-off-after")
+        }
+        assertEquals(null, light())
+    }
+
     private fun pad() = screen.padBounds()[0].let { Point(it.centerX(), it.centerY()) }
 
     private fun observe(name: String): Pair<Int, Int?> {

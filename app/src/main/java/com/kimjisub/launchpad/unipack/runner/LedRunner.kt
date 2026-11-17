@@ -244,8 +244,8 @@ class LedRunner(
 	}
 
 	fun eventOffAll(x: Int, y: Int) {
-		// No `active` guard: ledInit() calls this right after stop() to shut the looping
-		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
+		// An explicit all-loop shutdown can be requested while stopped too; the pending shutdown
+		// must take effect before retained animations get another tick after relaunch.
 		synchronized(this) {
 			for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
 				for (state in states) {
@@ -382,12 +382,14 @@ class LedRunner(
 						val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
 						if (x != -1) {
-							if (btnLed[x][y] === this) {
+							// Pack files on the same pad and chain can deliberately share an on/off pair.
+							// Input cleanup below still targets the exact animation that wrote the light.
+							if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
 								changes.add(LedChange.PadOff(x, y))
 								btnLed[x][y] = null
 							}
 						} else {
-							if (cirLed[y] === this) {
+							if (cirLed[y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
 								changes.add(LedChange.ChainLedOff(y))
 								cirLed[y] = null
 							}

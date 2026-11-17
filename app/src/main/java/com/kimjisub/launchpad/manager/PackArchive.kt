@@ -39,14 +39,17 @@ object PackArchive {
 		false
 	}
 
-	/** Count pack roots before dropping wrapper folders or unrelated sidecars. */
+	/** Prefer the outer pack to copies inside it; reject separate branches leading to packs. */
 	private fun rejectMultiplePacks(root: File) {
-		val roots = mutableSetOf<File>()
+		var roots = 0
 		root.walkTopDown().onEnter { dir ->
-			dir == root || !dir.name.startsWith(".") && dir.name != "__MACOSX" && dir.canonicalFile == dir.absoluteFile
-		}.forEach { file ->
-			if (file.isFile && file.name.equals("info", ignoreCase = true) && roots.add(file.parentFile!!) && roots.size > 1) throw MultiplePacksException()
-		}
+			if (dir != root && (dir.name.startsWith(".") || dir.name == "__MACOSX" || dir.canonicalFile != dir.absoluteFile)) {
+				false
+			} else if (dir.listFiles().orEmpty().any { it.isFile && it.name.equals("info", ignoreCase = true) }) {
+				if (++roots > 1) throw MultiplePacksException()
+				false
+			} else true
+		}.forEach { /* onEnter checks folders without descending into a selected pack. */ }
 	}
 
 	/**

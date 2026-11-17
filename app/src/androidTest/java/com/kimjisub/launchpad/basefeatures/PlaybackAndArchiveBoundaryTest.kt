@@ -2,10 +2,12 @@ package com.kimjisub.launchpad.basefeatures
 
 import android.net.Uri
 import android.os.SystemClock
+import androidx.compose.runtime.State
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -93,4 +95,45 @@ class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
             archive.delete()
         }
     }
+    private fun importPackWithNestedCopy(wrapped: Boolean) {
+        val pack = screen.pack()
+        val info = File(pack, "info").readBytes()
+        val prefix = if (wrapped) "Wrapper/" else ""
+        val archive = File(screen.context.cacheDir, "nested-copy-$wrapped.zip")
+        ZipOutputStream(archive.outputStream()).use { zip ->
+            for (file in pack.walkTopDown().filter { it.isFile }) {
+                zip.putNextEntry(ZipEntry(prefix + file.relativeTo(pack).invariantSeparatorsPath))
+                file.inputStream().use { it.copyTo(zip) }
+                zip.closeEntry()
+            }
+            zip.putNextEntry(ZipEntry("${prefix}Backup/info"))
+            zip.write(info)
+            zip.closeEntry()
+        }
+        try {
+            screen.launch(MainActivity::class.java)
+            screen.onMain {
+                MainActivity::class.java.getDeclaredMethod("importUniPack", Uri::class.java)
+                    .apply { isAccessible = true }.invoke(screen.resumed(), Uri.fromFile(archive))
+            }
+            val field = MainActivity::class.java.getDeclaredField("importResult\$delegate").apply { isAccessible = true }
+            fun result() = screen.onMain { (field.get(screen.resumed()) as State<*>).value }
+            screen.await("The import must finish") { result() != null }
+            val result = result()
+            screen.node(By.text(screen.text(if (result is ImportResult.Success) R.string.importComplete else R.string.importFailed)))
+            screen.capture("nested-copy-import-$wrapped")
+            assertTrue("A nested backup must not hide the outer pack: $result", result is ImportResult.Success)
+            val folder = (result as ImportResult.Success).folder
+            assertTrue("The outer metadata must be preserved", File(folder, "info").readBytes().contentEquals(info))
+            assertTrue("The nested copy must remain inside the chosen pack", File(folder, "Backup/info").isFile)
+            assertTrue("The source archive must remain", archive.isFile)
+        } finally {
+            archive.delete()
+        }
+    }
+
+    @Test fun importingRootPackKeepsItsNestedBackup() = importPackWithNestedCopy(false)
+
+    @Test fun importingWrappedPackKeepsItsNestedBackup() = importPackWithNestedCopy(true)
+
 }
