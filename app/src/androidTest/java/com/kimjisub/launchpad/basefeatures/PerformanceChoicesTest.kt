@@ -57,8 +57,8 @@ class PerformanceChoicesTest : PlaybackScreenTest() {
         screen.device.waitForIdle()
         screen.capture("trace-after-relayout")
         assertEquals(listOf(0 to 0, 0 to 1, 0 to 0), screen.onMain { vm.traceLogSequence[0].toList() })
-        val texts = screen.onMain { screen.views(screen.resumed().window.decorView).filterIsInstance<TextView>()
-            .filter { it.id == com.kimjisub.design.R.id.traceLog }.map { it.text.toString() } }
+        val texts = screen.onMain { screen.views(screen.resumed().window.decorView).filterIsInstance<com.kimjisub.design.view.PadView>()
+            .map { it.findViewById<TextView>(com.kimjisub.design.R.id.traceLog)?.text?.toString().orEmpty() } }
         assertEquals("1 3 ", texts[0])
         assertEquals("2 ", texts[1])
         assertEquals("", texts[2])
