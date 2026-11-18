@@ -214,7 +214,8 @@ public class ProcessRecoveryDriver extends Instrumentation {
             shell("dumpsys activity activities > " + EVIDENCE + "/activities.txt");
             shell("dumpsys activity exit-info " + PACKAGE + " > " + EVIDENCE + "/exit-info.txt");
             shell("run-as " + PACKAGE + " cat " + EVENTS + " > " + EVIDENCE + "/events.jsonl");
-            app("rm -f " + EVENTS + "; rm -rf " + FOLDER);
+            app("rm -f " + EVENTS);
+            shell("rm -rf " + FOLDER);
             app("pm disable " + PROBE); shell("am force-stop " + PACKAGE);
         }
         Bundle result = new Bundle(); result.putString("stream", "\n" + outcome + "\n" + detail + "\n");

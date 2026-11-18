@@ -57,8 +57,9 @@ device_settings prepare
 "$adb_bin" -s "$serial" shell am force-stop com.kimjisub.launchpad.dev
 # Component state changes use the debuggable app's UID; Android can refuse the shell UID.
 "$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev pm disable com.kimjisub.launchpad.dev/com.kimjisub.launchpad.tool.ProcessRecoveryProbe
-"$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev sh -c \
-  "'rm -f files/process-recovery-events.jsonl; rm -rf /storage/emulated/0/Android/data/com.kimjisub.launchpad.dev/files/UniPack/process-recovery-pack'"
+"$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev rm -f files/process-recovery-events.jsonl
+# The shell has the external-storage mount; run-as can access only the private record reliably.
+"$adb_bin" -s "$serial" shell rm -rf /storage/emulated/0/Android/data/com.kimjisub.launchpad.dev/files/UniPack/process-recovery-pack
 device_settings verify
 # Match the merged debug-test preparation before the target process starts.
 # Direct am instrument bypasses Gradle's force-aot-compilation setup.
