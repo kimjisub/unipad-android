@@ -21,8 +21,12 @@ class RotationPlaybackTest : PlaybackScreenTest() {
         screen.openPlay()
         val activity = screen.resumed() as PlayActivity
         val vm = screen.vm()
-        screen.onMain { vm.controllerPadTouch(0, 0, true) }
+        screen.onMain {
+            vm.scbProLightMode.setChecked(true)
+            vm.controllerPadTouch(0, 0, true)
+        }
         screen.await("Held sound did not start") { audio.ringingLoops().isNotEmpty() }
+        assertLights()
         val silences = audio.silences.get()
         screen.capture("rotation-short-focus-before")
         screen.onMain { activity.onWindowFocusChanged(false) }
