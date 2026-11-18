@@ -20,6 +20,7 @@ import org.junit.runners.Suite
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
     SharedMidiPadTest::class,
+    OptionWindowInputTest::class,
     StoreDownloadTest::class,
     AppearanceAndInsetsTest::class,
     SearchKeyboardLayoutTest::class,

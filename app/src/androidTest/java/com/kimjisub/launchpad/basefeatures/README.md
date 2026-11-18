@@ -551,7 +551,7 @@ python3 devices.py down
 
 ### Options while pads are held
 
-`OptionWindowInputTest` holds endless-loop pads through opening the options panel with Back
+`OptionWindowInputTest`, included in `BaseFeaturesSuite`, holds endless-loop pads through opening the options panel with Back
 (in both pad modes) and with a virtual Launchpad function key. It checks immediate sound and
 press-light release, ignored drags while open and after closing until the original finger lifts,
 ignored controller pads and chain buttons, and normal fresh presses after closing. A separate
