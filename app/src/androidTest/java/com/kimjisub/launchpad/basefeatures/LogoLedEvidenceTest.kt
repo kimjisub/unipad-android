@@ -64,6 +64,10 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 screen.device.executeShellCommand("wm density 320")
                 screen.device.executeShellCommand("wm size $size")
                 screen.onMain { screen.resumed().requestedOrientation = orientation }
+                // Android 17 ignores app orientation requests on tablet-sized displays.
+                // Rotate the device as well so each layout is exercised on every API level.
+                if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) screen.device.setOrientationNatural()
+                else screen.device.setOrientationLeft()
                 val expectedWidth = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
                 val expectedOrientation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
                 screen.await("Display did not settle for $name") {
@@ -184,6 +188,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             screen.repo.delete(noLogoFolder.name)
             screen.device.executeShellCommand("wm size ${originalSize ?: "reset"}")
             screen.device.executeShellCommand("wm density ${originalDensity ?: "reset"}")
+            screen.device.unfreezeRotation()
         }
     }
 
