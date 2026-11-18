@@ -30,7 +30,7 @@ class PadView
 	private val touchSpace = View(context).apply {
 		id = R.id.touchSpace
 		isClickable = true
-		// Keep pads out of keyboard Tab traversal, as in the original layout.
+		// Skip pads during keyboard Tab traversal so chain and menu buttons take only a few presses to reach.
 		isFocusable = false
 	}
 
@@ -107,11 +107,10 @@ class PadView
 
 	private fun traceText(): TextView = traceLog ?: AppCompatTextView(context).apply {
 		id = R.id.traceLog
-		// Preserve the integer pixel rounding used by the original XML text size.
-		setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimensionPixelSize(R.dimen.text_small).toFloat())
+		setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimensionPixelSize(R.dimen.pad_number_text_size).toFloat())
 		traceColor?.let(::setTextColor)
 		applyTraceShadow(this)
-		val margin = (2 * resources.displayMetrics.density + 0.5f).toInt()
+		val margin = resources.getDimensionPixelSize(R.dimen.pad_number_margin)
 		val params = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER)
 		params.setMargins(margin, margin, margin, margin)
 		addView(this, indexOfChild(touchSpace), params)

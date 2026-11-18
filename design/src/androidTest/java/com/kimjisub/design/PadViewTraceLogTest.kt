@@ -3,7 +3,7 @@ package com.kimjisub.design
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.SystemClock
-import android.view.LayoutInflater
+import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -37,15 +37,21 @@ class PadViewTraceLogTest {
 	}
 
 	@Test
-	fun deferredNumberKeepsXmlTextSize() {
+	fun deferredNumberKeepsRoundedTextSizeAndMargins() {
 		val instrumentation = InstrumentationRegistry.getInstrumentation()
 		instrumentation.runOnMainSync {
 			val context = instrumentation.targetContext
-			val original = LayoutInflater.from(context).inflate(R.layout.view_pad, FrameLayout(context), false)
-				.findViewById<TextView>(R.id.traceLog)
+			val metrics = context.resources.displayMetrics
+			val expectedTextSize = (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10f, metrics) + 0.5f).toInt()
+			val expectedMargin = (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, metrics) + 0.5f).toInt()
 			val pad = PadView(context).setTraceLogText("1 2 3 ")
 			val deferred = pad.findViewById<TextView>(R.id.traceLog)
-			assertEquals("XML and deferred number size in pixels", original.textSize, deferred.textSize, 0f)
+			assertEquals("Number size rounded to integer pixels", expectedTextSize.toFloat(), deferred.textSize, 0f)
+			val params = deferred.layoutParams as FrameLayout.LayoutParams
+			assertEquals(expectedMargin, params.leftMargin)
+			assertEquals(expectedMargin, params.topMargin)
+			assertEquals(expectedMargin, params.rightMargin)
+			assertEquals(expectedMargin, params.bottomMargin)
 		}
 	}
 
