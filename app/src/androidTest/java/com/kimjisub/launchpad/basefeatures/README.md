@@ -584,7 +584,9 @@ background thread. In `finally` the driver removes its fixture, disables the obs
 app. A killed driver can leave its fixture and observer enabled; the base runner restores the
 disabled default and removes this fixture before its next suite. Use a disposable installation. It never clears all app data. Screenshots, hierarchies, events,
 logcat and system exit history are copied to `<results>/process-recovery`; the runner refuses failed,
-missing or incomplete verdicts. Archive a failed round before rerunning it.
+missing or incomplete verdicts. The independent recovery check still runs after a failed base
+suite so both results are available; the full preflight fails if either check fails or is incomplete.
+Archive a failed round before rerunning it.
 
 For a focused run after building and installing both debug APKs:
 

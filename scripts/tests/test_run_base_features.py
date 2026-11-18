@@ -98,6 +98,11 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((root / "recovery-ran").exists())
 
+    def test_failed_base_suite_still_checks_process_recovery_and_fails(self):
+        root, result = self.run_runner(instrumentation(5, footer="FAILURES!!!\nTests run: 5, Failures: 1"))
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertTrue((root / "recovery-ran").exists())
+
     def test_process_recovery_failure_or_missing_verdict_fails_preflight(self):
         for recovery in ("PROCESS_RECOVERY_FAILED\n", "INSTRUMENTATION_CODE: 0\n",
                          "PROCESS_RECOVERY_PASSED\n", "PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: 0\n",

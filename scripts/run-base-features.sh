@@ -73,18 +73,21 @@ output="$results/instrumentation.txt"
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer
 # for every test the suite's classes declare; a skipped test (status -4) still counts as run.
+base_result=0
 if grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
-  exit 1
+  base_result=1
 fi
 if grep -q 'INSTRUMENTATION_STATUS_CODE: -4' "$output"; then
   echo 'A base feature test was skipped; the suite must run every test.' >&2
-  exit 1
+  base_result=1
 fi
 if ! grep -Eq "^OK \\($expected tests\\)" "$output"; then
   echo "Base features did not pass all $expected tests declared by the classes in BaseFeaturesSuite; inspect the instrumentation output above." >&2
-  exit 1
+  base_result=1
 fi
+# Collect the independent process-death result even when another feature failed.
+# Its success must never turn a failed or incomplete base suite into a passing preflight.
 # This instrumentation targets the test APK itself, so am kill can end the app while
 # the driver survives to restore its recent task and verify a genuinely new process.
 output="$results/process-recovery-setup.txt"
@@ -104,3 +107,4 @@ if grep -Eq 'PROCESS_RECOVERY_FAILED|INSTRUMENTATION_FAILED|Process crashed' "$o
   echo 'Background process recovery failed or did not finish; inspect process-recovery.txt and its captures.' >&2
   exit 1
 fi
+exit "$base_result"
