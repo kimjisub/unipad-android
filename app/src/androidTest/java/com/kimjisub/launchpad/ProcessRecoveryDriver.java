@@ -39,8 +39,13 @@ public class ProcessRecoveryDriver extends Instrumentation {
     }
     private static String quote(String text) { return "'" + text.replace("'", "'\"'\"'") + "'"; }
     private String shell(String command) {
-        try (ParcelFileDescriptor fd = getUiAutomation().executeShellCommand("sh -c " + quote(command));
-             ParcelFileDescriptor.AutoCloseInputStream input = new ParcelFileDescriptor.AutoCloseInputStream(fd)) {
+        // UiAutomation tokenizes its command rather than interpreting shell quoting.
+        // Feed scripts to a real shell through stdin so quotes, redirects and pipelines work.
+        ParcelFileDescriptor[] pipes = getUiAutomation().executeShellCommandRw("sh");
+        try (ParcelFileDescriptor.AutoCloseInputStream input = new ParcelFileDescriptor.AutoCloseInputStream(pipes[0])) {
+            try (ParcelFileDescriptor.AutoCloseOutputStream output = new ParcelFileDescriptor.AutoCloseOutputStream(pipes[1])) {
+                output.write(("exec 2>&1\n" + command + "\nexit\n").getBytes(StandardCharsets.UTF_8));
+            }
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             byte[] buffer = new byte[8192];
             int count;
@@ -156,6 +161,8 @@ public class ProcessRecoveryDriver extends Instrumentation {
         String detail;
         try {
             require(android.os.Build.VERSION.SDK_INT >= 33, "API 33+ required");
+            require(shell("printf '%s' 'process recovery shell ready'").equals("process recovery shell ready"),
+                "Shell script transport did not preserve arguments");
             android.accessibilityservice.AccessibilityServiceInfo info = getUiAutomation().getServiceInfo();
             info.flags |= android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
                 | android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
@@ -208,7 +215,7 @@ public class ProcessRecoveryDriver extends Instrumentation {
             outcome = "PROCESS_RECOVERY_PASSED";
         } catch (Throwable error) {
             detail = android.util.Log.getStackTraceString(error);
-            try { capture("failure"); } catch (Exception captureError) { detail += "\n" + captureError; }
+            try { capture("failure"); } catch (Throwable captureError) { detail += "\n" + captureError; }
         } finally {
             shell("logcat -d -v threadtime > " + EVIDENCE + "/logcat.txt");
             shell("dumpsys activity activities > " + EVIDENCE + "/activities.txt");
