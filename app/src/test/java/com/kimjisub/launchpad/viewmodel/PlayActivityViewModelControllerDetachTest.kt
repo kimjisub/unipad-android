@@ -116,10 +116,12 @@ class PlayActivityViewModelControllerDetachTest {
 	}
 
 	@Test
-	fun padReleasedWhileTheOptionWindowIsOpen_isLetGo() {
+	fun openingTheOptionWindowReleasesThePad_andItsLaterLiftDoesNothing() {
 		vm.controllerPadTouch(2, 3, true)
 		vm.toggleOptionWindow(true)
 
+		verify(exactly = 1) { sound.soundOff(2, 3) }
+		assertNull(pressedLight(2, 3))
 		vm.controllerPadTouch(2, 3, false)
 
 		verify(exactly = 1) { sound.soundOff(2, 3) }
