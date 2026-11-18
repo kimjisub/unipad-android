@@ -380,8 +380,9 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertTrue(engine.voices.isEmpty())
 	}
 
-	@Test fun manualPadReacquiresAudioWithoutResumingTheInterruptedSong() {
+	private fun manualPadReacquiresAudioWithoutResumingTheInterruptedSong(controller: Boolean) {
 		start()
+		vm.scbFeedbackLight.setChecked(true)
 		vm.interruptPlayback()
 		val progress = vm.autoPlayRunner!!.progress
 		val plays = engine.playCount
@@ -389,14 +390,22 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 			vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
 			true
 		}
-		vm.padTouch(0, 0, true)
+		if (controller) vm.controllerPadTouch(0, 0, true) else vm.padTouch(0, 0, true)
 		assertEquals(plays + 1, engine.playCount)
+		assertEquals(1, engine.voices.size)
+		assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
 		assertTrue("Only Play can resume the song", vm.autoPlayRunner!!.suspended)
 		assertTrue(!vm.isAutoPlayPlaying)
 		assertEquals(PlayMode.AutoPlay, vm.playMode)
 		assertEquals(progress, vm.autoPlayRunner!!.progress)
-		vm.padTouch(0, 0, false)
+		if (controller) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
 	}
+
+	@Test fun screenPadReacquiresAudioWithoutResumingTheInterruptedSong() =
+		manualPadReacquiresAudioWithoutResumingTheInterruptedSong(controller = false)
+
+	@Test fun controllerPadReacquiresAudioWithoutResumingTheInterruptedSong() =
+		manualPadReacquiresAudioWithoutResumingTheInterruptedSong(controller = true)
 
 	@Test fun automaticInputCannotRequestAudioAfterFocusLoss() {
 		start(autoplay = false)

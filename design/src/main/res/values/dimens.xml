@@ -4,6 +4,8 @@
 	<dimen name="text">14sp</dimen>
 	<dimen name="text_big">20sp</dimen>
 	<dimen name="text_small">10sp</dimen>
+	<dimen name="pad_number_text_size">10sp</dimen>
+	<dimen name="pad_number_margin">2dp</dimen>
 
 	<dimen name="imgbtn">40dp</dimen>
 </resources>

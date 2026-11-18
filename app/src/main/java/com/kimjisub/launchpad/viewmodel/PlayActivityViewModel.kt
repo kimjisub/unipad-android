@@ -132,6 +132,7 @@ class PlayActivityViewModel(
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
 		fun stopGuideAnimation(x: Int, y: Int)
 		fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int)
+		fun cancelPadTouches() {}
 		fun onRequestRelayout()
 	}
 
@@ -621,24 +622,28 @@ class PlayActivityViewModel(
 	}
 
 	/** A pad the person pressed or released on the screen. */
-	fun padTouch(x: Int, y: Int, upDown: Boolean, pointerId: Long = 0) =
+	fun padTouch(x: Int, y: Int, upDown: Boolean, pointerId: Long = 0) {
+		if (upDown && isOptionWindowVisible) return
 		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN, pointerId = pointerId)
+	}
 
 	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
 	// unplugged or stops being the screen's controller, so these are let go then.
 	private val controllerHeldPads = LinkedHashSet<Pair<Int, Int>>()
+	private val controllerCancelledPads = LinkedHashSet<Pair<Int, Int>>()
 
 	/**
 	 * A pad pressed or released on the MIDI controller. Presses are ignored while the option window
-	 * is open, where the controller's buttons change settings; the release of a pad that was played
-	 * still goes through so it does not stay held.
+	 * is open, where the controller's buttons change settings. A button held across opening the
+	 * window stays cancelled until its release, even if the window closes first.
 	 */
 	fun controllerPadTouch(x: Int, y: Int, upDown: Boolean) {
 		val pad = x to y
 		if (upDown) {
-			if (isOptionWindowVisible) return
+			if (isOptionWindowVisible) controllerCancelledPads += pad
+			if (pad in controllerCancelledPads) return
 			controllerHeldPads += pad
-		} else if (!controllerHeldPads.remove(pad)) {
+		} else if (controllerCancelledPads.remove(pad) || !controllerHeldPads.remove(pad)) {
 			return
 		}
 		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.MIDI)
@@ -646,6 +651,7 @@ class PlayActivityViewModel(
 
 	/** Lets go of the controller's holds, preserving any fingers still pressing on screen. */
 	fun releaseControllerPads() {
+		controllerCancelledPads.clear()
 		val pads = controllerHeldPads.toList()
 		controllerHeldPads.clear()
 		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
@@ -847,7 +853,20 @@ class PlayActivityViewModel(
 	}
 
 	fun toggleOptionWindow(bool: Boolean = !isOptionWindowVisible) {
+		val opening = bool && !isOptionWindowVisible
 		isOptionWindowVisible = bool
+		if (opening) {
+			// Cancel the gesture as well as its output so a held finger cannot slide onto another pad.
+			uiCallback?.cancelPadTouches()
+			controllerCancelledPads += controllerHeldPads
+			controllerHeldPads.clear()
+			for ((pad, inputs) in heldPads.toMap()) {
+				for (input in inputs.toList()) {
+					if (input.trigger == PlayTrigger.PAD)
+						padEvent(pad.first, pad.second, false, input.trigger, input.source, pointerId = input.pointerId)
+				}
+			}
+		}
 		refreshWatermark()
 	}
 

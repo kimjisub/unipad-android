@@ -231,4 +231,57 @@ class PlayActivityViewModelInputOwnershipTest {
         advance()
         assertEquals(listOf(0, null, false), state())
     }
+    @Test fun openingOptionsReleasesEveryManualHoldAndBothLights() {
+        fingerDown(10)
+        fingerDown(20)
+        vm.controllerPadTouch(0, 0, true)
+        advance()
+        assertEquals(listOf(1, 4, true), state())
+        vm.toggleOptionWindow(true)
+        advance()
+        assertEquals(listOf(0, null, false), state())
+        val plays = engine.plays
+        screen.up(10)
+        screen.up(20)
+        vm.controllerPadTouch(0, 0, false)
+        advance()
+        assertEquals(plays, engine.plays)
+        assertEquals(listOf(0, null, false), state())
+        vm.toggleOptionWindow(false)
+        fingerDown(10)
+        assertEquals(listOf(1, 4, true), state())
+    }
+
+    @Test fun openingOptionsKeepsTheNewerAutoplayOutputOnASharedPad() {
+        fingerDown(10)
+        vm.controllerPadTouch(0, 0, true)
+        auto(true)
+        vm.toggleOptionWindow(true)
+        advance()
+        assertEquals(listOf(1, 4, true), state())
+        screen.up(10)
+        vm.controllerPadTouch(0, 0, false)
+        vm.toggleOptionWindow(false)
+        advance()
+        assertEquals(listOf(1, 4, true), state())
+        auto(false)
+        assertEquals(listOf(0, null, false), state())
+    }
+
+    @Test fun manualPressesWhileOptionsAreOpenCannotReplaceAutoplay() {
+        auto(true)
+        vm.toggleOptionWindow(true)
+        fingerDown(10)
+        vm.controllerPadTouch(0, 0, true)
+        assertEquals(1, engine.plays)
+        screen.up(10)
+        vm.controllerPadTouch(0, 0, false)
+        auto(false)
+        assertEquals(listOf(0, null, false), state())
+        vm.toggleOptionWindow(false)
+        vm.controllerPadTouch(0, 0, true)
+        advance()
+        assertEquals(listOf(1, 4, true), state())
+    }
+
 }

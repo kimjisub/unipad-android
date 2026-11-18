@@ -77,6 +77,8 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                         screen.resumed().resources.displayMetrics.densityDpi == 320 &&
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
+                // Cutouts and system bars can leave the app window narrower than the display.
+                screen.freshControls()
                 screen.instrumentation.waitForIdleSync()
                 val logoBounds = screen.node(logo).visibleBounds
                 val decorativeBounds = screen.node(By.res("play_logo")).visibleBounds
