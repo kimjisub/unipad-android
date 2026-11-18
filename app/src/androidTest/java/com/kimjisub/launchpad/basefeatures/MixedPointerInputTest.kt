@@ -53,30 +53,38 @@ class MixedPointerInputTest : HeldPadTest() {
         val held = Cell(3, 3)
         val other = Cell(3, 5)
 
+        // Position the mouse before the finger lands, then click without another hover.
+        mouse.hover(center(if (mouseFirst) held else other))
         first.press(center(held))
         awaitHeld("The ${first.name} did not play, light and loop its pad", setOf(held))
+        val capture = "mixed-${first.name}-first-slide-$slide"
+        screen.capture("$capture-first-held")
         val beforeSecond = received.events.size
         second.press(center(other))
         screen.await({ "The ${second.name} did not play and light its pad while the ${first.name} held another\n$received" }) {
             audio.plays.size == 2 && other in litCells()
         }
         settle()
+        screen.capture("$capture-second-held")
         val ended = endedBySystem(first, received.events.drop(beforeSecond))
         if (ended && mouseFirst) mouse.forgetCancelled()
         Log.i(ReceivedInput.TAG, "${second.name} pressed while the ${first.name} held a pad: " +
             if (ended) "Android ended the ${first.name}'s gesture" else "both kept")
         val firstHeld = if (ended) emptySet() else setOf(held)
+        Log.i(ReceivedInput.TAG, "Before release checks: lights=${litCells()} loops=${loopingCells()}")
         assertHeldStill("While the ${second.name} holds its pad" + if (ended) " after Android ended the ${first.name}'s" else "",
             listOf(held, other), firstHeld + other)
 
         second.lift()
         awaitHeld("Lifting the ${second.name} changed the ${first.name}'s pad or left its own playing", firstHeld)
         assertHeldStill("After lifting the ${second.name}", listOf(held, other), firstHeld)
+        screen.capture("$capture-second-lifted")
         // A kernel touchscreen still needs a physical lift; an injected mouse ended at cancel.
         if (!ended || !mouseFirst) first.lift()
         awaitHeld("The ${first.name}'s pad stayed lit or looping after lifting", emptySet())
         assertHeldStill("After lifting the ${first.name}", listOf(held, other), emptySet())
         assertPointers(first, ended)
+        screen.capture("$capture-all-lifted")
     }
 
     /**

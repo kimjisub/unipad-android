@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -309,6 +310,13 @@ class PlayActivity : BaseActivity() {
 				initLayout(area)
 			}
 		}
+	}
+
+	// A pending mouse hover exit can hide a cancelled finger from Compose's synthetic releases.
+	// End the held inputs while the window still has the actual cancellation.
+	override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+		if (ev.actionMasked == MotionEvent.ACTION_CANCEL) padTouch.cancel()
+		return super.dispatchTouchEvent(ev)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
