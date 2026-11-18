@@ -88,7 +88,11 @@ class OptionWindowInputTest : HeldPadTest() {
     @Test fun optionsKeepAutoplayHeldPadsAndContinueTheNextCommand() {
         File(screen.pack(), "autoPlay").writeText("on 1 1\ndelay 3000\noff 1 1\non 2 1\ndelay 60000\n")
         startHeld()
-        screen.onMain { screen.vm().switchPlayMode(PlayMode.AutoPlay) }
+        screen.onMain {
+            screen.vm().switchPlayMode(PlayMode.AutoPlay)
+            // Entering a mode restores the pack's default lights; this test observes press feedback.
+            screen.vm().scbFeedbackLight.setChecked(true)
+        }
         awaitHeld("Autoplay must hold its first pad", setOf(Cell(0, 0)))
         screen.device.pressBack()
         screen.await("Back must open options") { screen.onMain { screen.vm().isOptionWindowVisible } }
