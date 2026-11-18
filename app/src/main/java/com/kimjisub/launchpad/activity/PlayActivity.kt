@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -221,6 +222,12 @@ class PlayActivity : BaseActivity() {
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 	private val audioFocus by lazy { AudioFocusController(audioManager) { vm.audioFocusPolicy.onFocusChange(it) } }
+	private val windowFocusHandler = Handler(Looper.getMainLooper())
+	private val windowFocusInterruption = WindowFocusInterruption(
+		schedule = { task, delay -> windowFocusHandler.postDelayed(task, delay) },
+		cancel = { windowFocusHandler.removeCallbacks(it) },
+		interrupt = { vm.interruptPlayback() },
+	)
 
 	// Registered on the whole Settings.System tree: it fires for brightness, rotation, font scale...
 	// so only volume keys (or an unknown uri) refresh the UI.
@@ -301,12 +308,21 @@ class PlayActivity : BaseActivity() {
 			if (launchpadOutputEnabled) driver.sendPadLed(x, y, velocity)
 		}
 
+		override fun cancelPadTouches() = padTouch.cancel()
+
 		override fun onRequestRelayout() {
 			layoutArea?.let { area ->
 				vm.uiLoaded = false
 				initLayout(area)
 			}
 		}
+	}
+
+	// A pending mouse hover exit can hide a cancelled finger from Compose's synthetic releases.
+	// End the held inputs while the window still has the actual cancellation.
+	override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+		if (ev.actionMasked == MotionEvent.ACTION_CANCEL) padTouch.cancel()
+		return super.dispatchTouchEvent(ev)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -843,8 +859,9 @@ class PlayActivity : BaseActivity() {
 						val id = change.id.value
 						val (px, py) = change.position
 						when {
-							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+							vm.isOptionWindowVisible -> Unit
+							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.pressed -> padTouch.move(id, px, py, size.width, size.height)
 						}
 					}
@@ -1556,10 +1573,10 @@ class PlayActivity : BaseActivity() {
 	override fun onWindowFocusChanged(hasFocus: Boolean) {
 		super.onWindowFocusChanged(hasFocus)
 		if (::vm.isInitialized) {
-			if (!hasFocus) {
-				vm.interruptPlayback()
-				padTouch.cancel()
-			} else if (!audioFocus.request()) vm.interruptPlayback()
+			windowFocusInterruption.onFocusChanged(hasFocus)
+			// A covering window can swallow the finger's release, even if focus returns quickly.
+			if (!hasFocus) padTouch.cancel()
+			else if (!audioFocus.request()) vm.interruptPlayback()
 		}
 	}
 
@@ -1567,6 +1584,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		windowFocusInterruption.cancelPending()
 		vm.interruptPlayback()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
@@ -1593,6 +1611,7 @@ class PlayActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		windowFocusInterruption.cancelPending()
 		vm.requestAudioFocus = null
 		vm.uiCallback = null
 		vm.enable = false

@@ -306,6 +306,14 @@ pointers already down for device DeviceId(-1)`); a real mouse and touchscreen ar
 one `TOOL_TYPE_MOUSE` pointer and one `TOOL_TYPE_FINGER` pointer from the touchscreen's device ID
 went down and ended.
 
+The mouse is positioned before the finger presses, and a stationary `Mouse.press` injects no
+extra hover. Android 14 rejects another device's hover during a held touch; the stationary click
+still exercises the real press. On Android 13, a pending mouse hover exit can precede the finger's
+`ACTION_CANCEL` and prevent Compose from synthesizing its release. The window must release held
+pads directly on cancellation. Input delivery, sound, light and release checks stay unchanged;
+received events include device, source, flags, pointer count and tool types. Captures preserve
+the first press, second press, second release and final release.
+
 Android may still end the first device's gesture in a window when another device starts one there
 (input flag `enable_multi_device_same_window_stream` off, as on the API 35 and 37 emulators; the system
 logs `Canceling pointers for device …`). The test accepts that only as one `ACTION_CANCEL` for
@@ -587,3 +595,12 @@ adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
   com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.ProcessRecoveryDriver
 adb -s "$ANDROID_SERIAL" pull /data/local/tmp/unipad_tests/process-recovery <round-output>
 ```
+
+### Options while pads are held
+
+`OptionWindowInputTest`, included in `BaseFeaturesSuite`, holds endless-loop pads through opening the options panel with Back
+(in both pad modes) and with a virtual Launchpad function key. It checks immediate sound and
+press-light release, ignored drags while open and after closing until the original finger lifts,
+ignored controller pads and chain buttons, and normal fresh presses after closing. A separate
+case checks that autoplay keeps its held pad and reaches its next command while options remain
+open. Captures show the open panel before the immediate-release assertions.

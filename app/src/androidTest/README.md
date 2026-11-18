@@ -479,3 +479,15 @@ Not an instrumented test: release builds are not debuggable, so `scripts/upgrade
 installs the published build and the candidate over each other on a rooted emulator and
 compares packs, database rows and settings before and after. See [its usage, scenarios and
 evidence](../../../scripts/UPGRADE_CHECK.md).
+
+### Rotation and covering windows
+
+`RotationPlaybackTest` enables all three system animation scales at 1.0 and restores
+the prior values in `finally`. It checks a short focus transition with a held
+controller input, then manual playback and autoplay across landscape/reverse-landscape
+and display-size changes. The exact pad/logo colors, rendered logo, running loop
+and unchanged autoplay state must survive beyond the focus grace period. Opening
+the notification shade must still release sounds and lights and require manual
+resume. Audio assertions record real runner requests; they do not prove speaker output.
+`LogoLedEvidenceTest` also enables animations explicitly so Gradle's animation
+disabling cannot hide a rotation regression.

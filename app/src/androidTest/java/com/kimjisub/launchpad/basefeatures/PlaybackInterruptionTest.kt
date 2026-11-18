@@ -119,6 +119,8 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         val activity = screen.resumed()
         val vm = screen.vm()
         screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
+        // Menu moves when transport appears; wait for its new layout before locating the button.
+        screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_pause)))
         screen.options()
         screen.onMain { assertTrue("The in-screen menu must not interrupt", vm.isAutoPlayPlaying) }
         screen.device.pressBack()

@@ -31,7 +31,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
     private val logo = By.res("play_logo_led")
     private val off = 0xFF2A3A52.toInt()
 
-    @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() {
+    @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() = withWindowAnimations {
         val prefs = PreferenceManager(screen.context)
         val originalTheme = prefs.selectedTheme
         val originalWatermark = prefs.watermark
@@ -64,14 +64,21 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 screen.device.executeShellCommand("wm density 320")
                 screen.device.executeShellCommand("wm size $size")
                 screen.onMain { screen.resumed().requestedOrientation = orientation }
+                // Android 17 ignores app orientation requests on tablet-sized displays.
+                // Rotate the device as well so each layout is exercised on every API level.
+                if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) screen.device.setOrientationNatural()
+                else screen.device.setOrientationLeft()
                 val expectedWidth = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
                 val expectedOrientation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
                 screen.await("Display did not settle for $name") {
-                    screen.onMain { screen.resumed().resources.configuration.orientation == expectedOrientation &&
-                        screen.bounds(screen.resumed().window.decorView).width() == expectedWidth &&
+                    // Older Android keeps the decor inside the cutout; wm size describes the whole display.
+                    screen.device.displayWidth == expectedWidth && screen.onMain {
+                        screen.resumed().resources.configuration.orientation == expectedOrientation &&
                         screen.resumed().resources.displayMetrics.densityDpi == 320 &&
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
+                // Cutouts and system bars can leave the app window narrower than the display.
+                screen.freshControls()
                 screen.instrumentation.waitForIdleSync()
                 val logoBounds = screen.node(logo).visibleBounds
                 val decorativeBounds = screen.node(By.res("play_logo")).visibleBounds
@@ -183,6 +190,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
             screen.repo.delete(noLogoFolder.name)
             screen.device.executeShellCommand("wm size ${originalSize ?: "reset"}")
             screen.device.executeShellCommand("wm density ${originalDensity ?: "reset"}")
+            screen.device.unfreezeRotation()
         }
     }
 
