@@ -548,3 +548,12 @@ python3 devices.py down
   the device under test; a rectangular emulator cannot prove behavior around a notch.
 - Live store servers: this suite never contacts them; the release candidate check above reads the
   real list and downloads one pack.
+
+### Options while pads are held
+
+`OptionWindowInputTest`, included in `BaseFeaturesSuite`, holds endless-loop pads through opening the options panel with Back
+(in both pad modes) and with a virtual Launchpad function key. It checks immediate sound and
+press-light release, ignored drags while open and after closing until the original finger lifts,
+ignored controller pads and chain buttons, and normal fresh presses after closing. A separate
+case checks that autoplay keeps its held pad and reaches its next command while options remain
+open. Captures show the open panel before the immediate-release assertions.

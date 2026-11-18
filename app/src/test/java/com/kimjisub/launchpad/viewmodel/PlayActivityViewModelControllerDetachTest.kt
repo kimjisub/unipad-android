@@ -116,10 +116,12 @@ class PlayActivityViewModelControllerDetachTest {
 	}
 
 	@Test
-	fun padReleasedWhileTheOptionWindowIsOpen_isLetGo() {
+	fun openingTheOptionWindowReleasesThePad_andItsLaterLiftDoesNothing() {
 		vm.controllerPadTouch(2, 3, true)
 		vm.toggleOptionWindow(true)
 
+		verify(exactly = 1) { sound.soundOff(2, 3) }
+		assertNull(pressedLight(2, 3))
 		vm.controllerPadTouch(2, 3, false)
 
 		verify(exactly = 1) { sound.soundOff(2, 3) }
@@ -137,4 +139,16 @@ class PlayActivityViewModelControllerDetachTest {
 		verify(exactly = 0) { sound.soundOn(2, 3) }
 		verify(exactly = 0) { sound.soundOff(2, 3) }
 	}
+	@Test
+	fun controllerHeldAcrossOptionsCannotPressAgainUntilItsRelease() {
+		vm.controllerPadTouch(2, 3, true)
+		vm.toggleOptionWindow(true)
+		vm.toggleOptionWindow(false)
+		vm.controllerPadTouch(2, 3, true)
+		verify(exactly = 1) { sound.soundOn(2, 3) }
+		vm.controllerPadTouch(2, 3, false)
+		vm.controllerPadTouch(2, 3, true)
+		verify(exactly = 2) { sound.soundOn(2, 3) }
+	}
+
 }

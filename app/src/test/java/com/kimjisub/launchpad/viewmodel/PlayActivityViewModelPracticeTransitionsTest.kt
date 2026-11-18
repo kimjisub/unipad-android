@@ -258,4 +258,55 @@ class PlayActivityViewModelPracticeTransitionsTest {
     @Test fun shortInterruptionBeforeTheFinalGroupEndsAfterReplay() = interruptionBeforeReplay(1000, true)
     @Test fun longInterruptionBeforeTheFinalGroupEndsAfterReplay() = interruptionBeforeReplay(10000, true)
 
+    private fun manualPadWhileInterrupted(mode: PlayMode, controller: Boolean) {
+        start("on 1 1\ndelay 5000\non 2 1\ndelay 5000\n")
+        if (mode != PlayMode.StepPractice) {
+            vm.switchPlayMode(mode)
+            advance(1000)
+        }
+        vm.scbFeedbackLight.setChecked(true)
+        vm.interruptPlayback()
+        scheduler.runCurrent()
+        val runner = vm.autoPlayRunner!!
+        val progress = runner.progress
+        val before = sounds.size
+        guideHistory.clear()
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        if (controller) vm.controllerPadTouch(0, 0, true) else vm.padTouch(0, 0, true)
+        scheduler.runCurrent()
+        assertEquals("The manual press sounds while the song waits", before + 1, sounds.size)
+        assertEquals(sounds, lights)
+        assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
+        if (controller) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
+        advance(6000)
+        assertTrue(runner.suspended)
+        assertFalse(vm.isAutoPlayPlaying)
+        assertEquals(mode, vm.playMode)
+        assertEquals(progress, runner.progress)
+        assertEquals(before + 1, sounds.size)
+        assertGuides()
+        assertTrue("Manual input must not restore even a transient guide", guideHistory.isEmpty())
+        vm.autoPlayResume()
+        scheduler.runCurrent()
+        if (mode == PlayMode.StepPractice) {
+            assertGuides(0 to 0)
+            press(0)
+            assertGuides(1 to 0)
+        } else {
+            val count = sounds.size
+            advance(3999)
+            assertEquals(count, sounds.size)
+            advance(1)
+            if (mode == PlayMode.AutoPlay) assertEquals(1, sounds.last().x)
+            else assertEquals(count, sounds.size)
+        }
+    }
+
+    @Test fun screenPadSoundsWithoutResumingInterruptedAutoplay() = manualPadWhileInterrupted(PlayMode.AutoPlay, false)
+    @Test fun controllerPadSoundsWithoutResumingInterruptedAutoplay() = manualPadWhileInterrupted(PlayMode.AutoPlay, true)
+    @Test fun screenPadSoundsWithoutAdvancingInterruptedSteps() = manualPadWhileInterrupted(PlayMode.StepPractice, false)
+    @Test fun controllerPadSoundsWithoutAdvancingInterruptedSteps() = manualPadWhileInterrupted(PlayMode.StepPractice, true)
+    @Test fun screenPadSoundsWithoutRestoringInterruptedGuides() = manualPadWhileInterrupted(PlayMode.GuidePlay, false)
+    @Test fun controllerPadSoundsWithoutRestoringInterruptedGuides() = manualPadWhileInterrupted(PlayMode.GuidePlay, true)
+
 }

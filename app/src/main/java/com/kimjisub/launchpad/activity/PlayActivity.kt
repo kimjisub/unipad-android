@@ -301,6 +301,8 @@ class PlayActivity : BaseActivity() {
 			if (launchpadOutputEnabled) driver.sendPadLed(x, y, velocity)
 		}
 
+		override fun cancelPadTouches() = padTouch.cancel()
+
 		override fun onRequestRelayout() {
 			layoutArea?.let { area ->
 				vm.uiLoaded = false
@@ -843,8 +845,9 @@ class PlayActivity : BaseActivity() {
 						val id = change.id.value
 						val (px, py) = change.position
 						when {
-							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+							vm.isOptionWindowVisible -> Unit
+							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.pressed -> padTouch.move(id, px, py, size.width, size.height)
 						}
 					}
