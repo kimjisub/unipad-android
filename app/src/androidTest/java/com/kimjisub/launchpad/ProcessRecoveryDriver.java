@@ -164,7 +164,7 @@ public class ProcessRecoveryDriver extends Instrumentation {
             shell("rm -rf " + EVIDENCE + "; mkdir -p " + EVIDENCE);
             shell("am force-stop " + PACKAGE);
             app("mkdir -p files; rm -f " + EVENTS);
-            require(shell("pm enable " + PROBE).contains("enabled"), "Could not enable debug observer");
+            require(app("pm enable " + PROBE).contains("enabled"), "Could not enable debug observer");
             shell("logcat -c");
             android.content.Intent launch = getContext().getPackageManager().getLaunchIntentForPackage(PACKAGE);
             require(launch != null, "Target launch intent missing");
@@ -215,7 +215,7 @@ public class ProcessRecoveryDriver extends Instrumentation {
             shell("dumpsys activity exit-info " + PACKAGE + " > " + EVIDENCE + "/exit-info.txt");
             shell("run-as " + PACKAGE + " cat " + EVENTS + " > " + EVIDENCE + "/events.jsonl");
             app("rm -f " + EVENTS + "; rm -rf " + FOLDER);
-            shell("pm disable " + PROBE); shell("am force-stop " + PACKAGE);
+            app("pm disable " + PROBE); shell("am force-stop " + PACKAGE);
         }
         Bundle result = new Bundle(); result.putString("stream", "\n" + outcome + "\n" + detail + "\n");
         finish(outcome.equals("PROCESS_RECOVERY_PASSED") ? Activity.RESULT_OK : Activity.RESULT_CANCELED, result);

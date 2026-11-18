@@ -49,13 +49,14 @@ trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 device_settings prepare
-./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain 2>&1 | tee "$results/gradle-ui.txt"
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon --continue --console=plain 2>&1 | tee "$results/gradle-ui.txt"
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 # Restore the debug probe's disabled default after an interrupted external driver;
 # remove only its owned fixture/observation files before target instrumentation.
 "$adb_bin" -s "$serial" shell am force-stop com.kimjisub.launchpad.dev
-"$adb_bin" -s "$serial" shell pm disable com.kimjisub.launchpad.dev/com.kimjisub.launchpad.tool.ProcessRecoveryProbe
+# Component state changes use the debuggable app's UID; Android can refuse the shell UID.
+"$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev pm disable com.kimjisub.launchpad.dev/com.kimjisub.launchpad.tool.ProcessRecoveryProbe
 "$adb_bin" -s "$serial" shell run-as com.kimjisub.launchpad.dev sh -c \
   "'rm -f files/process-recovery-events.jsonl; rm -rf /storage/emulated/0/Android/data/com.kimjisub.launchpad.dev/files/UniPack/process-recovery-pack'"
 device_settings verify

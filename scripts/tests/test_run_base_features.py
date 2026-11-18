@@ -64,6 +64,7 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         adb.parent.mkdir(parents=True)
         adb.write_text("#!/bin/bash\n"
                        "case \"$*\" in\n"
+                       "  *'shell pm disable '*|*'shell pm enable '*) echo 'Shell cannot change component state' >&2; exit 255 ;;\n"
                        "  *getprop*) echo 34 ;;\n"
                        "  *airplane_mode_on*) echo 1 ;;\n"
                        "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
