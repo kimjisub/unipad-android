@@ -9,9 +9,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * The touch and mouse events the play window was handed, as the app received them: action, device,
- * source and each pointer's ID and tool type, without moves. It shows whether the system cancelled
- * a held gesture and that a mouse and a finger arrived as two kinds of pointer. Each event is also
- * logged under [TAG].
+ * source, flags, pointer count and each pointer's ID and tool type, without moves. It shows whether
+ * the system cancelled a held gesture and that a mouse and a finger arrived as two kinds of
+ * pointer. Each event is also logged under [TAG].
  */
 class ReceivedInput(private val screen: FeatureScreen) {
     data class Pointer(val id: Int, val toolType: Int) {
@@ -23,9 +23,9 @@ class ReceivedInput(private val screen: FeatureScreen) {
     }
 
     /** [actor] is the pointer the action is about, among all [pointers] down at the time. */
-    data class Event(val action: Int, val actor: Pointer, val deviceId: Int, val source: Int, val pointers: List<Pointer>) {
+    data class Event(val action: Int, val actor: Pointer, val deviceId: Int, val source: Int, val flags: Int, val pointers: List<Pointer>) {
         override fun toString() =
-            "${MotionEvent.actionToString(action)} ($actor) device $deviceId source 0x${Integer.toHexString(source)} $pointers"
+            "${MotionEvent.actionToString(action)} ($actor) device $deviceId source 0x${Integer.toHexString(source)} flags 0x${Integer.toHexString(flags)} count ${pointers.size} $pointers"
     }
 
     val events = CopyOnWriteArrayList<Event>()
@@ -52,7 +52,7 @@ class ReceivedInput(private val screen: FeatureScreen) {
         val action = event.actionMasked
         if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_HOVER_MOVE) return
         val pointers = (0 until event.pointerCount).map { Pointer(event.getPointerId(it), event.getToolType(it)) }
-        Event(action, pointers[event.actionIndex], event.deviceId, event.source, pointers).also {
+        Event(action, pointers[event.actionIndex], event.deviceId, event.source, event.flags, pointers).also {
             events += it
             Log.i(TAG, it.toString())
         }
