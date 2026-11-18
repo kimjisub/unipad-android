@@ -55,6 +55,8 @@ class MixedPointerInputTest : HeldPadTest() {
 
         first.press(center(held))
         awaitHeld("The ${first.name} did not play, light and loop its pad", setOf(held))
+        val capture = "mixed-${first.name}-first-slide-$slide"
+        screen.capture("$capture-first-held")
         val beforeSecond = received.events.size
         second.press(center(other))
         screen.await({ "The ${second.name} did not play and light its pad while the ${first.name} held another\n$received" }) {
@@ -69,14 +71,17 @@ class MixedPointerInputTest : HeldPadTest() {
         assertHeldStill("While the ${second.name} holds its pad" + if (ended) " after Android ended the ${first.name}'s" else "",
             listOf(held, other), firstHeld + other)
 
+        screen.capture("$capture-second-held")
         second.lift()
         awaitHeld("Lifting the ${second.name} changed the ${first.name}'s pad or left its own playing", firstHeld)
         assertHeldStill("After lifting the ${second.name}", listOf(held, other), firstHeld)
+        screen.capture("$capture-second-lifted")
         // A kernel touchscreen still needs a physical lift; an injected mouse ended at cancel.
         if (!ended || !mouseFirst) first.lift()
         awaitHeld("The ${first.name}'s pad stayed lit or looping after lifting", emptySet())
         assertHeldStill("After lifting the ${first.name}", listOf(held, other), emptySet())
         assertPointers(first, ended)
+        screen.capture("$capture-all-lifted")
     }
 
     /**
