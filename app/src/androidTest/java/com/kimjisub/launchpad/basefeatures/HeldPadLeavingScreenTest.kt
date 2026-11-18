@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +27,29 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
     @Test fun heldPadStopsWhenAppGoesHome() = holdWhileHome(slide = false)
 
     @Test fun heldPadStopsWhenAppGoesHomeInSlideMode() = holdWhileHome(slide = true)
+
+    @Test fun heldPadStopsUnderNotificationShade() = holdWhileShade(slide = false)
+
+    @Test fun heldPadStopsUnderNotificationShadeInSlideMode() = holdWhileShade(slide = true)
+
+    @Test fun heldTouchReleasesEvenWhenWindowFocusReturnsQuickly() {
+        holdWhileLeaving("a brief window focus loss", slide = false,
+            leave = {
+                val activity = screen.resumed() as PlayActivity
+                screen.onMain { activity.onWindowFocusChanged(false) }
+                android.os.SystemClock.sleep(100)
+                screen.onMain { activity.onWindowFocusChanged(true) }
+            },
+            back = {},
+        )
+    }
+
+    private fun holdWhileShade(slide: Boolean) = withWindowAnimations {
+        holdWhileLeaving("opening the notification shade", slide,
+            leave = { assertTrue("Notification shade did not open", screen.device.openNotification()) },
+            back = { screen.device.pressBack() },
+        )
+    }
 
     /** ActivityScenario pauses the play screen by opening a floating activity over it. */
     private fun holdWhilePaused(slide: Boolean) = holdWhileLeaving("pausing the play screen", slide,

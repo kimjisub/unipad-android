@@ -36,6 +36,24 @@ abstract class PlaybackScreenTest {
         }
     }
 
+    /** Gradle disables animations; these regressions must exercise the system's real transitions. */
+    protected fun withWindowAnimations(block: () -> Unit) {
+        val keys = listOf("window_animation_scale", "transition_animation_scale", "animator_duration_scale")
+        val original = keys.associateWith { screen.device.executeShellCommand("settings get global $it").trim() }
+        try {
+            keys.forEach { key ->
+                screen.device.executeShellCommand("settings put global $key 1.0")
+                assertEquals("System animations must be enabled", 1f,
+                    screen.device.executeShellCommand("settings get global $key").trim().toFloat(), 0f)
+            }
+            block()
+        } finally {
+            original.forEach { (key, value) ->
+                screen.device.executeShellCommand(if (value == "null") "settings delete global $key" else "settings put global $key $value")
+            }
+        }
+    }
+
     /** Taps a pad and waits until the app received it, which a pad press shows as one sound request. */
     protected fun pressPad(index: Int) {
         val plays = audio.plays.size

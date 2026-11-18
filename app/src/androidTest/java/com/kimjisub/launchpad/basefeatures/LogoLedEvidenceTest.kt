@@ -31,7 +31,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
     private val logo = By.res("play_logo_led")
     private val off = 0xFF2A3A52.toInt()
 
-    @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() {
+    @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() = withWindowAnimations {
         val prefs = PreferenceManager(screen.context)
         val originalTheme = prefs.selectedTheme
         val originalWatermark = prefs.watermark
@@ -67,8 +67,9 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 val expectedWidth = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
                 val expectedOrientation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
                 screen.await("Display did not settle for $name") {
-                    screen.onMain { screen.resumed().resources.configuration.orientation == expectedOrientation &&
-                        screen.bounds(screen.resumed().window.decorView).width() == expectedWidth &&
+                    // Older Android keeps the decor inside the cutout; wm size describes the whole display.
+                    screen.device.displayWidth == expectedWidth && screen.onMain {
+                        screen.resumed().resources.configuration.orientation == expectedOrientation &&
                         screen.resumed().resources.displayMetrics.densityDpi == 320 &&
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
