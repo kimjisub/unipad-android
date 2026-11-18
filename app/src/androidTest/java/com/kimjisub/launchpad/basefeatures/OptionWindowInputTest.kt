@@ -2,6 +2,8 @@ package com.kimjisub.launchpad.basefeatures
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import com.kimjisub.launchpad.R
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,14 +15,17 @@ import java.io.File
 class OptionWindowInputTest : HeldPadTest() {
     private val label get() = InstrumentationRegistry.getArguments().getString("captureLabel") ?: "after"
 
-    private fun heldFinger(slide: Boolean) {
+    private fun heldFinger(slide: Boolean, menuFinger: Boolean = false) {
         startHeld(slide)
         val pad = Cell(3, 3)
         val next = Cell(3, 4)
         val finger = fingers.down(center(pad))
         awaitHeld("Finger must start a loop", setOf(pad))
-        screen.device.pressBack()
-        screen.await("Back must open options") { screen.onMain { screen.vm().isOptionWindowVisible } }
+        if (menuFinger) {
+            val opener = fingers.down(screen.node(By.desc(screen.text(R.string.menu))).visibleCenter)
+            fingers.up(opener)
+        } else screen.device.pressBack()
+        screen.await("Menu or Back must open options") { screen.onMain { screen.vm().isOptionWindowVisible } }
         settle()
         screen.capture("options-$label-slide-$slide-open")
         assertHeldStill("Opening options must release the finger now", listOf(pad), emptySet())
@@ -39,6 +44,7 @@ class OptionWindowInputTest : HeldPadTest() {
 
     @Test fun openingOptionsReleasesAHeldFingerInPadMode() = heldFinger(false)
     @Test fun openingOptionsReleasesAHeldFingerInSlideMode() = heldFinger(true)
+    @Test fun aSecondFingerOpeningOptionsReleasesTheFirstFinger() = heldFinger(true, menuFinger = true)
 
     @Test fun controllerFunctionKeyReleasesHeldPadsAndKeepsPanelControls() {
         startHeld(slide = true)
