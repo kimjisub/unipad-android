@@ -222,6 +222,12 @@ class PlayActivity : BaseActivity() {
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 	private val audioFocus by lazy { AudioFocusController(audioManager) { vm.audioFocusPolicy.onFocusChange(it) } }
+	private val windowFocusHandler = Handler(Looper.getMainLooper())
+	private val windowFocusInterruption = WindowFocusInterruption(
+		schedule = { task, delay -> windowFocusHandler.postDelayed(task, delay) },
+		cancel = { windowFocusHandler.removeCallbacks(it) },
+		interrupt = { vm.interruptPlayback() },
+	)
 
 	// Registered on the whole Settings.System tree: it fires for brightness, rotation, font scale...
 	// so only volume keys (or an unknown uri) refresh the UI.
@@ -1567,10 +1573,10 @@ class PlayActivity : BaseActivity() {
 	override fun onWindowFocusChanged(hasFocus: Boolean) {
 		super.onWindowFocusChanged(hasFocus)
 		if (::vm.isInitialized) {
-			if (!hasFocus) {
-				vm.interruptPlayback()
-				padTouch.cancel()
-			} else if (!audioFocus.request()) vm.interruptPlayback()
+			windowFocusInterruption.onFocusChanged(hasFocus)
+			// A covering window can swallow the finger's release, even if focus returns quickly.
+			if (!hasFocus) padTouch.cancel()
+			else if (!audioFocus.request()) vm.interruptPlayback()
 		}
 	}
 
@@ -1578,6 +1584,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		windowFocusInterruption.cancelPending()
 		vm.interruptPlayback()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
@@ -1604,6 +1611,7 @@ class PlayActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		windowFocusInterruption.cancelPending()
 		vm.requestAudioFocus = null
 		vm.uiCallback = null
 		vm.enable = false

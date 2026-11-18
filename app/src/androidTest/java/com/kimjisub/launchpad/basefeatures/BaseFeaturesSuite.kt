@@ -17,6 +17,7 @@ import org.junit.runners.Suite
     MixedPointerInputTest::class,
     HeldPadLayoutChangeTest::class,
     HeldPadLeavingScreenTest::class,
+    RotationPlaybackTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
     SharedMidiPadTest::class,
