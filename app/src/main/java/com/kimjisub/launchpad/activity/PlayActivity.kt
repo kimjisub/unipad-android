@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -301,12 +302,21 @@ class PlayActivity : BaseActivity() {
 			if (launchpadOutputEnabled) driver.sendPadLed(x, y, velocity)
 		}
 
+		override fun cancelPadTouches() = padTouch.cancel()
+
 		override fun onRequestRelayout() {
 			layoutArea?.let { area ->
 				vm.uiLoaded = false
 				initLayout(area)
 			}
 		}
+	}
+
+	// A pending mouse hover exit can hide a cancelled finger from Compose's synthetic releases.
+	// End the held inputs while the window still has the actual cancellation.
+	override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+		if (ev.actionMasked == MotionEvent.ACTION_CANCEL) padTouch.cancel()
+		return super.dispatchTouchEvent(ev)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -843,8 +853,9 @@ class PlayActivity : BaseActivity() {
 						val id = change.id.value
 						val (px, py) = change.position
 						when {
-							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+							vm.isOptionWindowVisible -> Unit
+							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
 							change.pressed -> padTouch.move(id, px, py, size.width, size.height)
 						}
 					}

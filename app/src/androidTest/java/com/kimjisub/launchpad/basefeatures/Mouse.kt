@@ -23,8 +23,7 @@ class Mouse(private val screen: FeatureScreen) {
 
     /** Moves to [at] if needed and presses [button] there. */
     fun press(at: Point, button: Int = MotionEvent.BUTTON_PRIMARY) {
-        // A stationary click needs no hover. Android 14 rejects another device's
-        // hover while a finger is down, but accept the new mouse DOWN.
+        // A stationary click needs no hover; another device may already hold a touch.
         if (x != at.x.toFloat() || y != at.y.toFloat()) hover(at)
         downAt = SystemClock.uptimeMillis()
         buttons = button
@@ -87,7 +86,7 @@ class Mouse(private val screen: FeatureScreen) {
         try {
             if (actionButton != 0) setActionButton(event, actionButton)
             val delivered = screen.instrumentation.uiAutomation.injectInputEvent(event, true)
-            if (requireDelivery) assertTrue("Mouse injection failed: $event", delivered)
+            if (requireDelivery) assertTrue("Mouse injection failed", delivered)
         } finally {
             event.recycle()
         }

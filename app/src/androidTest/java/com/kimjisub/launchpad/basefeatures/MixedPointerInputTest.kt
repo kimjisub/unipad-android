@@ -53,8 +53,7 @@ class MixedPointerInputTest : HeldPadTest() {
         val held = Cell(3, 3)
         val other = Cell(3, 5)
 
-        // Position the mouse before the finger lands, then click without moving it.
-        // Android 14 rejects another device's hover while a finger is down.
+        // Position the mouse before the finger lands, then click without another hover.
         mouse.hover(center(if (mouseFirst) held else other))
         first.press(center(held))
         awaitHeld("The ${first.name} did not play, light and loop its pad", setOf(held))
@@ -66,15 +65,16 @@ class MixedPointerInputTest : HeldPadTest() {
             audio.plays.size == 2 && other in litCells()
         }
         settle()
+        screen.capture("$capture-second-held")
         val ended = endedBySystem(first, received.events.drop(beforeSecond))
         if (ended && mouseFirst) mouse.forgetCancelled()
         Log.i(ReceivedInput.TAG, "${second.name} pressed while the ${first.name} held a pad: " +
             if (ended) "Android ended the ${first.name}'s gesture" else "both kept")
         val firstHeld = if (ended) emptySet() else setOf(held)
+        Log.i(ReceivedInput.TAG, "Before release checks: lights=${litCells()} loops=${loopingCells()}")
         assertHeldStill("While the ${second.name} holds its pad" + if (ended) " after Android ended the ${first.name}'s" else "",
             listOf(held, other), firstHeld + other)
 
-        screen.capture("$capture-second-held")
         second.lift()
         awaitHeld("Lifting the ${second.name} changed the ${first.name}'s pad or left its own playing", firstHeld)
         assertHeldStill("After lifting the ${second.name}", listOf(held, other), firstHeld)
