@@ -9,6 +9,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.view.InputDevice;
 import android.view.KeyEvent;
+import android.view.KeyCharacterMap;
 import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import org.json.JSONObject;
@@ -115,8 +116,12 @@ public class ProcessRecoveryDriver extends Instrumentation {
         Rect bounds = new Rect(); node.getBoundsInScreen(bounds); tap(bounds.centerX(), bounds.centerY());
     }
     private void key(int key) {
+        // The action/code constructor leaves event times at zero; the OS rejects it as stale.
+        long down = SystemClock.uptimeMillis();
         for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
-            require(getUiAutomation().injectInputEvent(new KeyEvent(action, key), true), "Key injection failed");
+            KeyEvent event = new KeyEvent(down, SystemClock.uptimeMillis(), action, key, 0, 0,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
+            require(getUiAutomation().injectInputEvent(event, true), "Key injection failed: " + key + "/" + action);
         }
     }
     private void tree(AccessibilityNodeInfo node, StringBuilder text, int depth) {
@@ -182,7 +187,7 @@ public class ProcessRecoveryDriver extends Instrumentation {
             require(oldPid.matches("[0-9]+") && !oldPid.equals(Integer.toString(android.os.Process.myPid())), "No independent app process: " + oldPid);
             await("Pack never finished loading", () -> ready(oldPid) != null);
             pressPad(oldPid); capture("before-home"); key(KeyEvent.KEYCODE_HOME);
-            Pattern stopped = Pattern.compile("(?s)ActivityRecord\\{[^\\n]*" + Pattern.quote(PACKAGE) + "/[^\\n}]*\\.PlayActivity[^\\n]*\\n(?:(?!ActivityRecord\\{).)*?mState=STOPPED");
+            Pattern stopped = Pattern.compile("(?s)ActivityRecord\\{[^\\n]*" + Pattern.quote(PACKAGE) + "/[^\\n}]*\\.PlayActivity[^\\n]*\\n(?:(?!ActivityRecord\\{).)*?\\b(?:mState|state)=STOPPED\\b");
             await("System has not acknowledged the stopped play activity", () -> stopped.matcher(shell("dumpsys activity activities")).find());
             shell("am kill " + PACKAGE);
             await("am kill did not end the background app process", () -> shell("pidof " + PACKAGE).isEmpty());
