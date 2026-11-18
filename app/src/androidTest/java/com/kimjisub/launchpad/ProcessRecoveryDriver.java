@@ -2,6 +2,7 @@ package com.kimjisub.launchpad;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -192,7 +193,14 @@ public class ProcessRecoveryDriver extends Instrumentation {
             shell("am kill " + PACKAGE);
             await("am kill did not end the background app process", () -> shell("pidof " + PACKAGE).isEmpty());
             key(KeyEvent.KEYCODE_APP_SWITCH);
-            AccessibilityNodeInfo card = node("Recent task", n -> n.getViewIdResourceName() != null && n.getViewIdResourceName().endsWith(":id/snapshot"));
+            String appLabel = getContext().getPackageManager().getApplicationInfo(PACKAGE,
+                PackageManager.ApplicationInfoFlags.of(0)).loadLabel(getContext().getPackageManager()).toString();
+            AccessibilityNodeInfo card = node("Recent task for " + appLabel, n -> {
+                if (n.getViewIdResourceName() == null || !n.getViewIdResourceName().endsWith(":id/snapshot")) return false;
+                // Other tasks, including instrumentation's empty activity, can precede this card.
+                AccessibilityNodeInfo owner = n.getParent();
+                return owner != null && appLabel.contentEquals(owner.getContentDescription() == null ? "" : owner.getContentDescription());
+            });
             capture("recent-apps"); tap(card);
             final String[] restoredPid = {""};
             await("Recents did not start a new app process", () -> {
