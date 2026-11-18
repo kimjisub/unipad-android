@@ -85,7 +85,7 @@ class Mouse(private val screen: FeatureScreen) {
         try {
             if (actionButton != 0) setActionButton(event, actionButton)
             val delivered = screen.instrumentation.uiAutomation.injectInputEvent(event, true)
-            if (requireDelivery) assertTrue("Mouse injection failed", delivered)
+            if (requireDelivery) assertTrue("Mouse injection failed: $event", delivered)
         } finally {
             event.recycle()
         }
