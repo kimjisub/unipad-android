@@ -356,10 +356,9 @@ private class ScenarioRun(
 		// applied as PlayActivity's layout step applies it, which also covers the unchanged default.
 		vm.scbProLightMode.setChecked(options.proLight)
 		vm.proLightMode(vm.scbProLightMode.isChecked())
-		// The option window open with the UI hidden: the screen's own lights on the round buttons (selected
-		// chain, option bar, logo) are all off, so only the pack's lights are reported.
-		vm.scbHideUI.setChecked(true)
-		vm.toggleOptionWindow(true)
+		// Hide the screen's own round lights without opening options, which blocks manual pad input.
+		// Only the pack's lights are reported while the play surface remains available.
+		vm.scbWatermark.setChecked(false)
 		vm.chain.addObserver { curr, _ ->
 			val tag = chainTag.get()
 			if (tag == null) {
@@ -439,12 +438,7 @@ private class ScenarioRun(
 		val name = input ?: "pointer:0"
 		if (name.startsWith("midi:")) {
 			check(name == "midi:1") { "Only one active controller is supported: $name" }
-			// The corpus hides the screen's round UI with the options flag; this is a pad
-			// event during play, not an options-window controller button.
-			val options = vm.isOptionWindowVisible
-			vm.isOptionWindowVisible = false
-			try { press(x, y, down) { vm.controllerPadTouch(x, y, down) } }
-			finally { vm.isOptionWindowVisible = options }
+			press(x, y, down) { vm.controllerPadTouch(x, y, down) }
 		} else {
 			val pointerId = pointerIds.getOrPut(name) { pointerIds.size.toLong() }
 			when {
