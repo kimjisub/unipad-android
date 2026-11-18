@@ -53,6 +53,9 @@ class MixedPointerInputTest : HeldPadTest() {
         val held = Cell(3, 3)
         val other = Cell(3, 5)
 
+        // Position the mouse before the finger lands, then click without moving it.
+        // Android 14 rejects another device's hover while a finger is down.
+        mouse.hover(center(if (mouseFirst) held else other))
         first.press(center(held))
         awaitHeld("The ${first.name} did not play, light and loop its pad", setOf(held))
         val capture = "mixed-${first.name}-first-slide-$slide"

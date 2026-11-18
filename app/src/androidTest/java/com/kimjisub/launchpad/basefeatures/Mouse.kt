@@ -21,9 +21,11 @@ class Mouse(private val screen: FeatureScreen) {
     /** Moves the pointer to [at] with no button held. */
     fun hover(at: Point, steps: Int = 3) = stroke(at, steps, MotionEvent.ACTION_HOVER_MOVE)
 
-    /** Moves to [at] and presses [button] there. */
+    /** Moves to [at] if needed and presses [button] there. */
     fun press(at: Point, button: Int = MotionEvent.BUTTON_PRIMARY) {
-        hover(at)
+        // A stationary click needs no hover. Android 14 rejects another device's
+        // hover while a finger is down, but accept the new mouse DOWN.
+        if (x != at.x.toFloat() || y != at.y.toFloat()) hover(at)
         downAt = SystemClock.uptimeMillis()
         buttons = button
         inject(MotionEvent.ACTION_DOWN)

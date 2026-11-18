@@ -306,6 +306,12 @@ pointers already down for device DeviceId(-1)`); a real mouse and touchscreen ar
 one `TOOL_TYPE_MOUSE` pointer and one `TOOL_TYPE_FINGER` pointer from the touchscreen's device ID
 went down and ended.
 
+The mouse is positioned before either pointer presses, and `Mouse.press` does not inject another
+hover when it is already at the requested position. Android 14 rejects another device's
+hover while a finger is down, before the app receives it, but accepts its new `ACTION_DOWN`. A
+stationary mouse click still exercises the finger-first press, cancellation and release path;
+all injected events must succeed and the sound, light and release assertions stay the same.
+
 Android may still end the first device's gesture in a window when another device starts one there
 (input flag `enable_multi_device_same_window_stream` off, as on the API 35 and 37 emulators; the system
 logs `Canceling pointers for device …`). The test accepts that only as one `ACTION_CANCEL` for
