@@ -48,7 +48,7 @@ internal object DisplaySettings {
             if (size != null) device.executeShellCommand("wm size ${size.first}x${size.second}")
             if (density != null) device.executeShellCommand("wm density $density")
             device.executeShellCommand("wm user-rotation lock $rotation")
-            awaitApplied(device, size ?: previous.size, density ?: previous.density)
+            awaitApplied(device, size ?: previous.size, density ?: previous.density, "lock $rotation")
             return block()
         } catch (t: Throwable) {
             failure = t
@@ -63,7 +63,7 @@ internal object DisplaySettings {
                     device.executeShellCommand(previous.densityOverride?.let { "wm density $it" } ?: "wm density reset")
                 }
                 device.executeShellCommand("wm user-rotation ${previous.rotation}")
-                awaitApplied(device, previous.size, previous.density)
+                awaitApplied(device, previous.size, previous.density, previous.rotation)
             } catch (t: Throwable) {
                 failure?.addSuppressed(t) ?: throw t
             }
@@ -74,26 +74,29 @@ internal object DisplaySettings {
      * Reads the applied window configuration, rather than the overrides the shell just accepted.
      * The user rotation lock is a preference: a portrait-only launcher or a landscape activity can
      * override it. Wait for size, density and layout at the actual rotation; callers that require a
-     * particular orientation check it after opening their activity.
+     * particular orientation check it after opening their activity. The preference itself must read
+     * back exactly as written before the same deadline, even when the activity ignores it.
      */
-    private fun awaitApplied(device: UiDevice, size: Pair<Int, Int>, density: Int) {
+    private fun awaitApplied(device: UiDevice, size: Pair<Int, Int>, density: Int, expectedUserRotation: String) {
         var windows = ""
+        var userRotation = ""
         val deadline = SystemClock.elapsedRealtime() + APPLY_TIMEOUT_MS
         do {
+            userRotation = device.executeShellCommand("wm user-rotation").trim()
             windows = device.executeShellCommand("dumpsys window displays")
-            if (applied(windows, size, density, null)) return
+            if (applied(windows, size, density, userRotation, expectedUserRotation)) return
             SystemClock.sleep(100)
         } while (SystemClock.elapsedRealtime() < deadline)
-        throw AssertionError("Display did not reach size=$size density=$density at the actual rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
+        throw AssertionError("Display did not reach size=$size density=$density userRotation=$expectedUserRotation (was $userRotation) at the actual rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
     }
 
-    internal fun applied(windows: String, size: Pair<Int, Int>, density: Int, rotation: Int?): Boolean {
+    internal fun applied(windows: String, size: Pair<Int, Int>, density: Int, userRotation: String, expectedUserRotation: String): Boolean {
         val display = windows.substringAfter("mDisplayId=0 ", "").substringBefore("Display areas")
         val config = display.lineSequence().firstOrNull { it.trimStart().startsWith("overrideConfig=") } ?: return false
         val degrees = Regex("mDisplayRotation=ROTATION_(0|90|180|270)\\b").find(config)?.groupValues?.get(1)?.toInt() ?: return false
         val actualRotation = degrees / 90
         val (width, height) = if (actualRotation % 2 == 0) size else size.second to size.first
-        return (rotation == null || rotation == actualRotation) &&
+        return userRotation == expectedUserRotation &&
             " cur=${width}x$height " in display && " ${density}dpi " in config &&
             "deferred=false mLayoutNeeded=false" in display
     }
