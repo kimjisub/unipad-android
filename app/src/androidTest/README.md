@@ -4,6 +4,15 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+`ThemePreviewLayoutTest` checks narrow (180 × 260 dp), wide (320 × 120 dp), and square
+(220 × 220 dp) preview areas. It requires the full pad grid and all eight chain buttons to fit,
+with no artwork covering the logo. Its real-screen test also saves a screenshot. To check a
+Pixel Fold emulator's physical displays, select `realThemePreviewShowsEveryPart` and pass
+`-Pandroid.testInstrumentationRunnerArguments.themePreviewPose=open` or `closed`, plus
+`-Pandroid.testInstrumentationRunnerArguments.themePreviewRotation=0` or `1`. These use the
+Pixel Fold profile's device states (2 for open, 0 for closed) and restore the device-state
+override and rotation settings afterwards.
+
 The debug app sends no Firebase analytics, performance data or crash reports from its first
 launch (`app/src/debug/AndroidManifest.xml`); it keeps network access, which
 `StoreCancellationDeviceTest` needs for its local download server. A crash collection value saved
