@@ -15,6 +15,7 @@ import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.FBStoreActivity
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.FirebaseStoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
@@ -54,6 +55,8 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
     }
 
     @Test fun storeKeepsItsFirstVisibleRow() = withTablet {
+        val prefs = PreferenceManager(screen.context)
+        val previousStoreCount = prefs.prevStoreCount
         val fixture = object : StoreCatalog {
             override fun attach(listener: StoreCatalog.Listener) {
                 (0 until 30).reversed().forEach { index ->
@@ -71,6 +74,7 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         } finally {
             screen.close()
             loadKoinModules(module { factory<StoreCatalog> { FirebaseStoreCatalog() } })
+            prefs.prevStoreCount = previousStoreCount
         }
     }
 
