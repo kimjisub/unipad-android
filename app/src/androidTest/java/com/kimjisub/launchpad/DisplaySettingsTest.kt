@@ -1,5 +1,8 @@
 package com.kimjisub.launchpad
 
+import android.content.pm.ActivityInfo
+import androidx.test.core.app.ActivityScenario
+import com.kimjisub.launchpad.activity.MidiSelectActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -35,21 +38,25 @@ class DisplaySettingsTest {
 
     @Test fun thisDevicesDisplayRestoresExistingOverridesEvenWhenTheBlockFails() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        device.pressHome()
-        val original = DisplaySettings.read(device)
-        val (width, height) = original.size
-        val shortest = minOf(width, height)
-        DisplaySettings.with(device, shortest to maxOf(width, height), shortest * 160 / 480, 1) {
-            val outer = DisplaySettings.read(device)
-            val failure = IllegalStateException("exercise display restoration")
-            try {
-                DisplaySettings.with(device, density = shortest * 160 / 720, rotation = 3) { throw failure }
-            } catch (caught: IllegalStateException) {
-                assertTrue(caught === failure)
+        // A phone's home activity may be portrait-only and ignore the user's rotation lock.
+        // Use an unrestricted app window to exercise display rotation in both directions.
+        ActivityScenario.launch(MidiSelectActivity::class.java).use { scenario ->
+            scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+            val original = DisplaySettings.read(device)
+            val (width, height) = original.size
+            val shortest = minOf(width, height)
+            DisplaySettings.with(device, shortest to maxOf(width, height), shortest * 160 / 480, 1) {
+                val outer = DisplaySettings.read(device)
+                val failure = IllegalStateException("exercise display restoration")
+                try {
+                    DisplaySettings.with(device, density = shortest * 160 / 720, rotation = 3) { throw failure }
+                } catch (caught: IllegalStateException) {
+                    assertTrue(caught === failure)
+                }
+                assertEquals(outer, DisplaySettings.read(device))
             }
-            assertEquals(outer, DisplaySettings.read(device))
+            assertEquals(original, DisplaySettings.read(device))
         }
-        assertEquals(original, DisplaySettings.read(device))
     }
 
     // The fields used by the wait, as Android 16's dumpsys window displays prints them.
