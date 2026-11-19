@@ -59,6 +59,30 @@ class DisplaySettingsTest {
         }
     }
 
+    @Test fun restoresPortraitUserLockWhileTheActivityStillRequiresLandscape() {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        val original = DisplaySettings.read(device)
+        val (width, height) = original.size
+        val shortest = minOf(width, height)
+        // Phone dimensions make activity orientation requests effective on large-screen devices too.
+        DisplaySettings.with(device, shortest to maxOf(width, height), shortest * 160 / 480, 0) {
+            ActivityScenario.launch(MidiSelectActivity::class.java).use { scenario ->
+                val locked = DisplaySettings.read(device)
+                assertEquals("lock 0", locked.rotation)
+                DisplaySettings.with(device, density = locked.density + 1, rotation = 1) {
+                    scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+                    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                }
+                assertEquals(locked, DisplaySettings.read(device))
+                assertTrue(DisplaySettings.applied(
+                    device.executeShellCommand("dumpsys window displays"), locked.size, locked.density, null,
+                ))
+                scenario.onActivity { assertEquals(1, it.display!!.rotation) }
+            }
+        }
+        assertEquals(original, DisplaySettings.read(device))
+    }
+
     // The fields used by the wait, as Android 16's dumpsys window displays prints them.
     private fun windows() = """
         WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)

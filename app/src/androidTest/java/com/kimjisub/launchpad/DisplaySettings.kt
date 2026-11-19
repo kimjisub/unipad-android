@@ -48,7 +48,7 @@ internal object DisplaySettings {
             if (size != null) device.executeShellCommand("wm size ${size.first}x${size.second}")
             if (density != null) device.executeShellCommand("wm density $density")
             device.executeShellCommand("wm user-rotation lock $rotation")
-            awaitApplied(device, size ?: previous.size, density ?: previous.density, rotation)
+            awaitApplied(device, size ?: previous.size, density ?: previous.density)
             return block()
         } catch (t: Throwable) {
             failure = t
@@ -63,24 +63,28 @@ internal object DisplaySettings {
                     device.executeShellCommand(previous.densityOverride?.let { "wm density $it" } ?: "wm density reset")
                 }
                 device.executeShellCommand("wm user-rotation ${previous.rotation}")
-                val locked = previous.rotation.removePrefix("lock ").toIntOrNull()
-                awaitApplied(device, previous.size, previous.density, locked)
+                awaitApplied(device, previous.size, previous.density)
             } catch (t: Throwable) {
                 failure?.addSuppressed(t) ?: throw t
             }
         }
     }
 
-    /** Reads the applied window configuration, rather than the overrides the shell just accepted. */
-    private fun awaitApplied(device: UiDevice, size: Pair<Int, Int>, density: Int, rotation: Int?) {
+    /**
+     * Reads the applied window configuration, rather than the overrides the shell just accepted.
+     * The user rotation lock is a preference: a portrait-only launcher or a landscape activity can
+     * override it. Wait for size, density and layout at the actual rotation; callers that require a
+     * particular orientation check it after opening their activity.
+     */
+    private fun awaitApplied(device: UiDevice, size: Pair<Int, Int>, density: Int) {
         var windows = ""
         val deadline = SystemClock.elapsedRealtime() + APPLY_TIMEOUT_MS
         do {
             windows = device.executeShellCommand("dumpsys window displays")
-            if (applied(windows, size, density, rotation)) return
+            if (applied(windows, size, density, null)) return
             SystemClock.sleep(100)
         } while (SystemClock.elapsedRealtime() < deadline)
-        throw AssertionError("Display did not reach size=$size density=$density rotation=$rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
+        throw AssertionError("Display did not reach size=$size density=$density at the actual rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
     }
 
     internal fun applied(windows: String, size: Pair<Int, Int>, density: Int, rotation: Int?): Boolean {
