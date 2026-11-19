@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.basefeatures
 
 import android.graphics.Rect
 import android.os.StrictMode
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
@@ -89,17 +88,8 @@ class LibraryAndFileTest {
                 // while its replacement initially shows Recent; neither idle nor an old title proves it.
                 // DocumentsUI can rotate as it opens, leaving touch coordinates transformed for
                 // the previous rotation. Deliver this system control's click to its actual view.
-                val rootsButton = screen.node(By.pkg(picker).clazz("android.widget.ImageButton")
-                    .hasAncestor(By.res(picker, "toolbar")))
-                    .accessibilityNodeInfo
-                val buttonBounds = Rect().also(rootsButton::getBoundsInScreen)
-                val window = rootsButton.window
-                val windowBounds = Rect().also { window?.getBoundsInScreen(it) }
-                val rotation = screen.device.displayRotation
-                val accepted = rootsButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                println("DocumentsUI roots click: accepted=$accepted rotation=$rotation " +
-                    "window=${window?.id} focused=${window?.isFocused} bounds=$windowBounds button=$buttonBounds")
-                assertTrue("DocumentsUI did not accept the roots button click", accepted)
+                screen.accessibilityClick(By.pkg(picker).clazz("android.widget.ImageButton")
+                    .hasAncestor(By.res(picker, "toolbar")), "DocumentsUI roots click")
                 screen.node(By.res(picker, "roots_list"))
                 println("DocumentsUI roots opened: rotation=${screen.device.displayRotation}")
                 screen.capture("file-picker-roots")
