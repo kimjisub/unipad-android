@@ -397,6 +397,21 @@ reads those with `cmd overlay lookup` and `dumpsys window displays`. Android 10 
 so there a navigation overlay is switched without waiting, as before; of the tests that switch one,
 only `transferScreenSearchResultsScrollAboveKeyboardOnTablet` runs below API 33. Switching only the
 cutout (the play screen's window-change tests, which run on every version) does not wait.
+On tablets from Android 12L, three-button navigation uses `taskbar_frame_height`. A transient
+gesture taskbar advertises `ANIMATE_RESIZING` and uses the home app's
+`transient_taskbar_stashed_height`; a pinned gesture taskbar uses the taskbar height when its source
+also reports `SUPPRESS_SCRIM` and `INSETS_ROUNDED_CORNER`. Phone navigation keeps its existing
+orientation-specific dimensions. The wait still requires the requested navigation mode and the
+exact pixel thickness, within the same ten seconds.
+
+The theme side-bar check temporarily gives a tablet portrait natural dimensions and a smallest
+width of 480 dp. Density alone cannot give a naturally landscape tablet a side bar at rotation 0.
+It also rotates the display itself, because a tablet can ignore activity rotation requests after
+its metrics change. Both landscape rotations still require a real side bar and cutout before
+checking every control. Size, density and user rotation are restored in `finally`; the separate
+tablet bottom-bar check continues to use tablet dimensions. The language/skin check reopens fresh
+Settings and finds the English row whether it is initially visible or needs scrolling, then still
+checks the locale, persisted skin, and rendered pad pixels.
 A navigation overlay change also relaunches the home app. On a busy emulator that took several
 seconds, and opening the main screen meanwhile made the system time out pausing the home app and
 show its "isn't responding" dialog, which then held the input focus the main screen's readiness
