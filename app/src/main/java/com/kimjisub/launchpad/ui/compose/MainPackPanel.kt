@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -117,12 +118,13 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 					PackDates(unipackEnt?.createdAt, unipackEnt?.lastOpenedAt)
 				}
 			} else {
-				Row(
+				FlowRow(
 					modifier = Modifier.fillMaxWidth(),
-					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalArrangement = Arrangement.spacedBy(8.dp),
+					itemVerticalAlignment = Alignment.CenterVertically,
 				) {
 					PlayCount(unipackEnt?.openCount ?: 0)
-					Spacer(Modifier.weight(1f))
 					PackDates(unipackEnt?.createdAt, unipackEnt?.lastOpenedAt)
 				}
 			}
@@ -200,6 +202,8 @@ private fun PlayCount(value: Long) {
 		)
 		Text(
 			text = value.toString(),
+			maxLines = 1,
+			softWrap = false,
 			fontWeight = FontWeight.Bold,
 			color = Color(0xFF1A1A1A),
 		)
@@ -257,16 +261,20 @@ fun DateRow(label: String, value: String) {
 			Text(text = value, fontSize = 10.sp, maxLines = 1, color = Color(0xFF333333))
 		}
 	} else {
-		Row(verticalAlignment = Alignment.CenterVertically) {
+		FlowRow(
+			horizontalArrangement = Arrangement.spacedBy(8.dp),
+			itemVerticalAlignment = Alignment.CenterVertically,
+		) {
 			Text(
 				text = label,
 				fontSize = 10.sp,
 				color = Color(0xFF888888),
 			)
-			Spacer(Modifier.width(8.dp))
 			Text(
 				text = value,
 				fontSize = 10.sp,
+				maxLines = 1,
+				softWrap = false,
 				color = Color(0xFF333333),
 			)
 		}
