@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -40,7 +41,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ResizeScrollMutationTest {
     @get:Rule val compose = createAndroidComposeRule<SettingsActivity>()
-    private var viewportHeight by mutableStateOf(300.dp)
+    private var viewportHeight by mutableStateOf(120.dp)
     private var rows by mutableIntStateOf(12)
     private var resetKey by mutableIntStateOf(0)
     private var listState: LazyListState? = null
@@ -53,11 +54,11 @@ class ResizeScrollMutationTest {
                         val state = rememberResizeLazyListState(resetKey)
                         listState = state
                         LazyColumn(state = state, modifier = (if (wrapWidth) Modifier.fillMaxHeight() else Modifier.fillMaxSize()).testTag("scroll")) {
-                            items(rows) { Text("Row $it", Modifier.height(50.dp)) }
+                            items(rows) { Text("Row $it", Modifier.height(20.dp), fontSize = 12.sp, lineHeight = 16.sp) }
                         }
                     } else {
                         Column(Modifier.fillMaxSize().resizeVerticalScroll().testTag("scroll")) {
-                            repeat(rows) { Text("Row $it", Modifier.height(50.dp)) }
+                            repeat(rows) { Text("Row $it", Modifier.height(20.dp), fontSize = 12.sp, lineHeight = 16.sp) }
                         }
                     }
                 }
@@ -88,23 +89,23 @@ class ResizeScrollMutationTest {
                 down(center)
                 repeat(10) { moveBy(Offset(0f, -15f)) }
             }
-            resize(280)
+            resize(112)
             compose.onNodeWithTag("scroll").performTouchInput {
                 repeat(5) { moveBy(Offset.Zero) }
                 up()
             }
             compose.waitForIdle()
-            resize(300)
+            resize(120)
         }
         val before = value()
         val rowBefore = listState?.let { it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset }
         assertTrue("The fixture must be scrolled", before > 0)
         val label = "${if (lazy) "list" else "column"}-drag-$drag-wrap-$wrapWidth"
         capture("$label-before")
-        resize(700)
+        resize(280)
         assertEquals("All content must fit", 0f, value(), 0f)
         capture("$label-tall")
-        resize(300)
+        resize(120)
         capture("$label-after")
         println("Resize mutation $label before=$before after=${value()} rowBefore=$rowBefore")
         if (lazy) assertEquals(rowBefore, listState!!.let { it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset })
