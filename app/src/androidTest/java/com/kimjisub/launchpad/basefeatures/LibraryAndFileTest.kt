@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.graphics.Rect
 import android.os.StrictMode
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
@@ -9,6 +11,7 @@ import android.provider.MediaStore
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import com.kimjisub.launchpad.ActivityReadiness
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
@@ -84,11 +87,27 @@ class LibraryAndFileTest {
                 val picker = "com.google.android.documentsui"
                 // Always navigate to the known destination. A previous picker can remember Downloads,
                 // while its replacement initially shows Recent; neither idle nor an old title proves it.
-                screen.click(By.pkg(picker).clazz("android.widget.ImageButton")
+                // DocumentsUI can rotate as it opens, leaving touch coordinates transformed for
+                // the previous rotation. Deliver this system control's click to its actual view.
+                val rootsButton = screen.node(By.pkg(picker).clazz("android.widget.ImageButton")
                     .hasAncestor(By.res(picker, "toolbar")))
+                    .accessibilityNodeInfo
+                val buttonBounds = Rect().also(rootsButton::getBoundsInScreen)
+                val window = rootsButton.window
+                val windowBounds = Rect().also { window?.getBoundsInScreen(it) }
+                val rotation = screen.device.displayRotation
+                val accepted = rootsButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                println("DocumentsUI roots click: accepted=$accepted rotation=$rotation " +
+                    "window=${window?.id} focused=${window?.isFocused} bounds=$windowBounds button=$buttonBounds")
+                assertTrue("DocumentsUI did not accept the roots button click", accepted)
                 screen.node(By.res(picker, "roots_list"))
+                println("DocumentsUI roots opened: rotation=${screen.device.displayRotation}")
+                screen.capture("file-picker-roots")
+                ActivityReadiness.captureState(screen.context, screen.device, "basefeatures-captures", "file-picker-roots")
                 screen.click(By.text("Downloads").hasAncestor(By.res(picker, "roots_list")))
                 screen.node(By.text("Downloads").hasAncestor(By.res(picker, "toolbar")))
+                screen.capture("file-picker-downloads")
+                ActivityReadiness.captureState(screen.context, screen.device, "basefeatures-captures", "file-picker-downloads")
                 // Select explicitly: a delayed injected tap can become a long press and leave
                 // DocumentsUI in selection mode without returning the document to the app.
                 screen.node(By.text("basefeatures-file.zip")).longClick()
@@ -101,7 +120,8 @@ class LibraryAndFileTest {
                 screen.await("Imported pack did not load", screen::ready)
                 assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })
                 assertEquals("basefeatures-file", screen.onMain { screen.vm().unipack.id })
-                screen.capture("file-import-play")
+                // Model readiness can precede the frame that removes the loading overlay.
+                screen.capturePads("file-import-play", emptySet())
                 listener.submit {}.get(10, java.util.concurrent.TimeUnit.SECONDS)
                 assertEquals("Import accessed files on the main thread", emptyList<String>(), violations.toList())
             } finally {
