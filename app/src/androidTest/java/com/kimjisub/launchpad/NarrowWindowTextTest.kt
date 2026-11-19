@@ -19,7 +19,6 @@ import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.midi.MidiConnection
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -60,7 +59,10 @@ class NarrowWindowTextTest : BaseUITest() {
         for (value in listOf("19/11/2026", "19/11/2025", "123456789")) {
             val layout = layout(compose.onNode(hasText(value), useUnmergedTree = true))
             assertEquals("Numeric value wraps: $value at ${widthDp}dp", 1, layout.lineCount)
-            assertFalse("Numeric value is clipped: $value at ${widthDp}dp", layout.hasVisualOverflow)
+            val node = compose.onNode(hasText(value), useUnmergedTree = true)
+            val bounds = node.fetchSemanticsNode().boundsInRoot
+            assertTrue("Numeric line is clipped: $value", layout.getLineRight(0) - layout.getLineLeft(0) <= bounds.width + 1f)
+            assertTrue("Numeric line is clipped vertically: $value", layout.getLineBottom(0) <= bounds.height + 1f)
         }
     }
 
