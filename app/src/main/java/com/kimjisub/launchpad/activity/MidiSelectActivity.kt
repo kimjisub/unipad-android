@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -402,26 +404,32 @@ private fun MidiSelectScreen(
 			}
 		}
 
-		// Right panel (~65%) - Device grid
-		LazyVerticalGrid(
-			columns = GridCells.Fixed(4),
+		// Keep up to four columns, with room for a complete word inside each card.
+		BoxWithConstraints(
 			modifier = Modifier
 				.weight(0.65f)
 				.fillMaxHeight()
 				.padding(16.dp),
-			horizontalArrangement = Arrangement.spacedBy(12.dp),
-			verticalArrangement = Arrangement.spacedBy(12.dp),
-			contentPadding = PaddingValues(
-				top = 8.dp,
-				bottom = 8.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
-			),
 		) {
-			itemsIndexed(midiDevices) { index, device ->
-				DeviceCard(
-					device = device,
-					isSelected = index == selectedIndex,
-					onClick = { onDeviceSelect(index) },
-				)
+			val minCardWidth = 112.dp * LocalDensity.current.fontScale
+			val columns = ((maxWidth + 12.dp) / (minCardWidth + 12.dp)).toInt().coerceIn(1, 4)
+			LazyVerticalGrid(
+				columns = GridCells.Fixed(columns),
+				modifier = Modifier.fillMaxSize(),
+				horizontalArrangement = Arrangement.spacedBy(12.dp),
+				verticalArrangement = Arrangement.spacedBy(12.dp),
+				contentPadding = PaddingValues(
+					top = 8.dp,
+					bottom = 8.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+				),
+			) {
+				itemsIndexed(midiDevices) { index, device ->
+					DeviceCard(
+						device = device,
+						isSelected = index == selectedIndex,
+						onClick = { onDeviceSelect(index) },
+					)
+				}
 			}
 		}
 	}
