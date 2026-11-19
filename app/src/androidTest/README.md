@@ -507,3 +507,11 @@ so a run shows when the entire content fits. Captures are named
 The existing animated playback rotation checks also turn the device itself; large-screen
 Android can ignore an activity-only orientation request. Their expected rotation, playback
 checks and time limits are unchanged, and the device rotation is unfrozen during cleanup.
+
+`basefeatures.ResizeScrollMutationTest` exercises the production scroll helpers in small
+Compose fixtures. It checks a resize during an unfinished touch gesture, a list whose row
+width changes while flinging, an explicit list reset during dragging, and content shrink/growth.
+A controlled Compose clock checks that content growth does not interrupt a fling; matching
+control cases establish that scrolling and restoration work without the competing changes.
+All nine cases run on a phone-sized window or larger and save resize captures under
+`resize-mutation/`.
