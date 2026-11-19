@@ -178,7 +178,8 @@ public class ProcessRecoveryDriver extends Instrumentation {
             shell("am force-stop " + PACKAGE);
             app("mkdir -p files; rm -f " + EVENTS);
             require(app("pm enable " + PROBE).contains("enabled"), "Could not enable debug observer");
-            shell("logcat -c");
+            long startedAt = System.currentTimeMillis();
+            require(shell("logcat -b all -c && echo cleared").equals("cleared"), "Cannot clear system log buffers");
             android.content.Intent launch = getContext().getPackageManager().getLaunchIntentForPackage(PACKAGE);
             require(launch != null, "Target launch intent missing");
             getContext().startActivity(launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -212,19 +213,17 @@ public class ProcessRecoveryDriver extends Instrumentation {
             JSONObject restored = ready(newPid);
             require(restored.getInt("taskId") == ready(oldPid).getInt("taskId"), "Returned to another task");
             require(restored.getBoolean("savedState"), "Fresh launch instead of saved state restoration");
-            pressPad(newPid); capture("after-return"); getUiAutomation().waitForIdle(100, 1000);
+            pressPad(newPid); capture("after-return");
             require(shell("pidof " + PACKAGE).equals(newPid), "Restored process exited after pad input");
             final String[] exits = {""};
             await("System exit history did not record the terminated process", () -> {
                 exits[0] = shell("dumpsys activity exit-info " + PACKAGE);
-                return exits[0].contains("ACTIVITY MANAGER PROCESS EXIT INFO") && exits[0].contains("pid=" + oldPid + " ");
+                return ProcessRecoveryLogs.hasExit(exits[0], PACKAGE, oldPid, startedAt);
             });
             shell("logcat -d -b crash -b events -v threadtime > " + EVIDENCE + "/errors.txt");
             String errors = shell("cat " + EVIDENCE + "/errors.txt");
-            require(errors.contains("am_proc_start") && errors.contains(PACKAGE), "System event log could not be verified");
-            require(!Pattern.compile("am_crash.*" + Pattern.quote(PACKAGE) + "|am_anr.*" + Pattern.quote(PACKAGE) + "|FATAL EXCEPTION|Fatal signal").matcher(errors).find(), "Crash or ANR: " + errors);
-            require(!Pattern.compile("reason=([456])\\b").matcher(exits[0]).find(), "System reported crash/native crash/ANR: " + exits[0]);
-            detail = "old_pid=" + oldPid + " new_pid=" + newPid + " saved_state=true same_pack=true sound_request=true";
+            ProcessRecoveryLogs.verify(exits[0], errors, PACKAGE, oldPid, newPid, startedAt);
+            detail = "old_pid=" + oldPid + " new_pid=" + newPid + " started_at_ms=" + startedAt + " saved_state=true same_pack=true sound_request=true";
             outcome = "PROCESS_RECOVERY_PASSED";
         } catch (Throwable error) {
             detail = android.util.Log.getStackTraceString(error);

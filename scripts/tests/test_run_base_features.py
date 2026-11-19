@@ -32,7 +32,7 @@ def instrumentation(tests, footer=None, status_codes=()):
 class BaseFeaturesRunnerTest(unittest.TestCase):
     def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n",
                    earlier=None, kill_during_suite=False, serial="emulator-5678", recovery="PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: -1\n",
-                   setup="PROCESS_RECOVERY_PREPARED\nINSTRUMENTATION_CODE: -1\n"):
+                   setup="PROCESS_RECOVERY_PREPARED\nINSTRUMENTATION_CODE: -1\n", build_fails=False):
         """Run the script against fake adb/Gradle; `am instrument` prints `output`.
 
         `earlier` maps result file names to contents a previous run left behind. With
@@ -70,12 +70,13 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
                        "  *airplane_mode_on*) echo 1 ;;\n"
                        "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
                        "  *ProcessRecoverySetup*) cat setup.txt ;;\n"
-                       "  *ProcessRecoveryDriver*) touch recovery-ran; cat recovery.txt ;;\n"
+                       "  *ProcessRecoveryDriver*) touch recovery-ran; mkdir -p device-evidence/process-recovery; echo current > device-evidence/process-recovery/after-return.png; cat recovery.txt ;;\n"
+                       "  *'pull /data/local/tmp/unipad_tests/process-recovery '*) cp -R device-evidence/process-recovery \"${@: -1}\" ;;\n"
                        "  *'am instrument'*) touch suite-ran; [[ -n \"${HANG:-}\" ]] && sleep 60; cat instrumentation.txt ;;\n"
                        "esac\n")
         adb.chmod(0o755)
         gradle = root / "gradlew"
-        gradle.write_text("#!/bin/bash\ntouch gradle-ran\n")
+        gradle.write_text("#!/bin/bash\ntouch gradle-ran\n" + ("exit 1\n" if build_fails else ""))
         gradle.chmod(0o755)
         env = dict(os.environ, ANDROID_HOME=str(root / "sdk"))
         env.pop("ANDROID_SERIAL", None)
@@ -85,6 +86,26 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             return root, kill_once_started(command, root, env, "suite-ran")
         result = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True)
         return root, result
+
+    def test_build_failure_removes_previous_recovery_verdict_and_captures(self):
+        earlier = {"process-recovery.txt": "PROCESS_RECOVERY_PASSED\n",
+                   "process-recovery-setup.txt": "PROCESS_RECOVERY_PREPARED\n",
+                   "process-recovery/after-return.png": "old screenshot"}
+        root, result = self.run_runner(instrumentation(5), earlier=earlier, build_fails=True)
+        self.assertNotEqual(result.returncode, 0)
+        for name in earlier:
+            path = root / ".ci-results/base-features" / name
+            self.assertFalse(path.exists() and path.read_text(), str(path))
+        self.assertFalse((root / ".ci-results/base-features/process-recovery").exists())
+        self.assertFalse((root / "recovery-ran").exists())
+
+    def test_new_captures_replace_previous_directory_without_nesting(self):
+        root, result = self.run_runner(instrumentation(5),
+                                       earlier={"process-recovery/after-return.png": "old screenshot"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        captures = root / ".ci-results/base-features/process-recovery"
+        self.assertEqual((captures / "after-return.png").read_text(), "current\n")
+        self.assertFalse((captures / "process-recovery").exists())
 
     def test_missing_or_incomplete_preparation_stops_before_process_recovery(self):
         for setup in ("INSTRUMENTATION_CODE: 0\n", "PROCESS_RECOVERY_PREPARED\n"):

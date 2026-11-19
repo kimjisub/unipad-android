@@ -3,7 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 results="${CI_RESULTS_DIR:-.ci-results/base-features}"
 # Only the exit handler writes this, so a run that stops before it leaves none, not an earlier verdict.
-rm -f "$results/ui-status.txt"
+rm -f "$results/ui-status.txt" "$results/process-recovery.txt" "$results/process-recovery-setup.txt"
+rm -rf "$results/process-recovery"
 serial="${1:-${ANDROID_SERIAL:-}}"
 if [[ -z "$serial" ]]; then
   echo 'Pass the test device serial from adb devices (or set ANDROID_SERIAL).' >&2
@@ -49,6 +50,8 @@ trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 device_settings prepare
+# Do not pull captures from a prior run if this driver cannot even start.
+"$adb_bin" -s "$serial" shell rm -rf /data/local/tmp/unipad_tests/process-recovery
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon --continue --console=plain 2>&1 | tee "$results/gradle-ui.txt"
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
