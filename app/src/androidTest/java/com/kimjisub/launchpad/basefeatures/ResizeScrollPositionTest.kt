@@ -4,6 +4,8 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.performScrollToIndex
@@ -103,8 +105,8 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         if (name == "library") {
             // Trailing padding can leave a few pixels of range even when every row is visible.
             assertEquals("All added library rows must be visible in the taller window", 15,
-                screen.device.findObjects(By.textStartsWith("Resize Pack")).count { it.visibleBounds.height() > 0 })
-            assertTrue("The original pack must also be visible", screen.node(By.text(FeatureScreen.TITLE)).visibleBounds.height() > 0)
+                visibleTexts().count { it.text.startsWith("Resize Pack") })
+            assertTrue("The original pack must also be visible", visibleTexts().any { it.text == FeatureScreen.TITLE })
         }
         rotate(portrait = false)
         screen.capture("resize-$name-after-rotation")
@@ -121,12 +123,21 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         println("Resize scroll $name: offset=$before first=$firstRow preserved across rotation and resize")
     }
 
-    private fun firstVisibleText(): String {
+    private data class VisibleText(val bounds: Rect, val text: String)
+
+    private fun visibleTexts(): List<VisibleText> {
+        compose.waitForIdle()
         val bounds = scroll().fetchSemanticsNode().boundsInWindow
-        return screen.device.findObjects(By.pkg(screen.context.packageName).text(java.util.regex.Pattern.compile(".+")))
-            .filter { val r = it.visibleBounds; r.left >= bounds.left && r.top >= bounds.top && r.bottom <= bounds.bottom }
-            .minByOrNull { it.visibleBounds.top }?.text ?: error("No visible scroll content")
+        return compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes().map { node ->
+                VisibleText(node.boundsInWindow, node.config[SemanticsProperties.Text].joinToString { it.text })
+            }.filter { it.bounds.width > 0 && it.bounds.height > 0 &&
+                it.bounds.left >= bounds.left && it.bounds.top >= bounds.top && it.bounds.bottom <= bounds.bottom }
     }
+
+    private fun firstVisibleText(): String = visibleTexts()
+        .minWithOrNull(compareBy<VisibleText> { it.bounds.top }.thenBy { it.bounds.left })?.text
+        ?: error("No visible scroll content")
 
     private fun rotate(portrait: Boolean) {
         screen.onMain { screen.resumed().requestedOrientation = if (portrait) ActivityInfo.SCREEN_ORIENTATION_PORTRAIT else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
