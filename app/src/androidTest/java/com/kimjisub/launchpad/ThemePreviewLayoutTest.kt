@@ -18,6 +18,7 @@ import androidx.test.uiautomator.UiDevice
 import com.kimjisub.launchpad.activity.PreviewBitmaps
 import com.kimjisub.launchpad.activity.ThemeActivity
 import com.kimjisub.launchpad.activity.ThemePreview
+import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -31,8 +32,27 @@ class ThemePreviewLayoutTest {
     @Test fun narrowPreviewShowsEveryChainButton() = checkPreview(180.dp, 260.dp)
     @Test fun widePreviewShowsTheWholeLogo() = checkPreview(320.dp, 120.dp)
     @Test fun squarePreviewShowsPadsChainsAndLogo() = checkPreview(220.dp, 220.dp)
+    @Test fun logoFreePreviewShowsPadsAndChains() = checkPreview(180.dp, 260.dp, hasLogo = false)
 
-    @Test fun realThemePreviewShowsEveryPart() {
+    @Test fun realThemePreviewRestoresSavedLogoFreeTheme() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = PreferenceManager(context)
+        val originalTheme = prefs.selectedTheme
+        try {
+            prefs.selectedTheme = "asset://sskin"
+            checkRealPreview()
+            assertEquals("Preview check must restore the saved theme", "asset://sskin", prefs.selectedTheme)
+        } finally {
+            prefs.selectedTheme = originalTheme
+        }
+    }
+
+    @Test fun realThemePreviewShowsEveryPart() = checkRealPreview()
+
+    private fun checkRealPreview() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = PreferenceManager(context)
+        val originalTheme = prefs.selectedTheme
         val arguments = InstrumentationRegistry.getArguments()
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         // Optional physical-display checks use the registered Pixel Fold emulator profile.
@@ -44,6 +64,7 @@ class ThemePreviewLayoutTest {
         val previousFixed = device.executeShellCommand("wm fixed-to-user-rotation").trim()
         var scenario: ActivityScenario<ThemeActivity>? = null
         try {
+            prefs.selectedTheme = context.packageName
             if (pose != null) {
                 println(device.executeShellCommand("cmd device_state state ${if (pose == "closed") 0 else 2}"))
                 device.wakeUp()
@@ -67,6 +88,7 @@ class ThemePreviewLayoutTest {
             assertTrue("Could not save theme preview", TestCaptures.screenshot(device, capture))
             assertPreviewFits()
         } finally {
+            prefs.selectedTheme = originalTheme
             scenario?.close()
             if (rotation != null) {
                 device.executeShellCommand("wm user-rotation ${previousRotation.takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"}")
@@ -76,7 +98,7 @@ class ThemePreviewLayoutTest {
         }
     }
 
-    private fun checkPreview(width: Dp, height: Dp) {
+    private fun checkPreview(width: Dp, height: Dp, hasLogo: Boolean = true) {
         val button = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply {
             eraseColor(android.graphics.Color.BLUE)
         }
@@ -84,14 +106,14 @@ class ThemePreviewLayoutTest {
             eraseColor(android.graphics.Color.YELLOW)
         }
         val bitmaps = PreviewBitmaps(null, button.asImageBitmap(), null, null,
-            button.asImageBitmap(), false, logo.asImageBitmap())
+            button.asImageBitmap(), false, if (hasLogo) logo.asImageBitmap() else null)
         val scenario = ActivityScenario.launch(ThemeActivity::class.java)
         try {
             scenario.onActivity { activity ->
                 activity.setContent { Box(Modifier.size(width, height)) { ThemePreview(bitmaps) } }
             }
             compose.waitForIdle()
-            assertPreviewFits()
+            assertPreviewFits(hasLogo)
         } finally {
             scenario.close()
             button.recycle()
@@ -99,10 +121,12 @@ class ThemePreviewLayoutTest {
         }
     }
 
-    private fun assertPreviewFits() {
+    private fun assertPreviewFits(hasLogo: Boolean = true) {
         val preview = compose.onNodeWithTag("theme_preview", useUnmergedTree = true).fetchSemanticsNode()
         val bounds = preview.boundsInRoot
-        for (tag in listOf("theme_preview_pads", "theme_preview_chains", "theme_preview_logo")) {
+        val tags = listOf("theme_preview_pads", "theme_preview_chains") +
+            if (hasLogo) listOf("theme_preview_logo") else emptyList()
+        for (tag in tags) {
             val node = compose.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode()
             val visible = node.boundsInRoot
             assertTrue("$tag must have a visible width", visible.width > 0)
@@ -115,9 +139,13 @@ class ThemePreviewLayoutTest {
         }
         val pads = compose.onNodeWithTag("theme_preview_pads", true).fetchSemanticsNode().boundsInRoot
         val chains = compose.onNodeWithTag("theme_preview_chains", true).fetchSemanticsNode().boundsInRoot
-        val logoBounds = compose.onNodeWithTag("theme_preview_logo", true).fetchSemanticsNode().boundsInRoot
-        assertTrue("Pads must leave the logo visible", !pads.overlaps(logoBounds))
-        assertTrue("Chains must leave the logo visible", !chains.overlaps(logoBounds))
+        if (hasLogo) {
+            val logoBounds = compose.onNodeWithTag("theme_preview_logo", true).fetchSemanticsNode().boundsInRoot
+            assertTrue("Pads must leave the logo visible", !pads.overlaps(logoBounds))
+            assertTrue("Chains must leave the logo visible", !chains.overlaps(logoBounds))
+        } else {
+            compose.onNodeWithTag("theme_preview_logo", true).assertDoesNotExist()
+        }
         assertEquals("All eight chains must fit beside the pads", pads.height, chains.height, 1f)
         assertEquals("Chain buttons must keep the pad artwork's proportions", pads.width / 8, chains.width, 1f)
     }
