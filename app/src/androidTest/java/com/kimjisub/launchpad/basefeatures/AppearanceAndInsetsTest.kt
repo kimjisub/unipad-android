@@ -12,6 +12,7 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.DisplaySettings
 import com.kimjisub.launchpad.DisplayOverlays
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
@@ -98,68 +99,75 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     @Test fun rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.openPlay()
-            val vm = screen.vm()
-            screen.onMain { vm.chain.value = 1 }
-            val activity = screen.resumed()
-            val oldOrientation = screen.onMain { activity.requestedOrientation }
-            try {
-                awaitSideBarAndCutout()
-                screen.freshControls()
-                for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
-                    screen.onMain { activity.requestedOrientation = orientation }
-                    val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
-                    awaitSideBarAndCutout(expected)
+        onPhoneSizedDisplay { rotateDisplay ->
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                screen.openPlay()
+                val vm = screen.vm()
+                screen.onMain { vm.chain.value = 1 }
+                val activity = screen.resumed()
+                val oldOrientation = screen.onMain { activity.requestedOrientation }
+                try {
+                    awaitSideBarAndCutout()
                     screen.freshControls()
-                    screen.instrumentation.waitForIdleSync()
-                    assertSame(vm, screen.vm())
-                    assertEquals(FeatureScreen.TITLE, screen.onMain { vm.unipack.title })
-                    assertEquals(1, screen.onMain { vm.chain.value })
-                    screen.onMain {
-                        val decor = activity.window.decorView
-                        val safe = freeArea(decor)!!
-                        val controls = screen.views(decor).filter { it is PadView || it is ChainView }.filter { it.width > 0 && it.height > 0 }
-                        assertEquals("Incomplete pad grid", 64, controls.count { it is PadView })
-                        assertTrue("Chain buttons missing", controls.any { it is ChainView })
-                        controls.forEach { assertTrue("Control ${screen.bounds(it)} outside $safe", safe.contains(screen.bounds(it))) }
+                    for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+                        screen.onMain { activity.requestedOrientation = orientation }
+                        val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+                        if (rotateDisplay) screen.device.executeShellCommand("wm user-rotation lock $expected")
+                        awaitSideBarAndCutout(expected)
+                        screen.freshControls()
+                        screen.instrumentation.waitForIdleSync()
+                        assertSame(vm, screen.vm())
+                        assertEquals(FeatureScreen.TITLE, screen.onMain { vm.unipack.title })
+                        assertEquals(1, screen.onMain { vm.chain.value })
+                        screen.onMain {
+                            val decor = activity.window.decorView
+                            val safe = freeArea(decor)!!
+                            val controls = screen.views(decor).filter { it is PadView || it is ChainView }.filter { it.width > 0 && it.height > 0 }
+                            assertEquals("Incomplete pad grid", 64, controls.count { it is PadView })
+                            assertTrue("Chain buttons missing", controls.any { it is ChainView })
+                            controls.forEach { assertTrue("Control ${screen.bounds(it)} outside $safe", safe.contains(screen.bounds(it))) }
+                        }
+                        screen.node(By.desc(screen.text(R.string.menu)))
+                        screen.capture("rotation-$orientation")
                     }
-                    screen.node(By.desc(screen.text(R.string.menu)))
-                    screen.capture("rotation-$orientation")
+                    pressPad(0)
+                } finally {
+                    screen.onMain { activity.requestedOrientation = oldOrientation }
                 }
-                pressPad(0)
-            } finally {
-                screen.onMain { activity.requestedOrientation = oldOrientation }
             }
         }
     }
 
     @Test fun mainScreenButtonsStayClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
-        // takes the opposite side; both are emulated through the system's own overlays. The main
-        // screen opts into edge-to-edge on older versions too and receives both as insets.
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(MainActivity::class.java)
-            screen.node(By.text(FeatureScreen.TITLE))
-            assertControlsClearOfSideBarAndCutout("main") {
-                screen.node(By.desc(screen.text(R.string.store)))
-                screen.node(By.desc(screen.text(R.string.import_unipack)))
-                screen.node(By.res("main_pack_${FeatureScreen.PACK_ID}"))
+        onPhoneSizedDisplay { rotateDisplay ->
+            // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
+            // takes the opposite side; both are emulated through the system's own overlays. The main
+            // screen opts into edge-to-edge on older versions too and receives both as insets.
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                screen.launch(MainActivity::class.java)
+                screen.node(By.text(FeatureScreen.TITLE))
+                assertControlsClearOfSideBarAndCutout("main", rotateDisplay) {
+                    screen.node(By.desc(screen.text(R.string.store)))
+                    screen.node(By.desc(screen.text(R.string.import_unipack)))
+                    screen.node(By.res("main_pack_${FeatureScreen.PACK_ID}"))
+                }
             }
         }
     }
 
     @Test fun settingsScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(SettingsActivity::class.java)
-            assertControlsClearOfSideBarAndCutout("settings-info") {
-                screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
-            }
-            screen.clickText(R.string.settings_storage)
-            assertControlsClearOfSideBarAndCutout("settings-storage") {
-                screen.node(By.text(screen.text(R.string.transfer_button)))
+        onPhoneSizedDisplay { rotateDisplay ->
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                screen.launch(SettingsActivity::class.java)
+                assertControlsClearOfSideBarAndCutout("settings-info", rotateDisplay) {
+                    screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+                }
+                screen.clickText(R.string.settings_storage)
+                assertControlsClearOfSideBarAndCutout("settings-storage", rotateDisplay) {
+                    screen.node(By.text(screen.text(R.string.transfer_button)))
+                }
             }
         }
     }
@@ -178,22 +186,26 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     @Test fun transferScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            launchTransfer(screen.workspace)
-            assertControlsClearOfSideBarAndCutout("transfer") {
-                screen.node(By.text(FeatureScreen.PACK_ID))
-                screen.node(By.text(screen.text(R.string.transfer_start)))
+        onPhoneSizedDisplay { rotateDisplay ->
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                launchTransfer(screen.workspace)
+                assertControlsClearOfSideBarAndCutout("transfer", rotateDisplay) {
+                    screen.node(By.text(FeatureScreen.PACK_ID))
+                    screen.node(By.text(screen.text(R.string.transfer_start)))
+                }
             }
         }
     }
 
     @Test fun midiSelectScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(MidiSelectActivity::class.java)
-            assertControlsClearOfSideBarAndCutout("midi-select") {
-                screen.node(By.text(screen.text(android.R.string.ok)))
-                screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
+        onPhoneSizedDisplay { rotateDisplay ->
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                screen.launch(MidiSelectActivity::class.java)
+                assertControlsClearOfSideBarAndCutout("midi-select", rotateDisplay) {
+                    screen.node(By.text(screen.text(android.R.string.ok)))
+                    screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
+                }
             }
         }
     }
@@ -220,38 +232,41 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     @Test fun midiSelectRotatesWithExistingNavigationSettings() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        val navigationMode = screen.device.executeShellCommand("settings get secure navigation_mode").trim()
-        println("Existing navigation_mode=$navigationMode")
-        repeat(10) { iteration ->
-            for (type in listOf(MainActivity::class.java, MidiSelectActivity::class.java)) {
-                screen.install()
-                screen.launch(type)
-                for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
-                    val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
-                    screen.onMain { screen.resumed().requestedOrientation = orientation }
-                    screen.await("Requested rotation did not reach window") {
-                        screen.onMain { screen.resumed().display!!.rotation == expected }
+        onPhoneSizedDisplay { rotateDisplay ->
+            val navigationMode = screen.device.executeShellCommand("settings get secure navigation_mode").trim()
+            println("Existing navigation_mode=$navigationMode")
+            repeat(10) { iteration ->
+                for (type in listOf(MainActivity::class.java, MidiSelectActivity::class.java)) {
+                    screen.install()
+                    screen.launch(type)
+                    for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+                        val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+                        screen.onMain { screen.resumed().requestedOrientation = orientation }
+                        if (rotateDisplay) screen.device.executeShellCommand("wm user-rotation lock $expected")
+                        screen.await("Requested rotation did not reach window") {
+                            screen.onMain { screen.resumed().display!!.rotation == expected }
+                        }
+                        // With gesture navigation the handle's strip runs along the bottom. A list may
+                        // run on under it as long as its end scrolls clear, as with the tablet's bottom bar.
+                        screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach(::scrollToEnd)
+                        val controls = screen.freshControls()
+                        val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
+                        assertTrue("No controls on ${type.simpleName} (navigation_mode=$navigationMode)", controls.isNotEmpty())
+                        val name = "existing-navigation-${iteration}-${type.simpleName}-${orientation}"
+                        screen.capture(name)
+                        com.kimjisub.launchpad.TestCaptures.save(screen.device, "basefeatures-captures/$name-windows.txt") {
+                            it.writeText(screen.device.executeShellCommand("dumpsys window windows"))
+                            true
+                        }
+                        controls.forEach {
+                            assertTrue(
+                                "${type.simpleName} control ${it.visibleBounds} outside $safe (navigation_mode=$navigationMode)",
+                                safe.contains(it.visibleBounds),
+                            )
+                        }
                     }
-                    // With gesture navigation the handle's strip runs along the bottom. A list may
-                    // run on under it as long as its end scrolls clear, as with the tablet's bottom bar.
-                    screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach(::scrollToEnd)
-                    val controls = screen.freshControls()
-                    val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
-                    assertTrue("No controls on ${type.simpleName} (navigation_mode=$navigationMode)", controls.isNotEmpty())
-                    val name = "existing-navigation-${iteration}-${type.simpleName}-${orientation}"
-                    screen.capture(name)
-                    com.kimjisub.launchpad.TestCaptures.save(screen.device, "basefeatures-captures/$name-windows.txt") {
-                        it.writeText(screen.device.executeShellCommand("dumpsys window windows"))
-                        true
-                    }
-                    controls.forEach {
-                        assertTrue(
-                            "${type.simpleName} control ${it.visibleBounds} outside $safe (navigation_mode=$navigationMode)",
-                            safe.contains(it.visibleBounds),
-                        )
-                    }
+                    screen.close()
                 }
-                screen.close()
             }
         }
     }
@@ -443,7 +458,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      * cutout reach its window, and checks every control [ready] waited for, and every other one on
      * screen, lies outside both.
      */
-    private fun assertControlsClearOfSideBarAndCutout(name: String, rotateDisplay: Boolean = false, ready: () -> Unit) {
+    private fun assertControlsClearOfSideBarAndCutout(name: String, rotateDisplay: Boolean, ready: () -> Unit) {
         for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
             // Wait for rendered controls and the newly enabled overlays before forcing another
             // window transition, including when the previous test left the screen reversed.
@@ -483,54 +498,29 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     /** A side bar needs phone dimensions and portrait natural orientation, including on a tablet. */
     private fun <T> onPhoneSizedDisplay(block: (rotateDisplay: Boolean) -> T): T {
-        val sizes = screen.device.executeShellCommand("wm size")
-        val sizeOverride = Regex("Override size: (\\d+)x(\\d+)").find(sizes)
-        val (width, height) = (sizeOverride ?: Regex("Physical size: (\\d+)x(\\d+)").find(sizes)!!)
-            .destructured.let { (width, height) -> width.toInt() to height.toInt() }
+        val settings = DisplaySettings.read(screen.device)
+        val (width, height) = settings.size
         val shortest = minOf(width, height)
-        val densities = screen.device.executeShellCommand("wm density")
-        val override = Regex("Override density: (\\d+)").find(densities)?.groupValues?.get(1)
-        val density = override ?: Regex("Physical density: (\\d+)").find(densities)!!.groupValues[1]
-        if (width < height && shortest * 160 / density.toInt() <= PHONE_SMALLEST_WIDTH_DP) return block(false)
-        val rotation = screen.device.executeShellCommand("wm user-rotation").trim().takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"
-        try {
-            // Merely changing density leaves a naturally landscape tablet at rotation 0, where
-            // Android keeps navigation at the bottom even after the display becomes phone-sized.
-            screen.device.executeShellCommand("wm size ${shortest}x${maxOf(width, height)}")
-            screen.device.executeShellCommand("wm density ${shortest * 160 / PHONE_SMALLEST_WIDTH_DP}")
-            // A tablet can ignore activity orientation requests even after its metrics change.
-            screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
-            return block(true)
-        } finally {
-            screen.device.executeShellCommand("wm user-rotation $rotation")
-            screen.device.executeShellCommand(if (override != null) "wm density $override" else "wm density reset")
-            val previousSize = sizeOverride?.destructured?.let { (w, h) -> "${w}x$h" }
-            screen.device.executeShellCommand(if (previousSize != null) "wm size $previousSize" else "wm size reset")
-        }
+        if (width < height && shortest * 160 / settings.density <= PHONE_SMALLEST_WIDTH_DP) return block(false)
+        // A naturally landscape tablet needs portrait natural dimensions as well as phone density.
+        // It can still ignore activity requests, so its display is rotated in each assertion too.
+        return DisplaySettings.with(
+            screen.device,
+            size = shortest to maxOf(width, height),
+            density = shortest * 160 / PHONE_SMALLEST_WIDTH_DP,
+            rotation = android.view.Surface.ROTATION_90,
+        ) { block(true) }
     }
 
-    /**
-     * Runs [block] with three-button navigation on a display whose density makes it a tablet
-     * (smallest width [TABLET_SMALLEST_WIDTH_DP]), held in landscape, where the bar, or the taskbar
-     * holding its buttons, stays along the bottom. From API 36 a screen this large ignores the app's
-     * landscape request and follows the display, so the display itself is turned. The density and
-     * rotation in place before are put back; a rotation that cannot be read is put back as free.
-     */
+    /** Tablet metrics settle before switching navigation mode, and restore after its teardown. */
     private fun <T> onTabletWithButtonBar(block: () -> T): T {
-        val sizes = screen.device.executeShellCommand("wm size")
-        val shortest = (Regex("Override size: (\\d+)x(\\d+)").find(sizes) ?: Regex("Physical size: (\\d+)x(\\d+)").find(sizes)!!)
-            .destructured.let { (width, height) -> minOf(width.toInt(), height.toInt()) }
-        val density = Regex("Override density: (\\d+)").find(screen.device.executeShellCommand("wm density"))?.groupValues?.get(1)
-        val rotation = screen.device.executeShellCommand("wm user-rotation").trim().takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"
-        return DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION) {
-            try {
-                screen.device.executeShellCommand("wm density ${shortest * 160 / TABLET_SMALLEST_WIDTH_DP}")
-                screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
-                block()
-            } finally {
-                screen.device.executeShellCommand("wm user-rotation $rotation")
-                screen.device.executeShellCommand(if (density != null) "wm density $density" else "wm density reset")
-            }
+        val (width, height) = DisplaySettings.read(screen.device).size
+        return DisplaySettings.with(
+            screen.device,
+            density = minOf(width, height) * 160 / TABLET_SMALLEST_WIDTH_DP,
+            rotation = android.view.Surface.ROTATION_90,
+        ) {
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, block = block)
         }
     }
 
