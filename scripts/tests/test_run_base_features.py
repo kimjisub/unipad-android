@@ -31,7 +31,8 @@ def instrumentation(tests, footer=None, status_codes=()):
 
 class BaseFeaturesRunnerTest(unittest.TestCase):
     def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n",
-                   earlier=None, kill_during_suite=False, serial="emulator-5678"):
+                   earlier=None, kill_during_suite=False, serial="emulator-5678", recovery="PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: -1\n",
+                   setup="PROCESS_RECOVERY_PREPARED\nINSTRUMENTATION_CODE: -1\n", build_fails=False):
         """Run the script against fake adb/Gradle; `am instrument` prints `output`.
 
         `earlier` maps result file names to contents a previous run left behind. With
@@ -53,6 +54,8 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             (suite_dir / f"{name}.kt").write_text(test_class(name, tests))
         (root / "instrumentation.txt").write_text(output)
         (root / "probe.txt").write_text(probe_output)
+        (root / "recovery.txt").write_text(recovery)
+        (root / "setup.txt").write_text(setup)
         for name, content in (earlier or {}).items():
             path = root / ".ci-results/base-features" / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -61,14 +64,19 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         adb.parent.mkdir(parents=True)
         adb.write_text("#!/bin/bash\n"
                        "case \"$*\" in\n"
+                       "  *'shell pm disable '*|*'shell pm enable '*) echo 'Shell cannot change component state' >&2; exit 255 ;;\n"
+                       "  *'shell run-as '*'rm -rf /storage/'*) echo 'External storage is not mounted for run-as' >&2; exit 1 ;;\n"
                        "  *getprop*) echo 34 ;;\n"
                        "  *airplane_mode_on*) echo 1 ;;\n"
                        "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
+                       "  *ProcessRecoverySetup*) cat setup.txt ;;\n"
+                       "  *ProcessRecoveryDriver*) touch recovery-ran; mkdir -p device-evidence/process-recovery; echo current > device-evidence/process-recovery/after-return.png; cat recovery.txt ;;\n"
+                       "  *'pull /data/local/tmp/unipad_tests/process-recovery '*) cp -R device-evidence/process-recovery \"${@: -1}\" ;;\n"
                        "  *'am instrument'*) touch suite-ran; [[ -n \"${HANG:-}\" ]] && sleep 60; cat instrumentation.txt ;;\n"
                        "esac\n")
         adb.chmod(0o755)
         gradle = root / "gradlew"
-        gradle.write_text("#!/bin/bash\ntouch gradle-ran\n")
+        gradle.write_text("#!/bin/bash\ntouch gradle-ran\n" + ("exit 1\n" if build_fails else ""))
         gradle.chmod(0o755)
         env = dict(os.environ, ANDROID_HOME=str(root / "sdk"))
         env.pop("ANDROID_SERIAL", None)
@@ -78,6 +86,51 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
             return root, kill_once_started(command, root, env, "suite-ran")
         result = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True)
         return root, result
+
+    def test_build_failure_removes_previous_recovery_verdict_and_captures(self):
+        earlier = {"process-recovery.txt": "PROCESS_RECOVERY_PASSED\n",
+                   "process-recovery-setup.txt": "PROCESS_RECOVERY_PREPARED\n",
+                   "process-recovery/after-return.png": "old screenshot"}
+        root, result = self.run_runner(instrumentation(5), earlier=earlier, build_fails=True)
+        self.assertNotEqual(result.returncode, 0)
+        for name in earlier:
+            path = root / ".ci-results/base-features" / name
+            self.assertFalse(path.exists() and path.read_text(), str(path))
+        self.assertFalse((root / ".ci-results/base-features/process-recovery").exists())
+        self.assertFalse((root / "recovery-ran").exists())
+
+    def test_new_captures_replace_previous_directory_without_nesting(self):
+        root, result = self.run_runner(instrumentation(5),
+                                       earlier={"process-recovery/after-return.png": "old screenshot"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        captures = root / ".ci-results/base-features/process-recovery"
+        self.assertEqual((captures / "after-return.png").read_text(), "current\n")
+        self.assertFalse((captures / "process-recovery").exists())
+
+    def test_missing_or_incomplete_preparation_stops_before_process_recovery(self):
+        for setup in ("INSTRUMENTATION_CODE: 0\n", "PROCESS_RECOVERY_PREPARED\n"):
+            with self.subTest(setup=setup):
+                root, result = self.run_runner(instrumentation(5), setup=setup)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((root / "recovery-ran").exists())
+
+    def test_process_recovery_is_required_after_the_in_process_suite(self):
+        root, result = self.run_runner(instrumentation(5))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((root / "recovery-ran").exists())
+
+    def test_failed_base_suite_still_checks_process_recovery_and_fails(self):
+        root, result = self.run_runner(instrumentation(5, footer="FAILURES!!!\nTests run: 5, Failures: 1"))
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertTrue((root / "recovery-ran").exists())
+
+    def test_process_recovery_failure_or_missing_verdict_fails_preflight(self):
+        for recovery in ("PROCESS_RECOVERY_FAILED\n", "INSTRUMENTATION_CODE: 0\n",
+                         "PROCESS_RECOVERY_PASSED\n", "PROCESS_RECOVERY_PASSED\nINSTRUMENTATION_CODE: 0\n",
+                         "PROCESS_RECOVERY_PASSED\nPROCESS_RECOVERY_FAILED\n"):
+            with self.subTest(recovery=recovery):
+                _, result = self.run_runner(instrumentation(5), recovery=recovery)
+                self.assertNotEqual(result.returncode, 0)
 
     def test_unconfirmed_app_settings_stop_before_running_the_suite(self):
         root, result = self.run_runner(instrumentation(5), probe_output="INSTRUMENTATION_CODE: -1\n")

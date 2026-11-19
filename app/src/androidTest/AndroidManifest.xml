@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <package android:name="com.kimjisub.launchpad.dev" />
+    </queries>
     <!-- Gradle applies its runner overrides to the first instrumentation element. -->
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
@@ -8,4 +11,11 @@
     <instrumentation
         android:name="com.kimjisub.launchpad.DeviceSettingsProbe"
         android:targetPackage="com.kimjisub.launchpad.dev" />
+    <instrumentation
+        android:name="com.kimjisub.launchpad.ProcessRecoverySetup"
+        android:targetPackage="com.kimjisub.launchpad.dev" />
+    <!-- Self-targeted: this driver survives the target app's process death. -->
+    <instrumentation
+        android:name="com.kimjisub.launchpad.ProcessRecoveryDriver"
+        android:targetPackage="com.kimjisub.launchpad.dev.test" />
 </manifest>
