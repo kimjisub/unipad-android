@@ -12,6 +12,7 @@ import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.FBStoreActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -48,7 +49,11 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
     }
 
     @Test fun playOptionsKeepTheirScrollOffset() = withTablet {
-        screen.openPlay()
+        screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+        // This rule owns frame advancement, including the loading screen's coroutine.
+        compose.waitUntil(timeoutMillis = 10000) {
+            screen.onMain { !screen.vm().unipackLoading && !screen.vm().soundLoadingActive && screen.vm().uiLoaded }
+        }
         screen.options()
         verifyRoundTrips("options", lazy = false)
     }
@@ -93,12 +98,17 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         screen.capture("resize-$name-tall")
         val tallRange = scroll().fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].maxValue()
         println("Resize scroll $name tall: offset=${offset()} max=$tallRange")
-        if (name == "library") assertEquals("All library rows must fit in the taller window", 0f, tallRange, 0f)
+        if (name == "library") {
+            // Trailing padding can leave a few pixels of range even when every row is visible.
+            assertEquals("All added library rows must be visible in the taller window", 15,
+                screen.device.findObjects(By.textStartsWith("Resize Pack")).count { it.visibleBounds.height() > 0 })
+            assertTrue("The original pack must also be visible", screen.node(By.text(FeatureScreen.TITLE)).visibleBounds.height() > 0)
+        }
         rotate(portrait = false)
         screen.capture("resize-$name-after-rotation")
         assertEquals("$name lost scroll position after rotation", before, offset(), 0.02f)
         assertEquals("$name changed the first visible row", firstRow, firstVisibleText())
-        screen.device.executeShellCommand("wm size 1600x3200")
+        screen.device.executeShellCommand("wm size 2560x3200")
         settle()
         screen.capture("resize-$name-wide")
         screen.device.executeShellCommand("wm size 1600x2560")

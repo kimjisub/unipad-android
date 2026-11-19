@@ -497,7 +497,7 @@ disabling cannot hide a rotation regression.
 `basefeatures.ResizeScrollPositionTest` opens the library with 16 local packs, Settings,
 the play options, and Store with an offline catalogue. On a tablet-sized display it scrolls
 each screen, records the first visible text and scroll position, rotates to a taller window
-and back, then changes only the landscape window width and restores it. Both comparisons
+and back, then changes the landscape window width and height and restores them. Both comparisons
 must preserve the original position. The taller-window position and scroll range are printed
 so a run shows when the entire content fits. Captures are named
 `basefeatures-captures/resize-{library,settings,options,store}-*.png`.
