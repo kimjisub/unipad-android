@@ -42,6 +42,7 @@ class ResizeScrollMutationTest {
     @get:Rule val compose = createAndroidComposeRule<SettingsActivity>()
     private var viewportHeight by mutableStateOf(300.dp)
     private var rows by mutableIntStateOf(12)
+    private var resetKey by mutableIntStateOf(0)
     private var listState: LazyListState? = null
 
     private fun content(lazy: Boolean, wrapWidth: Boolean = false) {
@@ -49,7 +50,7 @@ class ResizeScrollMutationTest {
             compose.activity.setContent {
                 Box(Modifier.fillMaxWidth().height(viewportHeight)) {
                     if (lazy) {
-                        val state = rememberResizeLazyListState()
+                        val state = rememberResizeLazyListState(resetKey)
                         listState = state
                         LazyColumn(state = state, modifier = (if (wrapWidth) Modifier.fillMaxHeight() else Modifier.fillMaxSize()).testTag("scroll")) {
                             items(rows) { Text("Row $it", Modifier.height(50.dp)) }
@@ -115,6 +116,21 @@ class ResizeScrollMutationTest {
     @Test fun columnRestoresAfterResizingDuringDrag() = roundTrip(lazy = false, drag = true)
     @Test fun listRestoresAfterResizingDuringDrag() = roundTrip(lazy = true, drag = true)
     @Test fun listRestoresAfterWidthChangesDuringFling() = roundTrip(lazy = true, drag = false, wrapWidth = true)
+
+    @Test fun anExplicitResetDuringDraggingStillStartsAtTheTop() {
+        content(lazy = true)
+        compose.onNodeWithTag("scroll").performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertTrue(value() > 0)
+        compose.onNodeWithTag("scroll").performTouchInput {
+            down(center)
+            repeat(10) { moveBy(Offset(0f, -15f)) }
+        }
+        compose.runOnIdle { resetKey++ }
+        compose.onNodeWithTag("scroll").performTouchInput { up() }
+        compose.waitForIdle()
+        assertEquals(0 to 0, listState!!.let { it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset })
+    }
 
     @Test fun contentShrinkAndGrowthDoNotRestoreAnObsoleteOffset() {
         content(lazy = false)
