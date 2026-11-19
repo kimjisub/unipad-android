@@ -35,10 +35,11 @@ object DisplayOverlays {
     private const val APPLY_TIMEOUT_MS = 10000L
     private const val POLL_MS = 100L
     private const val HOME_STEADY_MS = 500L
+    private const val TASKBAR_MIN_SMALLEST_WIDTH_DP = 600
     private const val TAG = "DisplayOverlays"
     private val CAN_LOOK_UP_OVERLAYS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
     private val NAVIGATION_BAR_SOURCE =
-        Regex("""InsetsSource [^\n]*type=(?:ITYPE_NAVIGATION_BAR|navigationBars) frame=\[(-?\d+),(-?\d+)]\[(-?\d+),(-?\d+)]""")
+        Regex("""InsetsSource [^\n]*type=(?:ITYPE_NAVIGATION_BAR|navigationBars) frame=\[(-?\d+),(-?\d+)]\[(-?\d+),(-?\d+)][^\n]*""")
     private val SIZE = Regex("""(\d+)x(\d+)""")
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {
@@ -86,20 +87,36 @@ object DisplayOverlays {
         val landscapeHeightDp = dip(lookup(device, "dimen/navigation_bar_height_landscape"))
         val widthDp = dip(lookup(device, "dimen/navigation_bar_width"))
         val scale = density(device) / 160f
-        val longestSide = displaySize(device).let { (w, h) -> maxOf(w, h) }
+        val (displayWidth, displayHeight) = displaySize(device)
+        val longestSide = maxOf(displayWidth, displayHeight)
+        // From Android 12L, three-button navigation on a tablet is provided by the taskbar.
+        // Its inset uses taskbar_frame_height, not the phone navigation_bar_height resources.
+        val tablet = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 &&
+            minOf(displayWidth, displayHeight) / scale >= TASKBAR_MIN_SMALLEST_WIDTH_DP
+        val taskbarHeightDp = if (tablet) dip(lookup(device, "dimen/taskbar_frame_height")) else null
+        // Older launchers may not have transient taskbars. Read their size only when the
+        // navigation source advertises the transient taskbar's resizing behavior.
+        val transientTaskbarHeightDp by lazy {
+            val homePackage = checkNotNull(SystemWindowState.homeActivity(device)).substringBefore('/')
+            dip(lookup(device, "dimen/transient_taskbar_stashed_height", homePackage))
+        }
         var state = ""
         val deadline = SystemClock.elapsedRealtime() + APPLY_TIMEOUT_MS
         do {
             val reported = device.executeShellCommand("settings get secure navigation_mode").trim()
-            val bar = NAVIGATION_BAR_SOURCE.find(device.executeShellCommand("dumpsys window displays"))
-                ?.destructured?.toList()?.map(String::toInt)
-            state = "mode=$reported bar=$bar"
+            val source = NAVIGATION_BAR_SOURCE.find(device.executeShellCommand("dumpsys window displays"))
+            val bar = source?.destructured?.toList()?.map(String::toInt)
+            val flags = source?.value.orEmpty().substringAfter("flags=", "").substringBefore(' ')
+            state = "mode=$reported bar=$bar flags=$flags"
             if (reported == mode && bar != null) {
                 val (left, top, right, bottom) = bar
                 val width = right - left
                 val height = bottom - top
                 val expected = when {
                     width <= height -> widthDp
+                    tablet && mode == "0" -> taskbarHeightDp!!
+                    tablet && mode == "2" && "ANIMATE_RESIZING" in flags -> transientTaskbarHeightDp
+                    tablet && mode == "2" && "SUPPRESS_SCRIM" in flags && "INSETS_ROUNDED_CORNER" in flags -> taskbarHeightDp!!
                     width >= longestSide -> landscapeHeightDp
                     else -> heightDp
                 }
@@ -109,7 +126,7 @@ object DisplayOverlays {
         } while (SystemClock.elapsedRealtime() < deadline)
         throw AssertionError(
             "Navigation bar did not reach mode $mode (height ${heightDp}dp, landscape ${landscapeHeightDp}dp, " +
-                "width ${widthDp}dp) within ${APPLY_TIMEOUT_MS}ms: $state" + SystemWindowState.describeNotResponding(device),
+                "width ${widthDp}dp, taskbar ${taskbarHeightDp}dp) within ${APPLY_TIMEOUT_MS}ms: $state" + SystemWindowState.describeNotResponding(device),
         )
     }
 
@@ -150,10 +167,10 @@ object DisplayOverlays {
         )
     }
 
-    private fun lookup(device: UiDevice, resource: String): String {
-        val value = device.executeShellCommand("cmd overlay lookup android android:$resource").trim()
+    private fun lookup(device: UiDevice, resource: String, packageName: String = "android"): String {
+        val value = device.executeShellCommand("cmd overlay lookup $packageName $packageName:$resource").trim()
         check(value.isNotEmpty() && value.first().isDigit()) {
-            "Cannot read android:$resource for the navigation overlay wait (API ${Build.VERSION.SDK_INT}): $value"
+            "Cannot read $packageName:$resource for the navigation overlay wait (API ${Build.VERSION.SDK_INT}): $value"
         }
         return value
     }

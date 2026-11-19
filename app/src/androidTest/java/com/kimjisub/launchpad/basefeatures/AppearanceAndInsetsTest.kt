@@ -46,7 +46,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             localeManager.applicationLocales = LocaleList(Locale.ENGLISH)
             screen.awaitActivity(SettingsActivity::class.java, "en")
             // Locale handling may retain scroll state. Reopen without saved state to exercise
-            // the language row below the top of a newly created Settings screen deterministically.
+            // the language row in a newly created Settings screen, whether it fits or needs scrolling.
             val previousSettings = screen.resumed()
             settings.close()
             settings = screen.launch(SettingsActivity::class.java)
@@ -55,9 +55,9 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             assertTrue("Previous Settings was not destroyed", screen.onMain { previousSettings.isDestroyed })
             val topRow = screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
             assertNotNull("Settings scroll container missing", screen.device.findObject(By.scrollable(true)))
-            assertFalse("Language row must start below the fresh viewport", screen.device.hasObject(By.text("English")))
+            val languageVisible = screen.device.hasObject(By.text("English"))
             screen.capture("settings-english-fresh-top")
-            android.util.Log.i("LanguageRowRegression", "fresh_settings=true locale=en top_row=${topRow.text} language_visible=false")
+            android.util.Log.i("LanguageRowRegression", "fresh_settings=true locale=en top_row=${topRow.text} language_visible=$languageVisible")
             assertNotNull("English language row missing", screen.scrollTo(By.text("English"), Direction.DOWN))
             android.util.Log.i("LanguageRowRegression", "language_row_found=true direction=DOWN")
             screen.capture("settings-english-language-row")
@@ -166,10 +166,12 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     @Test fun themeScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
-        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(ThemeActivity::class.java)
-            assertControlsClearOfSideBarAndCutout("theme") {
-                screen.node(By.desc(screen.text(R.string.theme_add_title)))
+        onPhoneSizedDisplay { rotateDisplay ->
+            DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+                screen.launch(ThemeActivity::class.java)
+                assertControlsClearOfSideBarAndCutout("theme", rotateDisplay) {
+                    screen.node(By.desc(screen.text(R.string.theme_add_title)))
+                }
             }
         }
     }
@@ -441,7 +443,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      * cutout reach its window, and checks every control [ready] waited for, and every other one on
      * screen, lies outside both.
      */
-    private fun assertControlsClearOfSideBarAndCutout(name: String, ready: () -> Unit) {
+    private fun assertControlsClearOfSideBarAndCutout(name: String, rotateDisplay: Boolean = false, ready: () -> Unit) {
         for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
             // Wait for rendered controls and the newly enabled overlays before forcing another
             // window transition, including when the previous test left the screen reversed.
@@ -450,6 +452,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             screen.freshControls()
             screen.onMain { screen.resumed().requestedOrientation = orientation }
             val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+            if (rotateDisplay) screen.device.executeShellCommand("wm user-rotation lock $expected")
             awaitSideBarAndCutout(expected)
             screen.instrumentation.waitForIdleSync()
             ready()
@@ -475,6 +478,34 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 landscape && (expectedRotation == null || rotation == expectedRotation) &&
                     safe != null && safe.left > display.left && safe.right < display.right
             }
+        }
+    }
+
+    /** A side bar needs phone dimensions and portrait natural orientation, including on a tablet. */
+    private fun <T> onPhoneSizedDisplay(block: (rotateDisplay: Boolean) -> T): T {
+        val sizes = screen.device.executeShellCommand("wm size")
+        val sizeOverride = Regex("Override size: (\\d+)x(\\d+)").find(sizes)
+        val (width, height) = (sizeOverride ?: Regex("Physical size: (\\d+)x(\\d+)").find(sizes)!!)
+            .destructured.let { (width, height) -> width.toInt() to height.toInt() }
+        val shortest = minOf(width, height)
+        val densities = screen.device.executeShellCommand("wm density")
+        val override = Regex("Override density: (\\d+)").find(densities)?.groupValues?.get(1)
+        val density = override ?: Regex("Physical density: (\\d+)").find(densities)!!.groupValues[1]
+        if (width < height && shortest * 160 / density.toInt() <= PHONE_SMALLEST_WIDTH_DP) return block(false)
+        val rotation = screen.device.executeShellCommand("wm user-rotation").trim().takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"
+        try {
+            // Merely changing density leaves a naturally landscape tablet at rotation 0, where
+            // Android keeps navigation at the bottom even after the display becomes phone-sized.
+            screen.device.executeShellCommand("wm size ${shortest}x${maxOf(width, height)}")
+            screen.device.executeShellCommand("wm density ${shortest * 160 / PHONE_SMALLEST_WIDTH_DP}")
+            // A tablet can ignore activity orientation requests even after its metrics change.
+            screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
+            return block(true)
+        } finally {
+            screen.device.executeShellCommand("wm user-rotation $rotation")
+            screen.device.executeShellCommand(if (override != null) "wm density $override" else "wm density reset")
+            val previousSize = sizeOverride?.destructured?.let { (w, h) -> "${w}x$h" }
+            screen.device.executeShellCommand(if (previousSize != null) "wm size $previousSize" else "wm size reset")
         }
     }
 
@@ -568,6 +599,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         const val DRAG_MARGIN_PX = 8
         const val DRAG_STEPS = 20
         const val TABLET_SMALLEST_WIDTH_DP = 720
+        const val PHONE_SMALLEST_WIDTH_DP = 480
         const val TRANSFER_FOLDERS = 30
     }
 }
