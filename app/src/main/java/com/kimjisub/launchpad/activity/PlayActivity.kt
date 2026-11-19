@@ -123,6 +123,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.kimjisub.launchpad.ui.compose.resizeVerticalScroll
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
@@ -987,7 +988,7 @@ class PlayActivity : BaseActivity() {
 				.background(panelBg)
 				.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical))
 				.width(280.dp)
-				.verticalScroll(rememberScrollState())
+				.resizeVerticalScroll()
 				.testTag("play_options")
 				.semantics { testTagsAsResourceId = true }
 				.padding(vertical = 24.dp),
