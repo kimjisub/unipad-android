@@ -23,7 +23,7 @@ def checkerCommand = { List<File> archives ->
 def checkApk = tasks.register('checkReleaseApkPageAlignment', Exec) {
     group = 'verification'
     description = 'Check release APK native ELF and uncompressed 16 KB ZIP alignment.'
-    dependsOn 'assembleRelease'
+    dependsOn 'packageRelease'
     doFirst {
         def apks = fileTree(layout.buildDirectory.dir('outputs/apk/release')) { include '*.apk' }.files.sort()
         if (apks.isEmpty()) {
@@ -36,7 +36,7 @@ def checkApk = tasks.register('checkReleaseApkPageAlignment', Exec) {
 def checkBundle = tasks.register('checkReleaseBundlePageAlignment', Exec) {
     group = 'verification'
     description = 'Check release bundle native ELF, bundle ZIP alignment request and release APK.'
-    dependsOn 'bundleRelease', checkApk
+    dependsOn 'signReleaseBundle', checkApk
     doFirst {
         def bundle = releaseBundle.get().asFile
         new ZipFile(bundle).withCloseable { archive ->
@@ -57,8 +57,8 @@ def checkBundle = tasks.register('checkReleaseBundlePageAlignment', Exec) {
 }
 
 // These are also reached by the existing fastlane build-only and deploy lanes.
-// A failing finalizer fails Gradle, so fastlane cannot proceed to the upload.
+// Check the packaged artifacts before their release lifecycle tasks can succeed.
 tasks.configureEach {
-    if (name == 'assembleRelease') finalizedBy checkApk
-    if (name == 'bundleRelease') finalizedBy checkBundle
+    if (name == 'assembleRelease') dependsOn checkApk
+    if (name == 'bundleRelease') dependsOn checkBundle
 }
