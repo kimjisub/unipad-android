@@ -40,7 +40,6 @@ object DisplayOverlays {
     private val CAN_LOOK_UP_OVERLAYS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
     private val NAVIGATION_BAR_SOURCE =
         Regex("""InsetsSource [^\n]*type=(?:ITYPE_NAVIGATION_BAR|navigationBars) frame=\[(-?\d+),(-?\d+)]\[(-?\d+),(-?\d+)][^\n]*""")
-    private val SIZE = Regex("""(\d+)x(\d+)""")
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {
         val previous = overlays.map(::categoryOf).associateWith { enabledIn(device, it) }
@@ -86,8 +85,9 @@ object DisplayOverlays {
         val heightDp = dip(lookup(device, "dimen/navigation_bar_height"))
         val landscapeHeightDp = dip(lookup(device, "dimen/navigation_bar_height_landscape"))
         val widthDp = dip(lookup(device, "dimen/navigation_bar_width"))
-        val scale = density(device) / 160f
-        val (displayWidth, displayHeight) = displaySize(device)
+        val settings = DisplaySettings.read(device)
+        val scale = settings.density / 160f
+        val (displayWidth, displayHeight) = settings.size
         val longestSide = maxOf(displayWidth, displayHeight)
         // From Android 12L, three-button navigation on a tablet is provided by the taskbar.
         // Its inset uses taskbar_frame_height, not the phone navigation_bar_height resources.
@@ -176,18 +176,6 @@ object DisplayOverlays {
     }
 
     private fun dip(value: String) = value.removeSuffix("dip").toFloat()
-
-    private fun density(device: UiDevice): Int {
-        val output = device.executeShellCommand("wm density")
-        val value = Regex("""Override density: (\d+)""").find(output) ?: Regex("""Physical density: (\d+)""").find(output)!!
-        return value.groupValues[1].toInt()
-    }
-
-    private fun displaySize(device: UiDevice): Pair<Int, Int> {
-        val output = device.executeShellCommand("wm size")
-        val line = output.lines().firstOrNull { it.startsWith("Override size") } ?: output.lines().first { it.startsWith("Physical size") }
-        return SIZE.find(line)!!.destructured.let { (w, h) -> w.toInt() to h.toInt() }
-    }
 
     private fun categoryOf(overlay: String) = listOf(NAVIGATION, CUTOUT).first { overlay.startsWith(it) }
 
