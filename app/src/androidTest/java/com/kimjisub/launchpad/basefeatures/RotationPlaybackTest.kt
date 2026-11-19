@@ -108,12 +108,19 @@ class RotationPlaybackTest : PlaybackScreenTest() {
             }
         } finally {
             screen.close()
+            screen.device.unfreezeRotation()
             screen.device.executeShellCommand("wm size $originalSize")
             prefs.selectedTheme = originalTheme
         }
     }
 
     private fun awaitRotation(rotation: Int) {
+        // Large screens can ignore activity orientation requests. Turn the device itself.
+        when (rotation) {
+            1 -> screen.device.setOrientationLeft()
+            3 -> screen.device.setOrientationRight()
+            else -> error("Unsupported rotation $rotation")
+        }
         screen.await("Animated rotation did not settle at $rotation") {
             screen.device.displayRotation == rotation && screen.onMain {
                 screen.resumed().window.decorView.hasWindowFocus() && screen.vm().uiLoaded

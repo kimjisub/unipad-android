@@ -503,3 +503,7 @@ partially visible first row. The library also checks that sorting clears the sav
 The taller-window position and scroll range are printed
 so a run shows when the entire content fits. Captures are named
 `basefeatures-captures/resize-{library,settings,options,store}-*.png`.
+
+The existing animated playback rotation checks also turn the device itself; large-screen
+Android can ignore an activity-only orientation request. Their expected rotation, playback
+checks and time limits are unchanged, and the device rotation is unfrozen during cleanup.
