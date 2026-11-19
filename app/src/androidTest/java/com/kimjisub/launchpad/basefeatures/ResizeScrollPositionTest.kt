@@ -54,7 +54,9 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         compose.waitUntil(timeoutMillis = 10000) {
             screen.onMain { !screen.vm().unipackLoading && !screen.vm().soundLoadingActive && screen.vm().uiLoaded }
         }
-        screen.options()
+        screen.device.pressBack()
+        compose.waitForIdle()
+        assertTrue("Back must open the options panel", screen.onMain { screen.vm().isOptionWindowVisible })
         verifyRoundTrips("options", lazy = false)
     }
 
