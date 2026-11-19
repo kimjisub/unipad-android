@@ -13,7 +13,6 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
-import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
@@ -142,14 +141,16 @@ class FeatureScreen {
     fun accessibilityClick(selector: BySelector, label: String) = withResponsiveInput {
         try {
             AccessibilityClick().perform(label) {
+                // Rotation reads wait for idle; do this before acquiring the node.
+                val rotation = device.displayRotation
                 val node = freshNode(selector)?.accessibilityNodeInfo ?: return@perform null
                 val buttonBounds = Rect().also(node::getBoundsInScreen)
                 val window = node.window
                 val windowBounds = Rect().also { window?.getBoundsInScreen(it) }
                 // Snapshot diagnostics before the action can replace this window.
-                val details = "rotation=${device.displayRotation} window=${window?.id} " +
+                val details = "rotation=$rotation window=${window?.id} " +
                     "focused=${window?.isFocused} bounds=$windowBounds button=$buttonBounds"
-                val accepted = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                val accepted = AccessibilityClick.action(node)
                 println("$label target: $details")
                 accepted
             }
@@ -207,12 +208,19 @@ class FeatureScreen {
         var top = device.displayHeight
         var changed = SystemClock.elapsedRealtime()
         await({
-            val inputMethod = Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
-            val windows = instrumentation.uiAutomation.windows
-                .filter { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
-            "Search keyboard did not finish opening: defaultInputMethod=$inputMethod " +
+            val inputMethod = runCatching {
+                Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+            }.getOrElse { "unavailable(${it.javaClass.simpleName})" }
+            val windowDetails = runCatching {
+                val windows = instrumentation.uiAutomation.windows
+                    .filter { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
                 "imeWindowPresent=${windows.isNotEmpty()} " +
-                "imeWindowVisible=${windows.any { it.root?.isVisibleToUser == true }}"
+                    "imeWindowVisible=${windows.any { it.root?.isVisibleToUser == true }}"
+            }.getOrElse {
+                "imeWindowPresent=unavailable(${it.javaClass.simpleName}) " +
+                    "imeWindowVisible=unavailable(${it.javaClass.simpleName})"
+            }
+            "Search keyboard did not finish opening: defaultInputMethod=$inputMethod $windowDetails"
         }) {
             val current = keyboardTopOnScreen()
             val now = SystemClock.elapsedRealtime()

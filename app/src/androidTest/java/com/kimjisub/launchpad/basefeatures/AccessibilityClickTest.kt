@@ -35,13 +35,17 @@ class AccessibilityClickTest {
         assertEquals(1, calls)
     }
 
-    @Test fun rejectedClickFailsWithoutResending() {
+    @Test fun rejectedClickAfterStaleLookupFailsWithoutResendingOrStaleCause() {
         var calls = 0
         val failure = assertThrows(AssertionError::class.java) {
-            AccessibilityClick().perform("rejected click") { calls++; false }
+            AccessibilityClick().perform("rejected click") {
+                if (++calls == 1) throw StaleObjectException()
+                false
+            }
         }
-        assertEquals(1, calls)
+        assertEquals(2, calls)
         assertTrue(failure.message!!.contains("was not accepted"))
+        assertNull("An earlier stale lookup did not cause this live-node rejection", failure.cause)
     }
 
     @Test fun staleTimeoutKeepsOriginalExceptionAndTheSameDeadline() {
@@ -114,10 +118,68 @@ class AccessibilityClickTest {
             screen.capture("rotated-picker-reacquired")
             ActivityReadiness.captureState(screen.context, screen.device, "basefeatures-captures", "rotated-picker-reacquired")
         } finally {
+            repeat(2) {
+                if (screen.device.hasObject(By.pkg("com.google.android.documentsui"))) screen.device.pressBack()
+            }
             screen.device.setOrientationNatural()
             screen.device.unfreezeRotation()
             screen.close()
         }
+    }
+
+    @Test fun rejectedActionOnReplacedNodeReacquiresBeforeOneAcceptedClick() {
+        val screen = FeatureScreen()
+        val picker = "com.google.android.documentsui"
+        try {
+            screen.launch(MainActivity::class.java)
+            screen.clickText(R.string.guide_import_external)
+            val selector = By.pkg(picker).clazz("android.widget.ImageButton")
+                .hasAncestor(By.res(picker, "toolbar"))
+            // Keep the raw node: replacement happens after UiObject2's freshness check.
+            val oldNode = screen.node(selector).accessibilityNodeInfo
+            screen.device.setOrientationLeft()
+            screen.device.pressBack()
+            screen.awaitActivity(MainActivity::class.java)
+            screen.device.setOrientationNatural()
+            screen.clickText(R.string.guide_import_external)
+            screen.node(selector)
+            assertFalse("The replaced window must reject the action",
+                oldNode.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertFalse("The old node must no longer refresh", oldNode.refresh())
+            var queries = 0
+            var accepted = 0
+            AccessibilityClick().perform("DocumentsUI replaced raw node click") {
+                val node = if (queries++ == 0) oldNode else screen.node(selector).accessibilityNodeInfo
+                AccessibilityClick.action(node).also { if (it == true) accepted++ }
+            }
+            assertEquals("The rejected, invalid node must be reacquired", 2, queries)
+            assertEquals("Only one click may be accepted", 1, accepted)
+            screen.node(By.res(picker, "roots_list"))
+        } finally {
+            repeat(2) { if (screen.device.hasObject(By.pkg(picker))) screen.device.pressBack() }
+            screen.device.setOrientationNatural()
+            screen.device.unfreezeRotation()
+            screen.close()
+        }
+    }
+
+    @Test fun rejectedActionOnLiveNodeFailsWithoutResending() {
+        val screen = FeatureScreen()
+        try {
+            screen.launch(MainActivity::class.java)
+            val node = screen.instrumentation.uiAutomation.rootInActiveWindow!!
+            assertFalse("The window root must reject clicks", node.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The rejected node must still exist", node.refresh())
+            var calls = 0
+            val failure = assertThrows(AssertionError::class.java) {
+                AccessibilityClick().perform("live root click") {
+                    calls++
+                    AccessibilityClick.action(node)
+                }
+            }
+            assertEquals(1, calls)
+            assertTrue(failure.message!!, failure.message!!.contains("was not accepted"))
+        } finally { screen.close() }
     }
 
     @Test fun missingAccessibilityTargetRetainsFailureAndCapturesItsOwnState() {

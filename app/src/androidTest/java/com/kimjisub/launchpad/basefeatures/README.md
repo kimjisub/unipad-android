@@ -91,7 +91,8 @@ inside that drawer and confirms the Downloads toolbar before selecting the ZIP. 
 checks the result text, pack title, Play now action and imported pack id; a result dialog
 owns focus, so MainActivity focus is not a prerequisite for inspecting that dialog.
 The picker accessibility action has one 10-second lookup budget. It reacquires a stale
-node before acceptance, stops immediately after acceptance and fails a rejected action
+node before acceptance, including a rejected action whose node no longer refreshes.
+It stops immediately after acceptance and fails a rejected action on a live node
 without sending it again. Terminal failures retain the exception plus the screen,
 hierarchy and activity state. `AccessibilityClickTest` checks this policy, replaces a
 rotated picker and verifies exactly one accepted roots click. Keyboard timeout messages

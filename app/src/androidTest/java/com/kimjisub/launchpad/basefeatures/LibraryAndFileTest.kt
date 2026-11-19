@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.basefeatures
 
-import android.graphics.Rect
 import android.os.StrictMode
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.CopyOnWriteArrayList
