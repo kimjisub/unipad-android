@@ -10,8 +10,10 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.os.SystemClock
+import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
@@ -135,6 +137,32 @@ class FeatureScreen {
         capture("missing-click-node-${SystemClock.uptimeMillis()}")
         throw AssertionError("Could not click $selector")
     }
+    /** Reacquire stale nodes only before ACTION_CLICK; after acceptance no node is read again. */
+    fun accessibilityClick(selector: BySelector, label: String) = withResponsiveInput {
+        try {
+            AccessibilityClick().perform(label) {
+                // Rotation reads wait for idle; do this before acquiring the node.
+                val rotation = device.displayRotation
+                val node = freshNode(selector)?.accessibilityNodeInfo ?: return@perform null
+                val buttonBounds = Rect().also(node::getBoundsInScreen)
+                val window = node.window
+                val windowBounds = Rect().also { window?.getBoundsInScreen(it) }
+                // Snapshot diagnostics before the action can replace this window.
+                val details = "rotation=$rotation window=${window?.id} " +
+                    "focused=${window?.isFocused} bounds=$windowBounds button=$buttonBounds"
+                val accepted = AccessibilityClick.action(node)
+                println("$label target: $details")
+                accepted
+            }
+        } catch (failure: Throwable) {
+            val name = "accessibility-click-failed-${SystemClock.uptimeMillis()}"
+            // A screenshot failure must not hide the original exception or prevent state capture.
+            runCatching { capture(name) }.onFailure(failure::addSuppressed)
+            runCatching { ActivityReadiness.captureState(context, device, CAPTURES, name) }
+                .onFailure(failure::addSuppressed)
+            throw failure
+        }
+    }
     /** Whether [selector] is on screen now; unlike [UiDevice.hasObject] it waits at most 0.5 s for idle and reads a fresh tree. */
     fun has(selector: BySelector): Boolean = freshNode(selector) != null
     fun clickText(id: Int) = click(By.text(text(id)))
@@ -179,7 +207,21 @@ class FeatureScreen {
     fun awaitKeyboardTopOnScreen(): Int {
         var top = device.displayHeight
         var changed = SystemClock.elapsedRealtime()
-        await("Search keyboard did not finish opening") {
+        await({
+            val inputMethod = runCatching {
+                Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+            }.getOrElse { "unavailable(${it.javaClass.simpleName})" }
+            val windowDetails = runCatching {
+                val windows = instrumentation.uiAutomation.windows
+                    .filter { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
+                "imeWindowPresent=${windows.isNotEmpty()} " +
+                    "imeWindowVisible=${windows.any { it.root?.isVisibleToUser == true }}"
+            }.getOrElse {
+                "imeWindowPresent=unavailable(${it.javaClass.simpleName}) " +
+                    "imeWindowVisible=unavailable(${it.javaClass.simpleName})"
+            }
+            "Search keyboard did not finish opening: defaultInputMethod=$inputMethod $windowDetails"
+        }) {
             val current = keyboardTopOnScreen()
             val now = SystemClock.elapsedRealtime()
             if (current != top) { top = current; changed = now }
