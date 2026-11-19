@@ -363,3 +363,6 @@ androidComponents {
         variant.experimentalProperties.put('android.experimental.force-aot-compilation', true)
     }
 }
+
+// Reject native libraries that cannot be loaded on 16 KB page-size devices.
+apply from: rootProject.file('gradle/page-alignment.gradle')

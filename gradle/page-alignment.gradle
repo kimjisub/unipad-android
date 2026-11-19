@@ -1,0 +1,64 @@
+import java.util.zip.ZipFile
+
+// Use the same bundletool schema as AGP; an AAB's own ZIP offsets are not APK offsets.
+def bundleConfig = plugins.getPlugin('com.android.application').class.classLoader.loadClass('com.android.bundle.Config$BundleConfig')
+def releaseBundle = layout.buildDirectory.file('outputs/bundle/release/app-release.aab')
+def alignmentChecker = rootProject.file('scripts/check_page_alignment.py')
+def sdkDirectory = androidComponents.sdkComponents.sdkDirectory
+
+def checkerCommand = { List<File> archives ->
+    def sdk = sdkDirectory.get().asFile
+    def executableSuffix = System.getProperty('os.name').toLowerCase().contains('windows') ? '.exe' : ''
+    def readelf = new File(sdk, "ndk/${android.ndkVersion}/toolchains/llvm/prebuilt").listFiles()
+        ?.collect { new File(it, "bin/llvm-readelf${executableSuffix}") }
+        ?.find { it.isFile() }
+    if (readelf == null) {
+        throw new GradleException('Cannot find llvm-readelf in the configured Android NDK')
+    }
+    def zipalign = new File(sdk, "build-tools/${android.buildToolsVersion}/zipalign${executableSuffix}")
+    return ['python3', alignmentChecker.absolutePath, '--readelf', readelf.absolutePath,
+            '--zipalign', zipalign.absolutePath] + archives.collect { it.absolutePath }
+}
+
+def checkApk = tasks.register('checkReleaseApkPageAlignment', Exec) {
+    group = 'verification'
+    description = 'Check release APK native ELF and uncompressed 16 KB ZIP alignment.'
+    dependsOn 'assembleRelease'
+    doFirst {
+        def apks = fileTree(layout.buildDirectory.dir('outputs/apk/release')) { include '*.apk' }.files.sort()
+        if (apks.isEmpty()) {
+            throw new GradleException('No release APK found for page alignment verification')
+        }
+        commandLine checkerCommand(apks)
+    }
+}
+
+def checkBundle = tasks.register('checkReleaseBundlePageAlignment', Exec) {
+    group = 'verification'
+    description = 'Check release bundle native ELF, bundle ZIP alignment request and release APK.'
+    dependsOn 'bundleRelease', checkApk
+    doFirst {
+        def bundle = releaseBundle.get().asFile
+        new ZipFile(bundle).withCloseable { archive ->
+            def entry = archive.getEntry('BundleConfig.pb')
+            if (entry == null) {
+                throw new GradleException('Release bundle has no BundleConfig.pb')
+            }
+            def nativeLibraries = archive.getInputStream(entry).withCloseable {
+                bundleConfig.parseFrom(it).optimizations.uncompressNativeLibraries
+            }
+            if (!nativeLibraries.enabled || nativeLibraries.alignment.name() != 'PAGE_ALIGNMENT_16K') {
+                throw new GradleException("Release bundle must request uncompressed PAGE_ALIGNMENT_16K libraries; found enabled=${nativeLibraries.enabled}, alignment=${nativeLibraries.alignment}")
+            }
+            logger.lifecycle('PASS: Release bundle requests uncompressed PAGE_ALIGNMENT_16K libraries')
+        }
+        commandLine checkerCommand([bundle])
+    }
+}
+
+// These are also reached by the existing fastlane build-only and deploy lanes.
+// A failing finalizer fails Gradle, so fastlane cannot proceed to the upload.
+tasks.configureEach {
+    if (name == 'assembleRelease') finalizedBy checkApk
+    if (name == 'bundleRelease') finalizedBy checkBundle
+}
