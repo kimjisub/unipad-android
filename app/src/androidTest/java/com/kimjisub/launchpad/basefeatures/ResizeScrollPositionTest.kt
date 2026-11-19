@@ -4,15 +4,19 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
@@ -43,6 +47,17 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         screen.launch(MainActivity::class.java)
         screen.node(By.textStartsWith("Resize Pack"))
         verifyRoundTrips("library", lazy = true)
+        val prefs = PreferenceManager(screen.context)
+        val originalOrder = prefs.sortOrder
+        try {
+            compose.onNodeWithContentDescription(screen.text(R.string.sort_order)).performClick()
+            compose.waitUntil(timeoutMillis = 10000) { offset() == 0f }
+            rotate(portrait = true)
+            rotate(portrait = false)
+            assertEquals("Sorting must clear the old resize position", 0f, offset(), 0.02f)
+        } finally {
+            prefs.sortOrder = originalOrder
+        }
     }
 
     @Test fun settingsKeepsItsScrollOffset() = withTablet {
@@ -96,7 +111,7 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         compose.waitForIdle()
         val before = offset()
         assertTrue("Fixture must be scrolled: $before", before > 0)
-        val firstRow = firstVisibleText()
+        val firstRow = firstVisibleRow(name, lazy)
         screen.capture("resize-$name-before")
         rotate(portrait = true)
         screen.capture("resize-$name-tall")
@@ -111,7 +126,7 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         rotate(portrait = false)
         screen.capture("resize-$name-after-rotation")
         assertEquals("$name lost scroll position after rotation", before, offset(), 0.02f)
-        assertEquals("$name changed the first visible row", firstRow, firstVisibleText())
+        assertEquals("$name changed the first visible row", firstRow, firstVisibleRow(name, lazy))
         screen.device.executeShellCommand("wm size 2560x3200")
         settle()
         screen.capture("resize-$name-wide")
@@ -119,7 +134,7 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
         settle()
         screen.capture("resize-$name-after-window-resize")
         assertEquals("$name lost scroll position after window resize", before, offset(), 0.02f)
-        assertEquals(firstRow, firstVisibleText())
+        assertEquals(firstRow, firstVisibleRow(name, lazy))
         println("Resize scroll $name: offset=$before first=$firstRow preserved across rotation and resize")
     }
 
@@ -135,9 +150,19 @@ class ResizeScrollPositionTest : PlaybackScreenTest() {
                 it.bounds.left >= bounds.left && it.bounds.top >= bounds.top && it.bounds.bottom <= bounds.bottom }
     }
 
-    private fun firstVisibleText(): String = visibleTexts()
-        .minWithOrNull(compareBy<VisibleText> { it.bounds.top }.thenBy { it.bounds.left })?.text
-        ?: error("No visible scroll content")
+    private fun firstVisibleRow(name: String, lazy: Boolean): String {
+        if (!lazy) return visibleTexts()
+            .minWithOrNull(compareBy<VisibleText> { it.bounds.top }.thenBy { it.bounds.left })?.text
+            ?: error("No visible scroll content")
+        // Producer names can repeat. Compare the actual first row's stable identity instead.
+        val prefix = if (name == "store") "store_pack_" else "main_pack_"
+        val bounds = scroll().fetchSemanticsNode().boundsInWindow
+        val matcher = SemanticsMatcher("pack row") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(prefix) == true }
+        return compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes()
+            .map { it.boundsInWindow to it.config[SemanticsProperties.TestTag] }
+            .filter { (r, _) -> r.width > 0 && r.height > 0 && r.bottom > bounds.top && r.top < bounds.bottom }
+            .minByOrNull { it.first.top }?.second ?: error("No visible pack row")
+    }
 
     private fun rotate(portrait: Boolean) {
         screen.onMain { screen.resumed().requestedOrientation = if (portrait) ActivityInfo.SCREEN_ORIENTATION_PORTRAIT else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }

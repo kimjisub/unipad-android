@@ -498,6 +498,8 @@ disabling cannot hide a rotation regression.
 the play options, and Store with an offline catalogue. On a tablet-sized display it scrolls
 each screen, records the first visible text and scroll position, rotates to a taller window
 and back, then changes the landscape window width and height and restores them. Both comparisons
-must preserve the original position. The taller-window position and scroll range are printed
+must preserve the original position. Pack lists compare their stable row identities, including a
+partially visible first row. The library also checks that sorting clears the saved position.
+The taller-window position and scroll range are printed
 so a run shows when the entire content fits. Captures are named
 `basefeatures-captures/resize-{library,settings,options,store}-*.png`.
