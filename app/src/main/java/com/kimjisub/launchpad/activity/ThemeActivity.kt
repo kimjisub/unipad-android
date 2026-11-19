@@ -68,6 +68,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -75,7 +77,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.kimjisub.launchpad.R
@@ -84,6 +85,7 @@ import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.ThemeType
 import com.kimjisub.launchpad.manager.resolveBundledThemeId
 import com.kimjisub.launchpad.manager.loadTheme
+import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
@@ -170,7 +172,7 @@ class ThemeActivity : BaseActivity() {
 	}
 }
 
-private data class PreviewBitmaps(
+internal data class PreviewBitmaps(
 	val playbg: ImageBitmap?,
 	val btn: ImageBitmap?,
 	val phantom: ImageBitmap?,
@@ -352,7 +354,7 @@ private fun ThemeScreen(
 				modifier = Modifier
 					.weight(1f)
 					.fillMaxHeight()
-					.windowInsetsPadding(safeBottom),
+					.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Vertical)),
 			) {
 				if (selectedIndex == themes.size) {
 					AddThemePanel(
@@ -639,7 +641,7 @@ private fun AddThemePanel(
 // region Preview composables
 
 @Composable
-private fun ThemePreview(bitmaps: PreviewBitmaps?) {
+internal fun ThemePreview(bitmaps: PreviewBitmaps?) {
 	if (bitmaps == null) {
 		Box(
 			modifier = Modifier
@@ -649,7 +651,9 @@ private fun ThemePreview(bitmaps: PreviewBitmaps?) {
 		return
 	}
 
-	Box(modifier = Modifier.fillMaxSize()) {
+	BoxWithConstraints(modifier = Modifier.fillMaxSize().testTag("theme_preview")) {
+		val logoMaxWidth = (maxWidth - 32.dp).coerceAtLeast(0.dp)
+		val logoMaxHeight = maxHeight / 4
 		// Background - 검정 바탕 위에 높이 기준 스케일링 (좌우 잘림 허용, 상하는 정확히 표시)
 		Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 			bitmaps.playbg?.let { bg ->
@@ -662,43 +666,47 @@ private fun ThemePreview(bitmaps: PreviewBitmaps?) {
 			}
 		}
 
-		// Custom logo - TopEnd, 16dp padding, 90dp width (matching PlayActivity)
-		bitmaps.customLogo?.let { logo ->
-			Image(
-				bitmap = logo,
-				contentDescription = null,
-				contentScale = ContentScale.FillWidth,
-				modifier = Modifier
-					.align(Alignment.TopEnd)
-					.padding(16.dp)
-					.width(90.dp),
-			)
-		}
+		Column(Modifier.fillMaxSize()) {
+			// Give the logo its own height so the grid cannot draw over it on a short window.
+			bitmaps.customLogo?.let { logo ->
+				Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+					val aspect = logo.width.toFloat() / logo.height
+					val logoWidth = minOf(90.dp, logoMaxWidth, logoMaxHeight * aspect)
+					Image(
+						bitmap = logo,
+						contentDescription = null,
+						contentScale = ContentScale.Fit,
+						modifier = Modifier
+							.padding(top = 16.dp, end = 16.dp, bottom = 8.dp)
+							.size(logoWidth, logoWidth / aspect)
+							.testTag("theme_preview_logo"),
+					)
+				}
+			}
 
-		// Pad grid + chain column - 8dp padding, matching PlayActivity layout
-		BoxWithConstraints(
-			modifier = Modifier
-				.fillMaxSize()
-				.padding(8.dp),
-		) {
-			val padCols = 8
-			val padRows = 8
-
-			// Cell size based on pad grid only (PlayActivity: min(W/buttonY, H/buttonX))
-			val cellSize = min(maxWidth / padCols, maxHeight / padRows)
-
-			// Center the pad grid (chains extend to the right)
-			val gridWidth = cellSize * padCols
-			val gridHeight = cellSize * padRows
-			val offsetX = (maxWidth - gridWidth) / 2
-			val offsetY = (maxHeight - gridHeight) / 2
-
-			Row(
-				verticalAlignment = Alignment.Top,
-				modifier = Modifier.offset(x = offsetX, y = offsetY),
+			BoxWithConstraints(
+				modifier = Modifier.weight(1f).fillMaxWidth().padding(8.dp),
 			) {
-				PadGridPreview(bitmaps, cellSize)
-				ChainColumnPreview(bitmaps, cellSize)
+				with(LocalDensity.current) {
+					val width = maxWidth.roundToPx()
+					val height = maxHeight.roundToPx()
+					// Use the play screen's reserved chain strips, keeping all preview cells square
+					// and equally sized so the chain artwork stays visible in narrow windows too.
+					val cell = PlayLayout.buttonSize(
+						PlayLayout.Area(width, height, 0), 8, 8,
+						square = false, sides = PlayLayout.chainSides(false, 8),
+					).chain
+					Row(
+						verticalAlignment = Alignment.Top,
+						modifier = Modifier.offset(
+							x = PlayLayout.padLeft(width, cell * 8).toDp(),
+							y = ((height - cell * 8) / 2).toDp(),
+						),
+					) {
+						PadGridPreview(bitmaps, cell.toDp())
+						ChainColumnPreview(bitmaps, cell.toDp())
+					}
+				}
 			}
 		}
 	}
@@ -730,7 +738,7 @@ private fun PadGridPreview(bitmaps: PreviewBitmaps, cellSize: Dp) {
 	}
 
 	// No spacing between cells - matching PlayActivity (cells are adjacent)
-	Column {
+	Column(Modifier.testTag("theme_preview_pads")) {
 		for (y in 0 until rows) {
 			Row {
 				for (x in 0 until cols) {
@@ -794,7 +802,7 @@ private fun ChainColumnPreview(bitmaps: PreviewBitmaps, cellSize: Dp) {
 	val selectedChainColor = Color(0x8800FF00)
 
 	// No spacing between cells - matching PlayActivity
-	Column {
+	Column(Modifier.testTag("theme_preview_chains")) {
 		for (i in 0 until chainCount) {
 			Box(modifier = Modifier.size(cellSize)) {
 				if (bitmaps.isChainLed) {

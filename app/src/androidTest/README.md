@@ -4,6 +4,18 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+`ThemePreviewLayoutTest` checks narrow (180 × 260 dp), wide (320 × 120 dp), and square
+(220 × 220 dp) preview areas. It requires the full pad grid and all eight chain buttons to fit,
+with no artwork covering the logo. A logo-free case checks pads and chains without requiring
+a logo. The real-screen check temporarily selects the default theme, saves a screenshot and
+restores the saved selection. A separate case starts with the logo-free S Skin saved to check
+that the real-screen check is independent of saved preferences and restores them. To check a
+Pixel Fold emulator's physical displays, select `realThemePreviewShowsEveryPart` and pass
+`-Pandroid.testInstrumentationRunnerArguments.themePreviewPose=open` or `closed`, plus
+`-Pandroid.testInstrumentationRunnerArguments.themePreviewRotation=0` or `1`. These use the
+Pixel Fold profile's device states (2 for open, 0 for closed) and restore the device-state
+override and rotation settings afterwards.
+
 The debug app sends no Firebase analytics, performance data or crash reports from its first
 launch (`app/src/debug/AndroidManifest.xml`); it keeps network access, which
 `StoreCancellationDeviceTest` needs for its local download server. A crash collection value saved
@@ -267,6 +279,12 @@ ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
 | `BackupFolderTest.themeImportWithoutFilePickerStaysOpen` | With the file pickers disabled, theme ZIP import leaves the theme screen open. |
 | `BackupFolderTest.packImportWithoutFilePickerStaysOpen` | With the file picker disabled, Import leaves Main open. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
+| `ThemePreviewLayoutTest.narrowPreviewShowsEveryChainButton` | In a 180 × 260 dp preview, all eight chain buttons and the full pad grid fit beside the logo. |
+| `ThemePreviewLayoutTest.widePreviewShowsTheWholeLogo` | In a 320 × 120 dp preview, pads and chains fit without covering or clipping the logo. |
+| `ThemePreviewLayoutTest.squarePreviewShowsPadsChainsAndLogo` | In a 220 × 220 dp preview, pads, chains and logo stay fully inside the preview. |
+| `ThemePreviewLayoutTest.logoFreePreviewShowsPadsAndChains` | A narrow preview without a custom logo keeps the complete pad grid and all eight chains visible, with no logo node. |
+| `ThemePreviewLayoutTest.realThemePreviewShowsEveryPart` | The real theme screen shows the complete default preview, captures it and restores the original theme selection. Optional fold pose and rotation arguments check the selected physical display. |
+| `ThemePreviewLayoutTest.realThemePreviewRestoresSavedLogoFreeTheme` | With S Skin saved, the real-screen check still validates the default preview and restores S Skin afterwards. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
