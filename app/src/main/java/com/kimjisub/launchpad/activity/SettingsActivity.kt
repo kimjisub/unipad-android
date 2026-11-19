@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.kimjisub.launchpad.ui.compose.resizeVerticalScroll
 import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import kotlinx.coroutines.Dispatchers
@@ -326,7 +327,7 @@ private fun CategoryNav(
 	Column(
 		modifier = modifier
 			.background(NavBg)
-			.verticalScroll(rememberScrollState())
+			.resizeVerticalScroll()
 			.padding(vertical = 24.dp, horizontal = 12.dp),
 	) {
 		Row(
@@ -512,7 +513,7 @@ private fun InfoContent(
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.verticalScroll(rememberScrollState())
+			.resizeVerticalScroll()
 			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom))
 			.padding(24.dp),
 	) {
@@ -764,7 +765,7 @@ private fun StorageContent(
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
-				.verticalScroll(rememberScrollState())
+				.resizeVerticalScroll()
 				.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom))
 				.padding(24.dp),
 		) {

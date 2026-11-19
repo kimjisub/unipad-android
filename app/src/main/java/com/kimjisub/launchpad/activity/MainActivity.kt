@@ -40,7 +40,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -96,6 +95,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.kimjisub.launchpad.ui.compose.rememberResizeLazyListState
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
@@ -759,11 +759,7 @@ class MainActivity : BaseActivity() {
 								}
 							}
 						} else {
-							val listState = rememberLazyListState()
-
-							LaunchedEffect(scrollToTopTrigger) {
-								listState.scrollToItem(0)
-							}
+							val listState = rememberResizeLazyListState(scrollToTopTrigger)
 
 							LaunchedEffect(scrollToCenterTrigger) {
 								if (scrollToCenterIndex < 0) return@LaunchedEffect

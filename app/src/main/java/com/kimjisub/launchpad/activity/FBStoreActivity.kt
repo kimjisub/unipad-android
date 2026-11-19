@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.kimjisub.launchpad.ui.compose.rememberResizeLazyListState
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -429,6 +430,7 @@ private fun StoreScreen(
 				}
 			} else {
 				LazyColumn(
+					state = rememberResizeLazyListState(),
 					modifier = Modifier.weight(1f).testTag("store_list"),
 					// The list scrolls behind the bottom bar but its last row stops above it.
 					contentPadding = PaddingValues(
