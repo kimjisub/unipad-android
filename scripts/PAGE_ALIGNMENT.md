@@ -3,7 +3,8 @@
 `assembleRelease` and `bundleRelease` automatically run verification tasks. A
 verification failure makes Gradle fail, including an otherwise up-to-date build,
 and stops the existing fastlane build and upload lanes before a store upload.
-Python 3 and the configured Android SDK/NDK must be available on `PATH`/disk.
+Python 3.9 or newer must be available as `python3` on `PATH`, and the configured
+Android SDK/NDK must be installed.
 Existing unsigned artifacts can be verified without signing credentials. Building
 release artifacts continues to use the project's existing signing configuration.
 
@@ -11,6 +12,9 @@ release artifacts continues to use the project's existing signing configuration.
 ./gradlew :app:bundleRelease --no-daemon --console=plain
 python3 -m unittest discover -s scripts/tests -p 'test_check_page_alignment.py' -v
 ```
+
+Run the regression command with Python 3.9 as well when changing the checker to
+verify compatibility with the minimum supported Python version.
 
 The checks cover:
 

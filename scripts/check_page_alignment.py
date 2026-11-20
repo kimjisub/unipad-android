@@ -4,6 +4,8 @@
 AAB ZIP offsets are not installable APK offsets; Gradle separately checks the
 bundle's PAGE_ALIGNMENT_16K request using bundletool's BundleConfig parser.
 """
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 import subprocess

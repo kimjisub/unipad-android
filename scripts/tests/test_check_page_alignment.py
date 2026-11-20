@@ -14,6 +14,14 @@ import zipfile
 CHECKER = Path(__file__).resolve().parents[1] / 'check_page_alignment.py'
 
 
+class PageAlignmentCliTest(unittest.TestCase):
+    def test_cli_starts_with_running_python(self):
+        result = subprocess.run([sys.executable, str(CHECKER), '--help'],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('--readelf', result.stdout)
+
+
 class PageAlignmentTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
