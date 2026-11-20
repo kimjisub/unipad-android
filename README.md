@@ -66,6 +66,10 @@ The built APK will be located at: `app/build/outputs/apk/debug/app-debug.apk`
 ./gradlew assembleRelease
 ```
 
+Release APK and bundle builds automatically check native 16 KB page alignment before
+upload. See [release page alignment checks](scripts/PAGE_ALIGNMENT.md) for coverage
+and verification commands.
+
 **Note:** For release builds, create `keystore.properties` in the project root with your signing credentials:
 ```properties
 storeFile=path/to/your/keystore.jks
