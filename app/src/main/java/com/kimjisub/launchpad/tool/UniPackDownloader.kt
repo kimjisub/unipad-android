@@ -172,7 +172,8 @@ class UniPackDownloader(
 
 				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-				val stagedFolder = PackStaging.create(workspace)
+				val installWorkspace = PackArchive.installationWorkspace(unipackFile, workspace) { File(context.filesDir, "UniPack") }
+				val stagedFolder = PackStaging.create(installWorkspace)
 				staged = stagedFolder
 				PackArchive.extract(unipackFile, stagedFolder)
 				FileManager.removeDoubleFolder(stagedFolder.path)
@@ -192,7 +193,7 @@ class UniPackDownloader(
 				}
 
 				ensureActive()
-				val folder = FileManager.moveToNextFolder(stagedFolder, workspace, folderName)
+				val folder = FileManager.moveToNextFolder(stagedFolder, installWorkspace, folderName)
 				claimedFolder = folder
 				val unipack = UniPackFolder(folder).load()
 

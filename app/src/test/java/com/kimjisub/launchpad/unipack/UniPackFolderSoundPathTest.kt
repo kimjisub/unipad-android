@@ -79,6 +79,14 @@ class UniPackFolderSoundPathTest {
 		assertSoundFound("fx/sweep.wav", "fx/sweep.wav")
 	}
 
+	@Test fun parentComponentsWithinSoundsFindTheWrittenFile() = assertSoundFound("kick.wav", "fx/../kick.wav")
+
+	@Test fun parentComponentsAreResolvedBeforeCaseAndUnicodeLookup() = assertSoundFound("caf\u0065\u0301.WAV", "fx/../caf\u00e9.wav")
+
+	@Test fun traversalCannotLeaveSoundsAndReenterIt() {
+		assertEquals(0, load("kick.wav", "../sounds/kick.wav").soundCount)
+	}
+
 	@Test
 	fun parentTraversal_doesNotFindAnOutsideSound() {
 		val pack = load("a.wav", "../info")

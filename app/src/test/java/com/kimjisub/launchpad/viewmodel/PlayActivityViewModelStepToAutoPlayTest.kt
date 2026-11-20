@@ -66,12 +66,12 @@ class PlayActivityViewModelStepToAutoPlayTest(
         vm.unipack = UniPackFolder(folder).load().loadDetail()
         vm.initState()
         vm.soundRunner = mockk<SoundRunner>(relaxed = true).also { sound ->
-            every { sound.soundOn(any(), any(), any()) } answers {
+            every { sound.soundOn(any(), any(), any(), any()) } answers {
                 if (!thirdArg<Boolean>()) plays += firstArg<Int>() to scheduler.currentTime
             }
         }
         vm.ledRunner = mockk<LedRunner>(relaxed = true).also { led ->
-            every { led.eventOn(any(), any(), any()) } answers {
+            every { led.eventOn(any(), any(), any(), any()) } answers {
                 lights += firstArg<Int>() to thirdArg<Long>()
             }
         }

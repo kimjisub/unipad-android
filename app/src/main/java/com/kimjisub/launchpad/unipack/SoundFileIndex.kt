@@ -36,9 +36,16 @@ internal class SoundFileIndex(soundDirs: List<File>) {
 	}
 
 	fun find(name: String): File? {
-		val components = name.replace('\\', '/').split('/').filter { it.isNotEmpty() && it != "." }
-		// References stay relative to sounds/, including a leading slash. Never walk outside it.
-		if (components.isEmpty() || ".." in components) return null
+		val components = mutableListOf<String>()
+		// Resolve the written path before spelling lookup, without ever leaving sounds/.
+		for (part in name.replace('\\', '/').split('/')) {
+			when (part) {
+				"", "." -> Unit
+				".." -> if (components.isEmpty()) return null else components.removeAt(components.lastIndex)
+				else -> components += part
+			}
+		}
+		if (components.isEmpty()) return null
 		val path = components.joinToString("/")
 		return byPath[path] ?: canonicalName(path).let {
 			byCanonicalPath[it] ?: byCaseFoldedPath[it.lowercase()]

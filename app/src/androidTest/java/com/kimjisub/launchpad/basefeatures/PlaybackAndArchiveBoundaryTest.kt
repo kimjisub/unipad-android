@@ -1,0 +1,145 @@
+package com.kimjisub.launchpad.basefeatures
+
+import android.net.Uri
+import android.os.SystemClock
+import androidx.compose.runtime.State
+import androidx.test.uiautomator.By
+import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.TestCaptures
+import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.ui.compose.ImportResult
+import com.kimjisub.launchpad.viewmodel.PlayMode
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+
+/** Screen observations of manual chain moves and the real import failure dialog. */
+class PlaybackAndArchiveBoundaryTest : PlaybackScreenTest() {
+    private fun manualMoveSurvives(name: String, control: () -> Unit) {
+        val pack = screen.pack()
+        File(pack, "keySound").writeText("1 1 1 silence.wav 1 2\n")
+        File(pack, "autoPlay").writeText("d 60000\non 1 1\n")
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
+        val elapsed = screen.onMain {
+            val started = SystemClock.elapsedRealtime()
+            vm.padTouch(0, 0, true)
+            // Main also delivers the delayed move. Keeping these calls in one Main turn
+            // proves the control precedes delivery even when rendering takes over 100 ms.
+            assertEquals("The manual move must still be pending before the control", 0, vm.chain.value)
+            control()
+            SystemClock.elapsedRealtime() - started
+        }
+        try {
+            try {
+                screen.await({ "The manual chain move did not arrive after the control: ${screen.onMain { vm.chain.value }}" }) {
+                    screen.onMain { vm.chain.value == 1 }
+                }
+            } finally {
+                val chain = screen.onMain { vm.chain.value }
+                val drawn = CountDownLatch(1)
+                screen.onMain {
+                    val view = screen.resumed().window.decorView
+                    view.postOnAnimation { view.postOnAnimation { drawn.countDown() } }
+                }
+                assertTrue("The moved chain must reach a rendered frame", drawn.await(10, TimeUnit.SECONDS))
+                screen.capture(name)
+                assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") {
+                    it.writeText("control_elapsed_ms=$elapsed\nfinal_chain=$chain\nsound_requests=${audio.plays.size}\n")
+                    true
+                })
+            }
+            assertEquals("A playback control must preserve the manual pad's chain move", 1, screen.onMain { vm.chain.value })
+        } finally {
+            screen.onMain {
+                vm.padTouch(0, 0, false)
+                vm.switchPlayMode(PlayMode.None)
+            }
+        }
+    }
+
+    @Test fun pausingAutoplayPreservesTheManualPadsPendingChainMove() =
+        manualMoveSurvives("manual-chain-after-pause") { screen.vm().autoPlayPause() }
+
+    @Test fun disablingAutoplayPreservesTheManualPadsPendingChainMove() =
+        manualMoveSurvives("manual-chain-after-disable") { screen.vm().switchPlayMode(PlayMode.None) }
+
+    @Test fun importingTwoPacksExplainsTheRejectionOnScreen() {
+        val archive = File(screen.context.cacheDir, "two-packs.zip")
+        ZipOutputStream(archive.outputStream()).use { zip ->
+            for (folder in listOf("first", "second")) {
+                zip.putNextEntry(ZipEntry("$folder/info"))
+                zip.write("title=$folder\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray())
+                zip.closeEntry()
+            }
+        }
+        try {
+            screen.launch(MainActivity::class.java)
+            // Use the same callback as the file picker, keeping the importer and dialog real.
+            screen.onMain {
+                MainActivity::class.java.getDeclaredMethod("importUniPack", Uri::class.java)
+                    .apply { isAccessible = true }.invoke(screen.resumed(), Uri.fromFile(archive))
+            }
+            screen.node(By.text(screen.text(R.string.importFailed)))
+            screen.capture("multiple-packs-rejected")
+            screen.node(By.textContains("Archive contains multiple packs"))
+            assertTrue("The source archive must remain after rejection", archive.isFile)
+            assertTrue("The existing pack must remain after rejection", File(screen.pack(), "info").isFile)
+        } finally {
+            archive.delete()
+        }
+    }
+    private fun importPackWithNestedCopy(wrapped: Boolean) {
+        val pack = screen.pack()
+        val info = File(pack, "info").readBytes()
+        val prefix = if (wrapped) "Wrapper/" else ""
+        val archive = File(screen.context.cacheDir, "nested-copy-$wrapped.zip")
+        ZipOutputStream(archive.outputStream()).use { zip ->
+            for (file in pack.walkTopDown().filter { it.isFile }) {
+                zip.putNextEntry(ZipEntry(prefix + file.relativeTo(pack).invariantSeparatorsPath))
+                file.inputStream().use { it.copyTo(zip) }
+                zip.closeEntry()
+            }
+            zip.putNextEntry(ZipEntry("${prefix}Backup/info"))
+            zip.write(info)
+            zip.closeEntry()
+        }
+        var importedFolder: File? = null
+        try {
+            screen.launch(MainActivity::class.java)
+            screen.onMain {
+                MainActivity::class.java.getDeclaredMethod("importUniPack", Uri::class.java)
+                    .apply { isAccessible = true }.invoke(screen.resumed(), Uri.fromFile(archive))
+            }
+            val field = MainActivity::class.java.getDeclaredField("importResult\$delegate").apply { isAccessible = true }
+            fun result() = screen.onMain { (field.get(screen.resumed()) as State<*>).value }
+            screen.await("The import must finish") { result() != null }
+            val result = result()
+            importedFolder = (result as? ImportResult.Success)?.folder
+            screen.node(By.text(screen.text(if (result is ImportResult.Success) R.string.importComplete else R.string.importFailed)))
+            screen.capture("nested-copy-import-$wrapped")
+            assertTrue("A nested backup must not hide the outer pack: $result", result is ImportResult.Success)
+            val folder = (result as ImportResult.Success).folder
+            assertTrue("The outer metadata must be preserved", File(folder, "info").readBytes().contentEquals(info))
+            assertTrue("The nested copy must remain inside the chosen pack", File(folder, "Backup/info").isFile)
+            assertTrue("The source archive must remain", archive.isFile)
+        } finally {
+            importedFolder?.let { folder ->
+                assertTrue("The imported test folder must be removed", folder.deleteRecursively())
+                screen.repo.delete(folder.name)
+            }
+            archive.delete()
+        }
+    }
+
+    @Test fun importingRootPackKeepsItsNestedBackup() = importPackWithNestedCopy(false)
+
+    @Test fun importingWrappedPackKeepsItsNestedBackup() = importPackWithNestedCopy(true)
+
+}

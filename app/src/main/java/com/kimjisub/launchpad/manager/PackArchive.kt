@@ -10,9 +10,48 @@ import java.nio.charset.CharacterCodingException
 import java.util.zip.CRC32
 import java.io.File
 import java.io.IOException
+import java.text.Normalizer
 
 /** Unpacks a pack archive (a .zip or .uni) into a folder. */
 object PackArchive {
+	class MultiplePacksException : IOException("Archive contains multiple packs")
+
+	/** Internal app storage preserves names which shared storage would merge on extraction. */
+	fun installationWorkspace(archive: File, selected: File, internal: () -> File): File =
+		if (hasCaseDistinctPaths(archive)) internal() else selected
+
+	private fun decodedName(header: FileHeader): String {
+		val raw = header.fileName.toByteArray(Charsets.ISO_8859_1)
+		return unicodePath(header, raw) ?: LegacyText.decode(raw)
+	}
+
+	internal fun hasCaseDistinctPaths(archive: File): Boolean = ZipFile(archive).use { zip ->
+		zip.charset = Charsets.ISO_8859_1
+		val names = mutableMapOf<String, String>()
+		for (header in zip.fileHeaders) {
+			var path = ""
+			for (part in decodedName(header).replace('\\', '/').split('/').filter { it.isNotEmpty() && it != "." }) {
+				path = if (path.isEmpty()) part else "$path/$part"
+				val previous = names.putIfAbsent(Normalizer.normalize(path, Normalizer.Form.NFC).lowercase(), path)
+				if (previous != null && previous != path) return@use true
+			}
+		}
+		false
+	}
+
+	/** Prefer the outer pack to copies inside it; reject separate branches leading to packs. */
+	private fun rejectMultiplePacks(root: File) {
+		var roots = 0
+		root.walkTopDown().onEnter { dir ->
+			if (dir != root && (dir.name.startsWith(".") || dir.name == "__MACOSX" || dir.canonicalFile != dir.absoluteFile)) {
+				false
+			} else if (dir.listFiles().orEmpty().any { it.isFile && it.name.equals("info", ignoreCase = true) }) {
+				if (++roots > 1) throw MultiplePacksException()
+				false
+			} else true
+		}.forEach { /* onEnter checks folders without descending into a selected pack. */ }
+	}
+
 	/**
 	 * Entry names are read as UTF-8, and as CP949 when they are not valid UTF-8 ([LegacyText]).
 	 * Archives zipped on Korean Windows store names in CP949 without the UTF-8 flag, which zip4j read
@@ -28,8 +67,7 @@ object PackArchive {
 			zip.charset = Charsets.ISO_8859_1
 			val parameters = UnzipParameters().apply { isExtractSymbolicLinks = false }
 			for (header in zip.fileHeaders) {
-				val rawName = header.fileName.toByteArray(Charsets.ISO_8859_1)
-				val name = unicodePath(header, rawName) ?: LegacyText.decode(rawName)
+				val name = decodedName(header)
 				if (header.isDirectory) {
 					val dir = File(root, name).canonicalFile
 					if (!dir.startsWith(root)) throw IOException("Entry outside the destination: $name")
@@ -39,6 +77,7 @@ object PackArchive {
 				}
 			}
 		}
+		rejectMultiplePacks(root)
 	}
 
 	/** A Unicode path is authoritative only when its version and original-name checksum match. */

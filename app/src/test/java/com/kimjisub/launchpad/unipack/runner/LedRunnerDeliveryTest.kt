@@ -13,6 +13,7 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -21,6 +22,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * The listener is the UI thread's side of the runner: it must be called after the runner's lock is
@@ -356,17 +359,20 @@ class LedRunnerDeliveryTest {
 	 * When the loop could take the lock straight back after each tick, the call waited for as many ticks
 	 * as it lost the race to it, for seconds or minutes on a busy machine.
 	 */
-	private fun assertWaitsOnlyForTheTickInDelivery(rounds: Int = 5, beforeRound: () -> Unit = {}, call: (work: () -> Unit) -> Unit) {
+	private fun assertWaitsOnlyForTheTickInDelivery(rounds: Int = 5, beforeRound: () -> Unit = {}, beforeCall: () -> Unit = {}, call: (work: () -> Unit) -> Unit) {
 		setUpRunner(loopDelay = 1) { _, _ -> LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Off(1, 1)), 0, 0) }
+		val deliveryQueue = LedRunner::class.java.getDeclaredField("deliveryLock")
+			.apply { isAccessible = true }.get(runner) as ReentrantLock
 		repeat(rounds) { round ->
 			beforeRound()
 			val holding = AtomicBoolean(true)
 			val held = CountDownLatch(1)
 			val releaseDelivery = CountDownLatch(1)
+			val deliveryTimedOut = AtomicBoolean(false)
 			onDelivery = {
 				if (holding.getAndSet(false)) {
 					held.countDown()
-					releaseDelivery.await(5, TimeUnit.SECONDS)
+					deliveryTimedOut.set(!releaseDelivery.await(5, TimeUnit.SECONDS))
 				}
 				Thread.sleep(1)
 			}
@@ -374,18 +380,36 @@ class LedRunnerDeliveryTest {
 			assertTrue("round $round: no tick reached the listener", held.await(2, TimeUnit.SECONDS))
 
 			val ticksWhenItRan = AtomicLong(-1)
-			val caller = Thread { call { ticksWhenItRan.set(ticksDelivered.get()) } }.apply { start() }
-			val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
-			while (caller.state != Thread.State.BLOCKED && caller.state != Thread.State.WAITING) {
-				assertTrue("round $round: the call did not wait for the tick in delivery", caller.isAlive && System.nanoTime() < deadline)
-				Thread.yield()
+			val callerFailure = AtomicReference<Throwable?>()
+			val caller = Thread {
+				try {
+					beforeCall()
+					call { ticksWhenItRan.set(ticksDelivered.get()) }
+				} catch (failure: Throwable) {
+					callerFailure.set(failure)
+				}
+			}.apply { start() }
+			try {
+				val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
+				// WAITING/BLOCKED may describe a different lock or latch. Release this tick only
+				// after the caller actually queues for delivery, the precondition for its ordering.
+				while (!deliveryQueue.hasQueuedThread(caller)) {
+					assertFalse("Timing condition failed: round $round: held delivery exceeded five seconds", deliveryTimedOut.get())
+					assertTrue("round $round: call ended before queuing for delivery: ${callerFailure.get()}", caller.isAlive)
+					assertTrue("Timing condition failed: round $round: caller did not queue within two seconds; state=${caller.state}", System.nanoTime() < deadline)
+					Thread.yield()
+				}
+				val ticksBefore = ticksDelivered.get()
+				releaseDelivery.countDown()
+				caller.join()
+				assertNull("round $round: delivery call failed", callerFailure.get())
+				assertFalse("Timing condition failed: round $round: held delivery exceeded five seconds", deliveryTimedOut.get())
+				assertEquals("round $round: ticks delivered before the call ran", ticksBefore, ticksWhenItRan.get())
+			} finally {
+				releaseDelivery.countDown()
+				caller.join()
+				onDelivery = {}
 			}
-			val ticksBefore = ticksDelivered.get()
-			releaseDelivery.countDown()
-			caller.join()
-			onDelivery = {}
-
-			assertEquals("round $round: ticks delivered before the call ran", ticksBefore, ticksWhenItRan.get())
 		}
 	}
 
@@ -396,6 +420,30 @@ class LedRunnerDeliveryTest {
 	@Test
 	fun afterDelivery_whileTicksRunBackToBack_waitsOnlyForTheTickInDelivery() =
 		assertWaitsOnlyForTheTickInDelivery { work -> runner.afterDelivery(work) }
+
+	@Test
+	fun afterDelivery_waitsForTheDeliveryQueueRatherThanAnUnrelatedWait() {
+		assertWaitsOnlyForTheTickInDelivery(rounds = 1, beforeCall = {
+			val otherWait = CountDownLatch(1)
+			val tickInDelivery = ticksDelivered.get()
+			val controller = Thread {
+				// A premature delivery release is observed as another tick. Otherwise, let the
+				// caller proceed within the existing two-second queue-entry deadline.
+				val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1)
+				try {
+					while (ticksDelivered.get() == tickInDelivery && System.nanoTime() < deadline) Thread.sleep(1)
+				} finally {
+					otherWait.countDown()
+				}
+			}.apply { start() }
+			try {
+				otherWait.await()
+			} finally {
+				otherWait.countDown()
+				controller.join()
+			}
+		}) { work -> runner.afterDelivery(work) }
+	}
 
 	/**
 	 * The UI thread walks the runner's animation list (eventOn from a touch, isEventExist and eventOffAll
