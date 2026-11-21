@@ -1215,11 +1215,11 @@ object MidiConnection {
 				runCatching { deviceDriver.sendClearLed() }
 				runCatching { deviceDriver.onDisconnected() }
 				virtualTransportAttached = false
+				connectedDevice = null
 				if (_driver === deviceDriver) {
 					_driver = previous
 					runCatching { listener?.onChangeDriver(previous) }
 				}
-				connectedDevice = null
 				runCatching { connectionObserver?.onDisconnected() }
 				deviceDriver.setOnGetSignalListener(null)
 				deviceDriver.setOnSendSignalListener(null)
