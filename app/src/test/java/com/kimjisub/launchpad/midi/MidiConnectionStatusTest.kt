@@ -34,7 +34,7 @@ class MidiConnectionStatusTest {
         val status = MidiConnection.connectionStatus(permissionManager = manager)
         assertEquals(MidiConnectionStatus.Phase.PERMISSION, status.phase)
         assertEquals("My Mini", status.deviceName)
-        verify(exactly = 0) { manager.requestPermission(any(), any()) }
+        verify(exactly = 0) { manager.requestPermission(any<UsbDevice>(), any<android.app.PendingIntent>()) }
         verify(exactly = 0) { manager.openDevice(any()) }
         every { manager.deviceList } returns hashMapOf()
     }
