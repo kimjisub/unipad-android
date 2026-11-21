@@ -179,9 +179,9 @@ object MidiConnection {
 	// disconnect cleanup) but iterated by onSendSignal/onSendRaw, which can run off-main
 	// (e.g. LED animation loops) - a plain map here caused ConcurrentModificationException.
 	private val sessions = ConcurrentHashMap<Int, DeviceSession>()
-	private var lastDisconnected = MidiConnectionStatus()
+	@Volatile private var lastDisconnected = MidiConnectionStatus()
 	private data class TransportObservation(val status: MidiConnectionStatus, val input: MidiInputObservation)
-	private var transportObservation: TransportObservation? = null
+	@Volatile private var transportObservation: TransportObservation? = null
 	private const val TRANSPORT_SESSION_ID = Int.MIN_VALUE
 
 	/** A snapshot for the chosen device, including permission waiting and a recent detach. */
@@ -475,7 +475,7 @@ object MidiConnection {
 				value.setOnCycleListener(onCycleListener)
 				if (value !is MultiplexDriver) {
 					val ownerSession = sessions.values.firstOrNull { it.driver === value }
-					value.setOnGetSignalListener(ownerSession?.let { makeReceiveListener(it) } ?: onReceiveSignalListener)
+					value.setOnGetSignalListener(ownerSession?.let { makeReceiveListener(it) } ?: transportReceiveListener())
 					value.setOnSendSignalListener(ownerSession?.let { makeSendListener(it) } ?: onSendSignalListener)
 				}
 				value.initialize()
@@ -590,7 +590,6 @@ object MidiConnection {
 			}
 
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
-				transportObservation?.input?.pad(x, y)
 				controller?.onPadTouch(x, y, upDown, velocity)
 			}
 
@@ -1219,10 +1218,22 @@ object MidiConnection {
 
 	// Driver
 
+	private fun transportReceiveListener(): DriverRef.OnReceiveSignalListener? {
+		val receiver = onReceiveSignalListener ?: return null
+		val input = transportObservation?.input ?: return receiver
+		return object : DriverRef.OnReceiveSignalListener by receiver {
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
+				// A callback already in flight belongs to the connection that registered it.
+				if (transportObservation?.input === input) input.pad(x, y)
+				receiver.onPadTouch(x, y, upDown, velocity)
+			}
+		}
+	}
+
 	fun setDriverListener(
 		target: DriverRef = driver,
 		sendListener: DriverRef.OnSendSignalListener? = onSendSignalListener,
-		receiveListener: DriverRef.OnReceiveSignalListener? = onReceiveSignalListener,
+		receiveListener: DriverRef.OnReceiveSignalListener? = transportReceiveListener(),
 	) {
 		target.setOnCycleListener(onCycleListener)
 		target.setOnGetSignalListener(receiveListener)
