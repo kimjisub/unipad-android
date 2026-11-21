@@ -7,11 +7,19 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.loadKoinModules
+import org.koin.core.context.unloadKoinModules
+import org.koin.dsl.module
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /** In-process system-event simulation with a recording engine, not physical routing or listening. */
 @RunWith(AndroidJUnit4::class)
@@ -152,5 +160,63 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
         deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
         screen.onMain { assertFalse(vm.isAutoPlayPlaying) }
         screen.capture("audio-output-already-paused")
+    }
+
+    @Test fun failedOutputRecoveryCannotReviveInterruptedVoices() {
+        val recovering = CountDownLatch(1)
+        val finishRecovery = CountDownLatch(1)
+        val recoveryFailed = CountDownLatch(1)
+        val available = AtomicBoolean(true)
+        val starts = AtomicInteger()
+        val rejected = AtomicInteger()
+        val engine = object : SoundRunner.Engine by audio {
+            override fun start(): Boolean {
+                if (starts.incrementAndGet() == 1) return audio.start()
+                recovering.countDown()
+                check(finishRecovery.await(10, TimeUnit.SECONDS)) { "Recovery gate was not released" }
+                recoveryFailed.countDown()
+                return false
+            }
+            override fun stop() {
+                available.set(false)
+                audio.stop()
+            }
+            override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int =
+                if (available.get()) audio.play(soundId, volumeL, volumeR, loop)
+                else { rejected.incrementAndGet(); 0 }
+        }
+        val binding = module { single<SoundRunner.Engine> { engine } }
+        loadKoinModules(binding)
+        try {
+            prepare()
+            screen.openPlay()
+            val vm = screen.vm()
+            val receiver = receiver(screen.resumed() as PlayActivity)
+            screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
+            screen.await("Autoplay did not start") { audio.plays.size == 3 }
+            screen.onMain { vm.soundRunner!!.pauseStream() }
+            screen.await("Output did not close") { audio.stops.get() > 0 }
+            screen.onMain { vm.soundRunner!!.resumeStream() }
+            assertTrue("Output recovery did not start", recovering.await(10, TimeUnit.SECONDS))
+            deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+            finishRecovery.countDown()
+            assertTrue("Output recovery did not fail", recoveryFailed.await(10, TimeUnit.SECONDS))
+            deliver(receiver, AudioManager.ACTION_HEADSET_PLUG)
+            screen.onMain { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN) }
+            SystemClock.sleep(5500)
+            screen.onMain {
+                assertFalse(vm.isAutoPlayPlaying)
+                assertTrue(vm.autoPlayRunner!!.suspended)
+                vm.padTouch(0, 2, true)
+                vm.padTouch(0, 2, false)
+            }
+            assertEquals("A fresh input reaches the existing failed-output path", 1, rejected.get())
+            assertEquals("A request on failed output is not a successful voice", 3, audio.plays.size)
+            assertTrue(audio.ringingLoops().isEmpty())
+            screen.capture("audio-output-recovery-failed")
+        } finally {
+            finishRecovery.countDown()
+            try { screen.close() } finally { unloadKoinModules(binding) }
+        }
     }
 }
