@@ -82,9 +82,9 @@ keyPassword=yourKeyPassword
 
 ## Testing
 
-For comprehensive testing documentation including environment setup, test execution, multi-API level testing, and troubleshooting:
-
-**📖 [Testing Guide](docs/TESTING.md)**
+- [Running tests](CLAUDE.md#testing): unit tests, UI tests on a device or emulator, and multi-API level testing
+- [Instrumented test inventory](app/src/androidTest/README.md): the UI test classes, their scenarios and the complete-suite command
+- [Pull request checks](.github/PULL_REQUEST_CHECKS.md): the checks every pull request must pass and how to run them locally
 
 ## Project Structure
 
@@ -108,7 +108,7 @@ We welcome contributions to this project! Please follow these steps if you would
 
 ## License
 
-This project is licensed under the [GNU Lesser General Public License v2.1](LICENSE.md) - see the `LICENSE.md` file for details.
+This project is licensed under the [GNU Lesser General Public License v2.1](LICENSE) - see the `LICENSE` file for details.
 
 ## Acknowledgements
 
