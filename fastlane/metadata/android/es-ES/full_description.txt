@@ -1,8 +1,18 @@
-UniPad es un nuevo tipo de juego de ritmo basado en el Launchpad: presiona los botones para tocar canciones.
+UniPad es un juego de ritmo que se toca en una cuadrícula de pads al estilo Launchpad. Cada canción es un UniPack: un paquete con sonidos, luces LED y, en muchos paquetes, una pista de Reproducción Automática.
 
-Funciones principales
-- Disfruta de mucho contenido con más de 40 canciones base.
-- Crea tus propios archivos de proyecto (UniPack) y tócalos en la app.
-- Incluye Reproducción Automática y funciones que te ayudan a practicar.
-- Personaliza el aspecto de UniPad con temas.
-- Conecta tu Launchpad y equipos MIDI a la app.
+Consigue paquetes
+- Descarga paquetes desde la Tienda dentro de la app (más de 70 paquetes; necesita conexión a internet).
+- Importa un archivo UniPack .zip que ya tengas (Importar packs descargados).
+- La comunidad crea los UniPacks fuera de la app. UniPad los toca; no sirve para crearlos.
+
+Practica
+- Reproducción Automática toca la canción completa con sus luces.
+- Guía toca la canción y marca los pads que debes presionar.
+- Paso espera hasta que presiones los pads marcados.
+Los modos de práctica funcionan con paquetes que incluyen una pista de Reproducción Automática.
+
+Toca a tu manera
+- ¿No tienes Launchpad? Solo toca los pads en la pantalla.
+- Conecta un Launchpad u otro controlador MIDI con un cable USB. Es posible que tu teléfono necesite un adaptador para su puerto. Los modelos de Launchpad más comunes se detectan automáticamente; si no, elige tu modelo en la app. No hemos probado todos los teléfonos, cables y controladores.
+- Cambia el aspecto con temas.
+- Cuando un paquete ya está en tu teléfono, puedes tocarlo sin conexión a internet.
