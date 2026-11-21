@@ -112,12 +112,14 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 **Configured Test Devices:**
 - `pixel2Api29` - Android 10 (API 29) - Scoped Storage baseline (minSdk is 24)
 - `pixel2Api33` - Android 13 (API 33) - Notification Runtime Permission
-- `pixel2Api35` - Android 15 (API 35) - Latest managed image (targetSdk is 37; no managed image for it yet)
+- `pixel2Api35` - Android 15 (API 35) - Highest Gradle Managed Device configured here (targetSdk is 37)
 
 **Why These API Levels?**
-- **API 29**: Scoped Storage introduced (minSdk is 24, but nothing below 29 is worth an emulator slot)
+- **API 29**: Scoped Storage introduced (minSdk is 24; no managed device is configured below 29)
 - **API 33**: Notification runtime permission required
-- **API 35**: Newest system image available to Gradle Managed Devices; targetSdk itself is 37
+- **API 35**: Highest Gradle Managed Device configured here; targetSdk itself is 37, and no managed device is configured for 36 or 37 yet
+
+The managed devices are not the only test targets: other API levels, including 24–28 and 37, are tested on emulators you create yourself (see [Manual AVD Creation](#manual-avd-creation-optional)) with `ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh`. Below API 30 some tests are filtered by `@SdkSuppress`, which fails the test count check, and below API 33 the base feature tests fail on purpose, so a run of the whole suite needs API 33 or later; on older devices pass the classes or methods that run there instead (see [the instrumented test inventory](app/src/androidTest/README.md)).
 
 **Running Multi-API Tests:**
 
@@ -127,10 +129,10 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 ./gradlew pixel2Api33DebugAndroidTest
 ./gradlew pixel2Api35DebugAndroidTest
 
-# Test on all supported API levels (3 devices, ~15-20 min)
+# Test on all configured devices (3 devices, ~15-20 min)
 ./gradlew allApisDebugAndroidTest
 
-# Test on minimum and maximum only (fastest, ~8-12 min)
+# Test on the lowest and highest configured API levels only (29 and 35; fastest, ~8-12 min)
 ./gradlew minAndMaxDebugAndroidTest
 ```
 
@@ -152,7 +154,7 @@ On first run, Gradle will download system images for each API level. This may ta
 **Tips:**
 - Use `allApisDebugAndroidTest` for comprehensive testing before releases
 - Use `minAndMaxDebugAndroidTest` for faster CI/CD pipelines
-- Use specific device tasks (e.g., `pixel2Api21DebugAndroidTest`) when debugging API-specific issues
+- Use specific device tasks (e.g., `pixel2Api29DebugAndroidTest`) when debugging API-specific issues
 - System images are cached in `$ANDROID_HOME/system-images/`
 
 #### Manual AVD Creation (Optional)
@@ -179,25 +181,21 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 # List available system images
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list | grep system-images
 
-# Install system images
-"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-21;google_apis;x86_64"
+# Install system images (any API from 24, the app's minSdk, to 36 has an image in this form;
+# API 37 images are named differently, e.g. "system-images;android-37.0;google_apis_ps16k;arm64-v8a";
+# use arm64-v8a instead of x86_64 on Apple silicon)
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-29;google_apis;x86_64"
-"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-34;google_apis;x86_64"
+"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-35;google_apis;x86_64"
 
-# Create AVDs
-"$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
-  --name "Pixel_2_API_21" \
-  --package "system-images;android-21;google_apis;x86_64" \
-  --device "pixel_2"
-
+# Create AVDs (use the same image name you installed above, e.g. arm64-v8a on Apple silicon)
 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
   --name "Pixel_2_API_29" \
   --package "system-images;android-29;google_apis;x86_64" \
   --device "pixel_2"
 
 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
-  --name "Pixel_2_API_34" \
-  --package "system-images;android-34;google_apis;x86_64" \
+  --name "Pixel_2_API_35" \
+  --package "system-images;android-35;google_apis;x86_64" \
   --device "pixel_2"
 
 # List created AVDs
@@ -208,7 +206,7 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 
 ```bash
 # Start emulator in background
-"$ANDROID_HOME/emulator/emulator" -avd Pixel_2_API_21 -no-snapshot-load &
+"$ANDROID_HOME/emulator/emulator" -avd Pixel_2_API_29 -no-snapshot-load &
 
 # Wait for device to boot (check with adb)
 "$ANDROID_HOME/platform-tools/adb" wait-for-device
