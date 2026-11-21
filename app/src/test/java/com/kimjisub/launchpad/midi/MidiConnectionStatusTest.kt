@@ -135,4 +135,25 @@ class MidiConnectionStatusTest {
             assertEquals("Launchpad Open", MidiConnection.connectionStatus().firmware)
         }
     }
+
+    @Test fun decodedInputAlreadyInFlightCannotConfirmTheNextDevice() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        every { manager.deviceList } returns hashMapOf()
+        initialize(manager)
+        val oldPad = LaunchpadS()
+        val currentPad = LaunchpadS()
+        val output = mockk<com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener>(relaxed = true)
+        val previous = MidiConnection.attachTransport("First pad", oldPad, output)
+        // Model a decoded callback that was already read before the listener was removed.
+        val inFlight = com.kimjisub.launchpad.midi.driver.DriverRef::class.java
+            .getDeclaredField("onReceiveSignalListener").apply { isAccessible = true }.get(oldPad)
+            as com.kimjisub.launchpad.midi.driver.DriverRef.OnReceiveSignalListener
+        previous.close()
+        MidiConnection.attachTransport("Second pad", currentPad, output).use {
+            inFlight.onPadTouch(0, 0, true, 127)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
+            currentPad.getSignal(9, 0x90, 0, 127)
+            assertEquals(MidiConnectionStatus.Phase.INPUT, MidiConnection.connectionStatus().phase)
+        }
+    }
 }
