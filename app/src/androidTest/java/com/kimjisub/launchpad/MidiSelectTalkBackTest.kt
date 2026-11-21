@@ -71,7 +71,7 @@ class MidiSelectTalkBackTest {
     @Test fun statusHelpQuestionsAndModelFollowTheReadingOrder() {
         val read = mutableListOf<String>()
         fun focus(text: String) {
-            val node = automation.rootInActiveWindow.findAccessibilityNodeInfosByText(text)
+            val node = requireNotNull(automation.rootInActiveWindow).findAccessibilityNodeInfosByText(text)
                 .firstOrNull { it.isClickable }
                 ?: error("No focusable help entry: $text")
             assertTrue(node.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS) || node.isAccessibilityFocused)
@@ -88,9 +88,9 @@ class MidiSelectTalkBackTest {
             compose.waitForIdle()
             automation.waitForIdle(500, 10_000)
             val title = str(R.string.midi_help_title)
-            val status = automation.rootInActiveWindow.findAccessibilityNodeInfosByText(
+            val status = requireNotNull(automation.rootInActiveWindow).findAccessibilityNodeInfosByText(
                 str(R.string.midi_status_none)).firstOrNull()
-                ?: automation.rootInActiveWindow.findAccessibilityNodeInfosByText(str(R.string.midi_status_disconnected)).first()
+                ?: requireNotNull(automation.rootInActiveWindow).findAccessibilityNodeInfosByText(str(R.string.midi_status_disconnected)).first()
             assertTrue(status.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS) || status.isAccessibilityFocused)
             assertTrue("Status must be followed by help: $read", next().contains(title))
             compose.onNodeWithText(title).performClick()

@@ -96,7 +96,7 @@ class MidiSelectScreenTest {
         var transport: AutoCloseable? = null
         compose.runOnIdle {
             val activity = compose.activity
-            MidiConnection.initConnection(Intent(), activity.getSystemService(UsbManager::class.java), activity)
+            MidiConnection.initConnection(Intent(), requireNotNull(activity.getSystemService(UsbManager::class.java)), activity)
             transport = MidiConnection.attachTransport("Virtual Mini", pad, output)
         }
         try {
@@ -148,7 +148,7 @@ class MidiSelectScreenTest {
         }
         compose.runOnIdle {
             val activity = compose.activity
-            MidiConnection.initConnection(Intent(), activity.getSystemService(UsbManager::class.java), activity)
+            MidiConnection.initConnection(Intent(), requireNotNull(activity.getSystemService(UsbManager::class.java)), activity)
         }
         try {
             attach("USB Piano 42", MasterKeyboard())
@@ -192,7 +192,7 @@ class MidiSelectScreenTest {
             button(R.string.midi_help_firmware).performScrollTo().performClick()
             button(R.string.midi_help_firmware_link).performScrollTo().assertIsDisplayed()
             // A device click avoids waiting for Compose frames in the background activity.
-            device.findObject(By.text(str(R.string.midi_help_firmware_link))).click()
+            requireNotNull(device.findObject(By.text(str(R.string.midi_help_firmware_link)))).click()
             assertTrue("The guide did not open in a browser", awaitResumed(browsers))
             repeat(4) {
                 if (!resumed(listOf(appPackage))) {
