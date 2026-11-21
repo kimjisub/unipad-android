@@ -2,6 +2,8 @@
 
 <a href='https://play.google.com/store/apps/details?id=com.kimjisub.launchpad&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' height="100px" src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
 
+If the store page doesn't open in your country, you can play in your browser at https://unipad.io/play.
+
 **English** | [한국어](README.ko.md)
 
 ## Overview
