@@ -132,6 +132,7 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.audio.AudioFocusController
+import com.kimjisub.launchpad.audio.AudioOutputReceiver
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
@@ -223,6 +224,7 @@ class PlayActivity : BaseActivity() {
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 	private val audioFocus by lazy { AudioFocusController(audioManager) { vm.audioFocusPolicy.onFocusChange(it) } }
+	private val audioOutputReceiver = AudioOutputReceiver { vm.interruptPlayback() }
 	private val windowFocusHandler = Handler(Looper.getMainLooper())
 	private val windowFocusInterruption = WindowFocusInterruption(
 		schedule = { task, delay -> windowFocusHandler.postDelayed(task, delay) },
@@ -1599,11 +1601,13 @@ class PlayActivity : BaseActivity() {
 	override fun onStart() {
 		super.onStart()
 		vm.screenVisible = true
+		audioOutputReceiver.start(this)
 	}
 
 	// Hidden screens also stop the audio stream. Returning reconnects it, but keeps the song suspended.
 	override fun onStop() {
 		super.onStop()
+		audioOutputReceiver.stop(this)
 		audioFocus.abandon()
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
 		vm.screenVisible = false
