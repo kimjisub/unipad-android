@@ -119,7 +119,7 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 - **API 33**: Notification runtime permission required
 - **API 35**: Highest Gradle Managed Device configured here; targetSdk itself is 37, and no managed device is configured for 36 or 37 yet
 
-The managed devices are not the only test targets: other API levels, including 24–28 and 37, are tested on emulators you create yourself (see [Manual AVD Creation](#manual-avd-creation-optional)) with `ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh`. Below API 30 some tests are filtered by `@SdkSuppress`, so a run of the whole suite fails the test count check; pass the classes or methods to run instead (see [the instrumented test inventory](app/src/androidTest/README.md)).
+The managed devices are not the only test targets: other API levels, including 24–28 and 37, are tested on emulators you create yourself (see [Manual AVD Creation](#manual-avd-creation-optional)) with `ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh`. Below API 30 some tests are filtered by `@SdkSuppress`, which fails the test count check, and below API 33 the base feature tests fail on purpose, so a run of the whole suite needs API 33 or later; on older devices pass the classes or methods that run there instead (see [the instrumented test inventory](app/src/androidTest/README.md)).
 
 **Running Multi-API Tests:**
 

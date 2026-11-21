@@ -329,9 +329,10 @@ the app APK failed to install and no app test ran. GitHub CI does not run the UI
 It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
 number with no failure, error or skip and Gradle printed no install failure. It records the counts
 and reasons in `.ci-results/ui-status.txt`; the file is deleted when a run starts, so a missing
-`ui-status.txt` means that run never finished. Below API 30 some tests are filtered by `@SdkSuppress`
-(the highest `minSdkVersion` is 30, in `ForegroundScreenDeviceTest`), so a run of the whole suite
-needs an API 30+ device; on older devices pass the classes or methods to run.
+`ui-status.txt` means that run never finished. Below API 30 some tests are filtered by `@SdkSuppress`,
+which fails the test count check, and below API 33 the
+[base feature tests](java/com/kimjisub/launchpad/basefeatures/README.md) fail on purpose, so a run
+of the whole suite needs an API 33+ device; on older devices pass the classes or methods that run there.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
 The renames are in [#130](https://github.com/kimjisub/unipad-android/pull/130), so earlier failure
