@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.midi
 
 import android.content.Intent
+import android.content.Context
+import android.app.PendingIntent
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import com.kimjisub.launchpad.midi.driver.LaunchpadPROCFW
@@ -8,6 +10,8 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadS
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
@@ -64,6 +68,44 @@ class MidiConnectionStatusTest {
             assertTrue(MidiConnection.connectionStatus().modelUnknown)
             assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
         }
+    }
+
+    @Test fun explicitPermissionRequestTargetsOnlyTheChosenUnpermittedDevice() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        val device = mockk<UsbDevice>(relaxed = true)
+        val context = mockk<Context>(relaxed = true)
+        val result = mockk<PendingIntent>()
+        every { context.getSystemService(Context.USB_SERVICE) } returns manager
+        every { device.deviceId } returns 41
+        every { device.productId } returns 0x0036
+        every { manager.deviceList } returns hashMapOf("mini" to device)
+        every { manager.hasPermission(device) } returns false
+        mockkStatic(PendingIntent::class)
+        try {
+            every { PendingIntent.getBroadcast(context, 41, any(), any()) } returns result
+            MidiConnection.requestUsbPermission(context, 41)
+            verify(exactly = 1) { manager.requestPermission(device, result) }
+            MidiConnection.requestUsbPermission(context, 42)
+            every { manager.hasPermission(device) } returns true
+            MidiConnection.requestUsbPermission(context, 41)
+            verify(exactly = 1) { manager.requestPermission(device, result) }
+        } finally { unmockkStatic(PendingIntent::class) }
+    }
+
+    @Test fun deniedPermissionDoesNotStartConnectionAndStillShowsPermissionNeeded() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        val device = mockk<UsbDevice>(relaxed = true)
+        val context = mockk<Context>(relaxed = true)
+        val result = mockk<Intent>(relaxed = true)
+        every { device.deviceId } returns 41
+        every { device.productId } returns 0x0036
+        every { manager.deviceList } returns hashMapOf("mini" to device)
+        every { manager.hasPermission(device) } returns false
+        every { result.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false) } returns false
+        UsbMidiPermissionReceiver().onReceive(context, result)
+        assertEquals(MidiConnectionStatus.Phase.PERMISSION, MidiConnection.connectionStatus(permissionManager = manager).phase)
+        verify(exactly = 0) { context.getSystemService(any<String>()) }
+        verify(exactly = 0) { manager.openDevice(any()) }
     }
 
     @Test fun previousTransportCannotConfirmInputOnTheNextDevice() {
