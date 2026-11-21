@@ -26,6 +26,8 @@ import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadS
+import com.kimjisub.launchpad.midi.driver.LaunchpadPROCFW
+import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -125,6 +127,43 @@ class MidiSelectScreenTest {
             }
             assertTrue(!MidiConnection.connectionStatus().manuallyChosen)
             compose.onNodeWithText(str(R.string.midi_status_input)).assertDoesNotExist()
+        } finally { compose.runOnIdle { transport?.close() } }
+    }
+
+    @Test fun koreanUnknownDeviceAndDetectedFirmwareShowObservedFacts() {
+        val output = object : DriverRef.OnSendSignalListener {
+            override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) = Unit
+            override fun onSendRaw(messages: List<ByteArray>, cableNumber: Int) = Unit
+        }
+        var transport: AutoCloseable? = null
+        fun attach(name: String, driver: DriverRef) {
+            compose.runOnIdle {
+                transport?.close()
+                transport = MidiConnection.attachTransport(name, driver, output)
+            }
+            compose.waitUntil(5000) {
+                compose.onAllNodes(hasText("연결됨: $name", substring = true)).fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        compose.runOnIdle {
+            val activity = compose.activity
+            MidiConnection.initConnection(Intent(), activity.getSystemService(UsbManager::class.java), activity)
+        }
+        try {
+            attach("USB Piano 42", MasterKeyboard())
+            compose.onNodeWithText(str(R.string.midi_status_unknown)).assertIsDisplayed()
+            capture("unknown-device-ko")
+            button(R.string.midi_help_title).performClick()
+            compose.onNodeWithText(str(R.string.midi_help_press_body)).assertExists()
+            device.pressBack()
+            compose.waitForIdle()
+            attach("Launchpad Open", LaunchpadPROCFW())
+            compose.onNodeWithText(str(R.string.midi_status_firmware).format("Launchpad Open")).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_status_unknown)).assertDoesNotExist()
+            capture("detected-firmware-ko")
+            button(R.string.midi_help_title).performClick()
+            button(R.string.midi_help_firmware_link).performScrollTo().assertIsDisplayed()
+            capture("detected-firmware-help-ko")
         } finally { compose.runOnIdle { transport?.close() } }
     }
 

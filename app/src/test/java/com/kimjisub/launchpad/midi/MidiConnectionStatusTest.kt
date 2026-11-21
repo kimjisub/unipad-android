@@ -66,6 +66,22 @@ class MidiConnectionStatusTest {
         }
     }
 
+    @Test fun previousTransportCannotConfirmInputOnTheNextDevice() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        every { manager.deviceList } returns hashMapOf()
+        initialize(manager)
+        val oldPad = LaunchpadS()
+        val currentPad = LaunchpadS()
+        val output = mockk<com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener>(relaxed = true)
+        MidiConnection.attachTransport("First pad", oldPad, output).close()
+        MidiConnection.attachTransport("Second pad", currentPad, output).use {
+            oldPad.getSignal(9, 0x90, 0, 127)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
+            currentPad.getSignal(9, 0x90, 0, 127)
+            assertEquals(MidiConnectionStatus.Phase.INPUT, MidiConnection.connectionStatus().phase)
+        }
+    }
+
     @Test fun detectedCustomFirmwareIsReportedWithoutInferringItFromLaterChoices() {
         val manager = mockk<UsbManager>(relaxed = true)
         every { manager.deviceList } returns hashMapOf()
