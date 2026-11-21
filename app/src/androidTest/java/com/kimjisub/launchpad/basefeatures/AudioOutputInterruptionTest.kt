@@ -142,7 +142,8 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
         prepare()
         val scenario = screen.openPlay()
         val vm = screen.vm()
-        val receiver = receiver(screen.resumed() as PlayActivity)
+        val activity = screen.resumed() as PlayActivity
+        val receiver = receiver(activity)
         screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
         screen.await("Autoplay did not start") { audio.plays.size == 3 }
         val silences = audio.silences.get()
@@ -152,9 +153,13 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
         screen.onMain { assertTrue(vm.isAutoPlayPlaying) }
         assertEquals(silences, audio.silences.get())
         scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED)
-        val afterStop = audio.silences.get()
-        deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-        assertEquals("A queued notification after onStop must be ignored", afterStop, audio.silences.get())
+        screen.onMain {
+            assertEquals(androidx.lifecycle.Lifecycle.State.CREATED, activity.lifecycle.currentState)
+            // Measure this delivery alone; delayed focus callbacks can also silence the engine.
+            val afterStop = audio.silences.get()
+            receiver?.onReceive(screen.context, Intent(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            assertEquals("A queued notification after onStop must be ignored", afterStop, audio.silences.get())
+        }
         scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
         screen.await("Play did not return") { screen.ready() }
         deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
