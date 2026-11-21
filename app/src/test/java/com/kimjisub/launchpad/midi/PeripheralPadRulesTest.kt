@@ -79,6 +79,13 @@ class PeripheralPadRulesTest {
         assertTrue(lights.snapshot().all { it == 0 })
     }
 
+    @Test fun invalidLightPositionDoesNotThrow() {
+        val lights = PeripheralLights()
+        assertEquals(0L, lights.argb(-1))
+        assertEquals(0L, lights.argb(80))
+        assertEquals(0L, lights.argb(Int.MAX_VALUE))
+    }
+
     @Test fun twoFingersMoveOutsideAndCancelReleaseOnlyLastOwner() {
         val pointers = PadPointers()
         assertEquals(listOf(PadChange(0,true)), pointers.move(4,0))

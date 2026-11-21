@@ -221,6 +221,21 @@ class UsbPeripheralConnectionTest {
         assertEquals(1,listOf(first,second).count { it.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.BUSY) })
     }
 
+    @Test fun reconnectHasDistinctIdentityForLateReleases() {
+        val (connection, peer) = connection()
+        open(connection)
+        val first = connection.state.value as UsbPeripheralConnection.State.Open
+        connection.send(PadChange(0,true))
+        await { peer.sent.size == 1 }
+        connection.disconnect()
+        await { connection.state.value == UsbPeripheralConnection.State.Idle }
+        open(connection)
+        val second = connection.state.value as UsbPeripheralConnection.State.Open
+        connection.send(PadChange(0,true))
+        await { peer.sent.size == 3 }
+        assertNotEquals(first,second)
+    }
+
     private fun connection(): Pair<UsbPeripheralConnection, FakeAccess> {
         val peer = FakeAccess()
         val connection = UsbPeripheralConnection(peer)
