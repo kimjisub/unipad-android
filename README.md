@@ -25,7 +25,7 @@ UniPad is a performance-based rhythm game that enables connection with a launchp
 To run this project locally, you need to have the following software installed on your computer:
 
 1. Android Studio (latest version)
-2. Android SDK (API 29-35, Android 10+)
+2. Android SDK Platform 37 (the app runs on Android 7.0, API 24, and newer)
 3. Git (for cloning the repository)
 4. Java Development Kit (JDK) - Android Studio's bundled JDK is recommended
 

@@ -152,7 +152,7 @@ On first run, Gradle will download system images for each API level. This may ta
 **Tips:**
 - Use `allApisDebugAndroidTest` for comprehensive testing before releases
 - Use `minAndMaxDebugAndroidTest` for faster CI/CD pipelines
-- Use specific device tasks (e.g., `pixel2Api21DebugAndroidTest`) when debugging API-specific issues
+- Use specific device tasks (e.g., `pixel2Api29DebugAndroidTest`) when debugging API-specific issues
 - System images are cached in `$ANDROID_HOME/system-images/`
 
 #### Manual AVD Creation (Optional)
@@ -179,25 +179,20 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 # List available system images
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list | grep system-images
 
-# Install system images
-"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-21;google_apis;x86_64"
+# Install system images (any API from 24, the app's minSdk, up to 37 works;
+# use arm64-v8a instead of x86_64 on Apple silicon)
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-29;google_apis;x86_64"
-"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-34;google_apis;x86_64"
+"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-35;google_apis;x86_64"
 
 # Create AVDs
-"$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
-  --name "Pixel_2_API_21" \
-  --package "system-images;android-21;google_apis;x86_64" \
-  --device "pixel_2"
-
 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
   --name "Pixel_2_API_29" \
   --package "system-images;android-29;google_apis;x86_64" \
   --device "pixel_2"
 
 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
-  --name "Pixel_2_API_34" \
-  --package "system-images;android-34;google_apis;x86_64" \
+  --name "Pixel_2_API_35" \
+  --package "system-images;android-35;google_apis;x86_64" \
   --device "pixel_2"
 
 # List created AVDs
@@ -208,7 +203,7 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 
 ```bash
 # Start emulator in background
-"$ANDROID_HOME/emulator/emulator" -avd Pixel_2_API_21 -no-snapshot-load &
+"$ANDROID_HOME/emulator/emulator" -avd Pixel_2_API_29 -no-snapshot-load &
 
 # Wait for device to boot (check with adb)
 "$ANDROID_HOME/platform-tools/adb" wait-for-device

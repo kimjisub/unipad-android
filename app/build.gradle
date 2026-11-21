@@ -166,7 +166,7 @@ android {
 		// Managed Devices for multi-API testing
 		managedDevices {
 			localDevices {
-				// API 29 (Android 10) - minSdk, Scoped Storage baseline
+				// API 29 (Android 10) - Scoped Storage baseline (minSdk is 24)
 				pixel2Api29 {
 					device = "Pixel 2"
 					apiLevel = 29
@@ -178,7 +178,7 @@ android {
 					apiLevel = 33
 					systemImageSource = "google"
 				}
-				// API 35 (Android 15) - targetSdk (latest)
+				// API 35 (Android 15) - newest managed image (targetSdk is 37)
 				pixel2Api35 {
 					device = "Pixel 2"
 					apiLevel = 35
