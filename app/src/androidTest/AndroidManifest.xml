@@ -3,6 +3,18 @@
     <queries>
         <package android:name="com.kimjisub.launchpad.dev" />
     </queries>
+    <application>
+        <service
+            android:name="com.kimjisub.launchpad.midi.PeripheralMidiPeer"
+            android:process=":peripheral_peer"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.midi.MidiDeviceService" />
+            </intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/peripheral_midi_peer" />
+        </service>
+    </application>
     <!-- Gradle applies its runner overrides to the first instrumentation element. -->
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"

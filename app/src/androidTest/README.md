@@ -41,6 +41,12 @@ A completed screen recorder remains an unverified corpus case; it is not a confo
 
 `SafMigrationDeletionDeviceTest` runs the three file-source move routes on internal and app-specific external storage, including moves from internal to external storage. It checks source removal, copied pack contents, and preservation of a linked sibling pack where the filesystem supports symbolic links. It also moves packs from a backup folder into the app's storage, checking that a backup with a folder that cannot be read fails and stays in place. It uses file-backed `DocumentFile` destinations, so system document-provider permission handling is outside this check.
 
+`UsbPeripheralPortsTest` opens real Android MIDI ports against `PeripheralMidiPeer`, a service
+in a separate process of the test APK. It checks byte-stream round trips, exclusive input-port
+occupancy, a missing light port, cancellation before a delayed open callback, peer process death,
+and final releases. The production endpoint filter rejects this virtual service. These checks do
+not establish USB peripheral support, desktop compatibility, or USB cable latency.
+
 ## Run on an API 35 emulator
 
 Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using

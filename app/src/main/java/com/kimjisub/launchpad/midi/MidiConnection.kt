@@ -140,7 +140,7 @@ object MidiConnection {
 	// (USB connection, endpoints, driver instance, send/receive loops, MIDI
 	// API state). One instance per physically connected Launchpad-like device.
 	// ---------------------------------------------------------------------
-	private class DeviceSession(val usbDevice: UsbDevice) {
+	private class DeviceSession(val usbDevice: UsbDevice, val ownership: MidiModeOwnership.Lease) {
 		val rawMidi = isOriginalLaunchpad(usbDevice)
 		var usbInterface: UsbInterface? = null
 		var usbEndpointIn: UsbEndpoint? = null
@@ -579,10 +579,16 @@ object MidiConnection {
 	}
 
 	private fun initDevice(device: UsbDevice?) {
-		if (device == null) {
-			Log.midiDetail("USB 에러 : device == null")
-			return
+		if (device == null) return
+		val ownership = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_HOST) ?: return
+		try {
+			initOwnedDevice(device, ownership)
+		} finally {
+			if (sessions[device.deviceId]?.ownership !== ownership) ownership.close()
 		}
+	}
+
+	private fun initOwnedDevice(device: UsbDevice, ownership: MidiModeOwnership.Lease) {
 		if (!dualPadModeEnabled && sessions.isNotEmpty()) {
 			// Single-pad mode: a new attach replaces whatever is connected, as on main.
 			for (old in sessions.values.toList()) teardownSession(old, notify = true)
@@ -593,7 +599,7 @@ object MidiConnection {
 			return
 		}
 
-		val session = DeviceSession(device)
+		val session = DeviceSession(device, ownership)
 		var interfaceNum = 0
 
 		try {
@@ -1117,6 +1123,7 @@ object MidiConnection {
 
 		session.isRun = false
 		sessions.remove(session.usbDevice.deviceId)
+		session.ownership.close()
 
 		if (notify) {
 			session.driver.onDisconnected()
@@ -1176,24 +1183,41 @@ object MidiConnection {
 		deviceDriver: DriverRef,
 		output: DriverRef.OnSendSignalListener,
 	): AutoCloseable {
-		check(sessions.isEmpty() && connectedDevice == null) { "A device is already connected" }
+		val ownership = checkNotNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.VIRTUAL)) {
+			"A MIDI mode is already connected"
+		}
 		val previous = driver
-		driver = deviceDriver
-		setDriverListener(deviceDriver, sendListener = output)
-		deviceDriver.initialize()
-		publishConnectedDevice(name)
-		deviceDriver.onConnected()
-		listener?.onConnectedListener()
-		connectedDevice?.let { connectionObserver?.onConnected(it) }
+		try {
+			check(sessions.isEmpty() && connectedDevice == null) { "A device is already connected" }
+			driver = deviceDriver
+			setDriverListener(deviceDriver, sendListener = output)
+			deviceDriver.initialize()
+			publishConnectedDevice(name)
+			deviceDriver.onConnected()
+			listener?.onConnectedListener()
+			connectedDevice?.let { connectionObserver?.onConnected(it) }
+		} catch (error: Exception) {
+			try {
+				deviceDriver.setOnGetSignalListener(null)
+				deviceDriver.setOnSendSignalListener(null)
+				deviceDriver.setOnCycleListener(null)
+				if (driver === deviceDriver) { driver = previous; connectedDevice = null }
+			} finally { ownership.close() }
+			throw error
+		}
 		return AutoCloseable {
-			if (driver === deviceDriver) {
-				driver = previous
-				connectedDevice = null
-				connectionObserver?.onDisconnected()
+			try {
+				if (driver === deviceDriver) {
+					driver = previous
+					connectedDevice = null
+					connectionObserver?.onDisconnected()
+				}
+			} finally {
+				deviceDriver.setOnGetSignalListener(null)
+				deviceDriver.setOnSendSignalListener(null)
+				deviceDriver.setOnCycleListener(null)
+				ownership.close()
 			}
-			deviceDriver.setOnGetSignalListener(null)
-			deviceDriver.setOnSendSignalListener(null)
-			deviceDriver.setOnCycleListener(null)
 		}
 	}
 
