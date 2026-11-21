@@ -22,6 +22,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
@@ -165,6 +166,46 @@ class MidiSelectScreenTest {
             button(R.string.midi_help_firmware_link).performScrollTo().assertIsDisplayed()
             capture("detected-firmware-help-ko")
         } finally { compose.runOnIdle { transport?.close() } }
+    }
+
+    @Test fun browserReturnKeepsTheExpandedHelp() {
+        val page = "https://unipad.io/docs/guide#custom-firmware"
+        val appPackage = compose.activity.packageName
+        val browsers = device.executeShellCommand("cmd package query-activities --brief -a android.intent.action.VIEW -d $page")
+            .lines().map { it.trim().substringBefore('/') }
+            .filter { it.contains('.') && !it.contains(' ') }.distinct()
+        assertTrue("The emulator must have a browser", browsers.isNotEmpty())
+        fun resumed(packages: List<String>) = device.executeShellCommand("dumpsys activity activities")
+            .lineSequence().filter { it.contains("topResumedActivity=") || it.contains("mResumedActivity:") }
+            .any { line -> packages.any { line.contains(" $it/") } }
+        fun awaitResumed(packages: List<String>): Boolean {
+            val end = System.nanoTime() + 20_000_000_000L
+            while (System.nanoTime() < end) {
+                if (resumed(packages)) return true
+                Thread.sleep(100)
+            }
+            return false
+        }
+        try {
+            browsers.forEach { device.executeShellCommand("am force-stop $it") }
+            button(R.string.midi_help_title).performClick()
+            button(R.string.midi_help_firmware).performScrollTo().performClick()
+            button(R.string.midi_help_firmware_link).performScrollTo().assertIsDisplayed()
+            // A device click avoids waiting for Compose frames in the background activity.
+            device.findObject(By.text(str(R.string.midi_help_firmware_link))).click()
+            assertTrue("The guide did not open in a browser", awaitResumed(browsers))
+            repeat(4) {
+                if (!resumed(listOf(appPackage))) {
+                    device.pressBack()
+                    device.wait(Until.hasObject(By.pkg(appPackage)), 2000)
+                }
+            }
+            assertTrue("Back did not return to UniPad", awaitResumed(listOf(appPackage)))
+            button(R.string.midi_help_firmware_link).assertIsDisplayed()
+            capture("browser-return-en")
+        } finally {
+            browsers.forEach { device.executeShellCommand("am force-stop $it") }
+        }
     }
 
     @Test fun failedGuideLaunchKeepsTheExpandedHelp() {
