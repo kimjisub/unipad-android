@@ -124,30 +124,33 @@ internal class VirtualMidiConnection(
 		} catch (_: Exception) {
 			withContext(main) { if (attempt === current) stop(State.Failed(failure)) }
 		} finally {
-			withContext(NonCancellable + main) {
-				current.receiving.set(false)
-				current.timer?.cancel()
-				// Discard old animation writes before detaching queues the driver's all-off messages.
-				while (current.outgoing.tryReceive().isSuccess) { }
-				closeSafely(current.attachment)
-				current.attachment = null
-			}
-			withContext(NonCancellable + io) {
-				current.outgoing.close()
-				withTimeoutOrNull(1_000) { current.writer?.join() }
-				closeSafely(current.watch)
-				closeSafely(input)
-				closeSafely(current.light)
-				closeSafely(device)
-				current.incoming.cancel()
-				current.outgoing.cancel()
-				current.writer?.cancel()
-			}
-			withContext(NonCancellable + main) {
-				current.lease.close()
-				if (attempt === current) {
-					attempt = null
-					publish(if (state is State.Connected || state == State.Connecting) State.Failed(Failure.DISCONNECTED) else state)
+			// Keep cancellation masked across dispatcher returns, until every resource is released.
+			withContext(NonCancellable) {
+				withContext(main) {
+					current.receiving.set(false)
+					current.timer?.cancel()
+					// Discard old animation writes before detaching queues the driver's all-off messages.
+					while (current.outgoing.tryReceive().isSuccess) { }
+					closeSafely(current.attachment)
+					current.attachment = null
+				}
+				withContext(io) {
+					current.outgoing.close()
+					withTimeoutOrNull(1_000) { current.writer?.join() }
+					closeSafely(current.watch)
+					closeSafely(input)
+					closeSafely(current.light)
+					closeSafely(device)
+					current.incoming.cancel()
+					current.outgoing.cancel()
+					current.writer?.cancel()
+				}
+				withContext(main) {
+					current.lease.close()
+					if (attempt === current) {
+						attempt = null
+						publish(if (state is State.Connected || state == State.Connecting) State.Failed(Failure.DISCONNECTED) else state)
+					}
 				}
 			}
 		}
