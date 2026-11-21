@@ -1,0 +1,18 @@
+UniPad is a rhythm game played on a Launchpad-style pad grid. Each song is a UniPack: a pack of sounds, LED lights and, in many packs, an autoplay track.
+
+Get packs
+- Download packs from the Store inside the app (more than 70 packs; needs an internet connection).
+- Import a UniPack .zip file you already have (Import downloaded packs).
+- UniPacks are made outside the app by the community. UniPad plays them; it does not create them.
+
+Practice
+- Autoplay plays the whole song with its lights.
+- Guide plays the song and marks the pads to press.
+- Step waits until you press the marked pads.
+Practice modes work with packs that include an autoplay track.
+
+Play your way
+- No Launchpad? Just tap the pads on screen.
+- Connect a Launchpad or another MIDI controller with a USB cable. Your phone may need an adapter for its port. Common Launchpad models are detected automatically; otherwise choose your model in the app. We have not tested every phone, cable and controller.
+- Change the look with themes.
+- Once a pack is on your phone, you can play it without an internet connection.

@@ -1,1 +1,1 @@
-Toca ritmos con UniPad.
+Toca canciones UniPack en una cuadrícula de pads: en pantalla o con Launchpad.

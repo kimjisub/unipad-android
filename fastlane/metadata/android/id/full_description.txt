@@ -1,8 +1,18 @@
-UniPad adalah game ritme jenis baru berbasis Launchpad: tekan tombolnya untuk memainkan lagu.
+UniPad adalah game ritme yang dimainkan di kisi pad bergaya Launchpad. Setiap lagu adalah UniPack: paket berisi suara, lampu LED, dan pada banyak paket, rekaman Putar Otomatis.
 
-Fitur utama
-- Nikmati beragam konten dengan lebih dari 40 lagu dasar.
-- Buat file proyek (UniPack) sendiri dan mainkan di aplikasi.
-- Dilengkapi fitur Putar Otomatis dan fitur yang membantu Anda berlatih.
-- Ubah tampilan UniPad dengan tema.
-- Hubungkan Launchpad dan perangkat MIDI ke aplikasi.
+Dapatkan paket
+- Unduh paket dari Toko di dalam aplikasi (lebih dari 70 paket; perlu koneksi internet).
+- Impor file UniPack .zip yang sudah Anda miliki (Impor pack yang diunduh).
+- UniPack dibuat oleh komunitas di luar aplikasi. UniPad memainkannya; aplikasi ini tidak membuat paket.
+
+Berlatih
+- Putar Otomatis memainkan seluruh lagu beserta lampunya.
+- Panduan memainkan lagu dan menandai pad yang harus ditekan.
+- Langkah menunggu sampai Anda menekan pad yang ditandai.
+Mode latihan berfungsi pada paket yang memiliki rekaman Putar Otomatis.
+
+Main dengan cara Anda
+- Tidak punya Launchpad? Cukup ketuk pad di layar.
+- Sambungkan Launchpad atau pengontrol MIDI lain dengan kabel USB. Ponsel Anda mungkin memerlukan adaptor untuk port-nya. Model Launchpad yang umum dikenali otomatis; jika tidak, pilih model Anda di aplikasi. Kami belum menguji semua ponsel, kabel, dan pengontrol.
+- Ubah tampilan dengan tema.
+- Setelah paket ada di ponsel Anda, Anda bisa memainkannya tanpa koneksi internet.
