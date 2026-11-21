@@ -178,7 +178,7 @@ android {
 					apiLevel = 33
 					systemImageSource = "google"
 				}
-				// API 35 (Android 15) - newest managed image (targetSdk is 37)
+				// API 35 (Android 15) - highest API level tested here (targetSdk is 37)
 				pixel2Api35 {
 					device = "Pixel 2"
 					apiLevel = 35
@@ -186,13 +186,13 @@ android {
 				}
 			}
 			groups {
-				// All supported API levels
+				// All configured devices
 				allApis {
 					targetDevices.add(localDevices.pixel2Api29)
 					targetDevices.add(localDevices.pixel2Api33)
 					targetDevices.add(localDevices.pixel2Api35)
 				}
-				// Minimum and maximum only (fastest)
+				// Lowest and highest configured API levels only (fastest)
 				minAndMax {
 					targetDevices.add(localDevices.pixel2Api29)
 					targetDevices.add(localDevices.pixel2Api35)

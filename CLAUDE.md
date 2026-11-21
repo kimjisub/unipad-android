@@ -112,12 +112,12 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 **Configured Test Devices:**
 - `pixel2Api29` - Android 10 (API 29) - Scoped Storage baseline (minSdk is 24)
 - `pixel2Api33` - Android 13 (API 33) - Notification Runtime Permission
-- `pixel2Api35` - Android 15 (API 35) - Latest managed image (targetSdk is 37; no managed image for it yet)
+- `pixel2Api35` - Android 15 (API 35) - Highest API level this project tests on (targetSdk is 37)
 
 **Why These API Levels?**
 - **API 29**: Scoped Storage introduced (minSdk is 24, but nothing below 29 is worth an emulator slot)
 - **API 33**: Notification runtime permission required
-- **API 35**: Newest system image available to Gradle Managed Devices; targetSdk itself is 37
+- **API 35**: Highest API level this project tests on; targetSdk itself is 37, and no device is configured for 36 or 37 yet
 
 **Running Multi-API Tests:**
 
@@ -127,10 +127,10 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 ./gradlew pixel2Api33DebugAndroidTest
 ./gradlew pixel2Api35DebugAndroidTest
 
-# Test on all supported API levels (3 devices, ~15-20 min)
+# Test on all configured devices (3 devices, ~15-20 min)
 ./gradlew allApisDebugAndroidTest
 
-# Test on minimum and maximum only (fastest, ~8-12 min)
+# Test on the lowest and highest configured API levels only (29 and 35; fastest, ~8-12 min)
 ./gradlew minAndMaxDebugAndroidTest
 ```
 
@@ -179,7 +179,8 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 # List available system images
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list | grep system-images
 
-# Install system images (any API from 24, the app's minSdk, up to 37 works;
+# Install system images (any API from 24, the app's minSdk, to 36 has an image in this form;
+# API 37 images are named differently, e.g. "system-images;android-37.0;google_apis_ps16k;arm64-v8a";
 # use arm64-v8a instead of x86_64 on Apple silicon)
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-29;google_apis;x86_64"
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-35;google_apis;x86_64"
