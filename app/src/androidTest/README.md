@@ -32,6 +32,17 @@ so no other test reports are queued. The test's default path checks that automat
 The real Store list and one real download are checked on the release candidate instead, by
 `scripts/release_store_check.py`.
 
+`AudioOutputInterruptionTest` delivers `ACTION_AUDIO_BECOMING_NOISY` directly to the play
+screen's receiver on the main thread; Android protects this system broadcast from app/shell
+senders. It checks autoplay suspension and progress, stopping one-shot/finite/infinite sound
+requests, no restart on connection or focus return, new hand input, explicit resume on the
+speaker, unrelated actions, duplicate delivery, denied audio focus and delivery after `onStop`.
+It also injects a failed output reopen overlapping the interruption: reconnecting cannot revive
+the song, and a fresh request rejected by the failed engine is not counted as a sounding voice.
+Its recording engine observes requests, not actual audio routing, physical headphones, Bluetooth,
+USB audio, audible silence or the delay before sound stops. Device-to-device route changes are
+left to Android's speaker-fallback notification rather than inferred from available devices.
+
 For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
