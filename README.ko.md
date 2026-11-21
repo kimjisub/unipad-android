@@ -76,9 +76,11 @@ keyPassword=yourKeyPassword
 
 ## 테스트
 
-환경 설정, 테스트 실행, 여러 API 레벨 테스트, 문제 해결을 포함한 종합 테스트 문서:
+아래 문서는 영어로 작성되어 있습니다.
 
-**📖 [테스트 가이드](docs/TESTING.ko.md)**
+- [테스트 실행](CLAUDE.md#testing): 단위 테스트, 기기·에뮬레이터 UI 테스트, 여러 API 레벨 테스트
+- [기기 테스트 목록](app/src/androidTest/README.md): UI 테스트 클래스와 시나리오, 전체 실행 명령
+- [풀 리퀘스트 검사](.github/PULL_REQUEST_CHECKS.md): 모든 풀 리퀘스트가 통과해야 하는 검사와 로컬 실행 방법
 
 ## 프로젝트 구조
 
@@ -102,7 +104,7 @@ keyPassword=yourKeyPassword
 
 ## 라이선스
 
-이 프로젝트는 [GNU Lesser General Public License v2.1](LICENSE.md) 라이선스를 따릅니다. 자세한 내용은 `LICENSE.md` 파일을 참조하세요.
+이 프로젝트는 [GNU Lesser General Public License v2.1](LICENSE) 라이선스를 따릅니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
 
 ## 감사의 글
 
