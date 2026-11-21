@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<devices>
+    <device manufacturer="Test provider" product="Mystrix test" name="Virtual MIDI fixture">
+        <input-port name="Lights zero" />
+        <input-port name="Lights one" />
+        <output-port name="Pads zero" />
+        <output-port name="Pads one" />
+    </device>
+</devices>

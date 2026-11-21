@@ -331,6 +331,29 @@ class MidiConnectionLifecycleTest {
 		assertNoCrash()
 	}
 
+
+	@Test fun usbAttachCannotOpenWhileAVirtualConnectionIsPending() {
+		val lease = requireNotNull(MidiConnection.transportGate.acquireVirtual())
+		try {
+			val (device, _) = launchpad(deviceId = 1)
+			attach(device)
+			verify(exactly = 0) { usbManager.openDevice(any()) }
+		} finally { lease.close() }
+	}
+
+	@Test fun pendingUsbMidiInitializationPreventsVirtualOpen() {
+		val (device, connection) = launchpad(deviceId = 1)
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo(device))
+		val callback = slot<MidiManager.OnDeviceOpenedListener>()
+		every { midiManager.openDevice(any(), capture(callback), any()) } returns Unit
+		attach(device)
+		org.junit.Assert.assertNull(MidiConnection.transportGate.acquireVirtual())
+		callback.captured.onDeviceOpened(null)
+		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertNoCrash()
+		MidiConnection.transportGate.acquireVirtual()!!.close()
+	}
+
 	private fun recordDrivers(): List<DriverRef> {
 		val drivers = Collections.synchronizedList(mutableListOf<DriverRef>())
 		val listener = mockk<MidiConnection.Listener>(relaxed = true)

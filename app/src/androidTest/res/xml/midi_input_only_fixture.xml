@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<devices>
+    <device manufacturer="Test provider" product="Matrix input only" name="Input-only MIDI fixture">
+        <output-port name="Pads" />
+    </device>
+</devices>
