@@ -322,6 +322,43 @@ class VirtualMidiConnectionTest {
 		assertEquals(listOf(VirtualMidiConnection.State.Connecting, VirtualMidiConnection.State.Connected(true), VirtualMidiConnection.State.Idle), states)
 	}
 
+	@Test fun terminalObserversCanReconnectAfterEveryTeardownPath() = runTest {
+		for (ending in listOf("disconnect", "cancel", "timeout", "input failure", "peer exit", "overflow")) {
+			val dispatcher = StandardTestDispatcher(testScheduler)
+			val device = Device().apply { inputBusy = ending == "input failure" }
+			val backend = Backend()
+			if (ending != "timeout" && ending != "cancel") backend.opened.complete(device)
+			val gate = MidiTransportGate()
+			var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+			val terminalReadiness = mutableListOf<Boolean>()
+			val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,output ->
+				sender = output
+				AutoCloseable { }
+			}
+			connection.onStateChanged = { state ->
+				if (state == VirtualMidiConnection.State.Idle || state is VirtualMidiConnection.State.Failed) {
+					terminalReadiness.add(connection.canConnect)
+					assertNull("$ending must remove the device watcher before notifying", backend.removed)
+					assertNotNull("$ending must release the transport before notifying", gate.acquireUsb()?.also { it.close() })
+				}
+			}
+			assertTrue(connection.connect(selection, Matrix()))
+			runCurrent()
+			when (ending) {
+				"disconnect", "cancel" -> connection.disconnect()
+				"timeout" -> advanceTimeBy(10_000)
+				"peer exit" -> backend.removed!!(descriptor.id)
+				"overflow" -> repeat(258) { sender!!.onSend(9, 0x91.toByte(), 36, 127) }
+			}
+			runCurrent()
+			assertEquals("$ending must notify exactly once, ready to reconnect", listOf(true), terminalReadiness)
+			connection.onStateChanged = null
+			assertTrue("$ending must allow reconnection", connection.connect(selection, Matrix()))
+			connection.disconnect()
+			runCurrent()
+		}
+	}
+
 	private companion object {
 		val descriptor = VirtualMidiDevice(7, "Matrix", "Mystrix", "test.provider", listOf(VirtualMidiPort(1,"Pads")), listOf(VirtualMidiPort(0,"Lights")))
 		val selection = VirtualMidiSelection(descriptor, 1, 0)
