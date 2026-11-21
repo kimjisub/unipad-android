@@ -112,12 +112,14 @@ The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Device
 **Configured Test Devices:**
 - `pixel2Api29` - Android 10 (API 29) - Scoped Storage baseline (minSdk is 24)
 - `pixel2Api33` - Android 13 (API 33) - Notification Runtime Permission
-- `pixel2Api35` - Android 15 (API 35) - Highest API level this project tests on (targetSdk is 37)
+- `pixel2Api35` - Android 15 (API 35) - Highest Gradle Managed Device configured here (targetSdk is 37)
 
 **Why These API Levels?**
-- **API 29**: Scoped Storage introduced (minSdk is 24, but nothing below 29 is worth an emulator slot)
+- **API 29**: Scoped Storage introduced (minSdk is 24; no managed device is configured below 29)
 - **API 33**: Notification runtime permission required
-- **API 35**: Highest API level this project tests on; targetSdk itself is 37, and no device is configured for 36 or 37 yet
+- **API 35**: Highest Gradle Managed Device configured here; targetSdk itself is 37, and no managed device is configured for 36 or 37 yet
+
+The managed devices are not the only test targets: other API levels, including 24–28 and 37, are tested on emulators you create yourself (see [Manual AVD Creation](#manual-avd-creation-optional)) with `ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh`.
 
 **Running Multi-API Tests:**
 
@@ -185,7 +187,7 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-29;google_apis;x86_64"
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-35;google_apis;x86_64"
 
-# Create AVDs
+# Create AVDs (use the same image name you installed above, e.g. arm64-v8a on Apple silicon)
 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
   --name "Pixel_2_API_29" \
   --package "system-images;android-29;google_apis;x86_64" \

@@ -178,7 +178,7 @@ android {
 					apiLevel = 33
 					systemImageSource = "google"
 				}
-				// API 35 (Android 15) - highest API level tested here (targetSdk is 37)
+				// API 35 (Android 15) - highest managed device configured here (targetSdk is 37)
 				pixel2Api35 {
 					device = "Pixel 2"
 					apiLevel = 35
