@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.activity
 
+import android.hardware.usb.UsbManager
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -9,8 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,12 +27,12 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,12 +51,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection
+import com.kimjisub.launchpad.midi.MidiConnectionStatus
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
@@ -65,13 +76,17 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
+import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import kotlin.reflect.KClass
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MidiSelectActivity : BaseActivity() {
 
-	private val isConnected = mutableStateOf(false)
+	private val usbManager by lazy { getSystemService(USB_SERVICE) as? UsbManager }
+	private val status = mutableStateOf(MidiConnectionStatus())
 	private val selectedIndex = mutableIntStateOf(0)
 	private val dualPadModeEnabled = mutableStateOf(false)
 	private val reflectedModeEnabled = mutableStateOf(false)
@@ -86,10 +101,20 @@ class MidiSelectActivity : BaseActivity() {
 			?.getInt("selectedSessionId")
 		readConnectionState()
 
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				while (true) {
+					readConnectionState()
+					delay(250)
+				}
+			}
+		}
 		setContent {
 			UniPadTheme {
 				MidiSelectScreen(
-					isConnected = isConnected.value,
+					status = status.value,
+					onAllow = { MidiConnection.requestUsbPermission(this, status.value.sessionId) },
+					onBrowse = { browse(it) },
 					selectedIndex = selectedIndex.intValue,
 					dualPadModeEnabled = dualPadModeEnabled.value,
 					reflectedModeEnabled = reflectedModeEnabled.value,
@@ -99,6 +124,7 @@ class MidiSelectActivity : BaseActivity() {
 					onSessionTargetSelect = { sessionId ->
 						selectedSessionId.value = sessionId
 						updateSelectedIndexForTarget()
+						status.value = MidiConnection.connectionStatus(sessionId, usbManager)
 					},
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
@@ -131,6 +157,7 @@ class MidiSelectActivity : BaseActivity() {
 		}
 	}
 
+
 	override fun onSaveInstanceState(outState: Bundle) {
 		selectedSessionId.value?.let { outState.putInt("selectedSessionId", it) }
 		super.onSaveInstanceState(outState)
@@ -142,11 +169,13 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	// Mirrors MidiConnection into the screen state without connecting or applying a driver.
-	// Keeps the targeted pad while it stays connected, otherwise targets the primary pad.
+	// Keep a detached target visible until a replacement connects or another device is chosen.
 	private fun readConnectionState() {
-		isConnected.value = MidiConnection.connectedDevice != null
 		connectedSessions.value = MidiConnection.connectedSessions
-		if (connectedSessions.value.none { it.sessionId == selectedSessionId.value }) {
+		val previousStatus = MidiConnection.connectionStatus(selectedSessionId.value, usbManager)
+		val keepDetachedTarget = selectedSessionId.value != null && previousStatus.sessionId == selectedSessionId.value &&
+			previousStatus.phase == MidiConnectionStatus.Phase.DISCONNECTED
+		if (!keepDetachedTarget && connectedSessions.value.none { it.sessionId == selectedSessionId.value }) {
 			selectedSessionId.value = connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
 				?: connectedSessions.value.firstOrNull()?.sessionId
 		}
@@ -154,6 +183,7 @@ class MidiSelectActivity : BaseActivity() {
 		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
 		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
 		updateSelectedIndexForTarget()
+		status.value = MidiConnection.connectionStatus(selectedSessionId.value, usbManager)
 	}
 
 	private fun updateSelectedIndexForTarget() {
@@ -204,7 +234,9 @@ private val midiDevices = listOf(
 
 @Composable
 private fun MidiSelectScreen(
-	isConnected: Boolean,
+	status: MidiConnectionStatus,
+	onAllow: () -> Unit,
+	onBrowse: (String) -> Unit,
 	selectedIndex: Int,
 	dualPadModeEnabled: Boolean,
 	reflectedModeEnabled: Boolean,
@@ -218,6 +250,15 @@ private fun MidiSelectScreen(
 	onReflectedSwapSidesChange: (Boolean) -> Unit,
 	onClose: () -> Unit,
 ) {
+	var helpOpen by rememberSaveable { mutableStateOf(false) }
+	var expandedQuestion by rememberSaveable { mutableIntStateOf(0) }
+	val expandedDescription = stringResource(R.string.midi_help_expanded)
+	val collapsedDescription = stringResource(R.string.midi_help_collapsed)
+	val toggleHelp = {
+		if (!helpOpen) expandedQuestion = status.initialHelp
+		helpOpen = !helpOpen
+	}
+	BackHandler(enabled = helpOpen) { helpOpen = false }
 	// Keep the confirmation button and final device row above the navigation bar.
 	val barsAndCutout = WindowInsets.barsAndCutout
 	val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
@@ -225,7 +266,8 @@ private fun MidiSelectScreen(
 		modifier = Modifier
 			.fillMaxSize()
 			.background(MaterialTheme.colorScheme.background)
-			.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
+			.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal))
+			.semantics { isTraversalGroup = true },
 	) {
 		// Left panel (~35%) - Selected device preview
 		Column(
@@ -237,21 +279,20 @@ private fun MidiSelectScreen(
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			Column(
-				modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+				modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+					.semantics { isTraversalGroup = false },
 				horizontalAlignment = Alignment.CenterHorizontally,
 			) {
 
-				Text(
-					text = if (isConnected)
-						stringResource(R.string.launchpadConnecting)
-					else
-						stringResource(R.string.midiDevicesNotDetected),
-					color = if (isConnected)
-						MaterialTheme.colorScheme.onBackground
-					else
-						MaterialTheme.colorScheme.error,
-					style = MaterialTheme.typography.titleSmall,
-				)
+				MidiStatusPanel(status, onAllow)
+				androidx.compose.material3.TextButton(
+					onClick = toggleHelp,
+					modifier = Modifier.semantics {
+						traversalIndex = 1f
+						stateDescription = if (helpOpen) expandedDescription else collapsedDescription
+					},
+				) { Text(stringResource(R.string.midi_help_title), color = Color(0xFFFFA726)) }
+
 
 				// With two pads connected, picking a model below needs to know which
 				// physical device it applies to - pick that here first.
@@ -301,11 +342,12 @@ private fun MidiSelectScreen(
 				) { index ->
 					val device = midiDevices[index]
 					Column(
+						modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 3f },
 						horizontalAlignment = Alignment.CenterHorizontally,
 					) {
 						Image(
 							painter = painterResource(device.iconResId),
-							contentDescription = stringResource(device.nameResId),
+							contentDescription = null,
 							modifier = Modifier.size(120.dp),
 						)
 						Spacer(modifier = Modifier.height(8.dp))
@@ -318,6 +360,12 @@ private fun MidiSelectScreen(
 					}
 				}
 
+				if (status.connected) Text(
+					stringResource(if (status.manuallyChosen) R.string.midi_source_manual else R.string.midi_source_auto),
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onBackground,
+					modifier = Modifier.semantics { traversalIndex = 3.1f },
+				)
 				Spacer(modifier = Modifier.height(16.dp))
 
 				HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
@@ -328,7 +376,7 @@ private fun MidiSelectScreen(
 				// Off: only the first device found connects (original single-pad behavior).
 				// On: a second device connecting is accepted as a mirrored session.
 				Row(
-					modifier = Modifier.fillMaxWidth(),
+					modifier = Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 4f },
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically,
 				) {
@@ -349,7 +397,7 @@ private fun MidiSelectScreen(
 				// Only meaningful once a second pad is connected via Dual Pad Mode - flips
 				// the second pad's grid left-right instead of duplicating it.
 				Row(
-					modifier = Modifier.fillMaxWidth(),
+					modifier = Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 4f },
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically,
 				) {
@@ -373,7 +421,7 @@ private fun MidiSelectScreen(
 				// may not match physical left/right - use this to correct it if the
 				// mirror feels backwards.
 				Row(
-					modifier = Modifier.fillMaxWidth(),
+					modifier = Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 4f },
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically,
 				) {
@@ -398,7 +446,7 @@ private fun MidiSelectScreen(
 
 			Button(
 				onClick = { onClose() },
-				modifier = Modifier.fillMaxWidth(),
+				modifier = Modifier.fillMaxWidth().semantics { traversalIndex = 5f },
 			) {
 				Text(text = stringResource(android.R.string.ok))
 			}
@@ -411,11 +459,15 @@ private fun MidiSelectScreen(
 				.fillMaxHeight()
 				.padding(16.dp),
 		) {
+			if (helpOpen) {
+				MidiConnectionHelp(expandedQuestion, { expandedQuestion = if (expandedQuestion == it) -1 else it },
+					{ helpOpen = false }, onBrowse)
+			} else {
 			val minCardWidth = 112.dp * LocalDensity.current.fontScale
 			val columns = ((maxWidth + 12.dp) / (minCardWidth + 12.dp)).toInt().coerceIn(1, 4)
 			LazyVerticalGrid(
 				columns = GridCells.Fixed(columns),
-				modifier = Modifier.fillMaxSize(),
+				modifier = Modifier.fillMaxSize().semantics { isTraversalGroup = true; traversalIndex = 6f },
 				horizontalArrangement = Arrangement.spacedBy(12.dp),
 				verticalArrangement = Arrangement.spacedBy(12.dp),
 				contentPadding = PaddingValues(
@@ -430,6 +482,7 @@ private fun MidiSelectScreen(
 						onClick = { onDeviceSelect(index) },
 					)
 				}
+			}
 			}
 		}
 	}
@@ -462,7 +515,7 @@ private fun DeviceCard(
 	) {
 		Image(
 			painter = painterResource(device.iconResId),
-			contentDescription = stringResource(device.nameResId),
+			contentDescription = null,
 			modifier = Modifier.size(48.dp),
 		)
 		Spacer(modifier = Modifier.height(6.dp))
@@ -472,8 +525,6 @@ private fun DeviceCard(
 			fontSize = 11.sp,
 			textAlign = TextAlign.Center,
 			minLines = 2,
-			maxLines = 2,
-			overflow = TextOverflow.Ellipsis,
 		)
 	}
 }

@@ -32,6 +32,8 @@ import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
 import com.kimjisub.launchpad.midi.driver.Noting
 import com.kimjisub.launchpad.tool.Log
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -45,8 +47,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 
 
 object MidiConnection {
@@ -167,6 +167,11 @@ object MidiConnection {
 		@Volatile var isRun = false
 
 		var name: String = "Unknown"
+		var announcedName: String = "Unknown"
+		var manuallyChosen = false
+		var detectedFirmware: String? = null
+		var modelUnknown = false
+		val inputObservation = MidiInputObservation(SystemClock.elapsedRealtime())
 	}
 
 	// Keyed by UsbDevice.deviceId (stable while the device stays attached).
@@ -174,6 +179,48 @@ object MidiConnection {
 	// disconnect cleanup) but iterated by onSendSignal/onSendRaw, which can run off-main
 	// (e.g. LED animation loops) - a plain map here caused ConcurrentModificationException.
 	private val sessions = ConcurrentHashMap<Int, DeviceSession>()
+	private var lastDisconnected = MidiConnectionStatus()
+	private data class TransportObservation(val status: MidiConnectionStatus, val input: MidiInputObservation)
+	private var transportObservation: TransportObservation? = null
+	private const val TRANSPORT_SESSION_ID = Int.MIN_VALUE
+
+	/** A snapshot for the chosen device, including permission waiting and a recent detach. */
+	fun connectionStatus(sessionId: Int? = null, permissionManager: UsbManager? = usbManager): MidiConnectionStatus {
+		val target = (sessionId ?: primarySessionId)?.let { sessions[it] }
+		if (target != null) return MidiConnectionStatus(
+			target.usbDevice.deviceId, target.announcedName,
+			target.inputObservation.phase(SystemClock.elapsedRealtime()), target.manuallyChosen,
+			target.detectedFirmware, target.modelUnknown,
+		)
+		transportObservation?.let { return it.status.copy(phase = it.input.phase(SystemClock.elapsedRealtime())) }
+		val pending = devicesNeedingPermission(permissionManager)
+		val permissionDevice = pending.firstOrNull { it.deviceId == sessionId } ?: pending.firstOrNull()
+		if (permissionDevice != null) return MidiConnectionStatus(
+			permissionDevice.deviceId, usbProductName(permissionDevice), MidiConnectionStatus.Phase.PERMISSION,
+		)
+		return lastDisconnected
+	}
+
+	private fun usbProductName(device: UsbDevice): String = try {
+		device.productName?.takeIf { it.isNotBlank() } ?: device.deviceName
+	} catch (_: RuntimeException) { device.deviceName }
+
+	private fun devicesNeedingPermission(manager: UsbManager?): List<UsbDevice> = try {
+		manager?.deviceList?.values?.filter { looksLikeMidiDevice(it) && !manager.hasPermission(it) }.orEmpty()
+	} catch (_: RuntimeException) { emptyList() }
+
+	/** Only called by the explicit Allow button. Enumeration itself never requests permission. */
+	fun requestUsbPermission(context: Context, sessionId: Int?) {
+		val manager = context.getSystemService(Context.USB_SERVICE) as? UsbManager ?: return
+		val device = devicesNeedingPermission(manager).firstOrNull { it.deviceId == sessionId } ?: return
+		try {
+			val intent = Intent(context, UsbMidiPermissionReceiver::class.java)
+			val flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) android.app.PendingIntent.FLAG_MUTABLE else 0
+			val result = android.app.PendingIntent.getBroadcast(context, device.deviceId, intent, flags)
+			manager.requestPermission(device, result)
+		} catch (e: RuntimeException) { Log.err("USB permission request failed", e) }
+	}
 
 	private fun startSendLoop(session: DeviceSession) {
 		if (session.sendJob?.isActive == true) return
@@ -303,6 +350,7 @@ object MidiConnection {
 			}
 
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
+				session.inputObservation.pad(x, y)
 				val mappedY = if (isFlippedForReflection(session)) 7 - y else y
 				controller?.onPadTouch(x, mappedY, upDown, velocity)
 			}
@@ -413,6 +461,7 @@ object MidiConnection {
 				for (session in sessions.values) {
 					if (session.driver === oldDriver) {
 						session.driver = value
+						session.manuallyChosen = true
 					}
 				}
 			}
@@ -438,6 +487,7 @@ object MidiConnection {
 				Log.err("Driver set failed", e)
 			}
 
+			transportObservation = transportObservation?.let { it.copy(status = it.status.copy(manuallyChosen = true)) }
 			listener?.onChangeDriver(value)
 		}
 
@@ -540,6 +590,7 @@ object MidiConnection {
 			}
 
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
+				transportObservation?.input?.pad(x, y)
 				controller?.onPadTouch(x, y, upDown, velocity)
 			}
 
@@ -594,6 +645,7 @@ object MidiConnection {
 		}
 
 		val session = DeviceSession(device)
+		session.announcedName = usbProductName(device)
 		var interfaceNum = 0
 
 		try {
@@ -641,6 +693,13 @@ object MidiConnection {
 		} catch (e: SecurityException) {
 			Log.err("USB driver selection failed", e)
 		}
+
+		session.detectedFirmware = when (session.driver) {
+			is LaunchpadCoreFW -> "CoreFW"
+			is LaunchpadPROCFW -> "Launchpad Open"
+			else -> null
+		}
+		session.modelUnknown = session.driver is MasterKeyboard
 
 		// Log all interfaces
 		for (i in 0 until device.interfaceCount) {
@@ -724,6 +783,7 @@ object MidiConnection {
 		}
 
 		sessions[device.deviceId] = session
+		lastDisconnected = MidiConnectionStatus()
 		setDriverListener(session.driver, makeSendListener(session), makeReceiveListener(session))
 
 		// First device to connect becomes "primary". PlayActivity/ChannelManager keep
@@ -1119,6 +1179,8 @@ object MidiConnection {
 		sessions.remove(session.usbDevice.deviceId)
 
 		if (notify) {
+			lastDisconnected = MidiConnectionStatus(session.usbDevice.deviceId, session.announcedName,
+				MidiConnectionStatus.Phase.DISCONNECTED)
 			session.driver.onDisconnected()
 
 			val wasPrimary = session.usbDevice.deviceId == primarySessionId
@@ -1179,6 +1241,14 @@ object MidiConnection {
 		check(sessions.isEmpty() && connectedDevice == null) { "A device is already connected" }
 		val previous = driver
 		driver = deviceDriver
+		val observation = MidiInputObservation(SystemClock.elapsedRealtime())
+		transportObservation = TransportObservation(MidiConnectionStatus(TRANSPORT_SESSION_ID, name, MidiConnectionStatus.Phase.WAITING,
+			modelUnknown = deviceDriver is MasterKeyboard,
+			firmware = when (deviceDriver) {
+				is LaunchpadCoreFW -> "CoreFW"
+				is LaunchpadPROCFW -> "Launchpad Open"
+				else -> null
+			}), observation)
 		setDriverListener(deviceDriver, sendListener = output)
 		deviceDriver.initialize()
 		publishConnectedDevice(name)
@@ -1186,8 +1256,11 @@ object MidiConnection {
 		listener?.onConnectedListener()
 		connectedDevice?.let { connectionObserver?.onConnected(it) }
 		return AutoCloseable {
-			if (driver === deviceDriver) {
+			val currentObservation = transportObservation
+			if (currentObservation != null && currentObservation.input === observation) {
 				driver = previous
+				lastDisconnected = currentObservation.status.copy(phase = MidiConnectionStatus.Phase.DISCONNECTED)
+				transportObservation = null
 				connectedDevice = null
 				connectionObserver?.onDisconnected()
 			}
@@ -1230,6 +1303,7 @@ object MidiConnection {
 		oldTargetDriver.onDisconnected()
 
 		target.driver = value
+		target.manuallyChosen = true
 		setDriverListener(value, makeSendListener(target), makeReceiveListener(target))
 		try {
 			value.initialize()

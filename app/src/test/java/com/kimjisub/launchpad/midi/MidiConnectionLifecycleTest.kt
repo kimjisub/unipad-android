@@ -83,6 +83,48 @@ class MidiConnectionLifecycleTest {
 		mainDispatcher.close()
 	}
 
+    @Test
+    fun status_isolatesTwoUsbDevicesAndKeepsAnnouncedNameAndDetectionFacts() {
+        val oldDualMode = MidiConnection.dualPadModeEnabled
+        MidiConnection.dualPadModeEnabled = true
+        val (first, firstConnection) = launchpad(31)
+        val (second, secondConnection) = launchpad(32)
+        every { first.productId } returns 0x0036
+        every { first.productName } returns "First Mini"
+        every { second.productId } returns 0x7777
+        every { second.productName } returns "Unrecognised USB Piano"
+        val infos = arrayOf(midiDeviceInfo(first), midiDeviceInfo(second))
+        midiManager.stubDeviceList() returns infos
+        val callbacks = mutableListOf<MidiManager.OnDeviceOpenedListener>()
+        every { midiManager.openDevice(any(), capture(callbacks), any()) } returns Unit
+        try {
+            attach(first)
+            attach(second)
+            val firstDriver = requireNotNull(MidiConnection.driverForSession(31))
+            firstDriver.getSignal(15, 0xf8, 0, 0)
+            firstDriver.getSignal(4, 0xf0, 0x7e, 0)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus(31).phase)
+            firstDriver.getSignal(9, 0x90, 0, 127)
+            assertEquals(MidiConnectionStatus.Phase.INPUT, MidiConnection.connectionStatus(31).phase)
+            val secondStatus = MidiConnection.connectionStatus(32)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, secondStatus.phase)
+            assertEquals("Unrecognised USB Piano", secondStatus.deviceName)
+            assertTrue(secondStatus.modelUnknown)
+            MidiConnection.setDriverForSession(32, com.kimjisub.launchpad.midi.driver.LaunchpadPROCFW())
+            assertTrue(MidiConnection.connectionStatus(32).manuallyChosen)
+            assertEquals(null, MidiConnection.connectionStatus(32).firmware)
+            assertEquals(false, MidiConnection.connectionStatus(31).manuallyChosen)
+        } finally {
+            // Let each held open request fall back to USB; the fixture's idle receive
+            // failures then tear it down through the real path.
+            callbacks.forEach { it.onDeviceOpened(null) }
+            verify(timeout = TIMEOUT_MS) { firstConnection.close() }
+            verify(timeout = TIMEOUT_MS) { secondConnection.close() }
+            MidiConnection.dualPadModeEnabled = oldDualMode
+        }
+        assertNoCrash()
+    }
+
 	@Test
 	fun init_midiServiceEnumerationNpe_fallsBackToUsbClaim() {
 		midiManager.stubDeviceList() throws NullPointerException("MidiManager.getDevices")

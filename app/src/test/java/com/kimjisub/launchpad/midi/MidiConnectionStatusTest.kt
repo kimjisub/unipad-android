@@ -1,0 +1,80 @@
+package com.kimjisub.launchpad.midi
+
+import android.content.Intent
+import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbManager
+import com.kimjisub.launchpad.midi.driver.LaunchpadPROCFW
+import com.kimjisub.launchpad.midi.driver.LaunchpadS
+import com.kimjisub.launchpad.midi.driver.MasterKeyboard
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert.*
+import org.junit.Test
+
+class MidiConnectionStatusTest {
+    private fun initialize(manager: UsbManager) {
+        val intent = mockk<Intent>(relaxed = true)
+        every { intent.action } returns null
+        @Suppress("DEPRECATION")
+        every { intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE) } returns null
+        every { intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java) } returns null
+        MidiConnection.initConnection(intent, manager)
+    }
+
+    @Test fun permissionWaitingIsDistinctAndNeverPromptsDuringEnumeration() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        val device = mockk<UsbDevice>(relaxed = true)
+        every { device.deviceId } returns 41
+        every { device.productId } returns 0x0036
+        every { device.productName } returns "My Mini"
+        every { manager.deviceList } returns hashMapOf("mini" to device)
+        every { manager.hasPermission(device) } returns false
+        // Permission must also be visible before any attach callback has initialised MIDI.
+        val status = MidiConnection.connectionStatus(permissionManager = manager)
+        assertEquals(MidiConnectionStatus.Phase.PERMISSION, status.phase)
+        assertEquals("My Mini", status.deviceName)
+        verify(exactly = 0) { manager.requestPermission(any(), any()) }
+        verify(exactly = 0) { manager.openDevice(any()) }
+        every { manager.deviceList } returns hashMapOf()
+    }
+
+    @Test fun virtualInputUsesDecodedPadsAndManualChoiceDoesNotDetectFirmware() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        every { manager.deviceList } returns hashMapOf()
+        initialize(manager)
+        val pad = LaunchpadS()
+        val output = mockk<com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener>(relaxed = true)
+        val connection = MidiConnection.attachTransport("Virtual Mini", pad, output)
+        try {
+            assertEquals("Virtual Mini", MidiConnection.connectionStatus().deviceName)
+            assertFalse(MidiConnection.connectionStatus().manuallyChosen)
+            pad.getSignal(15, 0xf8, 0, 0)
+            pad.getSignal(4, 0xf0, 0x7e, 0)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
+            pad.getSignal(9, 0x90, 0, 127)
+            assertEquals(MidiConnectionStatus.Phase.INPUT, MidiConnection.connectionStatus().phase)
+            MidiConnection.driver = LaunchpadPROCFW()
+            assertTrue(MidiConnection.connectionStatus().manuallyChosen)
+            assertNull(MidiConnection.connectionStatus().firmware)
+        } finally { connection.close() }
+        assertEquals(MidiConnectionStatus.Phase.DISCONNECTED, MidiConnection.connectionStatus().phase)
+        MidiConnection.attachTransport("Unrecognised keyboard", MasterKeyboard(), output).use {
+            assertFalse(MidiConnection.connectionStatus().manuallyChosen)
+            assertTrue(MidiConnection.connectionStatus().modelUnknown)
+            assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
+        }
+    }
+
+    @Test fun detectedCustomFirmwareIsReportedWithoutInferringItFromLaterChoices() {
+        val manager = mockk<UsbManager>(relaxed = true)
+        every { manager.deviceList } returns hashMapOf()
+        initialize(manager)
+        MidiConnection.attachTransport("Launchpad Open", LaunchpadPROCFW(), mockk(relaxed = true)).use {
+            assertEquals("Launchpad Open", MidiConnection.connectionStatus().firmware)
+            assertEquals(5, MidiConnection.connectionStatus().initialHelp)
+            MidiConnection.driver = LaunchpadS()
+            assertEquals("Launchpad Open", MidiConnection.connectionStatus().firmware)
+        }
+    }
+}

@@ -164,7 +164,7 @@
 	<string name="midi_lp_x" translatable="false">Launchpad X</string>
 	<string name="midi_lp_mini_mk3" translatable="false">Launchpad Mini MK3</string>
 	<string name="midi_lp_mk3" translatable="false">Launchpad Pro MK3</string>
-	<string name="midi_lp_pro_cfw" translatable="false">Launchpad Pro MK2 (CFW)</string>
+	<string name="midi_lp_pro_cfw" translatable="false">Launchpad Pro (Launchpad Open)</string>
 	<string name="midi_lp_core_fw" translatable="false">Launchpad (CoreFW)</string>
 	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
@@ -357,4 +357,40 @@
 	<string name="autoPlayRestoreApply">Restore</string>
 	<string name="autoPlayRestored">Previous autoplay restored. You can swap back from the menu.</string>
 	<string name="autoPlayRestoreFailed">Could not restore. Your current autoplay and backup are unchanged.</string>
+    <string name="midi_status_none">No Launchpad found</string>
+    <string name="midi_status_none_detail">Check the cable, adapter and power, then plug it in again.</string>
+    <string name="midi_status_permission">USB permission needed</string>
+    <string name="midi_status_permission_detail">A USB device is plugged in, but UniPad can\'t use it yet.</string>
+    <string name="midi_status_connected">Connected: %1$s</string>
+    <string name="midi_status_unknown_detail">UniPad didn\'t recognise the model, so it connected it as a keyboard. If it\'s a Launchpad, tap “Not connecting?”.</string>
+    <string name="midi_status_wait">Press any pad. You\'ll see it here when a signal arrives.</string>
+    <string name="midi_status_wait_long">No pad signal yet. If pressing doesn\'t change this, tap “Not connecting?”.</string>
+    <string name="midi_status_input">Pad signal received.</string>
+    <string name="midi_status_disconnected">Disconnected</string>
+    <string name="midi_status_disconnected_detail">Plug it in again and UniPad will try to reconnect.</string>
+    <string name="midi_status_allow">Allow</string>
+    <string name="midi_status_unknown">Model unknown</string>
+    <string name="midi_status_firmware">Custom firmware: %1$s</string>
+    <string name="midi_help_title">Not connecting?</string>
+    <string name="midi_help_close">Close help</string>
+    <string name="midi_help_expanded">Expanded</string>
+    <string name="midi_help_collapsed">Collapsed</string>
+    <string name="midi_help_web_link">Read the full guide on the web</string>
+    <string name="midi_help_firmware_link">Read about custom firmware</string>
+    <string name="midi_help_find">The app can\'t find the Launchpad</string>
+    <string name="midi_help_find_body">• Push the cable all the way in and use an adapter that fits your phone. Try another cable too.\n• The Launchpad is powered over USB. If it doesn\'t light up or only blinks, check the power first.\n• Your phone must support USB OTG (connecting external USB devices). If a window asks which app should use the USB device, choose UniPad.</string>
+    <string name="midi_help_press">Connected, but pressing pads does nothing</string>
+    <string name="midi_help_press_body">1. Press any pad and watch whether the status changes to “Pad signal received.”\n2. Check that the device in the status is your Launchpad. If the model is wrong, choose the right one in the model list. If your model isn\'t listed, don\'t pick another model in its place.\n3. If you changed the Launchpad\'s mode after connecting, unplug it and plug it in again. If you use custom firmware, see the guidance below.</string>
+    <string name="midi_help_lights">Sound plays, but no lights</string>
+    <string name="midi_help_lights_body">• Some packs have no light data. Check with a pack that has lights.\n• Launchpad X and Mini MK3 may start with the lights off.\n• Lights being off alone doesn\'t mean the connection failed.</string>
+    <string name="midi_help_wrong">The wrong pad responds</string>
+    <string name="midi_help_wrong_body">• If the chosen model differs from your Launchpad, pads land in the wrong place. Compare the device in the status with the chosen model.\n• The Launchpad may have switched to another mode (for example Live mode). Unplug it and plug it in again.\n• If you use custom firmware, see “I use custom firmware” below.</string>
+    <string name="midi_help_chain">Right-side buttons don\'t change chains</string>
+    <string name="midi_help_chain_body">Check in this order.\n1. While the option window is open on the play screen, the right-side buttons change the volume. Close the option window. The 4th button from the left on the top row opens and closes it.\n2. The 8 right-side buttons are chains 1–8 from the top. Buttons below the pack\'s number of chains do nothing.\n3. If it still doesn\'t work, unplug the Launchpad and plug it in again.</string>
+    <string name="midi_help_firmware">I use custom firmware</string>
+    <string name="midi_help_firmware_body">• UniPad recognises “Launchpad Open” for the Launchpad Pro (first model) and CoreFW. When it does, the status shows “Custom firmware”.\n• Only if you know the installed firmware is CoreFW or Launchpad Open, choose “Launchpad (CoreFW)” or “Launchpad Pro (Launchpad Open)” in the model list yourself. Choosing it does not confirm the firmware.\n• UniPad doesn\'t promise that every feature works with custom firmware, and it doesn\'t install or change firmware.</string>
+    <string name="midi_help_crash">The app closes unexpectedly</string>
+    <string name="midi_help_crash_body">Disconnect the device and note the app version, phone or tablet model, operating system, and the step where it closed. You do not need to repeat the crash.</string>
+    <string name="midi_source_auto">Recognised automatically</string>
+    <string name="midi_source_manual">Chosen by you · resets when you plug in again</string>
 </resources>
