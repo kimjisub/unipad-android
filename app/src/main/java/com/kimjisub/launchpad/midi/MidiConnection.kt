@@ -400,6 +400,9 @@ object MidiConnection {
 	var driver: DriverRef
 		get() = _driver
 		set(value) {
+			// A virtual connection owns its selected layout and sender until teardown.
+			if (virtualTransportAttached) return
+
 			// A manual pick from MidiSelectActivity while more than one pad is connected
 			// must NOT replace the MultiplexDriver dispatcher (that's what was causing only
 			// one pad to light up after picking a model). Route it to the primary session
@@ -1214,10 +1217,10 @@ object MidiConnection {
 				virtualTransportAttached = false
 				if (_driver === deviceDriver) {
 					_driver = previous
-					connectedDevice = null
 					runCatching { listener?.onChangeDriver(previous) }
-					runCatching { connectionObserver?.onDisconnected() }
 				}
+				connectedDevice = null
+				runCatching { connectionObserver?.onDisconnected() }
 				deviceDriver.setOnGetSignalListener(null)
 				deviceDriver.setOnSendSignalListener(null)
 				deviceDriver.setOnCycleListener(null)

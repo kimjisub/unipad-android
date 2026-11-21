@@ -44,6 +44,7 @@ internal class VirtualMidiConnection(
 	private var attempt: Attempt? = null
 
 	private class Attempt(val selection: VirtualMidiSelection, val driver: DriverRef, val lease: AutoCloseable) {
+		var stopping = false
 		val receiving = AtomicBoolean(false)
 		val overflowing = AtomicBoolean(false)
 		val incoming = Channel<IntArray>(256)
@@ -84,7 +85,7 @@ internal class VirtualMidiConnection(
 	private suspend fun run(current: Attempt) {
 		var device: VirtualMidiBackend.Device? = null
 		var input: VirtualMidiBackend.Port? = null
-		var failure = Failure.IO
+		var failure = Failure.UNAVAILABLE
 		try {
 			current.watch = backend.watchRemoval { id ->
 				scope.launch(main) {
@@ -95,7 +96,10 @@ internal class VirtualMidiConnection(
 			device = backend.open(current.selection.device.id) ?: error("Device unavailable")
 			currentCoroutineContext().ensureActive()
 			val decoder = MidiStreamDecoder { status, note, value ->
-				if (current.receiving.get() && !current.incoming.trySend(intArrayOf(status shr 4, status.toByte().toInt(), note, value)).isSuccess) overflow(current)
+				// The selected raw port has no USB cable header. Restore only the driver's
+				// cable expectation; the MIDI channel in status remains unchanged.
+				val command = (current.driver.receiveCableNumber shl 4) or (status shr 4)
+				if (current.receiving.get() && !current.incoming.trySend(intArrayOf(command, status.toByte().toInt(), note, value)).isSuccess) overflow(current)
 			}
 			failure = Failure.INPUT_PORT
 			input = device.openPerformancePort(current.selection.performancePort, decoder::accept) ?: error("Input port unavailable")
@@ -114,7 +118,9 @@ internal class VirtualMidiConnection(
 			failure = Failure.IO
 			while (true) {
 				delay(1_000)
-				if (withTimeoutOrNull(2_000) { device.isAlive() } != true) {
+				// Status callbacks can be delayed by Android's main looper. A timeout is
+				// unknown, not proof of a closed port; explicit closure still disconnects.
+				if (withTimeoutOrNull(2_000) { device.isAlive() } == false) {
 					withContext(main) { if (attempt === current) stop(State.Failed(Failure.DISCONNECTED)) }
 					break
 				}
@@ -204,6 +210,10 @@ internal class VirtualMidiConnection(
 
 	private fun stop(next: State) {
 		val current = attempt
+		// Teardown may still be draining all-off writes. Their failures must not
+		// replace the terminal state selected by the user or the original failure.
+		if (current?.stopping == true) return
+		current?.stopping = true
 		current?.receiving?.set(false)
 		current?.timer?.cancel()
 		current?.job?.cancel()
@@ -211,6 +221,7 @@ internal class VirtualMidiConnection(
 	}
 
 	private fun publish(value: State) {
+		if (state == value) return
 		state = value
 		try { onStateChanged?.invoke(value) } catch (_: Exception) { /* State remains readable after a failed observer. */ }
 	}
