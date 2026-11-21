@@ -62,6 +62,49 @@ class VirtualMidiServiceTest : com.kimjisub.launchpad.basefeatures.PlaybackScree
 		assertNull(MidiConnection.connectedDevice)
 	}
 
+	@Test fun secondCableLayoutsUseRealPortsAndIgnoreDriverChangesUntilDisconnected() {
+		val connection = connection()
+		val selected = selection(connection)
+		val pads = Collections.synchronizedList(mutableListOf<Boolean>())
+		main {
+			MidiConnection.controller = object : MidiController() {
+				override fun onAttach() { }
+				override fun onDetach() { }
+				override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
+					assertEquals(0, x); assertEquals(0, y); pads.add(upDown)
+				}
+				override fun onChainTouch(c: Int, upDown: Boolean) { }
+				override fun onFunctionKeyTouch(f: Int, upDown: Boolean) { }
+				override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) { }
+			}
+		}
+		try {
+			for ((driver, note) in listOf(
+				com.kimjisub.launchpad.midi.driver.LaunchpadX() to 81,
+				com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3() to 81,
+				com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW() to 64,
+			)) {
+				pads.clear()
+				main { assertTrue(connection.connect(selected, driver)) }
+				try {
+					await("Layout did not connect: ${driver.javaClass.simpleName}") { main { connection.state is VirtualMidiConnection.State.Connected } }
+					main { MidiConnection.driver = Matrix(); assertSame(driver, MidiConnection.driver) }
+					send(0x90, note, 100, 0x80, note, 64, 0x90, note, 0)
+					await("Layout press or releases missing: ${driver.javaClass.simpleName}") { pads.size == 3 }
+					assertEquals(listOf(true, false, false), pads.toList())
+					// Wait for the initialization queue before clearing the peer's recording.
+					main { driver.sendPadLed(0, 0, 99) }
+					val marker = byteArrayOf(0x90.toByte(), note.toByte(), 99)
+					await("Light marker missing") { call("read").getByteArray("lights0")!!.takeLast(3) == marker.toList() }
+					call("clear")
+					main { driver.sendPadLed(0, 0, 100); driver.sendPadLed(0, 0, 0) }
+					await("Lights missing after driver pick") { call("read").getByteArray("lights0")!!.size >= 6 }
+					assertArrayEquals(byteArrayOf(0x90.toByte(), note.toByte(), 100, 0x90.toByte(), note.toByte(), 0), call("read").getByteArray("lights0"))
+				} finally { close(connection) }
+			}
+		} finally { main { MidiConnection.controller = null } }
+	}
+
 	@Test fun actualServiceInputRequestsPackSoundAndReceivesThePacksLightBytes() {
 		screen.openPlay()
 		val connection = connection()

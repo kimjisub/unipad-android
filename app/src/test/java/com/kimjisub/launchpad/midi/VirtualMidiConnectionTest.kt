@@ -24,6 +24,8 @@ class VirtualMidiConnectionTest {
 		val output = Port()
 		var busy = false
 		var inputBusy = false
+		var alive: suspend () -> Boolean = { true }
+		override suspend fun isAlive() = alive()
 		var receive: ((ByteArray, Int, Int) -> Unit)? = null
 		var closed = 0
 		override fun openPerformancePort(number: Int, receiver: (ByteArray, Int, Int) -> Unit): VirtualMidiBackend.Port? {
@@ -260,6 +262,64 @@ class VirtualMidiConnectionTest {
 			mainDispatcher.close()
 			ioDispatcher.close()
 		}
+	}
+
+	@Test fun delayedStatusIsUnknownUntilTheDeviceReportsItHasClosed() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val device = Device().apply { alive = { delay(3_000); true } }
+		val backend = Backend().apply { opened.complete(device) }
+		val gate = MidiTransportGate()
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,_ -> AutoCloseable { } }
+		connection.connect(selection, Matrix())
+		runCurrent()
+		advanceTimeBy(8_000)
+		runCurrent()
+		assertEquals(VirtualMidiConnection.State.Connected(true), connection.state)
+		assertEquals(0, device.closed)
+		assertNull(gate.acquireUsb())
+		device.alive = { false }
+		advanceTimeBy(4_000)
+		runCurrent()
+		assertEquals(VirtualMidiConnection.State.Failed(VirtualMidiConnection.Failure.DISCONNECTED), connection.state)
+		assertEquals(1, device.closed)
+	}
+
+	@Test fun missingMidiServiceReportsUnavailable() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = object : VirtualMidiBackend {
+			override suspend fun devices() = emptyList<VirtualMidiDevice>()
+			override suspend fun open(id: Int): VirtualMidiBackend.Device? = null
+			override fun watchRemoval(callback: (Int) -> Unit): AutoCloseable = error("MIDI service unavailable")
+		}
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,_ -> error("Must not attach") }
+		connection.connect(selection, Matrix())
+		runCurrent()
+		assertEquals(VirtualMidiConnection.State.Failed(VirtualMidiConnection.Failure.UNAVAILABLE), connection.state)
+	}
+
+	@Test fun disconnectPublishesIdleOnceEvenWhenTheFinalLightWriteFails() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val device = object : VirtualMidiBackend.Device {
+			override fun openPerformancePort(number: Int, receiver: (ByteArray, Int, Int) -> Unit) = Port()
+			override fun openLightPort(number: Int) = object : VirtualMidiBackend.Port {
+				override fun send(bytes: ByteArray) = error("Peer closed during all-off")
+				override fun close() { }
+			}
+			override fun close() { }
+		}
+		backend.opened.complete(device)
+		val states = mutableListOf<VirtualMidiConnection.State>()
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,output ->
+			AutoCloseable { output.onSend(9, 0x91.toByte(), 36, 0) }
+		}
+		connection.onStateChanged = { states.add(it) }
+		connection.connect(selection, Matrix())
+		runCurrent()
+		connection.disconnect()
+		runCurrent()
+		assertEquals(VirtualMidiConnection.State.Idle, connection.state)
+		assertEquals(listOf(VirtualMidiConnection.State.Connecting, VirtualMidiConnection.State.Connected(true), VirtualMidiConnection.State.Idle), states)
 	}
 
 	private companion object {

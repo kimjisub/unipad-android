@@ -83,6 +83,21 @@ class MidiConnectionLifecycleTest {
 		mainDispatcher.close()
 	}
 
+	@Test fun virtualDriverPickCannotReplaceTheLiveTransportAndReconnectStillWorks() {
+		val selected = com.kimjisub.launchpad.midi.driver.Matrix()
+		val output = mockk<DriverRef.OnSendSignalListener>(relaxed = true)
+		val attachment = MidiConnection.attachTransport("Virtual pads", selected, output)
+		try {
+			MidiConnection.driver = LaunchpadX()
+			org.junit.Assert.assertSame(selected, MidiConnection.driver)
+			MidiConnection.driver.sendPadLed(7, 0, 100)
+			verify { output.onSend(9, 0x91.toByte(), 36, 100) }
+		} finally { attachment.close() }
+		org.junit.Assert.assertNull(MidiConnection.connectedDevice)
+		MidiConnection.attachTransport("Virtual pads", selected, output).close()
+		org.junit.Assert.assertNull(MidiConnection.connectedDevice)
+	}
+
 	@Test
 	fun init_midiServiceEnumerationNpe_fallsBackToUsbClaim() {
 		midiManager.stubDeviceList() throws NullPointerException("MidiManager.getDevices")
