@@ -155,7 +155,8 @@ internal class VirtualMidiConnection(
 					current.lease.close()
 					if (attempt === current) {
 						attempt = null
-						publish(if (state is State.Connected || state == State.Connecting) State.Failed(Failure.DISCONNECTED) else state)
+						// The terminal callback must observe released resources and canConnect == true.
+						publish(if (state is State.Connected || state == State.Connecting) State.Failed(Failure.DISCONNECTED) else state, force = true)
 					}
 				}
 			}
@@ -209,19 +210,20 @@ internal class VirtualMidiConnection(
 	fun disconnect() = stop(State.Idle)
 
 	private fun stop(next: State) {
-		val current = attempt
+		val current = attempt ?: run { publish(next); return }
 		// Teardown may still be draining all-off writes. Their failures must not
 		// replace the terminal state selected by the user or the original failure.
-		if (current?.stopping == true) return
-		current?.stopping = true
-		current?.receiving?.set(false)
-		current?.timer?.cancel()
-		current?.job?.cancel()
-		publish(next)
+		if (current.stopping) return
+		current.stopping = true
+		current.receiving.set(false)
+		current.timer?.cancel()
+		// Keep the reason readable immediately, but notify only after teardown finishes.
+		state = next
+		current.job?.cancel()
 	}
 
-	private fun publish(value: State) {
-		if (state == value) return
+	private fun publish(value: State, force: Boolean = false) {
+		if (state == value && !force) return
 		state = value
 		try { onStateChanged?.invoke(value) } catch (_: Exception) { /* State remains readable after a failed observer. */ }
 	}
