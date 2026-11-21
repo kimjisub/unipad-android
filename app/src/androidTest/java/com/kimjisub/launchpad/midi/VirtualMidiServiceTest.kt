@@ -18,6 +18,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.Collections
+import java.io.File
 
 /** Android service registration, openDevice and real ports; never substitutes an in-process driver. */
 @Suppress("DEPRECATION")
@@ -80,6 +81,7 @@ class VirtualMidiServiceTest : com.kimjisub.launchpad.basefeatures.PlaybackScree
 			val onIndex = lightValues().indexOf(on)
 			send(0x81,64,64)
 			screen.await("Pack light-off did not follow light-on at the peer") { lightValues().drop(onIndex + 1).contains(off) }
+			assertEquals("One press/release must request the sound exactly once", 1, audio.plays.size)
 			screen.capture("actual-midi-service-pack-roundtrip")
 		} finally { close(connection) }
 	}
@@ -172,17 +174,29 @@ class VirtualMidiServiceTest : com.kimjisub.launchpad.basefeatures.PlaybackScree
 	}
 
 	@Test fun peerProcessExitReleasesInputOnlyConnectionWithoutRediscoveryOrReconnect() {
+		val keySound = File(screen.pack(), "keySound")
+		keySound.writeText(keySound.readLines().joinToString("\n") {
+			if (it.startsWith("1 1 1 ")) "1 1 1 silence.wav 0" else it
+		} + "\n")
+		screen.openPlay()
+		screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
 		val connection = connection()
 		val selected = selection(connection, null)
 		main { assertTrue(connection.connect(selected, Matrix())) }
 		try {
 			await("Input-only device did not connect") { main { connection.state == VirtualMidiConnection.State.Connected(false) } }
 			await("Peer port status did not settle") { call("read").getInt("subscribers1") == 1 }
+			send(0x91,64,127)
+			screen.await("Peer input did not start the looping pad") { audio.ringingLoops().size == 1 }
+			screen.capturePads("actual-midi-service-peer-held", setOf(0))
 			call("exit")
 			await("Peer death did not disconnect input-only connection") {
 				main { connection.state == VirtualMidiConnection.State.Failed(VirtualMidiConnection.Failure.DISCONNECTED) && MidiConnection.connectedDevice == null }
 			}
 			assertNull(MidiConnection.connectedDevice)
+			screen.await("Peer exit left the pad sound looping") { audio.ringingLoops().isEmpty() }
+			screen.capturePads("actual-midi-service-peer-disconnected", emptySet())
+			assertEquals("Peer exit must not replay the held input", 1, audio.plays.size)
 		} finally { close(connection) }
 	}
 
