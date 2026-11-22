@@ -311,4 +311,26 @@ class MidiAppConnectionTest {
 		button(R.string.midi_help_close).assertDoesNotExist()
 		assertFalse(compose.activity.isFinishing)
 	}
+
+	/** A window narrower than the two-pane layout (a phone's split-screen half) shows the help in one column. */
+	@Test fun koreanHelpOpensAndClosesInANarrowWindow() {
+		try {
+			compose.activityRule.scenario.onActivity { activity ->
+				val density = activity.resources.displayMetrics.density
+				activity.window.setLayout((480 * density).toInt(), (360 * density).toInt())
+			}
+			compose.waitForIdle()
+			openAppsTab()
+			button(R.string.midi_help_title).reach().performClick()
+			text(str(R.string.midi_help_apps_play_body)).reach().assertIsDisplayed()
+			capture("ko-narrow-help")
+			button(R.string.midi_help_close).reach().performClick()
+			compose.waitForIdle()
+			button(R.string.midi_help_close).assertDoesNotExist()
+			button(R.string.midi_apps_search).reach().assertIsDisplayed()
+			assertFalse(compose.activity.isFinishing)
+		} finally {
+			compose.activityRule.scenario.onActivity { it.window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT) }
+		}
+	}
 }

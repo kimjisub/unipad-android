@@ -53,6 +53,7 @@ internal class VirtualMidiConnection(
 		// the same burst supersede only the pads they name, so the device is redrawn once the queue
 		// has drained after a drop.
 		val lightsDropped = AtomicBoolean(false)
+		val redrawing = AtomicBoolean(false)
 		val outgoing = Channel<ByteArray>(256, BufferOverflow.DROP_OLDEST) { lightsDropped.set(true) }
 		var job: Job? = null
 		var timer: Job? = null
@@ -72,9 +73,10 @@ internal class VirtualMidiConnection(
 		if (attempt != null) return false
 		if (selection.device.performancePorts.none { it.number == selection.performancePort } ||
 			(selection.lightPort != null && selection.device.lightPorts.none { it.number == selection.lightPort })) {
-			publish(State.Failed(Failure.INVALID_PORT)); return false
+			publish(State.Failed(Failure.INVALID_PORT), force = true); return false
 		}
-		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.USB_BUSY)); return false }
+		// Forced: the same refusal twice in a row is still an answer the screen must show.
+		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.USB_BUSY), force = true); return false }
 		val current = Attempt(selection, driver, lease)
 		attempt = current
 		current.timer = scope.launch(main) {
@@ -191,7 +193,7 @@ internal class VirtualMidiConnection(
 				try {
 					for (bytes in current.outgoing) {
 						current.light?.send(bytes)
-						if (current.outgoing.isEmpty && current.lightsDropped.getAndSet(false)) redraw(current)
+						if (current.outgoing.isEmpty && current.lightsDropped.get()) redraw(current)
 					}
 				}
 				catch (e: CancellationException) { throw e }
@@ -211,9 +213,26 @@ internal class VirtualMidiConnection(
 		} catch (_: Exception) { stop(State.Failed(Failure.IO)) }
 	}
 
-	// The driver's connect callback is the play screen's attach-time redraw of the current lights.
-	private fun redraw(current: Attempt) = scope.launch(main) {
-		if (attempt === current && current.receiving.get()) current.driver.onConnected()
+	/**
+	 * The driver's connect callback is the play screen's attach-time redraw, which clears the device
+	 * before lighting every pad. A pack lighting heavily during it can overflow the queue again, so
+	 * redraws are kept [REDRAW_INTERVAL_MS] apart instead of clearing the device back to back.
+	 */
+	private fun redraw(current: Attempt) {
+		if (!current.redrawing.compareAndSet(false, true)) return
+		scope.launch(main) {
+			try {
+				while (attempt === current && current.receiving.get() && current.outgoing.isEmpty &&
+					current.lightsDropped.getAndSet(false)) {
+					current.driver.onConnected()
+					delay(REDRAW_INTERVAL_MS)
+				}
+			} finally {
+				current.redrawing.set(false)
+			}
+			// A drop seen while this redraw was ending is redrawn by the writer once the queue drains.
+			if (current.outgoing.isEmpty && current.lightsDropped.get()) redraw(current)
+		}
 	}
 
 	private fun overflow(current: Attempt) {
@@ -236,6 +255,10 @@ internal class VirtualMidiConnection(
 		// Keep the reason readable immediately, but notify only after teardown finishes.
 		state = next
 		current.job?.cancel()
+	}
+
+	private companion object {
+		const val REDRAW_INTERVAL_MS = 1_000L
 	}
 
 	private fun publish(value: State, force: Boolean = false) {

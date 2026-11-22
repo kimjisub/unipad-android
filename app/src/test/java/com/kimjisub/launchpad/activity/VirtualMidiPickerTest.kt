@@ -298,6 +298,21 @@ class VirtualMidiPickerTest {
 		assertTrue(f.ui.canConnect)
 	}
 
+	@Test fun theSameImmediateFailureIsShownAgainAfterPickingAgain() = runTest {
+		val f = Fixture(this)
+		// USB holds the transport before the screen knows (a device waiting for permission).
+		val usb = f.gate.acquireUsb()!!
+		f.picker.open(); runCurrent()
+		f.picker.select(mystrix.id)
+		f.picker.connect(); runCurrent()
+		assertEquals(State.Failed(Failure.USB_BUSY), f.ui.connection)
+		f.picker.select(mystrix.id)
+		assertEquals(State.Idle, f.ui.connection)
+		f.picker.connect(); runCurrent()
+		assertEquals("Connect must answer again, not look unresponsive", State.Failed(Failure.USB_BUSY), f.ui.connection)
+		usb.close()
+	}
+
 	@Test fun identicalDevicesAreNumbered() {
 		val twin = mystrix.copy(id = 8)
 		assertEquals(mapOf(mystrix.id to 1, twin.id to 2), deviceOrdinals(listOf(mystrix, unknown, twin)))

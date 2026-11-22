@@ -125,15 +125,13 @@ internal fun MidiAppTab(
 				if (helpOpen) help()
 				else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = bottomPadding), content = list)
 			}
-		} else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp).padding(bottom = bottomPadding),
+		} else if (helpOpen) Box(Modifier.fillMaxSize().padding(12.dp).padding(bottom = bottomPadding)) { help() }
+		else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp).padding(bottom = bottomPadding),
 			verticalArrangement = Arrangement.spacedBy(8.dp)) {
-			if (helpOpen) help()
-			else {
-				list()
-				HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-				settings()
-				AppPrimaryButton(ui, actions)
-			}
+			list()
+			HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+			settings()
+			AppPrimaryButton(ui, actions)
 		}
 	}
 }
