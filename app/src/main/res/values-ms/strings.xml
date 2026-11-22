@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Pengecualian Berlaku</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Sambung Semula Launchpad</string>
+	<string name="midi_connect_title">Sambungkan peranti MIDI</string>
 	<string name="import_unipack">Import UniPack</string>
 	<string name="store">Kedai</string>
 
@@ -303,4 +303,6 @@
 	<string name="autoPlayRestoreApply">Pulihkan</string>
 	<string name="autoPlayRestored">Main automatik sebelumnya dipulihkan. Kedua-duanya boleh ditukar semula melalui menu.</string>
 	<string name="autoPlayRestoreFailed">Tidak dapat memulihkan. Main automatik semasa dan sandaran tidak berubah.</string>
+    <string name="midi_tab_usb">Peranti USB</string>
+    <string name="midi_tab_apps">Apl pada telefon ini</string>
 </resources>

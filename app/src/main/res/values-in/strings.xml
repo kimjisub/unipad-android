@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Terjadi Pengecualian</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Sambungkan Ulang Launchpad</string>
+	<string name="midi_connect_title">Hubungkan perangkat MIDI</string>
 	<string name="import_unipack">Impor UniPack</string>
 	<string name="store">Toko</string>
 
@@ -303,4 +303,6 @@
 	<string name="autoPlayRestoreApply">Pulihkan</string>
 	<string name="autoPlayRestored">Putar otomatis sebelumnya dipulihkan. Keduanya dapat ditukar lagi dari menu.</string>
 	<string name="autoPlayRestoreFailed">Gagal memulihkan. Putar otomatis saat ini dan cadangan tidak berubah.</string>
+    <string name="midi_tab_usb">Perangkat USB</string>
+    <string name="midi_tab_apps">Aplikasi di ponsel ini</string>
 </resources>

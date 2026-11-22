@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">May Naganap na Exception</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Ikonekta Muli ang Launchpad</string>
+	<string name="midi_connect_title">Ikonekta ang MIDI device</string>
 	<string name="import_unipack">Mag-import ng UniPack</string>
 	<string name="store">Tindahan</string>
 
@@ -293,4 +293,6 @@
 	<string name="autoPlayRestoreApply">Ibalik</string>
 	<string name="autoPlayRestored">Naibalik ang naunang pagtugtog. Maaari silang ipagpalit muli sa menu.</string>
 	<string name="autoPlayRestoreFailed">Hindi naibalik. Hindi nagbago ang kasalukuyang pagtugtog at backup.</string>
+    <string name="midi_tab_usb">Mga USB device</string>
+    <string name="midi_tab_apps">Mga app sa teleponong ito</string>
 </resources>

@@ -219,6 +219,38 @@ class VirtualMidiConnectionTest {
 		assertEquals(1, device.closed)
 	}
 
+	@Test fun droppedLightsAreRedrawnOnceAfterTheQueueDrains() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+		val driver = Matrix()
+		var redraws = 0
+		driver.setOnCycleListener(object : com.kimjisub.launchpad.midi.driver.DriverRef.OnCycleListener {
+			override fun onConnected() { redraws++ }
+			override fun onDisconnected() { }
+		})
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,output ->
+			sender = output
+			AutoCloseable { }
+		}
+		connection.connect(selection, driver)
+		runCurrent()
+		repeat(200) { sender!!.onSend(9, 0x91.toByte(), 36, 1) }
+		runCurrent()
+		assertEquals("A burst the queue holds needs no redraw", 0, redraws)
+		repeat(600) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+		runCurrent()
+		assertEquals("The oldest lights of the burst were dropped, so the device is redrawn once", 1, redraws)
+		advanceTimeBy(5_000)
+		runCurrent()
+		assertEquals(1, redraws)
+		connection.disconnect()
+		runCurrent()
+		assertEquals("Teardown discarding queued lights is not a drop to redraw", 1, redraws)
+	}
+
 	@Test fun attachTimeRedrawLongerThanTheQueueKeepsTheSession() = runTest {
 		val dispatcher = StandardTestDispatcher(testScheduler)
 		val backend = Backend()

@@ -49,9 +49,11 @@ internal class VirtualMidiConnection(
 		val receiving = AtomicBoolean(false)
 		val overflowing = AtomicBoolean(false)
 		val incoming = Channel<IntArray>(256)
-		// Lights are state: a burst (the play screen redrawing every pad as it attaches) longer than
-		// the queue drops the oldest writes, which later writes of the same burst supersede.
-		val outgoing = Channel<ByteArray>(256, BufferOverflow.DROP_OLDEST)
+		// Lights are state: a burst longer than the queue drops the oldest writes. Later writes of
+		// the same burst supersede only the pads they name, so the device is redrawn once the queue
+		// has drained after a drop.
+		val lightsDropped = AtomicBoolean(false)
+		val outgoing = Channel<ByteArray>(256, BufferOverflow.DROP_OLDEST) { lightsDropped.set(true) }
 		var job: Job? = null
 		var timer: Job? = null
 		var watch: AutoCloseable? = null
@@ -186,7 +188,12 @@ internal class VirtualMidiConnection(
 		try {
 			// Started before attaching, so the attach-time redraw drains while it is queued.
 			current.writer = scope.launch(io) {
-				try { for (bytes in current.outgoing) current.light?.send(bytes) }
+				try {
+					for (bytes in current.outgoing) {
+						current.light?.send(bytes)
+						if (current.outgoing.isEmpty && current.lightsDropped.getAndSet(false)) redraw(current)
+					}
+				}
 				catch (e: CancellationException) { throw e }
 				catch (_: Exception) { withContext(main) { if (attempt === current) stop(State.Failed(Failure.IO)) } }
 			}
@@ -202,6 +209,11 @@ internal class VirtualMidiConnection(
 				catch (_: Exception) { if (attempt === current) stop(State.Failed(Failure.IO)) }
 			}
 		} catch (_: Exception) { stop(State.Failed(Failure.IO)) }
+	}
+
+	// The driver's connect callback is the play screen's attach-time redraw of the current lights.
+	private fun redraw(current: Attempt) = scope.launch(main) {
+		if (attempt === current && current.receiving.get()) current.driver.onConnected()
 	}
 
 	private fun overflow(current: Attempt) {

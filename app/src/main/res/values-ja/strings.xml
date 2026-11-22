@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">例外が発生しました</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpadを再接続</string>
+	<string name="midi_connect_title">MIDIデバイスを接続</string>
 	<string name="import_unipack">UniPackをインポート</string>
 	<string name="store">ストア</string>
 
@@ -303,4 +303,6 @@
 	<string name="autoPlayRestoreApply">復元する</string>
 	<string name="autoPlayRestored">以前の自動演奏に復元しました。メニューから再び入れ替えられます。</string>
 	<string name="autoPlayRestoreFailed">復元できませんでした。現在の自動演奏とバックアップは変更されていません。</string>
+    <string name="midi_tab_usb">USBデバイス</string>
+    <string name="midi_tab_apps">このスマホのアプリ</string>
 </resources>
