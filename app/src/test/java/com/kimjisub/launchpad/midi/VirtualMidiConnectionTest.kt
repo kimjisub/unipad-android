@@ -109,6 +109,21 @@ class VirtualMidiConnectionTest {
 		assertNotNull(gate.acquireUsb()?.also { it.close() })
 	}
 
+	@Test fun virtualConnectIsRefusedWhileAComputerConnectionHoldsTheTransport() = runTest {
+		val gate = MidiTransportGate()
+		val peripheral = gate.acquirePeripheral()!!
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,_ -> error("Must not attach") }
+		assertFalse(connection.connect(selection, Matrix()))
+		runCurrent()
+		assertEquals(VirtualMidiConnection.Failure.USB_BUSY, (connection.state as VirtualMidiConnection.State.Failed).reason)
+		assertNull(backend.removed)
+		assertNull(gate.acquireUsb())
+		peripheral.close()
+		assertNotNull(gate.acquireVirtual()?.also { it.close() })
+	}
+
 	@Test fun virtualAndUsbReservationsAreMutuallyExclusive() {
 		val gate = MidiTransportGate()
 		val usb1 = gate.acquireUsb()!!

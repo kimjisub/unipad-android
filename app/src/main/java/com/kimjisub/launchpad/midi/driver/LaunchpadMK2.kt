@@ -1,26 +1,8 @@
 package com.kimjisub.launchpad.midi.driver
 
+import com.kimjisub.launchpad.midi.Mk2Layout
+
 class LaunchpadMK2 : DriverRef() {
-	companion object {
-		internal val circleCode = arrayOf(
-			intArrayOf(11, -80, 104),
-			intArrayOf(11, -80, 105),
-			intArrayOf(11, -80, 106),
-			intArrayOf(11, -80, 107),
-			intArrayOf(11, -80, 108),
-			intArrayOf(11, -80, 109),
-			intArrayOf(11, -80, 110),
-			intArrayOf(11, -80, 111),
-			intArrayOf(9, -112, 89),
-			intArrayOf(9, -112, 79),
-			intArrayOf(9, -112, 69),
-			intArrayOf(9, -112, 59),
-			intArrayOf(9, -112, 49),
-			intArrayOf(9, -112, 39),
-			intArrayOf(9, -112, 29),
-			intArrayOf(9, -112, 19)
-		)
-	}
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		if (cmd == 9) {
@@ -45,7 +27,7 @@ class LaunchpadMK2 : DriverRef() {
 		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
 		// data position.
 		if (x !in 0..7 || y !in 0..7) return
-		sendSignal(9, -112, 10 * (8 - x) + y + 1, velocity)
+		sendSignal(9, -112, Mk2Layout.padNote(x, y)!!, velocity)
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {
@@ -54,8 +36,9 @@ class LaunchpadMK2 : DriverRef() {
 	}
 
 	override fun sendFunctionKeyLed(f: Int, velocity: Int) {
-		if (f in 0..15)
-			sendSignal(circleCode[f][0], circleCode[f][1], circleCode[f][2], velocity)
+		if (f !in 0..15) return
+		val address = Mk2Layout.address(64 + f)!!
+		sendSignal(address.status shr 4, address.status.toByte().toInt(), address.number, velocity)
 	}
 
 	override fun sendClearLed() {

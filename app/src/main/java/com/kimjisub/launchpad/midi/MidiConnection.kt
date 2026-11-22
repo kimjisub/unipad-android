@@ -764,7 +764,7 @@ object MidiConnection {
 		// openDevice throws SecurityException for a device we were not granted (only the device
 		// that fired the attach intent is auto-granted).
 		val transportLease = transportGate.acquireUsb() ?: run {
-			Log.midiDetail("Disconnect virtual MIDI before reconnecting USB")
+			Log.midiDetail("USB device ignored: another MIDI connection holds the transport")
 			return
 		}
 		val connection = try {

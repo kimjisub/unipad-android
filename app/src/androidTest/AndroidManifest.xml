@@ -28,6 +28,12 @@
         <provider android:name="com.kimjisub.launchpad.midi.InputOnlyMidiFixtureProvider"
             android:authorities="com.kimjisub.launchpad.dev.test.inputmidi" android:exported="true"
             android:process=":inputOnlyMidiFixture" />
+        <service android:name="com.kimjisub.launchpad.midi.PeripheralMidiPeer"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":peripheral_peer">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/peripheral_midi_peer" />
+        </service>
     </application>
     <queries>
         <package android:name="com.kimjisub.launchpad.dev" />
