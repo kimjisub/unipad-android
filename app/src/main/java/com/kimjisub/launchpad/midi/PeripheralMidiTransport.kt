@@ -30,6 +30,7 @@ internal class PeripheralMidiTransport(
     private var closed = false
     private var watcher: AutoCloseable? = null
     private var refreshing = false
+    private var refreshAgain = false
 
     private class Session(val generation: Long, val id: Int, val lease: MidiModeOwnership.Lease, val rules: MidiSessionRules) {
         val resourcesLock = Any()
@@ -54,18 +55,25 @@ internal class PeripheralMidiTransport(
         }
     }
 
-    /** Enumeration errors are separate from an already open session. */
+    /**
+     * Enumeration errors are separate from an already open session. A change reported while a read
+     * is running may not be in that read, so it is followed by one more read instead of being dropped.
+     */
     fun refresh() {
         synchronized(lock) {
-            if (closed || refreshing) return
+            if (closed) return
+            if (refreshing) { refreshAgain = true; return }
             refreshing = true
             io.execute {
-                try {
-                    val found = access.devices()
-                    synchronized(lock) { if (!closed) { mutableDevices.value = found; mutableDiscoveryFailure.value = null } }
-                } catch (_: Exception) {
-                    synchronized(lock) { if (!closed) { mutableDevices.value = emptyList(); mutableDiscoveryFailure.value = Failure.DISCOVERY } }
-                } finally { synchronized(lock) { refreshing = false } }
+                do {
+                    synchronized(lock) { refreshAgain = false }
+                    try {
+                        val found = access.devices()
+                        synchronized(lock) { if (!closed) { mutableDevices.value = found; mutableDiscoveryFailure.value = null } }
+                    } catch (_: Exception) {
+                        synchronized(lock) { if (!closed) { mutableDevices.value = emptyList(); mutableDiscoveryFailure.value = Failure.DISCOVERY } }
+                    }
+                } while (synchronized(lock) { (refreshAgain && !closed).also { again -> if (!again) refreshing = false } })
             }
         }
     }
@@ -73,9 +81,9 @@ internal class PeripheralMidiTransport(
     fun connect(device: PeripheralDevice, inputPort: Int, outputPort: Int?) {
         synchronized(lock) {
             if (closed || current != null) return
-            if (device.inputs.none { it.number == inputPort } ||
-                (outputPort != null && device.outputs.none { it.number == outputPort })) {
-                mutableState.value = State.Failed(Failure.INPUT_PORT)
+            if (device.inputs.none { it.number == inputPort }) { mutableState.value = State.Failed(Failure.INPUT_PORT); return }
+            if (outputPort != null && device.outputs.none { it.number == outputPort }) {
+                mutableState.value = State.Failed(Failure.OUTPUT_PORT)
                 return
             }
             val lease = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_PERIPHERAL)
@@ -84,7 +92,10 @@ internal class PeripheralMidiTransport(
             current = session
             session.rules.clearReceived()
             mutableState.value = State.Connecting
-            session.timeout = timer.schedule({ end(session, State.Failed(Failure.TIMEOUT)) }, 10, TimeUnit.SECONDS)
+            // cancel() cannot stop a timer that already started, so it checks whether the open finished first.
+            session.timeout = timer.schedule({
+                synchronized(lock) { if (session.device == null) end(session, State.Failed(Failure.TIMEOUT)) }
+            }, 10, TimeUnit.SECONDS)
             io.execute {
                 try {
                     access.open(device.id) { opened ->
@@ -158,7 +169,7 @@ internal class PeripheralMidiTransport(
             ++generation // Invalidate incoming bytes immediately.
             session.rules.clearReceived()
             mutableState.value = State.Closing
-            session.timeout = timer.schedule({ end(session, State.Failed(Failure.SEND)) }, 1, TimeUnit.SECONDS)
+            session.timeout = timer.schedule({ end(session, State.Failed(Failure.RELEASE)) }, 1, TimeUnit.SECONDS)
             try {
                 session.writer.execute {
                     try {
@@ -209,7 +220,7 @@ internal class PeripheralMidiTransport(
                     session.lease.close()
                     outputClosed && inputClosed && deviceClosed
                 }
-                val finalResult = if (result == State.Idle && !closedCleanly) State.Failed(Failure.SEND) else result
+                val finalResult = if (result == State.Idle && !closedCleanly) State.Failed(Failure.CLOSE) else result
                 synchronized(lock) {
                     if (current === session) { current = null; mutableState.value = finalResult }
                     if (closed) shutdown()

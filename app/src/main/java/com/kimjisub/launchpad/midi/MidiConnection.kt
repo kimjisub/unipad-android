@@ -579,8 +579,15 @@ object MidiConnection {
 	}
 
 	private fun initDevice(device: UsbDevice?) {
-		if (device == null) return
-		val ownership = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_HOST) ?: return
+		if (device == null) {
+			Log.midiDetail("USB 에러 : device == null")
+			return
+		}
+		val ownership = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_HOST)
+		if (ownership == null) {
+			Log.midiDetail("USB device ignored: another MIDI mode is connected")
+			return
+		}
 		try {
 			initOwnedDevice(device, ownership)
 		} finally {

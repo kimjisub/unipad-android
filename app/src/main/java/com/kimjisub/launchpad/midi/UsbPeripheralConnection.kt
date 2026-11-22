@@ -4,7 +4,7 @@ import android.content.Context
 
 /** No pack, audio, USB host driver or screen dependencies. Call close when its screen leaves. */
 class UsbPeripheralConnection internal constructor(access: PeripheralMidiAccess) : AutoCloseable {
-    enum class Failure { UNAVAILABLE, DISCOVERY, BUSY, OPEN, INPUT_PORT, SEND, OVERFLOW, REMOVED, TIMEOUT }
+    enum class Failure { UNAVAILABLE, DISCOVERY, BUSY, OPEN, INPUT_PORT, OUTPUT_PORT, SEND, RELEASE, CLOSE, OVERFLOW, REMOVED, TIMEOUT }
     sealed interface State {
         data object Idle : State
         data object Connecting : State

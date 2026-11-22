@@ -7,6 +7,7 @@ import java.io.IOException
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class UsbPeripheralConnectionTest {
     private val port = PeripheralDevice.Port(0, "port")
@@ -147,6 +148,26 @@ class UsbPeripheralConnectionTest {
         assertNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_PERIPHERAL))
     }
 
+    @Test fun missingOutputPortNumberIsReportedAsLightPortFailure() {
+        val (connection, _) = connection()
+        connection.connect(endpoint,0,7)
+        assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OUTPUT_PORT),connection.state.value)
+    }
+
+    @Test fun deviceAddedWhileListingIsReadAgainAfterTheRunningRead() {
+        val (connection, peer) = connection()
+        await { peer.listCalls.get() >= 1 }
+        val before = peer.listCalls.get()
+        peer.holdList = CountDownLatch(1)
+        peer.changed!!()
+        assertTrue(peer.listEntered.await(10,TimeUnit.SECONDS))
+        peer.listed = listOf(endpoint)
+        peer.changed!!()
+        peer.holdList!!.countDown()
+        await { connection.devices.value == listOf(endpoint) }
+        assertEquals(before + 2, peer.listCalls.get())
+    }
+
     @Test fun missingInputOrThrowingInputNeverEscapes() {
         val (connection, peer) = connection()
         connection.connect(endpoint,7,0)
@@ -165,7 +186,7 @@ class UsbPeripheralConnectionTest {
         assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
         connection.disconnect()
         assertEquals(UsbPeripheralConnection.State.Closing, connection.state.value)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.SEND) }
+        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.RELEASE) }
         assertTrue(peer.deviceClosed)
     }
 
@@ -202,7 +223,7 @@ class UsbPeripheralConnectionTest {
         open(connection)
         peer.closeThrows = true
         connection.disconnect()
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.SEND) }
+        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.CLOSE) }
         assertTrue(peer.inputClosed && peer.outputClosed && peer.deviceClosed)
     }
 
@@ -263,6 +284,11 @@ class UsbPeripheralConnectionTest {
     private class FakeAccess : PeripheralMidiAccess {
         @Volatile var completion: ((PeripheralMidiAccess.Device?) -> Unit)? = null
         @Volatile var removed: ((Int) -> Unit)? = null
+        @Volatile var changed: (() -> Unit)? = null
+        @Volatile var listed: List<PeripheralDevice> = emptyList()
+        @Volatile var holdList: CountDownLatch? = null
+        val listEntered = CountDownLatch(1)
+        val listCalls = AtomicInteger()
         @Volatile var receive: ((ByteArray,Int,Int) -> Unit)? = null
         @Volatile var defer = false
         @Volatile var closeThrows = false
@@ -283,10 +309,14 @@ class UsbPeripheralConnectionTest {
         val sent = Collections.synchronizedList(mutableListOf<List<Int>>())
         val sendThreads = Collections.synchronizedSet(mutableSetOf<String>())
         override fun devices(): List<PeripheralDevice> {
+            listCalls.incrementAndGet()
             if (listThrows) throw SecurityException("list")
-            return emptyList()
+            val snapshot = listed
+            holdList?.let { listEntered.countDown(); it.await(10,TimeUnit.SECONDS) }
+            return snapshot
         }
         override fun watch(changed: () -> Unit, removed: (Int) -> Unit): AutoCloseable {
+            this.changed = changed
             this.removed = removed
             return AutoCloseable { }
         }
