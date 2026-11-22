@@ -1,11 +1,6 @@
 package com.kimjisub.launchpad.midi
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.ServiceInfo
-import android.hardware.usb.UsbManager
 import android.media.midi.MidiDeviceInfo
-import android.media.midi.MidiManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Process
@@ -25,42 +20,16 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class VirtualMidiServiceTest : com.kimjisub.launchpad.basefeatures.PlaybackScreenTest() {
 	private val context = InstrumentationRegistry.getInstrumentation().targetContext
-	private val manager = context.getSystemService(Context.MIDI_SERVICE) as MidiManager
-	private val uri = Uri.parse("content://com.kimjisub.launchpad.dev.test.midi")
-	private fun call(method: String, extras: Bundle = Bundle()): Bundle = context.contentResolver.call(uri, method, "selected", extras)!!
-	private fun send(vararg bytes: Int) = send(bytes.map { it.toByte() }.toByteArray())
-	private fun send(bytes: ByteArray, port: Int = 1) { call("send", Bundle().apply { putByteArray("bytes", bytes); putInt("port",port) }) }
-	private fun <T> main(block: () -> T): T = runBlocking { withContext(Dispatchers.Main) { block() } }
-	private fun await(message: String, condition: () -> Boolean) = runBlocking {
-		try { withTimeout(10_000) { while (!condition()) delay(10) } }
-		catch (error: TimeoutCancellationException) { throw AssertionError(message, error) }
-		assertTrue(message, condition())
-	}
-	private fun info(serviceName: String): MidiDeviceInfo {
-		var found: MidiDeviceInfo? = null
-		await("Test MIDI service was not registered") {
-			found = manager.devices.firstOrNull { it.properties.getParcelable<ServiceInfo>("service_info")?.name?.endsWith(serviceName) == true }
-			found != null
-		}
-		return found!!
-	}
-	private fun connection(): VirtualMidiConnection {
-		main { MidiConnection.initConnection(Intent(), context.getSystemService(Context.USB_SERVICE) as UsbManager, context) }
-		return MidiConnection.virtualConnection(context)
-	}
-	private fun selection(connection: VirtualMidiConnection, lights: Int? = 0): VirtualMidiSelection {
-		val id = info(".MidiFixtureService").id
-		val descriptor = runBlocking { connection.devices().getOrThrow().single { it.id == id } }
-		assertTrue(descriptor.recommendsMatrix)
-		assertEquals(2, descriptor.performancePorts.size)
-		assertEquals(2, descriptor.lightPorts.size)
-		return VirtualMidiSelection(descriptor, 1, lights)
-	}
-	private fun close(connection: VirtualMidiConnection) {
-		main { connection.disconnect(); connection.disconnect() }
-		await("Virtual resources still own the USB gate") { MidiConnection.transportGate.acquireUsb()?.let { it.close(); true } == true }
-		assertNull(MidiConnection.connectedDevice)
-	}
+	private val fixture = VirtualMidiFixture(context)
+	private fun call(method: String, extras: Bundle = Bundle()): Bundle = fixture.call(method, extras)
+	private fun send(vararg bytes: Int) = fixture.send(*bytes)
+	private fun send(bytes: ByteArray, port: Int = 1) = fixture.send(bytes, port)
+	private fun <T> main(block: () -> T): T = fixture.main(block)
+	private fun await(message: String, condition: () -> Boolean) = fixture.await(message, condition)
+	private fun info(serviceName: String): MidiDeviceInfo = fixture.info(serviceName)
+	private fun connection(): VirtualMidiConnection = fixture.connection()
+	private fun selection(connection: VirtualMidiConnection, lights: Int? = 0): VirtualMidiSelection = fixture.selection(connection, lights)
+	private fun close(connection: VirtualMidiConnection) = fixture.close(connection)
 
 	@Test fun secondCableLayoutsUseRealPortsAndIgnoreDriverChangesUntilDisconnected() {
 		val connection = connection()

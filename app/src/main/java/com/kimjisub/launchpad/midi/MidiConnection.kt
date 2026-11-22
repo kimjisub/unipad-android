@@ -1267,7 +1267,9 @@ object MidiConnection {
 		else -> null
 	}
 
-	private var virtualTransportAttached = false
+	/** A virtual device (another app on this phone) owns the driver; read on the main thread. */
+	internal var virtualTransportAttached = false
+		private set
 
 	/** Call on the main thread, after initConnection; closing also releases held controller input. */
 	internal fun attachTransport(
@@ -1290,10 +1292,11 @@ object MidiConnection {
 		val attachment = AutoCloseable {
 			if (!closed) {
 				closed = true
+				// Cleared first so the controller's detach callback already sees the device gone.
+				virtualTransportAttached = false
 				// Each cleanup is independent: a failed LED write must still release held sounds.
 				runCatching { deviceDriver.sendClearLed() }
 				runCatching { deviceDriver.onDisconnected() }
-				virtualTransportAttached = false
 				transportObservation?.takeIf { it.input === observation }?.let {
 					lastDisconnected = it.status.copy(phase = MidiConnectionStatus.Phase.DISCONNECTED)
 					transportObservation = null

@@ -9,6 +9,11 @@ import android.os.Bundle;
 public class MidiFixtureProvider extends ContentProvider {
     @Override public boolean onCreate() { return true; }
     @Override public Bundle call(String method, String arg, Bundle extras) {
+        // The pad window outlives the service, which stops once the app disconnects.
+        if (method.equals("closePad")) {
+            MidiFixturePadActivity.close();
+            return Bundle.EMPTY;
+        }
         MidiFixtureService instance = MidiFixtureService.INSTANCES.get(arg);
         if (instance != null) return instance.command(method, extras != null ? extras : Bundle.EMPTY);
         Bundle snapshot = MidiFixtureService.SNAPSHOTS.get(arg);
