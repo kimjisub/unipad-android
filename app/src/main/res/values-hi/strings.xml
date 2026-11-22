@@ -125,8 +125,6 @@
 	<string name="outOfCPU">फोन की विशेषताओं के कारण\nपैक शुरू नहीं हो सका…\nपुनः प्रयास करें।</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Launchpad कनेक्ट हो रहा है…</string>
-	<string name="midiDevicesNotDetected">MIDI डिवाइस नहीं मिले</string>
 	<string name="midi_open_panel">खोलें</string>
 	<string name="midi_disconnected">डिस्कनेक्ट</string>
 

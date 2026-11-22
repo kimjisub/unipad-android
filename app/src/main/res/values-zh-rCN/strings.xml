@@ -124,8 +124,6 @@
 	<string name="outOfCPU">由于手机规格无法启动包…\n请重试。</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">正在连接 launchpad…</string>
-	<string name="midiDevicesNotDetected">未检测到 MIDI 设备</string>
 	<string name="midi_open_panel">打开</string>
 	<string name="midi_disconnected">已断开</string>
 

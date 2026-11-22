@@ -124,8 +124,6 @@
 	<string name="outOfCPU">端末のスペックにより\nパックを開始できませんでした…\nもう一度お試しください。</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Launchpadに接続中…</string>
-	<string name="midiDevicesNotDetected">MIDIデバイスが検出されません</string>
 	<string name="midi_open_panel">開く</string>
 	<string name="midi_disconnected">切断済み</string>
 

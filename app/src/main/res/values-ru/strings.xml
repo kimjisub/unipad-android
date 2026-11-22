@@ -127,8 +127,6 @@
 	<string name="outOfCPU">Не удалось запустить пак\nиз-за характеристик телефона…\nПопробуйте снова.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Подключение launchpad…</string>
-	<string name="midiDevicesNotDetected">MIDI устройства не обнаружены</string>
 	<string name="midi_open_panel">Открыть</string>
 	<string name="midi_disconnected">Отключено</string>
 

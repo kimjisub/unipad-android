@@ -116,8 +116,6 @@
 	<string name="outOfCPU">ဖုန်းစွမ်းဆောင်ရည်ကြောင့်\npack စတင်၍မရပါ…\nထပ်ကြိုးစားပါ။</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Launchpad ချိတ်ဆက်နေသည်…</string>
-	<string name="midiDevicesNotDetected">MIDI စက်ပစ္စည်းများ မတွေ့ပါ</string>
 	<string name="midi_open_panel">ဖွင့်</string>
 	<string name="midi_disconnected">ချိတ်ဆက်မှုပြတ်</string>
 

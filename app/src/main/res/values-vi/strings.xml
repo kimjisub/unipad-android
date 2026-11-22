@@ -124,8 +124,6 @@
 	<string name="outOfCPU">Không thể khởi động pack\ndo cấu hình điện thoại…\nThử lại.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Đang kết nối launchpad…</string>
-	<string name="midiDevicesNotDetected">Không Phát Hiện Thiết Bị MIDI</string>
 	<string name="midi_open_panel">Mở</string>
 	<string name="midi_disconnected">Đã ngắt kết nối</string>
 
