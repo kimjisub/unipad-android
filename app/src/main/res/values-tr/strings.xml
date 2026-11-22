@@ -125,8 +125,6 @@
 	<string name="outOfCPU">Telefon özellikleri nedeniyle\npak başlatılamadı…\nTekrar deneyin.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Launchpad bağlanıyor…</string>
-	<string name="midiDevicesNotDetected">MIDI Cihazları Algılanmadı</string>
 	<string name="midi_open_panel">Aç</string>
 	<string name="midi_disconnected">Bağlantı kesildi</string>
 

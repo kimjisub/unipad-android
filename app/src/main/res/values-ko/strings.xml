@@ -152,8 +152,6 @@
 	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">런치패드 연결중…</string>
-	<string name="midiDevicesNotDetected">MIDI 장치가 감지되지 않았습니다.</string>
 	<string name="midi_open_panel">열기</string>
 	<string name="midi_disconnected">연결 해제됨</string>
 
@@ -344,4 +342,40 @@
 	<string name="autoPlayRestoreApply">복원하기</string>
 	<string name="autoPlayRestored">이전 자동 연주로 복원했습니다. 메뉴에서 다시 되돌릴 수 있어요</string>
 	<string name="autoPlayRestoreFailed">복원하지 못했습니다. 현재 자동 연주와 백업은 그대로입니다</string>
+    <string name="midi_status_none">런치패드를 찾지 못했어요</string>
+    <string name="midi_status_none_detail">케이블·어댑터·전원을 확인하고 다시 꽂아 주세요.</string>
+    <string name="midi_status_permission">USB 사용 허락이 필요해요</string>
+    <string name="midi_status_permission_detail">USB 장치가 꽂혀 있지만 UniPad가 아직 쓸 수 없어요.</string>
+    <string name="midi_status_connected">연결됨: %1$s</string>
+    <string name="midi_status_unknown_detail">기종을 알아보지 못해 건반 방식으로 연결했어요. 런치패드라면 \'연결이 안 되나요?\'를 눌러 주세요.</string>
+    <string name="midi_status_wait">아무 패드나 눌러 보세요. 신호가 오면 여기에 표시돼요.</string>
+    <string name="midi_status_wait_long">아직 패드 신호가 없어요. 눌러도 그대로라면 \'연결이 안 되나요?\'를 봐 주세요.</string>
+    <string name="midi_status_input">패드 신호를 받았어요.</string>
+    <string name="midi_status_disconnected">연결이 끊겼어요</string>
+    <string name="midi_status_disconnected_detail">다시 꽂으면 앱이 다시 연결을 시도해요.</string>
+    <string name="midi_status_allow">허락하기</string>
+    <string name="midi_status_unknown">기종 모름</string>
+    <string name="midi_status_firmware">커스텀 펌웨어: %1$s</string>
+    <string name="midi_help_title">연결이 안 되나요?</string>
+    <string name="midi_help_close">도움말 닫기</string>
+    <string name="midi_help_expanded">펼침</string>
+    <string name="midi_help_collapsed">접힘</string>
+    <string name="midi_help_web_link">웹에서 자세히 보기</string>
+    <string name="midi_help_firmware_link">커스텀 펌웨어 안내 보기</string>
+    <string name="midi_help_find">런치패드를 찾지 못해요</string>
+    <string name="midi_help_find_body">• 케이블을 끝까지 꽂고, 휴대폰 단자에 맞는 어댑터를 써 주세요. 다른 케이블로도 바꿔 보세요.\n• 런치패드는 USB로 전원을 받아요. 불이 안 켜지거나 깜박이기만 하면 전원을 먼저 확인해 주세요.\n• 휴대폰이 USB OTG(외부 USB 기기 연결)를 지원해야 해요. USB 장치를 쓸 앱을 묻는 창이 뜨면 UniPad를 골라 주세요.</string>
+    <string name="midi_help_press">연결됐는데 눌러도 반응이 없어요</string>
+    <string name="midi_help_press_body">1. 아무 패드나 누르면서 상태 칸이 \'패드 신호를 받았어요\'로 바뀌는지 보세요.\n2. 상태 칸의 장치가 내 런치패드와 같은지 확인하고, 기종이 다르게 잡혔으면 기종 목록에서 맞는 기종을 골라 주세요. 목록에 없는 기종은 다른 기종으로 대신 고르지 마세요.\n3. 연결한 뒤 런치패드에서 모드를 바꿨다면 뽑았다가 다시 꽂아 주세요. 커스텀 펌웨어를 쓴다면 아래 안내를 봐 주세요.</string>
+    <string name="midi_help_lights">소리는 나는데 불빛이 없어요</string>
+    <string name="midi_help_lights_body">• 불빛 데이터가 없는 팩도 있어요. 불빛이 있는 팩으로 확인해 주세요.\n• Launchpad X·Mini MK3는 처음에 불빛이 꺼져 있을 수 있어요.\n• 불빛이 꺼져 있다는 것만으로는 연결이 실패했다고 볼 수 없어요.</string>
+    <string name="midi_help_wrong">누른 자리와 다른 패드가 반응해요</string>
+    <string name="midi_help_wrong_body">• 고른 기종이 실제 기종과 다르면 패드 위치가 어긋나요. 상태 칸의 장치와 고른 기종을 비교해 주세요.\n• 런치패드가 다른 모드(예: Live 모드)로 바뀌었을 수 있어요. 뽑았다가 다시 꽂아 주세요.\n• 커스텀 펌웨어를 쓴다면 아래 \'커스텀 펌웨어를 써요\'를 봐 주세요.</string>
+    <string name="midi_help_chain">오른쪽 버튼으로 체인이 안 바뀌어요</string>
+    <string name="midi_help_chain_body">순서대로 확인해 주세요.\n1. 연주 화면의 옵션 창이 열려 있으면 오른쪽 버튼은 음량 조절이에요. 옵션 창을 닫아 주세요. 맨 위 줄 왼쪽에서 4번째 버튼을 누르면 옵션 창이 열리고 닫혀요.\n2. 오른쪽 버튼 8개는 위에서부터 체인 1–8이에요. 팩의 체인 수보다 아래 버튼은 반응하지 않아요.\n3. 그래도 안 되면 뽑았다가 다시 꽂아 주세요.</string>
+    <string name="midi_help_firmware">커스텀 펌웨어를 써요</string>
+    <string name="midi_help_firmware_body">• UniPad는 Launchpad Pro(첫 모델)용 \'Launchpad Open\'과 CoreFW를 알아봐요. 알아보면 상태 칸에 \'커스텀 펌웨어\'가 표시돼요.\n• 설치한 펌웨어가 CoreFW 또는 Launchpad Open임을 아는 경우에만, 기종 목록에서 \'Launchpad (CoreFW)\' 또는 \'Launchpad Pro (Launchpad Open)\'을 직접 골라 보세요. 직접 고르는 것은 펌웨어가 확인됐다는 뜻이 아니에요.\n• 커스텀 펌웨어에서 모든 기능이 동작한다고 보장하지 않아요. UniPad는 펌웨어를 설치하거나 바꾸지 않아요.</string>
+    <string name="midi_help_crash">앱이 종료돼요</string>
+    <string name="midi_help_crash_body">장치 연결을 풀고 앱 버전, 휴대폰이나 태블릿 모델, 운영체제, 종료된 단계를 기록해 주세요. 같은 종료를 반복할 필요는 없어요.</string>
+    <string name="midi_source_auto">자동으로 알아봄</string>
+    <string name="midi_source_manual">직접 고름 · 다시 꽂으면 자동으로 돌아가요</string>
 </resources>

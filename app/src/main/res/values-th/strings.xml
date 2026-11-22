@@ -124,8 +124,6 @@
 	<string name="outOfCPU">ไม่สามารถเริ่ม pack ได้\nเนื่องจากสเปคโทรศัพท์…\nลองใหม่อีกครั้ง</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">กำลังเชื่อมต่อ launchpad…</string>
-	<string name="midiDevicesNotDetected">ไม่พบอุปกรณ์ MIDI</string>
 	<string name="midi_open_panel">เปิด</string>
 	<string name="midi_disconnected">ตัดการเชื่อมต่อแล้ว</string>
 
