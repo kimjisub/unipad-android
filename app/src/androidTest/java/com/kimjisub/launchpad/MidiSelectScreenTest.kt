@@ -24,6 +24,12 @@ import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MidiSelectActivity
+import com.kimjisub.launchpad.activity.MidiSelectScreen
+import com.kimjisub.launchpad.midi.MidiConnectionStatus
+import com.kimjisub.launchpad.ui.theme.UniPadTheme
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadS
@@ -332,5 +338,74 @@ class MidiSelectScreenTest {
         }
         button(android.R.string.ok).assertIsDisplayed().assertHeightIsAtLeast(40.dp)
         capture("selection-korean-settings")
+    }
+
+    @Test fun unknownDeviceChosenByHandIsShownAsTheChoice() = checkUnknownDeviceChosenByHand("en")
+
+    @Test fun koreanUnknownDeviceChosenByHandIsShownAsTheChoice() = checkUnknownDeviceChosenByHand("ko")
+
+    /**
+     * An emulator cannot attach a USB device, and a virtual connection keeps its own layout, so
+     * this draws the real screen with the statuses a USB connection reports at each step
+     * (MidiConnectionLifecycleTest drives those through the USB path).
+     */
+    private fun checkUnknownDeviceChosenByHand(language: String) {
+        val unknown = MidiConnectionStatus(7, "USB Piano 42", MidiConnectionStatus.Phase.WAITING, modelUnknown = true)
+        val keyboard = 9
+        val status = mutableStateOf(unknown)
+        val selected = mutableIntStateOf(keyboard)
+        fun host() = compose.runOnUiThread {
+            compose.activity.setContent {
+                UniPadTheme {
+                    MidiSelectScreen(
+                        status = status.value, onAllow = {}, onBrowse = {}, selectedIndex = selected.intValue,
+                        dualPadModeEnabled = false, reflectedModeEnabled = false, reflectedSwapSides = false,
+                        connectedSessions = emptyList(), selectedSessionId = null, onSessionTargetSelect = {},
+                        onDeviceSelect = { index ->
+                            selected.intValue = index
+                            status.value = status.value.copy(manuallyChosen = true, modelUnknown = index == keyboard)
+                        },
+                        onDualPadModeChange = {}, onReflectedModeChange = {}, onReflectedSwapSidesChange = {}, onClose = {},
+                    )
+                }
+            }
+        }
+        fun assertKeyboardState() {
+            compose.onNodeWithText(str(R.string.midi_status_unknown)).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_status_unknown_detail)).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_source_auto)).assertDoesNotExist()
+            compose.onNodeWithText(str(R.string.midi_source_manual)).assertDoesNotExist()
+        }
+        host()
+        compose.onNodeWithText(str(R.string.midi_status_connected).format("USB Piano 42")).assertIsDisplayed()
+        assertKeyboardState()
+        capture("unknown-$language")
+
+        button(R.string.midi_lp_mini_mk3).performScrollTo().performClick()
+        fun assertChosenState() {
+            compose.onNodeWithText(str(R.string.midi_status_connected).format("USB Piano 42")).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_status_wait)).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_status_unknown)).assertDoesNotExist()
+            compose.onNodeWithText(str(R.string.midi_status_unknown_detail)).assertDoesNotExist()
+            compose.onNodeWithText(str(R.string.midi_status_firmware).format("CoreFW")).assertDoesNotExist()
+            compose.onNodeWithText(str(R.string.midi_source_manual)).assertIsDisplayed()
+        }
+        assertChosenState()
+        capture("unknown-chosen-$language")
+
+        // Opening the screen again reads the same connection.
+        compose.activityRule.scenario.recreate()
+        host()
+        assertChosenState()
+        capture("unknown-chosen-reopened-$language")
+
+        // Picking the keyboard again returns to it for this connection.
+        button(R.string.midi_master_keyboard).performScrollTo().performClick()
+        assertKeyboardState()
+
+        // Plugging it in again starts from detection.
+        compose.runOnIdle { status.value = unknown }
+        assertKeyboardState()
+        capture("unknown-replugged-$language")
     }
 }

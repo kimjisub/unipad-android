@@ -128,6 +128,57 @@ class MidiConnectionLifecycleTest {
         assertNoCrash()
     }
 
+	@Test fun status_modelAppliedByHandToAnUnknownUsbDeviceEndsTheKeyboardStateUntilPluggedInAgain() {
+		every { context.getSharedPreferences(any(), any()).getBoolean(any(), any()) } answers { secondArg<Boolean>() }
+		val oldDualMode = MidiConnection.dualPadModeEnabled
+		MidiConnection.dualPadModeEnabled = false
+		val (device, connection) = launchpad(33)
+		every { device.productId } returns 0x7777
+		every { device.productName } returns "USB Piano 42"
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo(device))
+		val callbacks = mutableListOf<MidiManager.OnDeviceOpenedListener>()
+		every { midiManager.openDevice(any(), capture(callbacks), any()) } returns Unit
+		try {
+			attach(device)
+			MidiConnection.connectionStatus(33).let {
+				assertTrue(it.modelUnknown)
+				assertEquals(false, it.manuallyChosen)
+				assertEquals("USB Piano 42", it.deviceName)
+			}
+
+			// A single pad: the selection screen assigns the shared driver.
+			MidiConnection.driver = com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3()
+			MidiConnection.connectionStatus(33).let {
+				assertEquals(false, it.modelUnknown)
+				assertTrue(it.manuallyChosen)
+				assertEquals("choosing a model does not claim firmware", null, it.firmware)
+				assertEquals(MidiConnectionStatus.Phase.WAITING, it.phase)
+				assertEquals("USB Piano 42", it.deviceName)
+			}
+
+			// Picking the keyboard fallback again returns to it.
+			MidiConnection.driver = com.kimjisub.launchpad.midi.driver.MasterKeyboard()
+			assertTrue(MidiConnection.connectionStatus(33).modelUnknown)
+
+			// The per-device path used while several pads are connected follows the same rule.
+			MidiConnection.setDriverForSession(33, LaunchpadX())
+			assertEquals(false, MidiConnection.connectionStatus(33).modelUnknown)
+
+			// Plugging it in again detects it afresh.
+			attach(device)
+			verify(timeout = TIMEOUT_MS) { connection.close() }
+			MidiConnection.connectionStatus(33).let {
+				assertTrue(it.modelUnknown)
+				assertEquals(false, it.manuallyChosen)
+			}
+		} finally {
+			callbacks.forEach { it.onDeviceOpened(null) }
+			verify(timeout = TIMEOUT_MS) { connection.close() }
+			MidiConnection.dualPadModeEnabled = oldDualMode
+		}
+		assertNoCrash()
+	}
+
 	@Test fun virtualDriverPickCannotReplaceTheLiveTransportAndReconnectStillWorks() {
 		val selected = com.kimjisub.launchpad.midi.driver.Matrix()
 		val output = mockk<DriverRef.OnSendSignalListener>(relaxed = true)

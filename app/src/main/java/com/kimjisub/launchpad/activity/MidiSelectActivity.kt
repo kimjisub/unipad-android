@@ -105,7 +105,9 @@ class MidiSelectActivity : BaseActivity() {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				while (true) {
 					readConnectionState()
-					delay(250)
+					// Pad input needs a quick sample; without a connection each read also lists the
+					// USB devices to spot one waiting for permission, which can wait longer.
+					delay(if (status.value.connected) 250 else 1000)
 				}
 			}
 		}
@@ -245,7 +247,7 @@ private val midiDevices = listOf(
 )
 
 @Composable
-private fun MidiSelectScreen(
+internal fun MidiSelectScreen(
 	status: MidiConnectionStatus,
 	onAllow: () -> Unit,
 	onBrowse: (String) -> Unit,
@@ -374,7 +376,8 @@ private fun MidiSelectScreen(
 					}
 				}
 
-				if (status.connected) Text(
+				// An unknown model has no source: the status already says it runs as a keyboard.
+				if (status.connected && !status.modelUnknown) Text(
 					stringResource(if (status.manuallyChosen) R.string.midi_source_manual else R.string.midi_source_auto),
 					style = MaterialTheme.typography.bodySmall,
 					color = MaterialTheme.colorScheme.onBackground,
