@@ -290,7 +290,10 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 
 	private fun holdOtherAppPad(): Int {
 		fixture.call("clear")
+		val presses = padPresses()
 		val finger = fingers.down(otherAppPad())
+		// Separates a press the emulator never delivered from one the play screen did not play.
+		screen.await("The other app's window did not receive the press") { padPresses() > presses }
 		screen.await("The other window's press did not start the looping pad") { audio.ringingLoops().size == 1 }
 		SystemClock.sleep(1_000)
 		assertBesideTheOtherApp()
@@ -401,7 +404,17 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		}
 	}
 
-	private fun otherAppPad(): Point = screen.device.findObject(By.desc(PAD)).visibleBounds.let { Point(it.centerX(), it.centerY()) }
+	private fun padPresses(): Int = fixture.call("read").getInt("padPresses")
+
+	/** The centre of the other app's pad once its window has stopped moving (a split settles after it opens). */
+	private fun otherAppPad(): Point {
+		var last: android.graphics.Rect? = null
+		screen.await("The other app's window did not settle") {
+			val now = screen.device.findObject(By.desc(PAD))?.visibleBounds
+			(now != null && now == last).also { last = now; if (!it) SystemClock.sleep(150) }
+		}
+		return last!!.let { Point(it.centerX(), it.centerY()) }
+	}
 
 	private fun playScreenCentre(): Point = screen.onMain { screen.bounds(play.window.decorView) }.let { Point(it.centerX(), it.centerY()) }
 
