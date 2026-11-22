@@ -126,8 +126,6 @@
 	<string name="outOfCPU">Impossibile avviare il pack\na causa delle specifiche del telefono…\nRiprova.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Connessione launchpad…</string>
-	<string name="midiDevicesNotDetected">Dispositivi MIDI Non Rilevati</string>
 	<string name="midi_open_panel">Apri</string>
 	<string name="midi_disconnected">Disconnesso</string>
 

@@ -132,8 +132,6 @@
 	<string name="outOfCPU">No se pudo iniciar el pack\npor las especificaciones del teléfono…\nIntenta de nuevo.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Conectando launchpad…</string>
-	<string name="midiDevicesNotDetected">No se detectaron dispositivos MIDI</string>
 	<string name="midi_open_panel">Abrir</string>
 	<string name="midi_disconnected">Desconectado</string>
 

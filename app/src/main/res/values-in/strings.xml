@@ -124,8 +124,6 @@
 	<string name="outOfCPU">Tidak bisa memulai pack\nkarena spesifikasi ponsel…\nCoba lagi.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Menghubungkan launchpad…</string>
-	<string name="midiDevicesNotDetected">Perangkat MIDI Tidak Terdeteksi</string>
 	<string name="midi_open_panel">Buka</string>
 	<string name="midi_disconnected">Terputus</string>
 

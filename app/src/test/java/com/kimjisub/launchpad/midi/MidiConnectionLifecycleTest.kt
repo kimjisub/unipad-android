@@ -85,6 +85,8 @@ class MidiConnectionLifecycleTest {
 
     @Test
     fun status_isolatesTwoUsbDevicesAndKeepsAnnouncedNameAndDetectionFacts() {
+        // Empty preferences must honour the getter's default, unlike a relaxed mock.
+        every { context.getSharedPreferences(any(), any()).getBoolean(any(), any()) } answers { secondArg<Boolean>() }
         val oldDualMode = MidiConnection.dualPadModeEnabled
         MidiConnection.dualPadModeEnabled = true
         val (first, firstConnection) = launchpad(31)
@@ -98,6 +100,7 @@ class MidiConnectionLifecycleTest {
         val callbacks = mutableListOf<MidiManager.OnDeviceOpenedListener>()
         every { midiManager.openDevice(any(), capture(callbacks), any()) } returns Unit
         try {
+            assertTrue("Dual pad mode must stay enabled in this fixture", MidiConnection.dualPadModeEnabled)
             attach(first)
             attach(second)
             val firstDriver = requireNotNull(MidiConnection.driverForSession(31))

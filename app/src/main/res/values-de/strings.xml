@@ -125,8 +125,6 @@
 	<string name="outOfCPU">Pack konnte nicht gestartet werden\naufgrund der Telefonspezifikationen…\nErneut versuchen.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Launchpad wird verbunden…</string>
-	<string name="midiDevicesNotDetected">Keine MIDI-Geräte erkannt</string>
 	<string name="midi_open_panel">Öffnen</string>
 	<string name="midi_disconnected">Getrennt</string>
 

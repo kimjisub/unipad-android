@@ -114,8 +114,6 @@
 	<string name="outOfCPU">Hindi nasimulan ang pack\ndahil sa specs ng telepono…\nSubukan muli.</string>
 
 	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">Kumokonekta sa launchpad…</string>
-	<string name="midiDevicesNotDetected">Hindi Nakita ang mga MIDI Device</string>
 	<string name="midi_open_panel">Buksan</string>
 	<string name="midi_disconnected">Nadiskonekta</string>
 
