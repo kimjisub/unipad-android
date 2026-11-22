@@ -3,8 +3,6 @@ package com.kimjisub.launchpad.basefeatures
 import android.content.Intent
 import android.graphics.Point
 import android.hardware.usb.UsbManager
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.SystemClock
@@ -104,19 +102,20 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		screen.await("The play screen did not close") { screen.onMain { play.isDestroyed } }
 	}
 
+	// The stream-type request exists on every supported version; AudioFocusRequest is API 26+, and a
+	// lambda capturing one would keep this class from loading on Android 7.
+	@Suppress("DEPRECATION")
 	@Test fun losingSoundOutputLetsGoOfTheHeldPad() {
 		val audioManager = screen.context.getSystemService(AudioManager::class.java)
-		val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-			.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build())
-			.setOnAudioFocusChangeListener { }
-			.build()
+		val otherPlayer = AudioManager.OnAudioFocusChangeListener { }
 		try {
 			// The earlier rule for sound output: silence, while the press itself stays held.
 			holdThenLeave("another player taking sound output", lightsOff = false) {
-				assertEquals(AudioManager.AUDIOFOCUS_REQUEST_GRANTED, audioManager.requestAudioFocus(request))
+				assertEquals(AudioManager.AUDIOFOCUS_REQUEST_GRANTED,
+					audioManager.requestAudioFocus(otherPlayer, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN))
 			}
 		} finally {
-			audioManager.abandonAudioFocusRequest(request)
+			audioManager.abandonAudioFocus(otherPlayer)
 		}
 	}
 
@@ -143,7 +142,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		fixture.send(0x91, 64, 127)
 		SystemClock.sleep(500)
 		screen.device.wakeUp()
-		screen.device.executeShellCommand("wm dismiss-keyguard")
+		// `wm dismiss-keyguard` arrived in Android 8; the menu key dismisses an insecure lock before it.
+		screen.device.executeShellCommand(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "wm dismiss-keyguard" else "input keyevent 82")
 		screen.await("Unlocking did not show the play screen again") { screen.onMain { vm.screenVisible } }
 		SystemClock.sleep(1_000)
 		assertEquals("Input received while locked must not play on return", played, audio.plays.size)
@@ -294,6 +294,9 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			// The docked stack of Android 7–11; the launcher's recents fill the other half until a launch.
 			screen.device.executeShellCommand("am stack movetask $playTask 3 true")
 			screen.await("The play screen was not docked") { screen.onMain { play.isInMultiWindowMode } }
+			// Opened before them, the other app's window would be covered by those recents.
+			screen.await("The recents did not take the other half") { screen.onMain { !play.hasWindowFocus() } }
+			screen.device.waitForIdle()
 			screen.context.startActivity(pad.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT))
 		}
 		screen.await("The play screen did not share the display with the other app") {
