@@ -40,8 +40,11 @@ class UsbPeripheralPortsTest {
         assertFalse("Production discovery must reject a virtual service", AndroidPeripheralMidiAccess.isPeripheral(info))
         observer = openDevice()
         observedPort = AndroidMidiPorts(observer).output(0, ::recordWire)!!
-        observer.openInputPort(1)!!.use { it.send(byteArrayOf(0),0,1) }
-        await { echoed.contains(listOf(0xb0,111,0)) }
+        // Closing the port right after sending can drop the byte before the peer reads it.
+        observer.openInputPort(1)!!.use {
+            it.send(byteArrayOf(0),0,1)
+            await { echoed.contains(listOf(0xb0,111,0)) }
+        }
         echoed.clear()
     }
 
