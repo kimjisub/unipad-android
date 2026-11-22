@@ -4,6 +4,8 @@ package com.kimjisub.launchpad.midi
  * Reserves the connection before any port is opened, including pending asynchronous opens.
  * USB host controllers may share it with each other; a virtual or computer (USB peripheral)
  * connection holds it alone. A held reservation is never taken away: the later request is refused.
+ * A computer connection that fails hands its reservation back before its ports finish closing, so
+ * a port stuck on a computer that is not reading can still be busy for the next connection.
  */
 internal class MidiTransportGate {
 	private enum class Exclusive { VIRTUAL, PERIPHERAL }

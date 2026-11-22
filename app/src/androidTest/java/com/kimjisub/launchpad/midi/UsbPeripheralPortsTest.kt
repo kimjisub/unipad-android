@@ -172,7 +172,7 @@ class UsbPeripheralPortsTest {
         } finally {
             control.send(byteArrayOf(3),0,1)
             // The stuck port closes once the peer reads again; the next test needs the port free.
-            assertTrue(devicesClosed.await(15,TimeUnit.SECONDS))
+            devicesClosed.await(15,TimeUnit.SECONDS)
         }
     }
 

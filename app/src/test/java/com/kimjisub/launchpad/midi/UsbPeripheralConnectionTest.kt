@@ -115,7 +115,7 @@ class UsbPeripheralConnectionTest {
         peer.sendThrows = true
         connection.sendCurrent(PadChange(0,true))
         await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.SEND) }
-        assertTrue(peer.inputClosed && peer.outputClosed && peer.deviceClosed)
+        await { peer.inputClosed && peer.outputClosed && peer.deviceClosed }
         peer.sendThrows = false
         open(connection)
         peer.receive!!(byteArrayOf(0x90.toByte(),81,5),0,3)
@@ -202,7 +202,7 @@ class UsbPeripheralConnectionTest {
         peer.inputThrows = true
         connection.connect(endpoint,0,0)
         await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.INPUT_PORT) }
-        assertTrue(peer.deviceClosed)
+        await { peer.deviceClosed }
     }
 
     @Test fun disconnectDoesNotWaitOnBlockedSenderAndClosesAtDeadline() {
@@ -214,7 +214,7 @@ class UsbPeripheralConnectionTest {
         connection.disconnect()
         assertEquals(UsbPeripheralConnection.State.Closing, connection.state.value)
         await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.RELEASE) }
-        assertTrue(peer.deviceClosed)
+        await { peer.deviceClosed }
     }
 
     @Test fun releaseDeadlineFreesTheTransportWhileClosingWaitsForABlockedSend() {

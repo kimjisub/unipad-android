@@ -32,6 +32,8 @@ public class PeripheralMidiPeer extends MidiDeviceService {
                 public void onSend(byte[] data, int offset, int count, long timestamp) throws IOException {
                     if (count == 0) return;
                     if (data[offset] == 2) {
+                        CountDownLatch previous = stalled;
+                        if (previous != null) previous.countDown();
                         stalled = new CountDownLatch(1);
                         byte[] stalling = {(byte) 0xb0, 111, 127};
                         getOutputPortReceivers()[0].send(stalling, 0, stalling.length);
