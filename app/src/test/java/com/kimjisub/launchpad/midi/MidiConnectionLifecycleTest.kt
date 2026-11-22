@@ -173,7 +173,9 @@ class MidiConnectionLifecycleTest {
 			}
 		} finally {
 			callbacks.forEach { it.onDeviceOpened(null) }
-			verify(timeout = TIMEOUT_MS) { connection.close() }
+			// Plugging in again already closed the first connection, so a close() check would
+			// pass before the second one is torn down; wait for the session itself to go.
+			awaitNoSessions()
 			MidiConnection.dualPadModeEnabled = oldDualMode
 		}
 		assertNoCrash()
@@ -539,6 +541,16 @@ class MidiConnectionLifecycleTest {
 		every { info.inputPortCount } returns 1
 		every { info.ports } returns arrayOf(port)
 		return info
+	}
+
+	private fun awaitNoSessions() {
+		val deadline = System.currentTimeMillis() + TIMEOUT_MS
+		while (MidiConnection.connectedSessions.isNotEmpty()) {
+			check(System.currentTimeMillis() < deadline) {
+				"sessions still open: ${MidiConnection.connectedSessions.map { it.sessionId }}"
+			}
+			Thread.sleep(20)
+		}
 	}
 
 	private fun assertNoCrash() {
