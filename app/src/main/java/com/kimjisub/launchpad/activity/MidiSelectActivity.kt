@@ -169,27 +169,39 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	// Mirrors MidiConnection into the screen state without connecting or applying a driver.
-	// Keep a detached target visible until a replacement connects or another device is chosen.
 	private fun readConnectionState() {
-		connectedSessions.value = MidiConnection.connectedSessions
-		val previousStatus = MidiConnection.connectionStatus(selectedSessionId.value, usbManager)
-		val keepDetachedTarget = selectedSessionId.value != null && previousStatus.sessionId == selectedSessionId.value &&
-			previousStatus.phase == MidiConnectionStatus.Phase.DISCONNECTED
-		if (!keepDetachedTarget && connectedSessions.value.none { it.sessionId == selectedSessionId.value }) {
-			selectedSessionId.value = connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
-				?: connectedSessions.value.firstOrNull()?.sessionId
-		}
+		val sessions = MidiConnection.connectedSessions
+		connectedSessions.value = sessions
+		val previousTarget = selectedSessionId.value
+		val previousStatus = MidiConnection.connectionStatus(previousTarget, usbManager)
+		val target = midiTargetAfterRead(sessions, previousTarget, previousStatus)
+		selectedSessionId.value = target
 		dualPadModeEnabled.value = MidiConnection.dualPadModeEnabled
 		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
 		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
 		updateSelectedIndexForTarget()
-		status.value = MidiConnection.connectionStatus(selectedSessionId.value, usbManager)
+		status.value = if (target == previousTarget) previousStatus else MidiConnection.connectionStatus(target, usbManager)
 	}
 
 	private fun updateSelectedIndexForTarget() {
 		midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
 			?.let { selectedIndex.intValue = it }
 	}
+}
+
+// The pad the screen targets after reading the connections. The last pad to leave stays targeted
+// so its disconnection shows; while another pad is connected the target moves to it, so a model
+// pick always reaches the pad the status describes.
+internal fun midiTargetAfterRead(
+	sessions: List<MidiConnection.SessionSummary>,
+	target: Int?,
+	targetStatus: MidiConnectionStatus,
+): Int? {
+	if (sessions.any { it.sessionId == target }) return target
+	val lastPadDetached = sessions.isEmpty() && target != null && targetStatus.sessionId == target &&
+		targetStatus.phase == MidiConnectionStatus.Phase.DISCONNECTED
+	if (lastPadDetached) return target
+	return sessions.firstOrNull { it.isPrimary }?.sessionId ?: sessions.firstOrNull()?.sessionId
 }
 
 // The model highlighted for the targeted pad, or for MidiConnection.driver when no pad is
