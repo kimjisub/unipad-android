@@ -59,7 +59,8 @@ A completed screen recorder remains an unverified corpus case; it is not a confo
 `UsbPeripheralPortsTest` opens real Android MIDI ports against `PeripheralMidiPeer`, a service
 in a separate process of the test APK. It checks byte-stream round trips, exclusive input-port
 occupancy, a missing light port, cancellation before a delayed open callback, peer process death,
-and final releases. The production endpoint filter rejects this virtual service. These checks do
+and final releases. It also makes the peer stop reading, like a computer with no program reading
+MIDI, and checks that the release and overflow deadlines still hand the connection back. The production endpoint filter rejects this virtual service. These checks do
 not establish USB peripheral support, desktop compatibility, or USB cable latency.
 
 ## Run on an API 35 emulator

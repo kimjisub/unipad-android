@@ -131,12 +131,58 @@ class UsbPeripheralPortsTest {
         assertTrue(connection.lights.snapshot().all { it == 0 })
     }
 
+    @Test fun releaseDeadlineHandsTheTransportBackWhileTheComputerIsNotReading() =
+        whileThePeerIsNotReading(UsbPeripheralConnection.Failure.RELEASE) { connection ->
+            blockTheWriter(connection)
+            connection.disconnect()
+        }
+
+    @Test fun overflowHandsTheTransportBackWhileTheComputerIsNotReading() =
+        whileThePeerIsNotReading(UsbPeripheralConnection.Failure.OVERFLOW) { connection ->
+            blockTheWriter(connection)
+            var sent = 0
+            while (sent < 200_000 && connection.sendCurrent(PadChange(sent % 64, sent % 2 == 0))) sent++
+            assertTrue("the queue never refused", sent < 200_000)
+        }
+
+    /** Fills the socket so the writer blocks in the Android port, staying under the 1,024 queued messages. */
+    private fun blockTheWriter(connection: UsbPeripheralConnection) {
+        var sent = 0
+        repeat(6) {
+            repeat(100) { if (connection.sendCurrent(PadChange(sent % 64, sent % 2 == 0))) sent++ }
+            Thread.sleep(100)
+        }
+        assertTrue("sends refused early: $sent of 600 accepted", sent == 600)
+    }
+
+    /** The one-second release deadline must hold even when a send is stuck inside the Android port. */
+    private fun whileThePeerIsNotReading(expected: UsbPeripheralConnection.Failure, fill: (UsbPeripheralConnection) -> Unit) {
+        val gate = MidiTransportGate()
+        val devicesClosed = CountDownLatch(1)
+        val connection = connection(gate = gate, onClosed = { devicesClosed.countDown() })
+        connect(connection)
+        val control = observer.openInputPort(1)!!
+        resources.add(control)
+        control.send(byteArrayOf(2),0,1)
+        try {
+            await { echoed.contains(listOf(0xb0,111,127)) }
+            fill(connection)
+            awaitWithin(4) { connection.state.value == UsbPeripheralConnection.State.Failed(expected) }
+            assertNotNull("the transport was not handed back", gate.acquireUsb()?.also { it.close() })
+        } finally {
+            control.send(byteArrayOf(3),0,1)
+            // The stuck port closes once the peer reads again; the next test needs the port free.
+            assertTrue(devicesClosed.await(15,TimeUnit.SECONDS))
+        }
+    }
+
     private fun UsbPeripheralConnection.sendCurrent(change: PadChange): Boolean {
         val opened = state.value as? UsbPeripheralConnection.State.Open ?: return false
         return send(change, opened.generation)
     }
 
-    private fun connection(noLights: Boolean = false, defer: ((() -> Unit) -> Unit)? = null, onClosed: () -> Unit = {}): UsbPeripheralConnection {
+    private fun connection(noLights: Boolean = false, defer: ((() -> Unit) -> Unit)? = null, onClosed: () -> Unit = {},
+                           gate: MidiTransportGate = MidiTransportGate()): UsbPeripheralConnection {
         var delayedOpen = defer
         val access = object : PeripheralMidiAccess {
             override fun devices() = listOf(endpoint)
@@ -162,7 +208,7 @@ class UsbPeripheralPortsTest {
                 }, Handler(Looper.getMainLooper()))
             }
         }
-        return UsbPeripheralConnection(access, MidiTransportGate()).also { connections.add(it) }
+        return UsbPeripheralConnection(access, gate).also { connections.add(it) }
     }
     private fun connect(connection: UsbPeripheralConnection) {
         connection.connect(endpoint,0,0)
@@ -175,8 +221,9 @@ class UsbPeripheralPortsTest {
         assertTrue(ready.await(15,TimeUnit.SECONDS))
         return device!!
     }
-    private fun await(condition: () -> Boolean) {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15)
+    private fun await(condition: () -> Boolean) = awaitWithin(15, condition)
+    private fun awaitWithin(seconds: Long, condition: () -> Boolean) {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(seconds)
         while (!condition() && System.nanoTime() < deadline) Thread.sleep(20)
         assertTrue("Android port condition did not complete; echo=${echoed.toList()}",condition())
     }

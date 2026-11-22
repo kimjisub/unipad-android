@@ -20,6 +20,8 @@ internal class PeripheralMidiTransport(
     private val lock = Any()
     private val io = Executors.newFixedThreadPool(2)
     private val timer = Executors.newSingleThreadScheduledExecutor()
+    // Closing a port waits for a send stuck on a computer that is not reading; it must not hold io.
+    private val closer = Executors.newCachedThreadPool()
     private val mutableState = MutableStateFlow<State>(State.Idle)
     val state = mutableState.asStateFlow()
     private val mutableDevices = MutableStateFlow<List<PeripheralDevice>>(emptyList())
@@ -203,6 +205,11 @@ internal class PeripheralMidiTransport(
         }
     }
 
+    /**
+     * A failure is reported and the transport handed back at once: closing the ports can wait for
+     * as long as a stuck send does. A normal release has no send in progress, so it closes first and
+     * reports a port that did not close cleanly.
+     */
     private fun end(session: Session, result: State) {
         synchronized(lock) {
             if (current !== session || session.ending) return
@@ -212,22 +219,27 @@ internal class PeripheralMidiTransport(
             session.timeout?.cancel(false)
             session.writer.shutdownNow()
             session.rules.clearReceived()
-            mutableState.value = State.Closing
-            io.execute {
+            val waitForClose = result == State.Idle
+            if (waitForClose) mutableState.value = State.Closing else finish(session, result)
+            closer.execute {
                 val closedCleanly = synchronized(session.resourcesLock) {
                     val outputClosed = safelyClose(session.output)
                     val inputClosed = safelyClose(session.input)
                     val deviceClosed = safelyClose(session.device)
-                    session.lease.close()
                     outputClosed && inputClosed && deviceClosed
                 }
-                val finalResult = if (result == State.Idle && !closedCleanly) State.Failed(Failure.CLOSE) else result
-                synchronized(lock) {
-                    if (current === session) { current = null; mutableState.value = finalResult }
+                if (waitForClose) synchronized(lock) {
+                    finish(session, if (closedCleanly) result else State.Failed(Failure.CLOSE))
                     if (closed) shutdown()
                 }
             }
+            if (closed && !waitForClose) shutdown()
         }
+    }
+
+    private fun finish(session: Session, result: State) {
+        session.lease.close()
+        if (current === session) { current = null; mutableState.value = result }
     }
 
     private fun dispatchOrClose(device: PeripheralMidiAccess.Device?, block: () -> Unit) {
@@ -245,6 +257,6 @@ internal class PeripheralMidiTransport(
         }
     }
 
-    private fun shutdown() { timer.shutdownNow(); io.shutdown() }
+    private fun shutdown() { timer.shutdownNow(); io.shutdown(); closer.shutdown() }
     private fun safelyClose(resource: AutoCloseable?): Boolean = try { resource?.close(); true } catch (_: Exception) { false }
 }

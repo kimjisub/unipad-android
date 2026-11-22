@@ -217,6 +217,39 @@ class UsbPeripheralConnectionTest {
         assertTrue(peer.deviceClosed)
     }
 
+    @Test fun releaseDeadlineFreesTheTransportWhileClosingWaitsForABlockedSend() {
+        val gate = MidiTransportGate()
+        val (connection, peer) = connection(gate)
+        peer.closeWaitsForSend = true
+        peer.blockSend = true
+        open(connection)
+        connection.sendCurrent(PadChange(0,true))
+        assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
+        connection.disconnect()
+        awaitWithin(3) { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.RELEASE) }
+        assertNotNull(gate.acquireUsb()?.also { it.close() })
+        assertFalse(peer.inputClosed)
+        peer.unblock.countDown()
+        await { peer.inputClosed && peer.deviceClosed }
+    }
+
+    @Test fun overflowDeadlineFreesTheTransportWhileClosingWaitsForABlockedSend() {
+        val gate = MidiTransportGate()
+        val (connection, peer) = connection(gate)
+        peer.closeWaitsForSend = true
+        peer.blockSend = true
+        open(connection)
+        connection.sendCurrent(PadChange(0,true))
+        assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
+        var accepted = 0
+        while (accepted < 5_000 && connection.sendCurrent(PadChange(accepted % 64, accepted % 2 == 0))) accepted++
+        assertTrue("the queue must refuse before 5,000 sends", accepted < 5_000)
+        awaitWithin(3) { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OVERFLOW) }
+        assertNotNull(gate.acquireUsb()?.also { it.close() })
+        peer.unblock.countDown()
+        await { peer.inputClosed && peer.deviceClosed }
+    }
+
     @Test fun removedPendingEndpointCannotReopenAndDoesNotReplayEvents() {
         val (connection, peer) = connection()
         peer.defer = true
@@ -303,8 +336,9 @@ class UsbPeripheralConnectionTest {
         connection.connect(endpoint,0,0)
         await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == true }
     }
-    private fun await(check: () -> Boolean) {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+    private fun await(check: () -> Boolean) = awaitWithin(10, check)
+    private fun awaitWithin(seconds: Long, check: () -> Boolean) {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(seconds)
         while (!check() && System.nanoTime() < deadline) Thread.sleep(5)
         assertTrue("Condition did not complete",check())
     }
@@ -328,6 +362,9 @@ class UsbPeripheralConnectionTest {
         @Volatile var openThrows = false
         @Volatile var sendThrows = false
         @Volatile var blockSend = false
+        /** Like Android's MidiInputPort: close() waits for a send that is still writing. */
+        @Volatile var closeWaitsForSend = false
+        private val sendLock = Any()
         @Volatile var inputClosed = false
         @Volatile var outputClosed = false
         @Volatile var deviceClosed = false
@@ -336,6 +373,18 @@ class UsbPeripheralConnectionTest {
         val unblock = CountDownLatch(1)
         val sent = Collections.synchronizedList(mutableListOf<List<Int>>())
         val sendThreads = Collections.synchronizedSet(mutableSetOf<String>())
+        /** A socket write blocked on a reader that stopped is not ended by interrupting the writer. */
+        private fun awaitUnblockIgnoringInterrupts() {
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+            var interrupted = false
+            while (true) {
+                try {
+                    unblock.await(deadline - System.nanoTime(), TimeUnit.NANOSECONDS)
+                    break
+                } catch (_: InterruptedException) { interrupted = true }
+            }
+            if (interrupted) Thread.currentThread().interrupt()
+        }
         override fun devices(): List<PeripheralDevice> {
             listCalls.incrementAndGet()
             if (listThrows) throw SecurityException("list")
@@ -360,12 +409,17 @@ class UsbPeripheralConnectionTest {
                 if (noInput) return null
                 return object : PeripheralMidiAccess.Sender {
                     override fun send(bytes: ByteArray) {
-                        if (sendThrows) throw IOException("send")
-                        if (blockSend) { entered.countDown(); unblock.await(10,TimeUnit.SECONDS) }
-                        sendThreads.add(Thread.currentThread().name)
-                        sent.add(bytes.map { it.toInt() and 255 })
+                        synchronized(sendLock) {
+                            if (sendThrows) throw IOException("send")
+                            if (blockSend) { entered.countDown(); awaitUnblockIgnoringInterrupts() }
+                            sendThreads.add(Thread.currentThread().name)
+                            sent.add(bytes.map { it.toInt() and 255 })
+                        }
                     }
-                    override fun close() { inputClosed = true; unblock.countDown() }
+                    override fun close() {
+                        if (closeWaitsForSend) synchronized(sendLock) { inputClosed = true }
+                        else { inputClosed = true; unblock.countDown() }
+                    }
                 }
             }
             override fun output(number: Int, receive: (ByteArray, Int, Int) -> Unit): AutoCloseable? {
