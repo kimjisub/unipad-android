@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad
 
+import android.app.UiAutomation
 import android.graphics.Rect
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityNodeInfo
@@ -25,15 +26,19 @@ object ScreenReaderOrder {
         override fun toString() = "\"$name\"${if (actionable) " (action)" else ""} ${tag ?: ""} $bounds"
     }
 
-    fun read(timeoutMs: Long = 5000L): List<Stop> {
-        val nodes = items(activeRoot(timeoutMs))
+    /**
+     * Compose links its items in reading order only while a screen reader runs, so a screen whose
+     * reading order differs from its layout order must be read with one enabled, through an
+     * [automation] connection that does not suppress it.
+     */
+    fun read(timeoutMs: Long = 5000L, automation: UiAutomation = InstrumentationRegistry.getInstrumentation().uiAutomation): List<Stop> {
+        val nodes = items(activeRoot(automation, timeoutMs))
         return ordered(nodes).map { node ->
             Stop(spokenName(node), isActionable(node), node.viewIdResourceName, Rect().also(node::getBoundsInScreen))
         }
     }
 
-    private fun activeRoot(timeoutMs: Long): AccessibilityNodeInfo {
-        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+    private fun activeRoot(automation: UiAutomation, timeoutMs: Long): AccessibilityNodeInfo {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (true) {
             automation.rootInActiveWindow?.let { return it }
@@ -56,9 +61,22 @@ object ScreenReaderOrder {
         return found
     }
 
-    /** Each traversal-before chain starts where the tree order first reaches it. */
+    /**
+     * Each traversal-before chain starts where the tree order first reaches it. A link to a node that is
+     * not an item (a container with nothing to say, or an item scrolled out of view) is followed on to
+     * the next item, as TalkBack passes through such nodes instead of ending the chain there.
+     */
     private fun ordered(nodes: List<AccessibilityNodeInfo>): List<AccessibilityNodeInfo> {
-        val next = nodes.associateWith { node -> node.traversalBefore?.let { target -> nodes.find { it == target } } }
+        fun nextItem(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+            val passed = mutableSetOf<AccessibilityNodeInfo>()
+            var target = node.traversalBefore
+            while (target != null && passed.add(target)) {
+                nodes.find { it == target }?.let { return it }
+                target = target.traversalBefore
+            }
+            return null
+        }
+        val next = nodes.associateWith(::nextItem)
         val linked = next.values.filterNotNull().toSet()
         val result = mutableListOf<AccessibilityNodeInfo>()
         for (head in nodes.filter { it !in linked }) {

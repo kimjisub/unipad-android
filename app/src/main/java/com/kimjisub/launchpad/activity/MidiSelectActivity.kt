@@ -279,8 +279,10 @@ private fun MidiSelectScreen(
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			Column(
-				modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
-					.semantics { isTraversalGroup = false },
+				// Scrolling makes this column its own reading group unless an outer modifier says otherwise;
+				// without that the help on the right is read after the model and switches.
+				modifier = Modifier.weight(1f).fillMaxWidth().semantics { isTraversalGroup = false }
+					.verticalScroll(rememberScrollState()),
 				horizontalAlignment = Alignment.CenterHorizontally,
 			) {
 
