@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -576,12 +577,15 @@ private fun DeviceCard(
 		label = "backgroundColor",
 	)
 
+	val name = stringResource(device.nameResId)
 	Column(
 		modifier = Modifier
 			.clip(RoundedCornerShape(12.dp))
 			.background(backgroundColor)
 			.border(2.dp, borderColor, RoundedCornerShape(12.dp))
 			.clickable { onClick() }
+			// Named on the card itself: a card cut off at the screen's edge keeps its name for screen readers.
+			.semantics { contentDescription = name }
 			.padding(12.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center,
@@ -593,7 +597,7 @@ private fun DeviceCard(
 		)
 		Spacer(modifier = Modifier.height(6.dp))
 		Text(
-			text = stringResource(device.nameResId),
+			text = name,
 			color = MaterialTheme.colorScheme.onSurface,
 			fontSize = 11.sp,
 			textAlign = TextAlign.Center,
