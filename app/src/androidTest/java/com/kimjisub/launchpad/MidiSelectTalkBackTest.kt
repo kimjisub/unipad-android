@@ -2,6 +2,7 @@ package com.kimjisub.launchpad
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.UiAutomation
+import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
@@ -41,17 +42,22 @@ class MidiSelectTalkBackTest {
                 fun restore(key: String, value: String) {
                     device.executeShellCommand(if (value == "null") "settings delete secure $key" else "settings put secure $key $value")
                 }
+                // On a fresh image TalkBack's first start asks for notifications over the app,
+                // which takes the active window and every swipe. Granting it beforehand avoids the prompt.
+                val grantNotifications = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    !device.executeShellCommand("dumpsys package $TALKBACK").contains("$NOTIFICATIONS: granted=true")
                 try {
+                    if (grantNotifications) device.executeShellCommand("pm grant $TALKBACK $NOTIFICATIONS")
                     AppLanguage.set("ko-KR")
                     val services = oldServices.takeUnless { it == "null" || it.isEmpty() }
                         ?.split(':').orEmpty().toMutableSet()
-                    services.add("com.google.android.marvin.talkback/.TalkBackService")
+                    services.add("$TALKBACK/.TalkBackService")
                     device.executeShellCommand("settings put secure enabled_accessibility_services ${services.joinToString(":")}")
                     device.executeShellCommand("settings put secure accessibility_enabled 1")
                     val manager = requireNotNull(instrumentation.targetContext.getSystemService(AccessibilityManager::class.java))
                     val deadline = System.nanoTime() + 20_000_000_000L
                     while (manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-                            .none { it.resolveInfo.serviceInfo.packageName == "com.google.android.marvin.talkback" }) {
+                            .none { it.resolveInfo.serviceInfo.packageName == TALKBACK }) {
                         check(System.nanoTime() < deadline) { "TalkBack did not start" }
                         Thread.sleep(100)
                     }
@@ -59,6 +65,10 @@ class MidiSelectTalkBackTest {
                 } finally {
                     restore("enabled_accessibility_services", oldServices)
                     restore("accessibility_enabled", oldEnabled)
+                    if (grantNotifications) {
+                        device.executeShellCommand("pm revoke $TALKBACK $NOTIFICATIONS")
+                        device.executeShellCommand("pm clear-permission-flags $TALKBACK $NOTIFICATIONS user-set user-fixed")
+                    }
                     AppLanguage.set(oldLanguage)
                     config.setUiAutomationFlags(oldFlags)
                     instrumentation.getUiAutomation(oldFlags)
@@ -115,3 +125,6 @@ class MidiSelectTalkBackTest {
         }
     }
 }
+
+private const val TALKBACK = "com.google.android.marvin.talkback"
+private const val NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
