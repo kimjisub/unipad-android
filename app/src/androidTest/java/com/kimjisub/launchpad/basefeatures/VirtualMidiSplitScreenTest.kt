@@ -387,8 +387,12 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 
 	private fun exitSplitScreen() {
 		val padTask = fixture.call("read").getInt("padTask")
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen exitSplitScreen $padTask")
+		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+			// Android 12L–13 have no exit command; taking the play screen out of its side ends the split.
+			val playTask = screen.onMain { play.taskId }
+			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen removeFromSideStage $playTask")
 		} else {
 			// Emptying the docked stack ends the split; the other app stays on top, full screen.
 			val playTask = screen.onMain { play.taskId }
