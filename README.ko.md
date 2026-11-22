@@ -23,7 +23,7 @@ UniPad는 런치패드와 연결하여 연주할 수 있는 퍼포먼스 기반 
 이 프로젝트를 로컬에서 실행하려면 다음 소프트웨어가 설치되어 있어야 합니다:
 
 1. Android Studio (최신 버전)
-2. Android SDK (API 29-35, Android 10+)
+2. Android SDK Platform 37 (앱은 Android 7.0, API 24 이상에서 실행)
 3. Git (저장소 클론용)
 4. Java Development Kit (JDK) - Android Studio의 번들 JDK 권장
 

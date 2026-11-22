@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 /** Lifecycle and ordered raw bytes; no layout, palette, pointers or byte-stream parser. */
 internal class PeripheralMidiTransport(
     private val access: PeripheralMidiAccess,
+    private val gate: MidiTransportGate,
     private val newRules: () -> MidiSessionRules,
 ) : AutoCloseable {
     private val lock = Any()
@@ -32,7 +33,7 @@ internal class PeripheralMidiTransport(
     private var refreshing = false
     private var refreshAgain = false
 
-    private class Session(val generation: Long, val id: Int, val lease: MidiModeOwnership.Lease, val rules: MidiSessionRules) {
+    private class Session(val generation: Long, val id: Int, val lease: AutoCloseable, val rules: MidiSessionRules) {
         val resourcesLock = Any()
         var device: PeripheralMidiAccess.Device? = null
         var input: PeripheralMidiAccess.Sender? = null
@@ -86,7 +87,7 @@ internal class PeripheralMidiTransport(
                 mutableState.value = State.Failed(Failure.OUTPUT_PORT)
                 return
             }
-            val lease = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_PERIPHERAL)
+            val lease = gate.acquirePeripheral()
             if (lease == null) { mutableState.value = State.Failed(Failure.BUSY); return }
             val session = Session(++generation, device.id, lease, newRules())
             current = session

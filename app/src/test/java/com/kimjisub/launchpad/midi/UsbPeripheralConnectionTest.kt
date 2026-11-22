@@ -39,6 +39,9 @@ class UsbPeripheralConnectionTest {
         open(connection)
         peer.receive!!(byteArrayOf(0x90.toByte(),81,5),0,3)
         assertEquals(5,connection.lights.snapshot()[0])
+        peer.receive!!(byteArrayOf(0x80.toByte(),81,64),0,3)
+        assertEquals(0,connection.lights.snapshot()[0])
+        peer.receive!!(byteArrayOf(0x90.toByte(),81,5),0,3)
         assertTrue(peer.sent.isEmpty())
         val old = peer.receive!!
         connection.disconnect()
@@ -134,18 +137,42 @@ class UsbPeripheralConnectionTest {
     }
 
     @Test fun hostAndVirtualOwnersAreNeverStolenAndPeripheralBlocksBoth() {
-        val (connection, _) = connection()
-        for (mode in listOf(MidiModeOwnership.Mode.USB_HOST, MidiModeOwnership.Mode.VIRTUAL)) {
-            val lease = MidiModeOwnership.acquire(mode)!!
+        val gate = MidiTransportGate()
+        val (connection, _) = connection(gate)
+        for (acquire in listOf(gate::acquireUsb, gate::acquireVirtual)) {
+            val lease = acquire()!!
             try {
                 connection.connect(endpoint,0,0)
                 assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.BUSY),connection.state.value)
             } finally { lease.close() }
         }
         open(connection)
-        assertNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_HOST))
-        assertNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.VIRTUAL))
-        assertNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_PERIPHERAL))
+        assertNull(gate.acquireUsb())
+        assertNull(gate.acquireVirtual())
+        assertNull(gate.acquirePeripheral())
+        connection.disconnect()
+        await { connection.state.value == UsbPeripheralConnection.State.Idle }
+        assertNotNull(gate.acquireUsb()?.also { it.close() })
+    }
+
+    @Test fun sharedGateLetsHostControllersShareButNeverHandsAnExclusiveOwnerAway() {
+        val gate = MidiTransportGate()
+        val first = gate.acquireUsb()!!
+        val second = gate.acquireUsb()!!
+        assertNull(gate.acquirePeripheral())
+        first.close(); first.close()
+        assertNull(gate.acquirePeripheral())
+        assertNull(gate.acquireVirtual())
+        second.close()
+        val peripheral = gate.acquirePeripheral()!!
+        assertNull(gate.acquirePeripheral())
+        assertNull(gate.acquireVirtual())
+        assertNull(gate.acquireUsb())
+        peripheral.close()
+        val virtual = gate.acquireVirtual()!!
+        assertNull(gate.acquirePeripheral())
+        virtual.close()
+        gate.acquirePeripheral()!!.close()
     }
 
     @Test fun missingOutputPortNumberIsReportedAsLightPortFailure() {
@@ -228,8 +255,9 @@ class UsbPeripheralConnectionTest {
     }
 
     @Test fun simultaneousConnectionsHaveExactlyOneOwner() {
-        val first = connection().first
-        val second = connection().first
+        val gate = MidiTransportGate()
+        val first = connection(gate).first
+        val second = connection(gate).first
         val start = CountDownLatch(1)
         val threads = listOf(first,second).map { connection ->
             Thread { start.await(); connection.connect(endpoint,0,0) }.also { it.start() }
@@ -264,9 +292,9 @@ class UsbPeripheralConnectionTest {
         return send(change, opened.generation)
     }
 
-    private fun connection(): Pair<UsbPeripheralConnection, FakeAccess> {
+    private fun connection(gate: MidiTransportGate = MidiTransportGate()): Pair<UsbPeripheralConnection, FakeAccess> {
         val peer = FakeAccess()
-        val connection = UsbPeripheralConnection(peer)
+        val connection = UsbPeripheralConnection(peer, gate)
         peers.add(connection to peer)
         await { peer.removed != null }
         return connection to peer

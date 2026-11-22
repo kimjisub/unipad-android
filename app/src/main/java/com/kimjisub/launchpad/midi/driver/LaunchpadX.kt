@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.midi.driver
 
 open class LaunchpadX : DriverRef() {
+	internal override val receiveCableNumber: Int get() = 1
+
 	companion object {
 		internal val circleCode = arrayOf(
 			intArrayOf(27, -80, 91),

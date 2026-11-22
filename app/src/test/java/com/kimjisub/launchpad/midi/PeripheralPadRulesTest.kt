@@ -32,26 +32,27 @@ class PeripheralPadRulesTest {
 
     @Test fun splitRunningStatusRealtimeAndSystemMessagesKeepBoundaries() {
         val received = mutableListOf<List<Int>>()
-        val parser = MidiByteStream { status, number, value -> received.add(listOf(status, number, value)) }
-        parser.feed(byteArrayOf(0x90.toByte(), 81))
-        parser.feed(byteArrayOf(0xf8.toByte(), 5, 82, 6, 0xc0.toByte(), 7, 8, 0x90.toByte(), 83, 9))
+        val parser = MidiStreamDecoder { status, number, value -> received.add(listOf(status, number, value)) }
+        parser.acceptAll(byteArrayOf(0x90.toByte(), 81))
+        parser.acceptAll(byteArrayOf(0xf8.toByte(), 5, 82, 6, 0xc0.toByte(), 7, 8, 0x90.toByte(), 83, 9))
         assertEquals(listOf(listOf(0x90,81,5), listOf(0x90,82,6), listOf(0x90,83,9)), received)
-        parser.feed(byteArrayOf(0xf1.toByte(), 3, 84, 10))
+        parser.acceptAll(byteArrayOf(0xf1.toByte(), 3, 84, 10))
         assertEquals(3, received.size)
-        parser.feed(byteArrayOf(0x90.toByte(), 81, 0x91.toByte(), 82, 7, 0x90.toByte(), 83, 8))
+        parser.acceptAll(byteArrayOf(0x90.toByte(), 81, 0x91.toByte(), 82, 7, 0x90.toByte(), 83, 8))
         assertEquals(listOf(0x91,82,7), received[3])
         assertEquals(listOf(0x90,83,8), received[4])
-        parser.feed(byteArrayOf(0x90.toByte(), 81, 5), -1, 3)
+        parser.accept(byteArrayOf(0x90.toByte(), 81, 5), -1, 3)
         assertEquals(5, received.size)
     }
 
     @Test fun oversizedSysexStoresNoPayloadAndRecoversAtNewStatusOrEnd() {
         val received = mutableListOf<Int>()
-        val parser = MidiByteStream { _, number, _ -> received.add(number) }
-        parser.feed(byteArrayOf(0xf0.toByte()))
-        repeat(10000) { parser.feed(byteArrayOf(1, 0xf8.toByte(), 2)) }
-        assertTrue(parser.sysexBytes <= 4096)
-        parser.feed(byteArrayOf(0x90.toByte(), 81, 5, 0xf0.toByte(), 1, 0xf7.toByte(), 82, 6, 0x90.toByte(), 83, 7))
+        val parser = MidiStreamDecoder { _, number, _ -> received.add(number) }
+        parser.acceptAll(byteArrayOf(0xf0.toByte()))
+        // Far past the 4,096-byte bound: the decoder keeps no payload and reports nothing from it.
+        repeat(10000) { parser.acceptAll(byteArrayOf(1, 0xf8.toByte(), 2)) }
+        assertTrue(received.isEmpty())
+        parser.acceptAll(byteArrayOf(0x90.toByte(), 81, 5, 0xf0.toByte(), 1, 0xf7.toByte(), 82, 6, 0x90.toByte(), 83, 7))
         assertEquals(listOf(81,83), received)
     }
 
@@ -100,4 +101,6 @@ class PeripheralPadRulesTest {
         assertTrue(pointers.pointerCount <= 32)
         assertEquals(listOf(PadChange(0,false)), pointers.cancel())
     }
+
+    private fun MidiStreamDecoder.acceptAll(bytes: ByteArray) = accept(bytes, 0, bytes.size)
 }

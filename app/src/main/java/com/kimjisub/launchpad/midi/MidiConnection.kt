@@ -51,6 +51,15 @@ import kotlin.reflect.KClass
 
 object MidiConnection {
 
+	internal val transportGate = MidiTransportGate()
+
+	/** No automatic discovery or connection: the later device picker owns this instance. */
+	internal fun virtualConnection(context: Context): VirtualMidiConnection = VirtualMidiConnection(
+		AndroidVirtualMidiBackend(context), ioScope, Dispatchers.Main.immediate, Dispatchers.IO,
+		transportGate, ::attachTransport,
+	)
+
+
 	internal data class DriverEntry(
 		val name: String,
 		val factory: () -> DriverRef,
@@ -140,7 +149,8 @@ object MidiConnection {
 	// (USB connection, endpoints, driver instance, send/receive loops, MIDI
 	// API state). One instance per physically connected Launchpad-like device.
 	// ---------------------------------------------------------------------
-	private class DeviceSession(val usbDevice: UsbDevice, val ownership: MidiModeOwnership.Lease) {
+	private class DeviceSession(val usbDevice: UsbDevice) {
+		var transportLease: AutoCloseable? = null
 		val rawMidi = isOriginalLaunchpad(usbDevice)
 		var usbInterface: UsbInterface? = null
 		var usbEndpointIn: UsbEndpoint? = null
@@ -390,6 +400,9 @@ object MidiConnection {
 	var driver: DriverRef
 		get() = _driver
 		set(value) {
+			// A virtual connection owns its selected layout and sender until teardown.
+			if (virtualTransportAttached) return
+
 			// A manual pick from MidiSelectActivity while more than one pad is connected
 			// must NOT replace the MultiplexDriver dispatcher (that's what was causing only
 			// one pad to light up after picking a model). Route it to the primary session
@@ -583,19 +596,10 @@ object MidiConnection {
 			Log.midiDetail("USB 에러 : device == null")
 			return
 		}
-		val ownership = MidiModeOwnership.acquire(MidiModeOwnership.Mode.USB_HOST)
-		if (ownership == null) {
-			Log.midiDetail("USB device ignored: another MIDI mode is connected")
+		if (virtualTransportAttached) {
+			Log.midiDetail("Disconnect virtual MIDI before reconnecting USB")
 			return
 		}
-		try {
-			initOwnedDevice(device, ownership)
-		} finally {
-			if (sessions[device.deviceId]?.ownership !== ownership) ownership.close()
-		}
-	}
-
-	private fun initOwnedDevice(device: UsbDevice, ownership: MidiModeOwnership.Lease) {
 		if (!dualPadModeEnabled && sessions.isNotEmpty()) {
 			// Single-pad mode: a new attach replaces whatever is connected, as on main.
 			for (old in sessions.values.toList()) teardownSession(old, notify = true)
@@ -606,7 +610,7 @@ object MidiConnection {
 			return
 		}
 
-		val session = DeviceSession(device, ownership)
+		val session = DeviceSession(device)
 		var interfaceNum = 0
 
 		try {
@@ -706,20 +710,26 @@ object MidiConnection {
 		}
 		// openDevice throws SecurityException for a device we were not granted (only the device
 		// that fired the attach intent is auto-granted).
+		val transportLease = transportGate.acquireUsb() ?: run {
+			Log.midiDetail("USB device ignored: another MIDI connection holds the transport")
+			return
+		}
 		val connection = try {
 			if (manager.hasPermission(device)) manager.openDevice(device) else {
 				Log.midiDetail("USB 에러 : no permission for ${device.deviceName}")
 				null
 			}
-		} catch (e: SecurityException) {
+		} catch (e: RuntimeException) {
 			Log.err("USB openDevice failed", e)
 			null
 		}
 		if (connection == null) {
+			transportLease.close()
 			Log.midiDetail("USB 에러 : usbDeviceConnection == null")
 			return
 		}
 		session.usbDeviceConnection = connection
+		session.transportLease = transportLease
 
 		// Defer USB interface claim - MIDI API needs the interface first for SysEx
 		session.pendingUsbClaim = {
@@ -1125,12 +1135,13 @@ object MidiConnection {
 				Log.err("USB close failed (${session.name})", e)
 			}
 		}
+		session.transportLease?.close()
+		session.transportLease = null
 		session.sendJob?.cancel()
 		session.sendChannel.close()
 
 		session.isRun = false
 		sessions.remove(session.usbDevice.deviceId)
-		session.ownership.close()
 
 		if (notify) {
 			session.driver.onDisconnected()
@@ -1181,50 +1192,51 @@ object MidiConnection {
 		target.setOnSendSignalListener(sendListener)
 	}
 
-	/** A non-USB transport can exercise the same driver/controller and connection notifications.
-	 * Call on the main thread, after initConnection. It owns its listener until closed. USB sessions
-	 * are never replaced; normal launches never call this entry point.
-	 */
+	private var virtualTransportAttached = false
+
+	/** Call on the main thread, after initConnection; closing also releases held controller input. */
 	internal fun attachTransport(
 		name: String,
 		deviceDriver: DriverRef,
 		output: DriverRef.OnSendSignalListener,
 	): AutoCloseable {
-		val ownership = checkNotNull(MidiModeOwnership.acquire(MidiModeOwnership.Mode.VIRTUAL)) {
-			"A MIDI mode is already connected"
+		check(sessions.isEmpty() && connectedDevice == null && !virtualTransportAttached) { "A device is already connected" }
+		val previous = _driver
+		previous.sendClearLed()
+		previous.onDisconnected()
+		virtualTransportAttached = true
+		_driver = deviceDriver
+		setDriverListener(deviceDriver, sendListener = output)
+		var closed = false
+		val attachment = AutoCloseable {
+			if (!closed) {
+				closed = true
+				// Each cleanup is independent: a failed LED write must still release held sounds.
+				runCatching { deviceDriver.sendClearLed() }
+				runCatching { deviceDriver.onDisconnected() }
+				virtualTransportAttached = false
+				connectedDevice = null
+				if (_driver === deviceDriver) {
+					_driver = previous
+					runCatching { listener?.onChangeDriver(previous) }
+				}
+				runCatching { connectionObserver?.onDisconnected() }
+				deviceDriver.setOnGetSignalListener(null)
+				deviceDriver.setOnSendSignalListener(null)
+				deviceDriver.setOnCycleListener(null)
+			}
 		}
-		val previous = driver
 		try {
-			check(sessions.isEmpty() && connectedDevice == null) { "A device is already connected" }
-			driver = deviceDriver
-			setDriverListener(deviceDriver, sendListener = output)
 			deviceDriver.initialize()
 			publishConnectedDevice(name)
 			deviceDriver.onConnected()
+			listener?.onChangeDriver(deviceDriver)
 			listener?.onConnectedListener()
 			connectedDevice?.let { connectionObserver?.onConnected(it) }
-		} catch (error: Exception) {
-			try {
-				deviceDriver.setOnGetSignalListener(null)
-				deviceDriver.setOnSendSignalListener(null)
-				deviceDriver.setOnCycleListener(null)
-				if (driver === deviceDriver) { driver = previous; connectedDevice = null }
-			} finally { ownership.close() }
-			throw error
-		}
-		return AutoCloseable {
-			try {
-				if (driver === deviceDriver) {
-					driver = previous
-					connectedDevice = null
-					connectionObserver?.onDisconnected()
-				}
-			} finally {
-				deviceDriver.setOnGetSignalListener(null)
-				deviceDriver.setOnSendSignalListener(null)
-				deviceDriver.setOnCycleListener(null)
-				ownership.close()
-			}
+			return attachment
+		} catch (e: Exception) {
+			attachment.close()
+			throw e
 		}
 	}
 

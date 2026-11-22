@@ -3,7 +3,10 @@ package com.kimjisub.launchpad.midi
 import android.content.Context
 
 /** No pack, audio, USB host driver or screen dependencies. Call close when its screen leaves. */
-class UsbPeripheralConnection internal constructor(access: PeripheralMidiAccess) : AutoCloseable {
+class UsbPeripheralConnection internal constructor(
+    access: PeripheralMidiAccess,
+    gate: MidiTransportGate,
+) : AutoCloseable {
     enum class Failure { UNAVAILABLE, DISCOVERY, BUSY, OPEN, INPUT_PORT, OUTPUT_PORT, SEND, RELEASE, CLOSE, OVERFLOW, REMOVED, TIMEOUT }
     sealed interface State {
         data object Idle : State
@@ -13,11 +16,11 @@ class UsbPeripheralConnection internal constructor(access: PeripheralMidiAccess)
         data class Failed(val reason: Failure) : State
     }
     companion object {
-        fun create(context: Context): UsbPeripheralConnection = UsbPeripheralConnection(AndroidPeripheralMidiAccess(context))
+        fun create(context: Context): UsbPeripheralConnection = UsbPeripheralConnection(AndroidPeripheralMidiAccess(context), MidiConnection.transportGate)
     }
 
     val lights = PeripheralLights()
-    private val transport = PeripheralMidiTransport(access) { PeripheralPadProtocol(lights) }
+    private val transport = PeripheralMidiTransport(access, gate) { PeripheralPadProtocol(lights) }
     val state get() = transport.state
     val devices get() = transport.devices
     val discoveryFailure get() = transport.discoveryFailure

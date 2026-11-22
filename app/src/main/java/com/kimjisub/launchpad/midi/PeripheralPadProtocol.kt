@@ -11,8 +11,8 @@ internal interface MidiSessionRules {
 /** Combines independent message and layout rules, without opening or owning ports. */
 internal class PeripheralPadProtocol(private val lights: PeripheralLights) : MidiSessionRules {
     private val active = BooleanArray(Mk2Layout.SIZE)
-    private val parser = MidiByteStream { status, number, value -> lights.accept(status,number,value) }
-    override fun receive(bytes: ByteArray, offset: Int, count: Int) = parser.feed(bytes,offset,count)
+    private val parser = MidiStreamDecoder { status, number, value -> lights.accept(status,number,value) }
+    override fun receive(bytes: ByteArray, offset: Int, count: Int) = parser.accept(bytes,offset,count)
     override fun sent(bytes: ByteArray) {
         if (bytes.size != 3) return
         val status = bytes[0].toInt() and 255

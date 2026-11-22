@@ -1,20 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <queries>
-        <package android:name="com.kimjisub.launchpad.dev" />
-    </queries>
     <application>
-        <service
-            android:name="com.kimjisub.launchpad.midi.PeripheralMidiPeer"
-            android:process=":peripheral_peer"
+        <service android:name="com.kimjisub.launchpad.midi.MidiFixtureService"
             android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.media.midi.MidiDeviceService" />
-            </intent-filter>
+            android:exported="true" android:process=":midiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_fixture" />
+        </service>
+        <service android:name="com.kimjisub.launchpad.midi.UnselectedMidiFixtureService"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":otherMidiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_fixture" />
+        </service>
+        <provider android:name="com.kimjisub.launchpad.midi.MidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.midi" android:exported="true"
+            android:process=":midiFixture" />
+        <provider android:name="com.kimjisub.launchpad.midi.OtherMidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.othermidi" android:exported="true"
+            android:process=":otherMidiFixture" />
+        <service android:name="com.kimjisub.launchpad.midi.InputOnlyMidiFixtureService"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":inputOnlyMidiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_input_only_fixture" />
+        </service>
+        <provider android:name="com.kimjisub.launchpad.midi.InputOnlyMidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.inputmidi" android:exported="true"
+            android:process=":inputOnlyMidiFixture" />
+        <service android:name="com.kimjisub.launchpad.midi.PeripheralMidiPeer"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":peripheral_peer">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
             <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/peripheral_midi_peer" />
         </service>
     </application>
+    <queries>
+        <package android:name="com.kimjisub.launchpad.dev" />
+    </queries>
     <!-- Gradle applies its runner overrides to the first instrumentation element. -->
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"

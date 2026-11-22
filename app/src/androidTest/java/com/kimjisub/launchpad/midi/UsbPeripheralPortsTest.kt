@@ -27,6 +27,7 @@ class UsbPeripheralPortsTest {
     private lateinit var observer: MidiDevice
     private lateinit var observedPort: AutoCloseable
     private val echoed = Collections.synchronizedList(mutableListOf<List<Int>>())
+    private val partial = mutableListOf<Int>()
     private val connections = mutableListOf<UsbPeripheralConnection>()
     private val resources = mutableListOf<AutoCloseable>()
     private val endpoint get() = PeripheralDevice(info.id,"test peer",listOf(PeripheralDevice.Port(0,"press")),listOf(PeripheralDevice.Port(0,"lights")))
@@ -38,11 +39,18 @@ class UsbPeripheralPortsTest {
         info = manager.devices.first { it.properties.getString(MidiDeviceInfo.PROPERTY_NAME) == "Peripheral port test peer" }
         assertFalse("Production discovery must reject a virtual service", AndroidPeripheralMidiAccess.isPeripheral(info))
         observer = openDevice()
-        val parser = MidiByteStream { status, number, value -> echoed.add(listOf(status,number,value)) }
-        observedPort = AndroidMidiPorts(observer).output(0) { bytes,offset,count -> parser.feed(bytes,offset,count) }!!
+        observedPort = AndroidMidiPorts(observer).output(0, ::recordWire)!!
         observer.openInputPort(1)!!.use { it.send(byteArrayOf(0),0,1) }
         await { echoed.contains(listOf(0xb0,111,0)) }
         echoed.clear()
+    }
+
+    /** Records the exact wire bytes (no Note Off normalization); every message here is three bytes long. */
+    private fun recordWire(bytes: ByteArray, offset: Int, count: Int) = synchronized(echoed) {
+        for (i in offset until offset + count) {
+            partial.add(bytes[i].toInt() and 255)
+            if (partial.size == 3) { echoed.add(partial.toList()); partial.clear() }
+        }
     }
 
     @After fun cleanup() {
@@ -151,7 +159,7 @@ class UsbPeripheralPortsTest {
                 }, Handler(Looper.getMainLooper()))
             }
         }
-        return UsbPeripheralConnection(access).also { connections.add(it) }
+        return UsbPeripheralConnection(access, MidiTransportGate()).also { connections.add(it) }
     }
     private fun connect(connection: UsbPeripheralConnection) {
         connection.connect(endpoint,0,0)
