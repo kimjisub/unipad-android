@@ -43,7 +43,7 @@ class MidiConnectionStatusTest {
         every { manager.deviceList } returns hashMapOf()
     }
 
-    @Test fun virtualInputUsesDecodedPadsAndManualChoiceDoesNotDetectFirmware() {
+    @Test fun virtualInputUsesDecodedPadsAndAPickWhileAttachedClaimsNothing() {
         val manager = mockk<UsbManager>(relaxed = true)
         every { manager.deviceList } returns hashMapOf()
         initialize(manager)
@@ -58,8 +58,9 @@ class MidiConnectionStatusTest {
             assertEquals(MidiConnectionStatus.Phase.WAITING, MidiConnection.connectionStatus().phase)
             pad.getSignal(9, 0x90, 0, 127)
             assertEquals(MidiConnectionStatus.Phase.INPUT, MidiConnection.connectionStatus().phase)
+            // A virtual connection keeps its own layout, so a model pick neither applies nor claims firmware.
             MidiConnection.driver = LaunchpadPROCFW()
-            assertTrue(MidiConnection.connectionStatus().manuallyChosen)
+            assertFalse(MidiConnection.connectionStatus().manuallyChosen)
             assertNull(MidiConnection.connectionStatus().firmware)
         } finally { connection.close() }
         assertEquals(MidiConnectionStatus.Phase.DISCONNECTED, MidiConnection.connectionStatus().phase)

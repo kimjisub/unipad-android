@@ -8,7 +8,9 @@ package com.kimjisub.launchpad.midi.driver
  *
  * Every LED goes out as a note-on on [cable] and [channel] (0-based).
  */
-abstract class DrumRackDriver(cable: Int, channel: Int) : DriverRef() {
+abstract class DrumRackDriver(private val cable: Int, channel: Int) : DriverRef() {
+	internal override val receiveCableNumber: Int get() = cable
+
 	private val ledCmd = (cable shl 4) or CIN_NOTE_ON
 	private val ledStatus = STATUS_NOTE_ON or channel
 

@@ -32,6 +32,21 @@ so no other test reports are queued. The test's default path checks that automat
 The real Store list and one real download are checked on the release candidate instead, by
 `scripts/release_store_check.py`.
 
+`AudioOutputInterruptionTest` delivers `ACTION_AUDIO_BECOMING_NOISY` directly to the play
+screen's receiver on the main thread; Android protects this system broadcast from app/shell
+senders, and the test fails if the play screen no longer has that receiver. With a one-shot, a
+repeating and an endlessly looping sound playing, it checks that the notice sends at least one
+stop-all request and leaves no endless loop sounding; it does not check each sound type
+separately. It also checks autoplay suspension and progress, no restart when the output is
+closed and reopened (standing in for the engine moving to reconnected headphones) or audio
+focus returns, new hand input, explicit resume on the speaker, unrelated actions, duplicate
+delivery, denied audio focus and delivery after `onStop`. It also injects a failed output
+reopen overlapping the interruption: returning audio focus cannot revive the song, and a fresh
+request rejected by the failed engine is not counted as a sounding voice.
+Its recording engine observes requests, not actual audio routing, physical headphones, Bluetooth,
+USB audio, audible silence or the delay before sound stops. Device-to-device route changes are
+left to Android's speaker-fallback notification rather than inferred from available devices.
+
 For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -329,8 +344,10 @@ the app APK failed to install and no app test ran. GitHub CI does not run the UI
 It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
 number with no failure, error or skip and Gradle printed no install failure. It records the counts
 and reasons in `.ci-results/ui-status.txt`; the file is deleted when a run starts, so a missing
-`ui-status.txt` means that run never finished. On API 24–28 `UniPackImportOverlapDeviceTest` is
-filtered by `@SdkSuppress`, so that script expects an API 29+ device.
+`ui-status.txt` means that run never finished. Below API 30 some tests are filtered by `@SdkSuppress`,
+which fails the test count check, and below API 33 the
+[base feature tests](java/com/kimjisub/launchpad/basefeatures/README.md) fail on purpose, so a run
+of the whole suite needs an API 33+ device; on older devices pass the classes or methods that run there.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
 The renames are in [#130](https://github.com/kimjisub/unipad-android/pull/130), so earlier failure
@@ -375,6 +392,7 @@ claimed here as audio or hardware proof.
 | `basefeatures.PadInputOwnershipTest` | Seven checks: releasing the input that started the current endless sound request and pack light ends both, even while an earlier input remains pressed. This is checked with two real pointers and a finger followed by a controller press. Releasing the earlier finger preserves the later finger's output. A player's release preserves a newer autoplay loop, and autoplay releases its own loop while an older finger remains. In both mixed-input orders, feedback stays after the current loop ends and clears when the last input releases. Captures include request counts, stopped voices, pack light and feedback values. The recording engine decodes audio but opens no speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.SoundAvailabilityTest` | Four checks using the real Android decoder, Oboe engine and controller callback: a press while decoding is gated consumes its sound/light turn and follows its chain move; the same rules hold with the output stream closed and after reopening it. Captures show loading, chain, next mapping, light and requested filenames. Only the decoding gate and request recorder are in the test APK. These checks do not record external PCM or inject physical MIDI. Not in `BaseFeaturesSuite`. |
 | `basefeatures.SoundLoadingNoticeTest` | Partial/all-failed/light-only packs; unique-file counts across all four causes; details and recreation; retry re-inspects files and can recover; physical 5 s/claimed 700 s WAV loads while physical 700 s/claimed 60 s WAV is excluded before decoding. A synthetic report of 100,000 failures keeps details responsive. Injected allocation failures and synthetic reports verify reporting/rendering only, not physical device memory safety. |
+| `basefeatures.AudioOutputInterruptionTest` | Six checks: when Android reports the switch to the speaker, playback (autoplay or hand-played) sends a stop-all request, leaves no endless loop sounding and waits for Play; reopening the output or regaining audio focus does not restart it; fresh hand input still plays; denied audio focus still blocks Play; unrelated actions and a delivery after `onStop` change nothing; a failed output reopen cannot revive the song. The recording engine opens no speaker and does not observe physical headphones or routing. Not in `BaseFeaturesSuite`. |
 | `basefeatures.AudioOutputFailureTest` | Output startup failures show English/Korean notices before closing. Decoder failures keep an all-failed screen with per-file reasons, details and a route back to the pack list. |
 | `basefeatures.PracticeTransitionTest` | Six checks: partial-chord replay matches normal autoplay lights; returning to steps across a chain wait preserves each input and a fresh run's sound and rendered lights after explicitly clearing old animations; 1 s and 10 s lock interruptions restore only the pending pad, including the final group. Uses decoded sound identities and real pad colours without opening a speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.PracticeProgressTest` | Step practice waits for its final pad and clears its guide when stopped. Seeking in guide practice shows the upcoming pad at the new position. Pausing guide play enters step practice: a real pad tap advances the guide, and resuming restores the timed screen hint. `resumingAfterPlayingThePausedStepKeepsTheWrittenGapAfterIt`: pausing before the first note, playing it as a step and resuming 2 s later guides the next note 1000 ms after the resume, as written after the played note, and the third 1000 ms after that; the played note is not guided again and only its own press sounds. `restartingAfterPracticeEndsInStepsKeepsTheWrittenGap`: ending timed practice with a final step, starting step practice again, playing the first note and resuming after 2 s keeps the next note at its written 1000 ms gap. Due times are read from the hints the play screen is asked to draw. Resume assertions precede screenshots so image capture does not consume the assertion window. Screenshots and observed guide state accompany each case. The recording engine opens no speaker. Not in `BaseFeaturesSuite`. |

@@ -87,7 +87,7 @@ class MidiSelectScreenTest {
         capture("help-restored-en")
     }
 
-    @Test fun decodedPadUpdatesStatusAndManualChoiceDoesNotClaimFirmware() {
+    @Test fun decodedPadUpdatesStatusAndAPickOnAVirtualPadClaimsNothing() {
         val pad = LaunchpadS()
         val output = object : DriverRef.OnSendSignalListener {
             override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) = Unit
@@ -111,11 +111,11 @@ class MidiSelectScreenTest {
                 compose.onAllNodes(hasText(str(R.string.midi_status_input), substring = true)).fetchSemanticsNodes().isNotEmpty()
             }
             capture("input-en")
+            // A virtual connection keeps its own layout: the pick neither applies nor claims firmware.
             button(R.string.midi_lp_pro_cfw).performScrollTo().performClick()
-            compose.waitUntil(5000) {
-                compose.onAllNodes(hasText(str(R.string.midi_source_manual))).fetchSemanticsNodes().isNotEmpty()
-            }
-            compose.onNodeWithText(str(R.string.midi_source_manual)).performScrollTo().assertIsDisplayed()
+            compose.waitForIdle()
+            compose.onNodeWithText(str(R.string.midi_source_auto)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_source_manual)).assertDoesNotExist()
             compose.onNodeWithText("Custom firmware: Launchpad Open").assertDoesNotExist()
             compose.runOnIdle { transport!!.close() }
             transport = null

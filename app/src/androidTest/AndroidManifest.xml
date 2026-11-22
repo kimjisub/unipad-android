@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service android:name="com.kimjisub.launchpad.midi.MidiFixtureService"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":midiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_fixture" />
+        </service>
+        <service android:name="com.kimjisub.launchpad.midi.UnselectedMidiFixtureService"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":otherMidiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_fixture" />
+        </service>
+        <provider android:name="com.kimjisub.launchpad.midi.MidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.midi" android:exported="true"
+            android:process=":midiFixture" />
+        <provider android:name="com.kimjisub.launchpad.midi.OtherMidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.othermidi" android:exported="true"
+            android:process=":otherMidiFixture" />
+        <service android:name="com.kimjisub.launchpad.midi.InputOnlyMidiFixtureService"
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true" android:process=":inputOnlyMidiFixture">
+            <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
+            <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_input_only_fixture" />
+        </service>
+        <provider android:name="com.kimjisub.launchpad.midi.InputOnlyMidiFixtureProvider"
+            android:authorities="com.kimjisub.launchpad.dev.test.inputmidi" android:exported="true"
+            android:process=":inputOnlyMidiFixture" />
+    </application>
     <queries>
         <package android:name="com.kimjisub.launchpad.dev" />
     </queries>

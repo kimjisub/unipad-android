@@ -155,7 +155,7 @@ class BaseApplication : Application() {
 	}
 
 	private fun setupNotification() {
-		// minSdk 29+ always supports notification channels (introduced in API 26)
+		// createChannel skips devices below API 26, where notification channels do not exist
 		NotificationManager.createChannel(this)
 		NotificationManager.cancelLeftoverDownloadProgress(this)
 	}
