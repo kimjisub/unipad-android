@@ -8,7 +8,8 @@ package com.kimjisub.launchpad.midi.controller
  * with the screen sharing the display in multi-window mode, so pads pressed in the other window
  * keep playing. Android 7–9 pause the visible window that lost focus; Android 10 and later keep it
  * resumed but unfocused. Either way the hold ends when the screen is stopped (Home, lock, another
- * full-screen app, leaving the screen) or when [keepWhileUnfocused] stops being true.
+ * full-screen app) or when [keepWhileUnfocused] stops being true. A screen that is closing is
+ * never held: the screen shown next takes the device before this one would stop.
  *
  * Events and callbacks belong to the main thread.
  */
@@ -56,10 +57,10 @@ internal class ControllerInputHold(
 		target.take(redraw = !wasHeld)
 	}
 
-	fun onPause() {
+	fun onPause(finishing: Boolean) {
 		resumed = false
 		target.cancelUnfocusedStop()
-		if (started && keepWhileUnfocused()) held = true else target.release()
+		if (started && !finishing && keepWhileUnfocused()) held = true else target.release()
 	}
 
 	fun onStop() {
@@ -78,7 +79,14 @@ internal class ControllerInputHold(
 
 	/** Call when the connection or the multi-window mode changes. */
 	fun reevaluate() {
-		if (keepWhileUnfocused()) return
+		if (keepWhileUnfocused()) {
+			// Already unfocused beside the other app when the device connects: its delayed stop is skipped.
+			if (resumed && !focused && !stopSkipped) {
+				stopSkipped = true
+				target.cancelUnfocusedStop()
+			}
+			return
+		}
 		if (held) {
 			held = false
 			target.release()

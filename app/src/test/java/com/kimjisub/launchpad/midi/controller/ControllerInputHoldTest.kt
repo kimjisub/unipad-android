@@ -30,7 +30,7 @@ class ControllerInputHoldTest {
 	/** Android 7–9: the visible window that lost focus is paused. */
 	private fun otherWindowTappedBefore10() {
 		hold.onFocusChanged(false)
-		hold.onPause()
+		hold.onPause(finishing = false)
 	}
 
 	@Test fun android7To9PausedBesideTheVirtualAppKeepsInputAndResumesWithoutRedraw() {
@@ -84,7 +84,7 @@ class ControllerInputHoldTest {
 	@Test fun android10PauseOnTheWayToStopHoldsUntilStopReleases() {
 		front()
 		hold.onFocusChanged(false)
-		hold.onPause()
+		hold.onPause(finishing = false)
 		hold.onStop()
 		assertEquals(listOf("cancel", "cancel", "release"), calls)
 	}
@@ -96,7 +96,7 @@ class ControllerInputHoldTest {
 			front()
 			hold.onFocusChanged(false)
 			assertEquals("Focus loss must schedule the delayed stop (usb=$usb)", listOf("schedule"), calls)
-			hold.onPause()
+			hold.onPause(finishing = false)
 			assertFalse(hold.receiving)
 			assertEquals("Pause must release at once (usb=$usb)", listOf("schedule", "cancel", "release"), calls)
 			hold.onStop()
@@ -137,5 +137,33 @@ class ControllerInputHoldTest {
 		calls.clear()
 		hold.reevaluate()
 		assertTrue(calls.isEmpty())
+	}
+
+	@Test fun closingTheScreenBesideTheVirtualAppReleasesAtOnce() {
+		for (unfocusedFirst in listOf(true, false)) {
+			front()
+			if (unfocusedFirst) hold.onFocusChanged(false)
+			calls.clear()
+			hold.onPause(finishing = true)
+			assertFalse(hold.receiving)
+			assertEquals("A closing screen must not hold input for the screen shown next", listOf("cancel", "release"), calls)
+			hold.onStop()
+			assertEquals("Stop must not release again", listOf("cancel", "release"), calls)
+		}
+	}
+
+	@Test fun android10ConnectingWhileUnfocusedBesideTheOtherAppSkipsTheScheduledStop() {
+		virtual = false
+		front()
+		hold.onFocusChanged(false)
+		assertEquals(listOf("schedule"), calls)
+		virtual = true
+		hold.reevaluate()
+		hold.reevaluate()
+		assertTrue(hold.receiving)
+		assertEquals("The pending stop is cancelled once", listOf("schedule", "cancel"), calls)
+		virtual = false
+		hold.reevaluate()
+		assertEquals("Losing the device again restores the stop", listOf("schedule", "cancel", "schedule"), calls)
 	}
 }

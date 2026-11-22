@@ -237,7 +237,9 @@ class PlayActivity : BaseActivity() {
 	private val inputHold = ControllerInputHold(
 		keepWhileUnfocused = { MidiConnection.virtualTransportAttached && isInMultiWindowMode },
 		target = object : ControllerInputHold.Target {
+			// The screen stays on while it takes input, including while held beside the other app.
 			override fun take(redraw: Boolean) {
+				window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 				launchpadOutputEnabled = true
 				if (vm.uiLoaded) {
 					controller = midiController
@@ -252,6 +254,7 @@ class PlayActivity : BaseActivity() {
 				driver.sendClearLed()
 				midiController?.let { removeController(it) }
 				vm.releaseControllerPads()
+				window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 			}
 
 			override fun scheduleUnfocusedStop() = windowFocusInterruption.onFocusChanged(false)
@@ -1598,7 +1601,6 @@ class PlayActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
-		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		// Reconnect output permission without starting the interrupted song.
 		if (!audioFocus.request()) vm.interruptPlayback()
 		inputHold.onResume()
@@ -1621,8 +1623,7 @@ class PlayActivity : BaseActivity() {
 	// Controller input is let go too, unless a virtual MIDI app beside this screen is being played.
 	override fun onPause() {
 		super.onPause()
-		inputHold.onPause()
-		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+		inputHold.onPause(finishing = isFinishing)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		padTouch.cancel()
 	}

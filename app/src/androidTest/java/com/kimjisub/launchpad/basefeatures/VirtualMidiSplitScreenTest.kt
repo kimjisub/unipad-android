@@ -1,10 +1,13 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.graphics.Point
 import android.hardware.usb.UsbManager
 import android.media.AudioManager
 import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.Lifecycle
@@ -44,26 +47,43 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	private lateinit var vm: PlayActivityViewModel
 	private var resized = false
 
+	// Each step runs even when an earlier one fails, so the display is always restored.
 	@After fun leaveSplitScreen() {
-		fingers.cancelRemaining()
-		connection?.let { fixture.close(it) }
+		val failures = listOf(
+			runCatching { fingers.cancelRemaining() },
+			runCatching { connection?.let { fixture.close(it) } },
+			runCatching { endSplitScreen() },
+			runCatching { screen.onMain { MidiConnection.driver = Noting() } },
+			runCatching { if (resized) screen.device.executeShellCommand("wm size reset") },
+			runCatching { screen.device.setOrientationNatural() },
+			runCatching { screen.device.unfreezeRotation() },
+		).mapNotNull { it.exceptionOrNull() }
+		failures.drop(1).forEach { failures.first().addSuppressed(it) }
+		failures.firstOrNull()?.let { throw it }
+	}
+
+	/**
+	 * The next test must start without this split screen: a split left behind opens its play screen
+	 * in one half, beside a stale pad window that holds focus.
+	 */
+	private fun endSplitScreen() {
 		runCatching { fixture.call("closePad") }
-		// The next test must start without this split screen.
-		screen.device.wait(androidx.test.uiautomator.Until.gone(By.desc(PAD)), 5_000)
+		if (::play.isInitialized) screen.onMain { if (!play.isDestroyed) play.finish() }
 		// Before Android 9 the docked stack outlives the other half; removing it closes the play screen.
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) screen.device.executeShellCommand("am stack remove $DOCKED_STACK")
-		screen.onMain { MidiConnection.driver = Noting() }
-		if (resized) screen.device.executeShellCommand("wm size reset")
-		screen.device.setOrientationNatural()
-		screen.device.unfreezeRotation()
+		screen.await("The other app's window stayed open after the test") { !screen.device.hasObject(By.desc(PAD)) }
+		if (::play.isInitialized) screen.await("The play screen stayed open after the test") { screen.onMain { play.isDestroyed } }
 	}
 
 	@Test fun connectingBesideAnOpenEightByEightPackKeepsTheConnectionAndRedrawsTheLights() {
 		openWithVirtualDevice()
+		// Clearing and redrawing 64 pads and the 32-button ring, before any pad is pressed. The lights
+		// are written on another thread, so they are counted once they have had time to arrive.
+		val expected = 96 + 64 + 32
+		runCatching { screen.await("The attach-time redraw did not reach the peer") { fixture.lights().size >= expected } }
 		val lights = fixture.lights()
-		Log.i(TAG, "Lights the peer received while connecting to the open 8x8 pack: ${lights.size}")
-		// Clearing and redrawing 64 pads and the 32-button ring, before any pad is pressed.
-		assertTrue("The attach-time redraw did not reach the peer (${lights.size} messages)", lights.size >= 96 + 64 + 32)
+		Log.i(TAG, "API ${Build.VERSION.SDK_INT}: lights the peer received while connecting to the open 8x8 pack: ${lights.size}")
+		assertTrue("The attach-time redraw did not reach the peer (${lights.size} of $expected messages)", lights.size >= expected)
 		SystemClock.sleep(2_000)
 		assertEquals("The connection must survive the attach-time redraw",
 			VirtualMidiConnection.State.Connected(true), fixture.main { connection!!.state })
@@ -114,9 +134,36 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		screen.await("The full-screen app did not hide the play screen") { screen.onMain { !vm.screenVisible } }
 	}
 
+	/**
+	 * A closing play screen lets go as it pauses, before the screen shown next takes the device;
+	 * letting go only at its stop would clear the next screen's lights. Android 10 and later report
+	 * the moment right after the pause.
+	 */
 	@Test fun closingThePlayScreenLetsGoOfTheHeldPad() = holdThenLeave("closing the play screen") {
-		screen.onMain { play.finish() }
-		screen.await("The play screen did not close") { screen.onMain { play.isDestroyed } }
+		// -1 until the play screen pauses, then 1 if it still held the device.
+		val heldAfterPause = java.util.concurrent.atomic.AtomicInteger(-1)
+		val callbacks = object : Application.ActivityLifecycleCallbacks {
+			override fun onActivityPostPaused(activity: Activity) {
+				if (activity === play) heldAfterPause.compareAndSet(-1, if (MidiConnection.controller != null) 1 else 0)
+			}
+			override fun onActivityCreated(activity: Activity, state: Bundle?) = Unit
+			override fun onActivityStarted(activity: Activity) = Unit
+			override fun onActivityResumed(activity: Activity) = Unit
+			override fun onActivityPaused(activity: Activity) = Unit
+			override fun onActivityStopped(activity: Activity) = Unit
+			override fun onActivitySaveInstanceState(activity: Activity, state: Bundle) = Unit
+			override fun onActivityDestroyed(activity: Activity) = Unit
+		}
+		screen.onMain { play.application.registerActivityLifecycleCallbacks(callbacks) }
+		try {
+			screen.onMain { play.finish() }
+			screen.await("The play screen did not close") { screen.onMain { play.isDestroyed } }
+		} finally {
+			screen.onMain { play.application.unregisterActivityLifecycleCallbacks(callbacks) }
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+			assertEquals("The closing play screen still held the device after its pause", 0, heldAfterPause.get())
+		}
 	}
 
 	// The stream-type request exists on every supported version; AudioFocusRequest is API 26+, and a
