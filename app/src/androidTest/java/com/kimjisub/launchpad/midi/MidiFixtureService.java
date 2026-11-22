@@ -83,9 +83,6 @@ public class MidiFixtureService extends MidiDeviceService {
             case "clear":
                 for (List<Byte> values : lights) synchronized (values) { values.clear(); }
                 break;
-            case "closePad":
-                MidiFixturePadActivity.close();
-                break;
             case "exit":
                 new Handler(Looper.getMainLooper()).postDelayed(() -> Process.killProcess(Process.myPid()), 100);
                 break;
