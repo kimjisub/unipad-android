@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.*
 import org.junit.Test
@@ -25,14 +26,31 @@ import java.util.concurrent.atomic.AtomicInteger
 @RunWith(AndroidJUnit4::class)
 class AudioOutputInterruptionTest : PlaybackScreenTest() {
     // The system protects this broadcast from shell/apps. Deliver to the activity's actual receiver
-    // on main instead. An older activity with no receiver receives nothing, preserving the baseline.
-    private fun receiver(activity: PlayActivity): BroadcastReceiver? = screen.onMain {
-        activity.javaClass.declaredFields.firstOrNull { it.name == "audioOutputReceiver" }
-            ?.apply { isAccessible = true }?.get(activity) as? BroadcastReceiver
+    // on main instead; a renamed or missing field fails here rather than delivering nothing.
+    private fun receiver(activity: PlayActivity): BroadcastReceiver = screen.onMain {
+        val field = activity.javaClass.declaredFields.firstOrNull { it.name == "audioOutputReceiver" }
+        assertNotNull("PlayActivity has no audioOutputReceiver field", field)
+        val receiver = field!!.apply { isAccessible = true }.get(activity)
+        assertTrue("audioOutputReceiver is not a BroadcastReceiver: $receiver", receiver is BroadcastReceiver)
+        receiver as BroadcastReceiver
     }
 
-    private fun deliver(receiver: BroadcastReceiver?, action: String) = screen.onMain {
-        receiver?.onReceive(screen.context, Intent(action))
+    private fun deliver(receiver: BroadcastReceiver, action: String) = screen.onMain {
+        receiver.onReceive(screen.context, Intent(action))
+    }
+
+    /**
+     * Android sends this receiver nothing when headphones come back. What changes for the app is that
+     * the engine's output is closed and opened again on the new device, which the runner's own
+     * close/reopen stands in for here; audio focus returning is delivered separately by each test.
+     */
+    private fun reopenOutput(vm: PlayActivityViewModel) {
+        val stops = audio.stops.get()
+        val starts = audio.starts.get()
+        screen.onMain { vm.soundRunner!!.pauseStream() }
+        screen.await("Output did not close") { audio.stops.get() > stops }
+        screen.onMain { vm.soundRunner!!.resumeStream() }
+        screen.await("Output did not reopen") { audio.starts.get() > starts }
     }
 
     private fun prepare() {
@@ -66,8 +84,8 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
             assertTrue("All voices must receive stopAll", audio.silences.get() > silencesBefore)
             assertTrue(audio.ringingLoops().isEmpty())
             deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-            // Reconnection and unrelated output/device events never restart the interrupted sequence.
-            if (reconnect) deliver(receiver, AudioManager.ACTION_HEADSET_PLUG)
+            // Neither a reopened output nor returning audio focus restarts the interrupted sequence.
+            if (reconnect) reopenOutput(vm)
             screen.onMain { repeat(2) { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN) } }
             SystemClock.sleep(5500)
             assertEquals("No new automatic commands after interruption", plays, audio.plays.size)
@@ -97,7 +115,7 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
         deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
         assertTrue(audio.silences.get() > silencesBefore)
         assertTrue(audio.ringingLoops().isEmpty())
-        deliver(receiver, AudioManager.ACTION_HEADSET_PLUG)
+        reopenOutput(vm)
         screen.onMain { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN) }
         assertEquals(3, audio.plays.size)
         screen.onMain { repeat(3) { vm.padTouch(0, it, false, it.toLong()) } }
@@ -157,7 +175,7 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
             assertEquals(androidx.lifecycle.Lifecycle.State.CREATED, activity.lifecycle.currentState)
             // Measure this delivery alone; delayed focus callbacks can also silence the engine.
             val afterStop = audio.silences.get()
-            receiver?.onReceive(screen.context, Intent(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            receiver.onReceive(screen.context, Intent(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
             assertEquals("A queued notification after onStop must be ignored", afterStop, audio.silences.get())
         }
         scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
@@ -206,7 +224,7 @@ class AudioOutputInterruptionTest : PlaybackScreenTest() {
             deliver(receiver, AudioManager.ACTION_AUDIO_BECOMING_NOISY)
             finishRecovery.countDown()
             assertTrue("Output recovery did not fail", recoveryFailed.await(10, TimeUnit.SECONDS))
-            deliver(receiver, AudioManager.ACTION_HEADSET_PLUG)
+            // With no open output there is nothing for a reconnection to reopen; only focus returns.
             screen.onMain { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN) }
             SystemClock.sleep(5500)
             screen.onMain {
