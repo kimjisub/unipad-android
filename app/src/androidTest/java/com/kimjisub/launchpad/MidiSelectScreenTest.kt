@@ -119,13 +119,16 @@ class MidiSelectScreenTest {
             compose.onNodeWithText("Custom firmware: Launchpad Open").assertDoesNotExist()
             compose.runOnIdle { transport!!.close() }
             transport = null
+            // Wait for the status panel itself: the top banner also says "Disconnected", and the source
+            // stays "Recognised automatically" throughout, so neither proves the screen read the change.
             compose.waitUntil(5000) {
-                compose.onAllNodes(hasText(str(R.string.midi_status_disconnected), substring = true)).fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodes(hasText(str(R.string.midi_status_disconnected_detail), substring = true)).fetchSemanticsNodes().isNotEmpty()
             }
             compose.runOnIdle { transport = MidiConnection.attachTransport("Virtual Mini", pad, output) }
             compose.waitUntil(5000) {
-                compose.onAllNodes(hasText(str(R.string.midi_source_auto))).fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodes(hasText(str(R.string.midi_status_wait), substring = true)).fetchSemanticsNodes().isNotEmpty()
             }
+            compose.onNodeWithText(str(R.string.midi_source_auto)).performScrollTo().assertIsDisplayed()
             assertTrue(!MidiConnection.connectionStatus().manuallyChosen)
             compose.onNodeWithText(str(R.string.midi_status_input)).assertDoesNotExist()
         } finally { compose.runOnIdle { transport?.close() } }
