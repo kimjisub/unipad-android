@@ -123,7 +123,7 @@ internal class PeripheralMidiTransport(
                         session.output = output
                         session.accepting = true
                         session.timeout?.cancel(false)
-                        mutableState.value = State.Open(output != null)
+                        mutableState.value = State.Open(output != null, session.generation)
                         return
                     }
                 }
@@ -133,9 +133,9 @@ internal class PeripheralMidiTransport(
     }
 
     /** Queued in order off the caller thread. A full queue fails the whole session. */
-    fun send(bytes: ByteArray): Boolean {
+    fun send(bytes: ByteArray, generation: Long): Boolean {
         synchronized(lock) {
-            val session = current?.takeIf { it.accepting && !it.ending } ?: return false
+            val session = current?.takeIf { it.accepting && !it.ending && it.generation == generation } ?: return false
             try {
                 session.writer.execute {
                     try {

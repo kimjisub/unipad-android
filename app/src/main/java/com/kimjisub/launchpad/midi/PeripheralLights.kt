@@ -19,7 +19,7 @@ class PeripheralLights {
     }
 
     @Synchronized fun snapshot(): IntArray = colors.copyOf()
-    @Synchronized fun argb(index: Int): Long = LaunchpadColor.ARGB[colors[index]]
+    @Synchronized fun argb(index: Int): Long = colors.getOrNull(index)?.let { LaunchpadColor.ARGB[it] } ?: 0L
     @Synchronized fun drainChanges(): Map<Int, Int> = buildMap {
         for (index in dirty.indices) if (dirty[index]) {
             put(index, colors[index])

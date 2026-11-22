@@ -56,8 +56,8 @@ class UsbPeripheralPortsTest {
     @Test fun actualPortsRoundTripAndNormalCloseReleasesEveryHeldButton() {
         val connection = connection()
         connect(connection)
-        assertTrue(connection.send(PadChange(0,true)))
-        assertTrue(connection.send(PadChange(64,true)))
+        assertTrue(connection.sendCurrent(PadChange(0,true)))
+        assertTrue(connection.sendCurrent(PadChange(64,true)))
         await { connection.lights.snapshot()[0] == 127 && connection.lights.snapshot()[64] == 127 && connection.lights.snapshot()[71] == 2 }
         await { echoed.toList().count { it[0] != 0xb0 || it[1] != 111 } == 2 }
         assertEquals(2, connection.lights.snapshot()[71])
@@ -82,8 +82,8 @@ class UsbPeripheralPortsTest {
     @Test fun actualButtonsWorkWhenOnlyLightPortOpeningFails() {
         val connection = connection(noLights = true)
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Open(false) }
-        assertTrue(connection.send(PadChange(79,true)))
+        await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == false }
+        assertTrue(connection.sendCurrent(PadChange(79,true)))
         await { echoed.contains(listOf(0x90,19,127)) }
         assertTrue(connection.lights.snapshot().all { it == 0 })
     }
@@ -101,7 +101,7 @@ class UsbPeripheralPortsTest {
         assertTrue(lateClosed.await(15,TimeUnit.SECONDS))
         // A new actual connection must still own the exclusive input port.
         connect(connection)
-        connection.send(PadChange(0,true))
+        connection.sendCurrent(PadChange(0,true))
         await { echoed.contains(listOf(0x90,81,127)) }
     }
 
@@ -112,7 +112,7 @@ class UsbPeripheralPortsTest {
         resources.add(control)
         control.send(byteArrayOf(1),0,1)
         await {
-            connection.send(PadChange(0,true))
+            connection.sendCurrent(PadChange(0,true))
             connection.state.value is UsbPeripheralConnection.State.Failed
         }
         assertTrue((connection.state.value as UsbPeripheralConnection.State.Failed).reason in
@@ -120,7 +120,13 @@ class UsbPeripheralPortsTest {
         assertTrue(connection.lights.snapshot().all { it == 0 })
     }
 
+    private fun UsbPeripheralConnection.sendCurrent(change: PadChange): Boolean {
+        val opened = state.value as? UsbPeripheralConnection.State.Open ?: return false
+        return send(change, opened.generation)
+    }
+
     private fun connection(noLights: Boolean = false, defer: ((() -> Unit) -> Unit)? = null, onClosed: () -> Unit = {}): UsbPeripheralConnection {
+        var delayedOpen = defer
         val access = object : PeripheralMidiAccess {
             override fun devices() = listOf(endpoint)
             override fun watch(changed: () -> Unit, removed: (Int) -> Unit): AutoCloseable {
@@ -139,7 +145,9 @@ class UsbPeripheralPortsTest {
                         override fun close() { try { it.close() } finally { onClosed() } }
                     } }
                     val action = { completed(wrapped) }
-                    if (defer == null) action() else defer(action)
+                    val delay = delayedOpen
+                    delayedOpen = null
+                    if (delay == null) action() else delay(action)
                 }, Handler(Looper.getMainLooper()))
             }
         }
@@ -147,7 +155,7 @@ class UsbPeripheralPortsTest {
     }
     private fun connect(connection: UsbPeripheralConnection) {
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Open(true) }
+        await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == true }
     }
     private fun openDevice(): MidiDevice {
         var device: MidiDevice? = null

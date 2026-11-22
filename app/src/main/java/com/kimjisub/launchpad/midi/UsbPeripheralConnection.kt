@@ -8,7 +8,7 @@ class UsbPeripheralConnection internal constructor(access: PeripheralMidiAccess)
     sealed interface State {
         data object Idle : State
         data object Connecting : State
-        data class Open(val lightsAvailable: Boolean) : State
+        data class Open(val lightsAvailable: Boolean, val generation: Long) : State
         data object Closing : State
         data class Failed(val reason: Failure) : State
     }
@@ -23,7 +23,9 @@ class UsbPeripheralConnection internal constructor(access: PeripheralMidiAccess)
     val discoveryFailure get() = transport.discoveryFailure
     fun refresh() = transport.refresh()
     fun connect(device: PeripheralDevice, inputPort: Int, outputPort: Int?) = transport.connect(device,inputPort,outputPort)
-    fun send(change: PadChange): Boolean = Mk2Layout.message(change.index,change.pressed)?.let(transport::send) ?: false
+    /** Keep the generation captured on pointer down, including for its eventual release. */
+    fun send(change: PadChange, generation: Long): Boolean =
+        Mk2Layout.message(change.index,change.pressed)?.let { transport.send(it, generation) } ?: false
     fun disconnect() = transport.disconnect()
     override fun close() = transport.close()
 }

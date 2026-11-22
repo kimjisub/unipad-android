@@ -21,10 +21,10 @@ class UsbPeripheralConnectionTest {
     @Test fun orderedMessagesLeaveCallerThreadAndCloseSendsEachActiveRelease() {
         val (connection, peer) = connection()
         open(connection)
-        assertTrue(connection.send(PadChange(0,true)))
-        assertTrue(connection.send(PadChange(64,true)))
-        assertTrue(connection.send(PadChange(1,true)))
-        assertTrue(connection.send(PadChange(1,false)))
+        assertTrue(connection.sendCurrent(PadChange(0,true)))
+        assertTrue(connection.sendCurrent(PadChange(64,true)))
+        assertTrue(connection.sendCurrent(PadChange(1,true)))
+        assertTrue(connection.sendCurrent(PadChange(1,false)))
         connection.disconnect()
         await { connection.state.value == UsbPeripheralConnection.State.Idle }
         assertEquals(listOf(listOf(0x90,81,127), listOf(0xb0,104,127), listOf(0x90,82,127),
@@ -83,8 +83,8 @@ class UsbPeripheralConnectionTest {
         peer.noInput = false
         peer.noOutput = true
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Open(false) }
-        assertTrue(connection.send(PadChange(0,true)))
+        await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == false }
+        assertTrue(connection.sendCurrent(PadChange(0,true)))
         await { peer.sent.size == 1 }
     }
 
@@ -92,7 +92,7 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         peer.outputThrows = true
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Open(false) }
+        await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == false }
     }
 
     @Test fun enumerationAndOpenExceptionsAreReportedWithoutEscaping() {
@@ -109,7 +109,7 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         open(connection)
         peer.sendThrows = true
-        connection.send(PadChange(0,true))
+        connection.sendCurrent(PadChange(0,true))
         await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.SEND) }
         assertTrue(peer.inputClosed && peer.outputClosed && peer.deviceClosed)
         peer.sendThrows = false
@@ -124,10 +124,10 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         peer.blockSend = true
         open(connection)
-        assertTrue(connection.send(PadChange(0,true)))
+        assertTrue(connection.sendCurrent(PadChange(0,true)))
         assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
-        repeat(1024) { assertTrue("Queue entry $it", connection.send(PadChange(1,true))) }
-        assertFalse(connection.send(PadChange(0,false)))
+        repeat(1024) { assertTrue("Queue entry $it", connection.sendCurrent(PadChange(1,true))) }
+        assertFalse(connection.sendCurrent(PadChange(0,false)))
         peer.unblock.countDown()
         await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OVERFLOW) }
     }
@@ -161,7 +161,7 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         peer.blockSend = true
         open(connection)
-        connection.send(PadChange(0,true))
+        connection.sendCurrent(PadChange(0,true))
         assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
         connection.disconnect()
         assertEquals(UsbPeripheralConnection.State.Closing, connection.state.value)
@@ -225,15 +225,22 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         open(connection)
         val first = connection.state.value as UsbPeripheralConnection.State.Open
-        connection.send(PadChange(0,true))
+        connection.sendCurrent(PadChange(0,true))
         await { peer.sent.size == 1 }
         connection.disconnect()
         await { connection.state.value == UsbPeripheralConnection.State.Idle }
         open(connection)
         val second = connection.state.value as UsbPeripheralConnection.State.Open
-        connection.send(PadChange(0,true))
+        connection.sendCurrent(PadChange(0,true))
         await { peer.sent.size == 3 }
         assertNotEquals(first,second)
+        assertFalse(connection.send(PadChange(0,false), first.generation))
+        assertEquals(3,peer.sent.size)
+    }
+
+    private fun UsbPeripheralConnection.sendCurrent(change: PadChange): Boolean {
+        val opened = state.value as? UsbPeripheralConnection.State.Open ?: return false
+        return send(change, opened.generation)
     }
 
     private fun connection(): Pair<UsbPeripheralConnection, FakeAccess> {
@@ -245,7 +252,7 @@ class UsbPeripheralConnectionTest {
     }
     private fun open(connection: UsbPeripheralConnection) {
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Open(true) }
+        await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == true }
     }
     private fun await(check: () -> Boolean) {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
