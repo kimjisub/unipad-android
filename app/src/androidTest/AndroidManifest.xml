@@ -13,6 +13,9 @@
             <intent-filter><action android:name="android.media.midi.MidiDeviceService" /></intent-filter>
             <meta-data android:name="android.media.midi.MidiDeviceService" android:resource="@xml/midi_fixture" />
         </service>
+        <activity android:name="com.kimjisub.launchpad.midi.MidiFixturePadActivity"
+            android:exported="true" android:process=":midiFixture"
+            android:resizeableActivity="true" android:taskAffinity="com.kimjisub.launchpad.dev.test.pad" />
         <provider android:name="com.kimjisub.launchpad.midi.MidiFixtureProvider"
             android:authorities="com.kimjisub.launchpad.dev.test.midi" android:exported="true"
             android:process=":midiFixture" />

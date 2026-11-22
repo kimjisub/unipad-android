@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -48,7 +49,9 @@ internal class VirtualMidiConnection(
 		val receiving = AtomicBoolean(false)
 		val overflowing = AtomicBoolean(false)
 		val incoming = Channel<IntArray>(256)
-		val outgoing = Channel<ByteArray>(256)
+		// Lights are state: a burst (the play screen redrawing every pad as it attaches) longer than
+		// the queue drops the oldest writes, which later writes of the same burst supersede.
+		val outgoing = Channel<ByteArray>(256, BufferOverflow.DROP_OLDEST)
 		var job: Job? = null
 		var timer: Job? = null
 		var watch: AutoCloseable? = null
@@ -118,8 +121,8 @@ internal class VirtualMidiConnection(
 			failure = Failure.IO
 			while (true) {
 				delay(1_000)
-				// Status callbacks can be delayed by Android's main looper. A timeout is
-				// unknown, not proof of a closed port; explicit closure still disconnects.
+				// A timeout or an unknown status is not proof of a closed port; the device
+				// reports closure, including the silence of a server that died.
 				if (withTimeoutOrNull(2_000) { device.isAlive() } == false) {
 					withContext(main) { if (attempt === current) stop(State.Failed(Failure.DISCONNECTED)) }
 					break
@@ -172,7 +175,7 @@ internal class VirtualMidiConnection(
 	private fun activate(current: Attempt) {
 		val sender = object : DriverRef.OnSendSignalListener {
 			private fun send(bytes: ByteArray?) {
-				if (current.light != null && bytes != null && !current.outgoing.trySend(bytes).isSuccess) overflow(current)
+				if (current.light != null && bytes != null) current.outgoing.trySend(bytes)
 			}
 			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) = send(MidiStreamEncoder.packet(cmd, sig, note, velocity))
 			override fun onSendPackets(packets: ByteArray) = send(MidiStreamEncoder.packets(packets))
@@ -181,6 +184,12 @@ internal class VirtualMidiConnection(
 			}
 		}
 		try {
+			// Started before attaching, so the attach-time redraw drains while it is queued.
+			current.writer = scope.launch(io) {
+				try { for (bytes in current.outgoing) current.light?.send(bytes) }
+				catch (e: CancellationException) { throw e }
+				catch (_: Exception) { withContext(main) { if (attempt === current) stop(State.Failed(Failure.IO)) } }
+			}
 			current.attachment = attach(current.selection.device.name, current.driver, sender)
 			current.receiving.set(true)
 			publish(State.Connected(current.light != null))
@@ -191,11 +200,6 @@ internal class VirtualMidiConnection(
 					}
 				} catch (e: CancellationException) { throw e }
 				catch (_: Exception) { if (attempt === current) stop(State.Failed(Failure.IO)) }
-			}
-			current.writer = scope.launch(io) {
-				try { for (bytes in current.outgoing) current.light?.send(bytes) }
-				catch (e: CancellationException) { throw e }
-				catch (_: Exception) { withContext(main) { if (attempt === current) stop(State.Failed(Failure.IO)) } }
 			}
 		} catch (_: Exception) { stop(State.Failed(Failure.IO)) }
 	}

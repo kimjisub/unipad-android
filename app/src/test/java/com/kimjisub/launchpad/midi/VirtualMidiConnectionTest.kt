@@ -176,7 +176,7 @@ class VirtualMidiConnectionTest {
 		assertEquals(1, device.output.closed)
 	}
 
-	@Test fun outputIsRawMidiAndOverflowStopsTheSession() = runTest {
+	@Test fun outputIsRawMidiAndALightBurstKeepsTheSessionWithItsNewestLights() = runTest {
 		val dispatcher = StandardTestDispatcher(testScheduler)
 		val backend = Backend()
 		val device = Device()
@@ -191,11 +191,37 @@ class VirtualMidiConnectionTest {
 		sender!!.onSend(9, 0x91.toByte(), 36, 127)
 		runCurrent()
 		assertArrayEquals(byteArrayOf(0x91.toByte(),36,127), device.input.sent.single())
-		// One message can already be handed to the suspended writer, in addition to the buffer.
-		repeat(258) { sender.onSend(9, 0x91.toByte(),36,127) }
+		device.input.sent.clear()
+		// More than the queue holds while the writer cannot run.
+		repeat(600) { sender.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
 		runCurrent()
-		assertEquals(VirtualMidiConnection.Failure.OVERFLOW, (connection.state as VirtualMidiConnection.State.Failed).reason)
+		assertEquals(VirtualMidiConnection.State.Connected(true), connection.state)
+		assertEquals(0, device.closed)
+		val newest = (344 until 600).map { listOf(0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+		assertEquals("The newest lights must arrive in order", newest, device.input.sent.map { it.toList() }.takeLast(256))
+		connection.disconnect()
+		runCurrent()
 		assertEquals(1, device.closed)
+	}
+
+	@Test fun attachTimeRedrawLongerThanTheQueueKeepsTheSession() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		// The play screen redraws every pad and the ring inside attach, before attach returns.
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,output ->
+			repeat(400) { output.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+			AutoCloseable { }
+		}
+		connection.connect(selection, Matrix())
+		runCurrent()
+		advanceTimeBy(5_000)
+		runCurrent()
+		assertEquals(VirtualMidiConnection.State.Connected(true), connection.state)
+		assertEquals(listOf(0x91.toByte(), (36 + 399 % 64).toByte(), (399 % 128).toByte()), device.input.sent.last().toList())
+		connection.disconnect()
+		runCurrent()
 	}
 
 	@Test fun enumerationFailureDoesNotOpenOrChangeAConnection() = runTest {
@@ -329,12 +355,8 @@ class VirtualMidiConnectionTest {
 			val backend = Backend()
 			if (ending != "timeout" && ending != "cancel") backend.opened.complete(device)
 			val gate = MidiTransportGate()
-			var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
 			val terminalReadiness = mutableListOf<Boolean>()
-			val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,output ->
-				sender = output
-				AutoCloseable { }
-			}
+			val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,_ -> AutoCloseable { } }
 			connection.onStateChanged = { state ->
 				if (state == VirtualMidiConnection.State.Idle || state is VirtualMidiConnection.State.Failed) {
 					terminalReadiness.add(connection.canConnect)
@@ -348,7 +370,8 @@ class VirtualMidiConnectionTest {
 				"disconnect", "cancel" -> connection.disconnect()
 				"timeout" -> advanceTimeBy(10_000)
 				"peer exit" -> backend.removed!!(descriptor.id)
-				"overflow" -> repeat(258) { sender!!.onSend(9, 0x91.toByte(), 36, 127) }
+				// Input the main thread cannot keep up with; lights drop their oldest writes instead.
+				"overflow" -> repeat(258) { device.receive!!(byteArrayOf(0x91.toByte(), 36, 100), 0, 3) }
 			}
 			runCurrent()
 			assertEquals("$ending must notify exactly once, ready to reconnect", listOf(true), terminalReadiness)

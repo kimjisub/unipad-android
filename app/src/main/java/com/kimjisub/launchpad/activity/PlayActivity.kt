@@ -140,9 +140,11 @@ import com.kimjisub.launchpad.manager.DefaultThemeResources
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.manager.applyTraceLogTextStyle
 import com.kimjisub.launchpad.manager.putClipboard
+import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
+import com.kimjisub.launchpad.midi.controller.ControllerInputHold
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.ui.compose.LogoLedImage
@@ -230,6 +232,32 @@ class PlayActivity : BaseActivity() {
 		schedule = { task, delay -> windowFocusHandler.postDelayed(task, delay) },
 		cancel = { windowFocusHandler.removeCallbacks(it) },
 		interrupt = { vm.interruptPlayback() },
+	)
+	// A virtual MIDI app beside this screen keeps playing it while that app's window has focus.
+	private val inputHold = ControllerInputHold(
+		keepWhileUnfocused = { MidiConnection.virtualTransportAttached && isInMultiWindowMode },
+		target = object : ControllerInputHold.Target {
+			override fun take(redraw: Boolean) {
+				launchpadOutputEnabled = true
+				if (vm.uiLoaded) {
+					controller = midiController
+					if (redraw) redrawAllLaunchpadLeds()
+				}
+			}
+
+			override fun release() {
+				windowFocusInterruption.cancelPending()
+				vm.interruptPlayback()
+				launchpadOutputEnabled = false
+				driver.sendClearLed()
+				midiController?.let { removeController(it) }
+				vm.releaseControllerPads()
+			}
+
+			override fun scheduleUnfocusedStop() = windowFocusInterruption.onFocusChanged(false)
+
+			override fun cancelUnfocusedStop() = windowFocusInterruption.cancelPending()
+		},
 	)
 
 	// Registered on the whole Settings.System tree: it fires for brightness, rotation, font scale...
@@ -345,6 +373,7 @@ class PlayActivity : BaseActivity() {
 			// Before API 26 the callback has no new configuration; the configuration change that follows corrects the size.
 			val configuration = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) it.newConfig else resources.configuration
 			reportScreenLayout(configuration, it.isInMultiWindowMode)
+			inputHold.reevaluate()
 		}
 
 		val path = intent.getStringExtra("path") ?: run {
@@ -1319,7 +1348,7 @@ class PlayActivity : BaseActivity() {
 			updateVolumeUI()
 			// initLayout runs from a posted runnable; if onPause already removed the controller,
 			// re-registering here would leave a paused activity receiving MIDI. onResume re-adds it.
-			if (lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) controller = midiController
+			if (inputHold.receiving) controller = midiController
 		} catch (e: RuntimeException) {
 			Log.err("initLayout failed", e)
 		}
@@ -1489,8 +1518,16 @@ class PlayActivity : BaseActivity() {
 	// region MIDI controller
 
 	private var midiController: MidiController? = object : MidiController() {
-		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chainBtnsRefresh(); vm.refreshWatermark() }
-		override fun onDetach() = vm.releaseControllerPads()
+		override fun onAttach() {
+			// A USB device connecting to a screen paused beside another app follows the USB rules.
+			inputHold.reevaluate()
+			if (!inputHold.receiving) return
+			redrawAllLaunchpadLeds(); vm.chainBtnsRefresh(); vm.refreshWatermark()
+		}
+		override fun onDetach() {
+			vm.releaseControllerPads()
+			inputHold.reevaluate()
+		}
 		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 			if (upDown) {
@@ -1564,11 +1601,7 @@ class PlayActivity : BaseActivity() {
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		// Reconnect output permission without starting the interrupted song.
 		if (!audioFocus.request()) vm.interruptPlayback()
-		launchpadOutputEnabled = true
-		if (vm.uiLoaded) {
-			controller = midiController
-			redrawAllLaunchpadLeds()
-		}
+		inputHold.onResume()
 		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
 		padTouch.slide = p.slideMode
 	}
@@ -1576,7 +1609,7 @@ class PlayActivity : BaseActivity() {
 	override fun onWindowFocusChanged(hasFocus: Boolean) {
 		super.onWindowFocusChanged(hasFocus)
 		if (::vm.isInitialized) {
-			windowFocusInterruption.onFocusChanged(hasFocus)
+			inputHold.onFocusChanged(hasFocus)
 			// A covering window can swallow the finger's release, even if focus returns quickly.
 			if (!hasFocus) padTouch.cancel()
 			else if (!audioFocus.request()) vm.interruptPlayback()
@@ -1585,21 +1618,18 @@ class PlayActivity : BaseActivity() {
 
 	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
+	// Controller input is let go too, unless a virtual MIDI app beside this screen is being played.
 	override fun onPause() {
 		super.onPause()
-		windowFocusInterruption.cancelPending()
-		vm.interruptPlayback()
+		inputHold.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
-		launchpadOutputEnabled = false
-		driver.sendClearLed()
-		midiController?.let { removeController(it) }
-		vm.releaseControllerPads()
 		padTouch.cancel()
 	}
 
 	override fun onStart() {
 		super.onStart()
+		inputHold.onStart()
 		vm.screenVisible = true
 		audioOutputReceiver.start(this)
 	}
@@ -1607,6 +1637,7 @@ class PlayActivity : BaseActivity() {
 	// Hidden screens also stop the audio stream. Returning reconnects it, but keeps the song suspended.
 	override fun onStop() {
 		super.onStop()
+		inputHold.onStop()
 		audioOutputReceiver.stop(this)
 		audioFocus.abandon()
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)

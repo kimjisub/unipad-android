@@ -21,7 +21,8 @@ internal interface VirtualMidiBackend {
 	suspend fun open(id: Int): Device?
 	fun watchRemoval(callback: (Int) -> Unit): AutoCloseable
 	interface Device : AutoCloseable {
-		suspend fun isAlive(): Boolean = true
+		/** False once the device has closed; null while that is unknown. */
+		suspend fun isAlive(): Boolean? = true
 		fun openPerformancePort(number: Int, receiver: (ByteArray, Int, Int) -> Unit): Port?
 		fun openLightPort(number: Int): Port?
 	}
