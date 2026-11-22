@@ -4,6 +4,9 @@ import com.kimjisub.launchpad.midi.UsbMidiSysEx
 import com.kimjisub.launchpad.tool.Log
 
 abstract class DriverRef {
+	/** USB cable header expected when adapting a selected raw MIDI port to this driver. */
+	internal open val receiveCableNumber: Int get() = 0
+
 	companion object {
 		/** Round buttons are function keys 0 until this: top, right, bottom and left rows of 8. */
 		const val ROUND_BUTTON_COUNT = 32

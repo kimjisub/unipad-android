@@ -83,6 +83,21 @@ class MidiConnectionLifecycleTest {
 		mainDispatcher.close()
 	}
 
+	@Test fun virtualDriverPickCannotReplaceTheLiveTransportAndReconnectStillWorks() {
+		val selected = com.kimjisub.launchpad.midi.driver.Matrix()
+		val output = mockk<DriverRef.OnSendSignalListener>(relaxed = true)
+		val attachment = MidiConnection.attachTransport("Virtual pads", selected, output)
+		try {
+			MidiConnection.driver = LaunchpadX()
+			org.junit.Assert.assertSame(selected, MidiConnection.driver)
+			MidiConnection.driver.sendPadLed(7, 0, 100)
+			verify { output.onSend(9, 0x91.toByte(), 36, 100) }
+		} finally { attachment.close() }
+		org.junit.Assert.assertNull(MidiConnection.connectedDevice)
+		MidiConnection.attachTransport("Virtual pads", selected, output).close()
+		org.junit.Assert.assertNull(MidiConnection.connectedDevice)
+	}
+
 	@Test
 	fun init_midiServiceEnumerationNpe_fallsBackToUsbClaim() {
 		midiManager.stubDeviceList() throws NullPointerException("MidiManager.getDevices")
@@ -329,6 +344,29 @@ class MidiConnectionLifecycleTest {
 		assertEquals("Launchpad X", connectedNames.last())
 		verify(timeout = TIMEOUT_MS) { connection.claimInterface(any(), true) }
 		assertNoCrash()
+	}
+
+
+	@Test fun usbAttachCannotOpenWhileAVirtualConnectionIsPending() {
+		val lease = requireNotNull(MidiConnection.transportGate.acquireVirtual())
+		try {
+			val (device, _) = launchpad(deviceId = 1)
+			attach(device)
+			verify(exactly = 0) { usbManager.openDevice(any()) }
+		} finally { lease.close() }
+	}
+
+	@Test fun pendingUsbMidiInitializationPreventsVirtualOpen() {
+		val (device, connection) = launchpad(deviceId = 1)
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo(device))
+		val callback = slot<MidiManager.OnDeviceOpenedListener>()
+		every { midiManager.openDevice(any(), capture(callback), any()) } returns Unit
+		attach(device)
+		org.junit.Assert.assertNull(MidiConnection.transportGate.acquireVirtual())
+		callback.captured.onDeviceOpened(null)
+		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertNoCrash()
+		MidiConnection.transportGate.acquireVirtual()!!.close()
 	}
 
 	private fun recordDrivers(): List<DriverRef> {
