@@ -50,6 +50,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		runCatching { fixture.call("closePad") }
 		// The next test must start without this split screen.
 		screen.device.wait(androidx.test.uiautomator.Until.gone(By.desc(PAD)), 5_000)
+		// Before Android 9 the docked stack outlives the other half; removing it closes the play screen.
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) screen.device.executeShellCommand("am stack remove $DOCKED_STACK")
 		screen.onMain { MidiConnection.driver = Noting() }
 		if (resized) screen.device.executeShellCommand("wm size reset")
 		screen.device.setOrientationNatural()
@@ -87,9 +89,24 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		screen.capture("virtual-midi-split-released")
 	}
 
-	@Test fun goingHomeLetsGoOfTheHeldPad() = holdThenLeave("going Home") {
-		assertTrue(screen.device.pressHome())
-		screen.await("Home did not hide the play screen") { screen.onMain { !vm.screenVisible } }
+	@Test fun goingHomeLetsGoOfTheHeldPad() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			holdThenLeave("going Home") {
+				assertTrue(screen.device.pressHome())
+				screen.await("Home did not hide the play screen") { screen.onMain { !vm.screenVisible } }
+			}
+			return
+		}
+		// Before Android 9 Home only minimizes the docked play screen, which stays visible and keeps
+		// playing; releasing the pad then stops it, and nothing is played again.
+		changeWindowWhileHeld("going Home beside the minimized dock") {
+			// pressHome reports whether the window list changed in time, which the minimized dock delays.
+			screen.device.pressHome()
+			screen.await("Home did not cover the other app's window") { !screen.device.hasObject(By.desc(PAD)) }
+			SystemClock.sleep(1_000)
+			assertTrue("Home must leave the minimized dock visible",
+				screen.onMain { vm.screenVisible && play.isInMultiWindowMode })
+		}
 	}
 
 	@Test fun theOtherAppGoingFullScreenLetsGoOfTheHeldPad() = holdThenLeave("the other app going full screen") {
@@ -122,9 +139,13 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	// The exited app has no light port left to read.
 	@Test fun theOtherAppExitingLetsGoOfTheHeldPad() = holdThenLeave("the other app exiting", lightsOff = false) {
 		fixture.call("exit")
+		// The exited app's window took the finger's gesture with it.
+		fingers.forgetCancelled()
 		screen.await("The other app's exit did not end the connection") {
-			fixture.main { connection!!.state == VirtualMidiConnection.State.Failed(VirtualMidiConnection.Failure.DISCONNECTED) }
+			fixture.main { connection!!.state is VirtualMidiConnection.State.Failed }
 		}
+		// A light written as the peer dies can report the end before its status checks do.
+		Log.i(TAG, "API ${Build.VERSION.SDK_INT}: the other app's exit ended the connection as ${fixture.main { connection!!.state }}")
 	}
 
 	@Test fun lockingLetsGoAndInputWhileLockedIsNotPlayedOnReturn() {
@@ -159,7 +180,10 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		screen.device.setOrientationLeft()
 	}
 
-	@Test fun resizingWhileHeldLeavesNothingStuck() = changeWindowWhileHeld("resizing the display") {
+	@Test fun resizingWhileHeldLeavesNothingStuck() = changeWindowWhileHeld("resizing the display", restore = {
+		screen.device.executeShellCommand("wm size reset")
+		resized = false
+	}) {
 		resized = true
 		screen.device.executeShellCommand("wm size 900x2000")
 	}
@@ -197,7 +221,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		screen.capture("virtual-midi-split-after-${context.replace(' ', '-')}")
 	}
 
-	private fun changeWindowWhileHeld(context: String, change: () -> Unit) {
+	/** [restore] undoes the change before the closing screenshot, which some sizes cannot take. */
+	private fun changeWindowWhileHeld(context: String, restore: () -> Unit = {}, change: () -> Unit) {
 		openBesideTheVirtualApp()
 		val finger = holdOtherAppPad()
 		change()
@@ -212,6 +237,7 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		SystemClock.sleep(500)
 		assertEquals("After $context the held press must not play again", 1, audio.plays.size)
 		screen.await("After $context the pad's light stayed on at the other app") { lightOffAfter(lightOn()) }
+		restore()
 		screen.capture("virtual-midi-split-after-${context.replace(' ', '-')}")
 	}
 
@@ -281,6 +307,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	/**
 	 * Opens the other app's pad window and puts it beside the play screen. Android 12L and later
 	 * split through the system UI's window manager shell; earlier versions dock the play screen.
+	 * Before Android 9 the other window goes into the full-screen stack by its id: launched as an
+	 * adjacent window from here it lands in the docked stack, on top of the play screen.
 	 */
 	private fun enterSplitScreen() {
 		val pad = Intent().setClassName(screen.instrumentation.context.packageName, MidiFixturePadActivity::class.java.name)
@@ -292,12 +320,16 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen moveToSideStage $playTask 0")
 		} else {
 			// The docked stack of Android 7–11; the launcher's recents fill the other half until a launch.
-			screen.device.executeShellCommand("am stack movetask $playTask 3 true")
+			screen.device.executeShellCommand("am stack movetask $playTask $DOCKED_STACK true")
 			screen.await("The play screen was not docked") { screen.onMain { play.isInMultiWindowMode } }
 			// Opened before them, the other app's window would be covered by those recents.
 			screen.await("The recents did not take the other half") { screen.onMain { !play.hasWindowFocus() } }
 			screen.device.waitForIdle()
-			screen.context.startActivity(pad.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT))
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+				screen.device.executeShellCommand("am start --stack $FULL_SCREEN_STACK -f ${pad.flags} -n ${pad.component!!.flattenToShortString()}")
+			} else {
+				screen.context.startActivity(pad.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT))
+			}
 		}
 		screen.await("The play screen did not share the display with the other app") {
 			screen.onMain { play.isInMultiWindowMode && !play.isDestroyed } && screen.device.hasObject(By.desc(PAD))
@@ -311,7 +343,10 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen exitSplitScreen $padTask")
 		} else {
-			screen.device.executeShellCommand("am stack movetask $padTask 1 true")
+			// Emptying the docked stack ends the split; the other app stays on top, full screen.
+			val playTask = screen.onMain { play.taskId }
+			screen.device.executeShellCommand("am stack movetask $playTask $FULL_SCREEN_STACK false")
+			screen.device.executeShellCommand("am stack movetask $padTask $FULL_SCREEN_STACK true")
 		}
 	}
 
@@ -321,6 +356,9 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 
 	private companion object {
 		const val PAD = "Fixture pad"
+		// Fixed stack ids before Android 9 (ActivityManager.StackId).
+		const val FULL_SCREEN_STACK = 1
+		const val DOCKED_STACK = 3
 		const val TAG = "VirtualMidiSplitScreen"
 	}
 }

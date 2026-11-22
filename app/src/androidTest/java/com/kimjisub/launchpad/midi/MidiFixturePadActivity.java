@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,6 +16,7 @@ public class MidiFixturePadActivity extends Activity {
     static final AtomicInteger PRESSES = new AtomicInteger();
     static final AtomicInteger RELEASES = new AtomicInteger();
     static volatile MidiFixturePadActivity current;
+    private static final Set<MidiFixturePadActivity> OPEN = new CopyOnWriteArraySet<>();
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -38,17 +41,18 @@ public class MidiFixturePadActivity extends Activity {
         });
         setContentView(pad);
         current = this;
+        OPEN.add(this);
     }
 
     @Override protected void onDestroy() {
+        OPEN.remove(this);
         if (current == this) current = null;
         super.onDestroy();
     }
 
-    /** Closes the window so the split screen ends; the service keeps running. */
+    /** Closes every pad window so the split screen ends; the service keeps running. */
     static void close() {
-        MidiFixturePadActivity activity = current;
-        if (activity != null) activity.runOnUiThread(activity::finishAndRemoveTask);
+        for (MidiFixturePadActivity activity : OPEN) activity.runOnUiThread(activity::finishAndRemoveTask);
     }
 
     private static void send(int status, int velocity) {
