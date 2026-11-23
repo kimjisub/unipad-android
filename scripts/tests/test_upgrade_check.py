@@ -510,6 +510,58 @@ class LegacyThemeTest(unittest.TestCase):
         self.assertEqual([c.args for c in open_play.call_args_list],
                          [('upgrade_check_a', Path(tmp) / f'play-{n}.png') for n in ('migrated', 'default', 'sskin')])
 
+    def test_a_play_screen_that_does_not_open_fails_the_scenario_with_its_crash_lines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            run.d.exists = lambda remote: False
+            after = snapshot()
+            after['prefs'] = {**after['prefs'], uc.THEME_KEY: ('string', 'asset://sskin')}
+            crash = '10-26 12:00:05.000  E AndroidRuntime: Process: p, PID: 1234'
+            stopped = uc.PlayNotReady('the play screen of upgrade_check_a did not open and come to rest within 30 s')
+            with mock.patch.object(run, 'prepare', return_value=snapshot()), mock.patch.object(run, 'leave_legacy_theme'), \
+                    mock.patch.object(run, 'upgrade', return_value=[]), mock.patch.object(run, 'snapshot', return_value=after), \
+                    mock.patch.object(run, 'write_theme_setting') as setting, \
+                    mock.patch.object(run, 'open_play', side_effect=stopped) as open_play, \
+                    mock.patch.object(run, 'events', return_value=[crash]):
+                result = run.scenario('legacy-theme', None)
+                written = json.loads((Path(tmp) / 'legacy-theme' / 'result.json').read_text())
+        self.assertFalse(result['passed'])
+        self.assertEqual(result['problems'], [f'play screen with the migrated theme: {stopped}', f'crash or ANR: {crash}'])
+        self.assertEqual(written['problems'], result['problems'])
+        self.assertEqual(open_play.call_count, 1)
+        setting.assert_not_called()
+
+    def test_a_cut_off_capture_is_retried_until_the_screen_rests(self):
+        class PlayDevice(FakeDevice):
+            adb = ['adb']
+
+            def sh(self, command, check=True):
+                self.calls.append(('shell', command))
+                return 'topResumedActivity=ActivityRecord{p/.activity.PlayActivity}' if 'dumpsys' in command else ''
+
+        captures = iter([mock.Mock(returncode=0, stdout=raw_halves(0, 200)[:-2]), mock.Mock(returncode=1, stdout=b''),
+                         mock.Mock(returncode=0, stdout=raw_halves(0, 200)),
+                         mock.Mock(returncode=0, stdout=raw_halves(0, 200))])
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(PlayDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            with mock.patch.object(uc.time, 'sleep'), mock.patch.object(run, 'screenshot'), \
+                    mock.patch.object(uc.subprocess, 'run', side_effect=lambda *a, **k: next(captures)):
+                signature = run.open_play('upgrade_check_a', Path(tmp) / 'play.png')
+        self.assertEqual(signature, uc.screen_signature(raw_halves(0, 200)))
+
+    def test_a_play_screen_that_never_rests_is_an_app_failure(self):
+        class PlayDevice(FakeDevice):
+            adb = ['adb']
+
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(PlayDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            clock = iter(range(0, 1000, 10))
+            with mock.patch.object(uc.time, 'sleep'), mock.patch.object(uc.time, 'monotonic', side_effect=lambda: next(clock)), \
+                    mock.patch.object(run, 'screenshot'), self.assertRaises(uc.PlayNotReady) as raised:
+                run.open_play('upgrade_check_a', Path(tmp) / 'play.png')
+        self.assertNotIsInstance(raised.exception, uc.SetupError)
+        self.assertIn('did not open and come to rest', str(raised.exception))
+
     def test_the_theme_setting_is_written_beside_the_other_settings_and_read_back(self):
         with tempfile.TemporaryDirectory() as tmp:
             run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))

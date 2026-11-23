@@ -67,7 +67,10 @@ the 4.2.2 → 4.3.0 run measured 98.9 and 0.0. These are in
 `legacy-theme/after/theme-screen.json`, with `play-migrated.png`, `play-default.png` and
 `play-sskin.png`; `legacy-theme/legacy-theme/` keeps the settings and folder listing
 left before the upgrade. The theme checks are skipped when the newer build already
-failed to install or open.
+failed to install or open. A play screen that does not open and come to rest within 30
+seconds (the app crashed drawing the theme, or hangs) fails the scenario like any other
+check: its crash and ANR lines and `result.json` are kept, the remaining screenshots are
+not taken, and the run exits 1.
 
 The pack file comparison includes every `autoPlay` and both backup formats:
 rewriting or deleting any of them fails the upgrade with its relative path in

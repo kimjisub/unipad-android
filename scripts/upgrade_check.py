@@ -95,6 +95,10 @@ class AppNotReady(Exception):
     """The app did not reach its pack list, or stopped soon after."""
 
 
+class PlayNotReady(Exception):
+    """The play screen did not open, or did not come to rest; an app failure, not a failed run."""
+
+
 class EmptyScreenDump(SetupError):
     """`uiautomator dump` gave nothing to read, so the screen cannot be judged."""
 
@@ -521,8 +525,12 @@ class UpgradeRun:
         for label, setting in (('migrated', ...), ('default', None), (theme, f'asset://{theme}')):
             if setting is not ...:
                 self.write_theme_setting(folder / f'play-{label}', setting)
-            shots[label] = self.open_play(PACKS[0]['id'], folder / f'play-{label}.png')
-            self.stop()
+            try:
+                shots[label] = self.open_play(PACKS[0]['id'], folder / f'play-{label}.png')
+            except PlayNotReady as error:
+                return [f'play screen with the {label} theme: {error}']
+            finally:
+                self.stop()
         differences = dict(to_default=signature_difference(shots['migrated'], shots['default']),
                            to_chosen=signature_difference(shots['migrated'], shots[theme]))
         (folder / 'theme-screen.json').write_text(json.dumps(differences, indent=1) + '\n')
@@ -534,21 +542,29 @@ class UpgradeRun:
         The screenshot at rest, or the last one taken, is saved as `png`."""
         path = f'/storage/emulated/0/Android/data/{self.package}/files/UniPack/{pack_id}'
         self.d.sh(f'am start -n {self.package}/.activity.PlayActivity --es path {q(path)}')
-        deadline, previous, top = time.monotonic() + PLAY_TIMEOUT_S, None, ''
+        deadline, previous, top, capture_error = time.monotonic() + PLAY_TIMEOUT_S, None, '', ''
         while time.monotonic() < deadline:
             time.sleep(2)
             top = self.d.sh('dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity"', check=False)
             if '.activity.PlayActivity' not in top:
                 continue
-            raw = subprocess.run([*self.d.adb, 'exec-out', 'screencap'], capture_output=True, timeout=60).stdout
-            signature = screen_signature(raw)
+            capture = subprocess.run([*self.d.adb, 'exec-out', 'screencap'], capture_output=True, timeout=60)
+            try:
+                if capture.returncode:
+                    raise ValueError(f'screencap exited {capture.returncode}')
+                signature = screen_signature(capture.stdout)
+            except ValueError as error:
+                # A cut-off or failed capture is retried; only the deadline ends the wait.
+                previous, capture_error = None, str(error)
+                continue
             if previous and signature_difference(signature, previous) < 1:
                 self.screenshot(png)
                 return signature
             previous = signature
         self.screenshot(png)
-        raise SetupError(f'the play screen of {pack_id} did not open and come to rest within {PLAY_TIMEOUT_S} s '
-                         f'(on top: {" ".join(top.split())}; see {png.name})')
+        raise PlayNotReady(f'the play screen of {pack_id} did not open and come to rest within {PLAY_TIMEOUT_S} s '
+                           f'(on top: {" ".join(top.split())}'
+                           f'{f"; last capture: {capture_error}" if capture_error else ""}; see {png.name})')
 
     def screenshot(self, png: Path) -> None:
         with png.open('wb') as out:

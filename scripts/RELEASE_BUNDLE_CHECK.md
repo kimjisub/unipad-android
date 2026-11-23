@@ -22,23 +22,25 @@ What fails the check:
   `exit_process_ms`, `exit_last_screen`, from `SystemExitReporter`) must still be loaded
   by a `const-string` in the candidate's bytecode. R8 removing or renaming one would
   drop that field from every report.
-- **Forbidden calls**: no reference to `Landroid/media/MediaPlayer;.<init>` in the
-  candidate. The system media player crashed in vendor implementations; 4.2.2 has one,
-  4.3.0 none.
+- **Forbidden calls**: no reference to `Landroid/media/MediaPlayer;.<init>` or
+  `Landroid/media/MediaPlayer;.create:` in the candidate. The system media player crashed
+  in vendor implementations; 4.2.2 constructs it once, 4.3.0 neither constructs nor
+  creates it.
 - **Permissions**: the set of `uses-permission` names must equal the published build's.
-  A planned change is named with `--expect-permission +NAME` (added) or `-NAME`
-  (removed), once the store declarations match; an expected change that is not in the
+  A planned change is named with `--permission-added NAME` or `--permission-removed NAME`
+  (repeat for each), once the store declarations match; a named change that is not in the
   candidate also fails.
 - **Device reach**: a `uses-feature` that is required in the candidate but was absent or
   optional before, since devices without it could no longer install the app.
 - **Advertising ID**: `google_analytics_adid_collection_enabled` must be `false` and no
-  advertising permission may be present (the same rules as
+  advertising permission may be present (`advertising_id_problems`, shared with
   `check_debug_telemetry_manifest.py`).
-- The candidate's version code must be higher than the published build's.
+- The candidate's version code must be higher than the published build's; a manifest
+  whose `versionCode` cannot be read fails.
 
 Other manifest changes are listed, not judged: features added as optional or no longer
 required, removed features, `queries` entries and broadcast receivers added or removed,
-and changed permission attributes such as `maxSdkVersion`.
+and changed attributes, such as `maxSdkVersion`, of a permission both builds request.
 
 Exit status: `0` every check passed, `1` a check failed, `2` the check could not run (a
 missing file or tool, an unreadable build); `setup-error.txt` then holds the reason.

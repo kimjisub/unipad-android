@@ -146,6 +146,8 @@ class FirebaseOffCheck:
 
     def back_to_main(self, label):
         self.screen.back()
+        # The Store's own title also reads "Store", so the main screen is told by its activity first.
+        self.wait_activity('.activity.MainActivity')
         self.screen.settled(main_entry, SCREEN_TIMEOUT, f'The main screen after {label}', f'main-after-{label}')
 
     def walk(self):

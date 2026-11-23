@@ -21,12 +21,13 @@ class FakeAdb:
     """Answers the adb commands the check sends; `fail_on` makes one command fail."""
 
     def __init__(self, apk_sha, *, crash_disabled='', firebase_while_disabled=False, firebase_lines_enabled=True,
-                 root=True, fail_on=(), alive=True):
+                 root=True, fail_on=(), alive=True, stuck_on=None):
         self.apk_sha, self.crash_disabled = apk_sha, crash_disabled
         self.firebase_while_disabled, self.firebase_lines_enabled = firebase_while_disabled, firebase_lines_enabled
         self.is_root, self.fail_on, self.alive = root, fail_on, alive
         self.disabled = False
-        self.activities = ['.activity.FBStoreActivity', '.activity.SettingsActivity']
+        # Activities above the main screen, top last; `stuck_on` keeps one there when Back is pressed.
+        self.activities, self.stuck_on = [], stuck_on
         self.commands = []
 
     def run(self, *args, timeout=60, check=True):
@@ -75,7 +76,7 @@ class FakeAdb:
         if command.startswith('date'):
             return '11-24 10:00:00.000'
         if command.startswith('dumpsys activity'):
-            top = self.activities[0] if self.activities else '.activity.MainActivity'
+            top = self.activities[-1] if self.activities else '.activity.MainActivity'
             return f'  topResumedActivity=ActivityRecord{{5b1 u0 {PACKAGE}/{top} t12}}'
         if command.startswith('pidof'):
             return '1234' if self.alive else ''
@@ -109,11 +110,13 @@ class FakeScreen:
 
     def tap(self, node):
         self.actions.append(f'tap {node.text}')
-        if node.text.startswith('The Settings') and self.adb.activities:
-            self.adb.activities.pop(0)
+        opens = {"The main screen's Store": '.activity.FBStoreActivity', 'The Settings': '.activity.SettingsActivity'}
+        self.adb.activities += [name for prefix, name in opens.items() if node.text.startswith(prefix)]
 
     def back(self):
         self.actions.append('back')
+        if self.adb.activities and self.adb.activities[-1] != self.adb.stuck_on:
+            self.adb.activities.pop()
 
     def capture(self, name):
         self.actions.append(f'capture {name}')
@@ -160,6 +163,16 @@ class RunTest(unittest.TestCase):
         code, result, adb, screen = self.run_check(crash_disabled=CRASH, alive=False)
         self.assertEqual((code, result['verdict']), (1, 'failed'))
         self.assertIn('crash or ANR with Firebase off', result['failures'][0])
+        self.assert_cleaned(adb, screen)
+
+    def test_back_that_leaves_the_store_open_is_not_taken_for_the_main_screen(self):
+        clock = iter(range(0, 100000, 5))
+        with mock.patch.object(fo.time, 'monotonic', side_effect=lambda: next(clock)):
+            code, result, adb, screen = self.run_check(stuck_on='.activity.FBStoreActivity')
+        self.assertEqual((code, result['verdict']), (1, 'failed'))
+        self.assertTrue(any('.activity.MainActivity was not on top' in f and 'FBStoreActivity' in f
+                            for f in result['failures']), result['failures'])
+        self.assertNotIn('tap The Settings button', screen.actions)
         self.assert_cleaned(adb, screen)
 
     def test_a_missing_store_message_is_the_apps_failure_and_the_logs_are_still_read(self):
