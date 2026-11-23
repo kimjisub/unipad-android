@@ -16,7 +16,7 @@ class VirtualMidiConnectionTest {
 	private class Port : VirtualMidiBackend.Port {
 		var closed = 0
 		val sent = mutableListOf<ByteArray>()
-		override fun send(bytes: ByteArray) { sent.add(bytes) }
+		override fun send(bytes: ByteArray) { synchronized(this) { sent.add(bytes) } }
 		override fun close() { closed++ }
 	}
 	private class Device : VirtualMidiBackend.Device {
@@ -219,6 +219,80 @@ class VirtualMidiConnectionTest {
 		assertEquals(1, device.closed)
 	}
 
+	@Test fun droppedLightsAreRedrawnOnceAfterTheQueueDrains() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+		val driver = Matrix()
+		var redraws = 0
+		driver.setOnCycleListener(object : com.kimjisub.launchpad.midi.driver.DriverRef.OnCycleListener {
+			override fun onConnected() { redraws++ }
+			override fun onDisconnected() { }
+		})
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,output ->
+			sender = output
+			AutoCloseable { }
+		}
+		connection.connect(selection, driver)
+		runCurrent()
+		repeat(200) { sender!!.onSend(9, 0x91.toByte(), 36, 1) }
+		runCurrent()
+		assertEquals("A burst the queue holds needs no redraw", 0, redraws)
+		repeat(600) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+		runCurrent()
+		assertEquals("The oldest lights of the burst were dropped, so the device is redrawn once", 1, redraws)
+		advanceTimeBy(5_000)
+		runCurrent()
+		assertEquals(1, redraws)
+		connection.disconnect()
+		runCurrent()
+		assertEquals("Teardown discarding queued lights is not a drop to redraw", 1, redraws)
+	}
+
+	@Test fun redrawsThatOverflowAgainAreSpacedApart() = runTest {
+		val dispatcher = StandardTestDispatcher(testScheduler)
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+		val driver = Matrix()
+		var redraws = 0
+		// A heavy pack keeps lighting while each redraw is queued, so every redraw overflows the
+		// queue again until the pack calms down (here, after the fiftieth redraw at the latest).
+		var heavy = true
+		driver.setOnCycleListener(object : com.kimjisub.launchpad.midi.driver.DriverRef.OnCycleListener {
+			override fun onConnected() {
+				redraws++
+				repeat(if (heavy && redraws < 50) 300 else 100) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), 5) }
+			}
+			override fun onDisconnected() { }
+		})
+		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, MidiTransportGate()) { _,_,output ->
+			sender = output
+			AutoCloseable { }
+		}
+		connection.connect(selection, driver)
+		runCurrent()
+		repeat(600) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+		runCurrent()
+		assertEquals("Only one redraw may run while the next one would clear the lights again", 1, redraws)
+		advanceTimeBy(3_100)
+		runCurrent()
+		assertEquals("Repeated overflows redraw at most once a second", 4, redraws)
+		heavy = false
+		advanceTimeBy(1_000)
+		runCurrent()
+		assertEquals("The redraw that fits the queue is the last one", 5, redraws)
+		advanceTimeBy(5_000)
+		runCurrent()
+		assertEquals(5, redraws)
+		assertEquals(VirtualMidiConnection.State.Connected(true), connection.state)
+		connection.disconnect()
+		runCurrent()
+	}
+
 	@Test fun attachTimeRedrawLongerThanTheQueueKeepsTheSession() = runTest {
 		val dispatcher = StandardTestDispatcher(testScheduler)
 		val backend = Backend()
@@ -395,6 +469,101 @@ class VirtualMidiConnectionTest {
 			connection.disconnect()
 			runCurrent()
 		}
+	}
+
+	/** Real main and writer threads, so the writer can be held while lights pile up in the queue. */
+	private class Threads(immediateMain: Boolean) : AutoCloseable {
+		private var mainThread: Thread? = null
+		private val mainExecutor = Executors.newSingleThreadExecutor { r -> Thread(r, "main").also { it.isDaemon = true; mainThread = it } }
+		private val ioExecutor = Executors.newSingleThreadExecutor { r -> Thread(r, "io").also { it.isDaemon = true } }
+		private val queued = mainExecutor.asCoroutineDispatcher()
+		// The app's main dispatcher is Dispatchers.Main.immediate: no dispatch when already on the main thread.
+		val main: CoroutineDispatcher = if (!immediateMain) queued else object : CoroutineDispatcher() {
+			override fun isDispatchNeeded(context: kotlin.coroutines.CoroutineContext) = Thread.currentThread() !== mainThread
+			override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) = queued.dispatch(context, block)
+		}
+		val io = ioExecutor.asCoroutineDispatcher()
+		val scope = CoroutineScope(SupervisorJob())
+		fun <T> onMain(block: () -> T): T = mainExecutor.submit<T>(block).get(10, TimeUnit.SECONDS)
+		fun mainAnswersWithin(seconds: Long) =
+			try { mainExecutor.submit { }.get(seconds, TimeUnit.SECONDS); true } catch (_: java.util.concurrent.TimeoutException) { false }
+		/** Blocks the writer's thread until the returned latch is released. */
+		fun holdWriter() = CountDownLatch(1).also { latch -> ioExecutor.execute { latch.await() } }
+		fun awaitState(connection: VirtualMidiConnection, expected: VirtualMidiConnection.State) {
+			val deadline = System.currentTimeMillis() + 5_000
+			while (onMain { connection.state } != expected && System.currentTimeMillis() < deadline) Thread.sleep(20)
+			assertEquals(expected, onMain { connection.state })
+		}
+		/** Waits until the writer has sent [count] messages and asked for its redraw. */
+		fun awaitSent(port: Port, count: Int) {
+			val deadline = System.currentTimeMillis() + 5_000
+			while (synchronized(port) { port.sent.size } < count && System.currentTimeMillis() < deadline) Thread.sleep(5)
+			Thread.sleep(100)
+		}
+		override fun close() {
+			scope.cancel()
+			mainExecutor.shutdownNow()
+			ioExecutor.shutdownNow()
+		}
+	}
+
+	private fun countingRedraws(driver: Matrix) = AtomicInteger().also { redraws ->
+		driver.setOnCycleListener(object : com.kimjisub.launchpad.midi.driver.DriverRef.OnCycleListener {
+			override fun onConnected() { redraws.incrementAndGet() }
+			override fun onDisconnected() { }
+		})
+	}
+
+	@Test fun disconnectingWithARedrawQueuedKeepsTheMainThreadResponsive() = Threads(immediateMain = true).use { threads ->
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+		val driver = Matrix()
+		countingRedraws(driver)
+		val connection = VirtualMidiConnection(backend, threads.scope, threads.main, threads.io, MidiTransportGate()) { _,_,output ->
+			sender = output
+			AutoCloseable { }
+		}
+		threads.onMain { connection.connect(selection, driver) }
+		threads.awaitState(connection, VirtualMidiConnection.State.Connected(true))
+		val hold = threads.holdWriter()
+		threads.onMain {
+			repeat(600) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+			hold.countDown()
+			// The writer drains the queue and asks for a redraw, queued behind this message.
+			threads.awaitSent(device.input, 256)
+			connection.disconnect()
+		}
+		assertTrue("The main thread must answer after disconnecting", threads.mainAnswersWithin(3))
+		threads.awaitState(connection, VirtualMidiConnection.State.Idle)
+	}
+
+	@Test fun lightsQueuedBeforeTheRedrawRunsDoNotPostponeIt() = Threads(immediateMain = false).use { threads ->
+		val backend = Backend()
+		val device = Device()
+		backend.opened.complete(device)
+		var sender: com.kimjisub.launchpad.midi.driver.DriverRef.OnSendSignalListener? = null
+		val driver = Matrix()
+		val redraws = countingRedraws(driver)
+		val connection = VirtualMidiConnection(backend, threads.scope, threads.main, threads.io, MidiTransportGate()) { _,_,output ->
+			sender = output
+			AutoCloseable { }
+		}
+		threads.onMain { connection.connect(selection, driver) }
+		threads.awaitState(connection, VirtualMidiConnection.State.Connected(true))
+		val hold = threads.holdWriter()
+		val again = threads.onMain {
+			repeat(600) { sender!!.onSend(9, 0x91.toByte(), (36 + it % 64).toByte(), (it % 128).toByte()) }
+			hold.countDown()
+			threads.awaitSent(device.input, 256)
+			// A pack keeps lighting: new lights wait in the queue when the main thread reaches the redraw.
+			threads.holdWriter().also { repeat(5) { sender!!.onSend(9, 0x91.toByte(), 36, 3) } }
+		}
+		assertEquals("The overflow is redrawn while the pack keeps lighting", 1, threads.onMain { redraws.get() })
+		again.countDown()
+		threads.onMain { connection.disconnect() }
+		threads.awaitState(connection, VirtualMidiConnection.State.Idle)
 	}
 
 	private companion object {

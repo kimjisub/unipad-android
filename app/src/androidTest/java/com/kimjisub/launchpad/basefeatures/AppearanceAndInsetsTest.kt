@@ -38,7 +38,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         val oldLocales = localeManager.applicationLocales
         try {
             var settings = screen.launch(SettingsActivity::class.java)
-            screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+            screen.node(By.text(screen.text(R.string.midi_connect_title)))
             localeManager.applicationLocales = LocaleList(Locale.KOREAN)
             screen.awaitActivity(SettingsActivity::class.java, "ko")
             assertNotNull("Korean language row missing", screen.scrollTo(By.text("한국어"), Direction.DOWN))
@@ -54,7 +54,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             val reopenedSettings = screen.resumed()
             assertNotSame("Settings did not create a new screen", previousSettings, reopenedSettings)
             assertTrue("Previous Settings was not destroyed", screen.onMain { previousSettings.isDestroyed })
-            val topRow = screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+            val topRow = screen.node(By.text(screen.text(R.string.midi_connect_title)))
             assertNotNull("Settings scroll container missing", screen.device.findObject(By.scrollable(true)))
             val languageVisible = screen.device.hasObject(By.text("English"))
             screen.capture("settings-english-fresh-top")
@@ -162,7 +162,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
                 screen.launch(SettingsActivity::class.java)
                 assertControlsClearOfSideBarAndCutout("settings-info", rotateDisplay) {
-                    screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+                    screen.node(By.text(screen.text(R.string.midi_connect_title)))
                 }
                 screen.clickText(R.string.settings_storage)
                 assertControlsClearOfSideBarAndCutout("settings-storage", rotateDisplay) {
@@ -276,7 +276,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         onTabletWithButtonBar {
             screen.launch(SettingsActivity::class.java)
             assertControlsAboveBottomBar("settings-info") {
-                screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+                screen.node(By.text(screen.text(R.string.midi_connect_title)))
             }
             screen.clickText(R.string.settings_storage)
             assertControlsAboveBottomBar("settings-storage") {

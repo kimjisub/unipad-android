@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">เกิดข้อยกเว้น</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">เชื่อมต่อ Launchpad ใหม่</string>
+	<string name="midi_connect_title">เชื่อมต่ออุปกรณ์ MIDI</string>
 	<string name="import_unipack">นำเข้า UniPack</string>
 	<string name="store">ร้านค้า</string>
 
@@ -303,4 +303,6 @@
 	<string name="autoPlayRestoreApply">กู้คืน</string>
 	<string name="autoPlayRestored">กู้คืนการเล่นก่อนหน้าแล้ว สลับกลับได้จากเมนู</string>
 	<string name="autoPlayRestoreFailed">กู้คืนไม่ได้ การเล่นปัจจุบันและข้อมูลสำรองไม่เปลี่ยนแปลง</string>
+    <string name="midi_tab_usb">อุปกรณ์ USB</string>
+    <string name="midi_tab_apps">แอปในโทรศัพท์นี้</string>
 </resources>

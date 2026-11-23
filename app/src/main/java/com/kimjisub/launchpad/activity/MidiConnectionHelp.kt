@@ -83,7 +83,7 @@ internal fun MidiStatusPanel(status: MidiConnectionStatus, onAllow: () -> Unit) 
 
 private val guidanceLineBreak = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
 
-private val questions = listOf(
+internal val usbHelpQuestions = listOf(
 	R.string.midi_help_find to R.string.midi_help_find_body,
 	R.string.midi_help_press to R.string.midi_help_press_body,
 	R.string.midi_help_lights to R.string.midi_help_lights_body,
@@ -94,7 +94,13 @@ private val questions = listOf(
 )
 
 @Composable
-internal fun MidiConnectionHelp(expanded: Int, onExpand: (Int) -> Unit, onClose: () -> Unit, onBrowse: (String) -> Unit) {
+internal fun MidiConnectionHelp(
+	expanded: Int,
+	onExpand: (Int) -> Unit,
+	onClose: () -> Unit,
+	onBrowse: (String) -> Unit,
+	questions: List<Pair<Int, Int>> = usbHelpQuestions,
+) {
 	val expandedDescription = stringResource(R.string.midi_help_expanded)
 	val collapsedDescription = stringResource(R.string.midi_help_collapsed)
 	Column(Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 2f }
@@ -109,7 +115,7 @@ internal fun MidiConnectionHelp(expanded: Int, onExpand: (Int) -> Unit, onClose:
 			}) { Text(stringResource(question), modifier = Modifier.fillMaxWidth()) }
 			if (expanded == index) {
 				Text(stringResource(body), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium.copy(lineBreak = guidanceLineBreak), modifier = Modifier.padding(horizontal = 12.dp).semantics { traversalIndex = 0.1f })
-				if (index == 5 && MidiHelpLinks.enabled) TextButton(onClick = { onBrowse(MidiHelpLinks.firmware) }, modifier = Modifier.semantics { traversalIndex = 0.2f }) {
+				if (question == R.string.midi_help_firmware && MidiHelpLinks.enabled) TextButton(onClick = { onBrowse(MidiHelpLinks.firmware) }, modifier = Modifier.semantics { traversalIndex = 0.2f }) {
 					Text(stringResource(R.string.midi_help_firmware_link))
 				}
 			}

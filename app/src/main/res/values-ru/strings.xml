@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Произошло исключение</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Переподключить Launchpad</string>
+	<string name="midi_connect_title">Подключить MIDI-устройство</string>
 	<string name="import_unipack">Импорт UniPack</string>
 	<string name="store">Магазин</string>
 
@@ -306,4 +306,6 @@
 	<string name="autoPlayRestoreApply">Восстановить</string>
 	<string name="autoPlayRestored">Предыдущее автовоспроизведение восстановлено. В меню можно поменять их снова.</string>
 	<string name="autoPlayRestoreFailed">Не удалось восстановить. Текущее автовоспроизведение и резервная копия не изменены.</string>
+    <string name="midi_tab_usb">USB-устройства</string>
+    <string name="midi_tab_apps">Приложения на этом телефоне</string>
 </resources>

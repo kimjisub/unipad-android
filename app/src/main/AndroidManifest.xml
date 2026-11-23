@@ -5,6 +5,10 @@
 	<uses-feature
 		android:name="android.hardware.usb.host"
 		android:required="false" />
+	<!-- Another app on this phone can offer a MIDI device; phones without the MIDI service still install. -->
+	<uses-feature
+		android:name="android.software.midi"
+		android:required="false" />
 	<uses-feature
 		android:glEsVersion="0x00020000"
 		android:required="true" />
@@ -23,6 +27,13 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<!-- Download/import progress notifications; without it they are dropped on Android 13+ -->
 	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+	<!-- Names the app that offers each virtual MIDI device in the device list. -->
+	<queries>
+		<intent>
+			<action android:name="android.media.midi.MidiDeviceService" />
+		</intent>
+	</queries>
 
 	<application
 		android:name=".BaseApplication"

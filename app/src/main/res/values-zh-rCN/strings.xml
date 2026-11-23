@@ -43,7 +43,7 @@
 	<string name="exceptionOccurred">发生异常</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">重新连接 Launchpad</string>
+	<string name="midi_connect_title">连接 MIDI 设备</string>
 	<string name="import_unipack">导入 UniPack</string>
 	<string name="store">商店</string>
 
@@ -305,4 +305,6 @@
 	<string name="autoPlayRestoreApply">恢复</string>
 	<string name="autoPlayRestored">已恢复之前的自动演奏。可从菜单再次交换。</string>
 	<string name="autoPlayRestoreFailed">无法恢复。当前自动演奏和备份均保持不变。</string>
+    <string name="midi_tab_usb">USB 设备</string>
+    <string name="midi_tab_apps">本机应用</string>
 </resources>

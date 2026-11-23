@@ -112,10 +112,14 @@ class MidiSelectScreenReaderOrderTest {
             compose.waitForIdle()
             // Items scrolled out of the help are not on screen, so read the top and then the end of it.
             val top = listOf(R.string.midi_help_title, R.string.midi_help_close, R.string.midi_help_find,
-                R.string.midi_help_find_body, R.string.midi_help_press, R.string.midi_help_lights,
-                R.string.midi_help_wrong).map { saying(it) }
+                R.string.midi_help_find_body, R.string.midi_help_press, R.string.midi_help_lights).map { saying(it) }
             log.append("\n\n[도움말 열림, 맨 위]\n")
                 .append(awaitOrder("open top", listOf(status, entry) + top + listOf(model, confirm)).joinToString("\n"))
+            compose.onNodeWithText(str(R.string.midi_help_wrong)).performScrollTo()
+            compose.waitForIdle()
+            val middle = listOf(R.string.midi_help_lights, R.string.midi_help_wrong).map { saying(it) }
+            log.append("\n\n[도움말 열림, 가운데]\n")
+                .append(awaitOrder("open middle", listOf(status, entry) + middle + listOf(model, confirm)).joinToString("\n"))
             compose.onNodeWithText(str(R.string.midi_help_web_link)).performScrollTo()
             compose.waitForIdle()
             val end = listOf(R.string.midi_help_chain, R.string.midi_help_firmware, R.string.midi_help_crash,

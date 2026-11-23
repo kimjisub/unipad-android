@@ -555,6 +555,23 @@ object MidiConnection {
 			}
 		}
 
+		installListeners()
+
+		// Re-wire whichever session(s) were created above now that the listeners exist
+		// (mirrors the original ordering, where setDriverListener() was called again at
+		// the end of initConnection to finish wiring the driver created inside initDevice()).
+		for (session in sessions.values) {
+			setDriverListener(session.driver, makeSendListener(session), makeReceiveListener(session))
+		}
+	}
+
+	/**
+	 * The listeners between the drivers and the play screen's controller. A USB attach installs them
+	 * through [initConnection]; a virtual connection installs them itself, so a phone that never had a
+	 * USB device plugged in still delivers pads and lights without a USB scan.
+	 */
+	private fun installListeners() {
+		if (onCycleListener != null) return
 		onCycleListener = object : DriverRef.OnCycleListener {
 			override fun onConnected() {
 				controller?.onAttach()
@@ -618,12 +635,6 @@ object MidiConnection {
 			}
 		}
 
-		// Re-wire whichever session(s) were created above now that the listeners exist
-		// (mirrors the original ordering, where setDriverListener() was called again at
-		// the end of initConnection to finish wiring the driver created inside initDevice()).
-		for (session in sessions.values) {
-			setDriverListener(session.driver, makeSendListener(session), makeReceiveListener(session))
-		}
 	}
 
 	// Used to filter both the app-launch scan loop above and to decide whether a freshly
@@ -1278,6 +1289,7 @@ object MidiConnection {
 		output: DriverRef.OnSendSignalListener,
 	): AutoCloseable {
 		check(sessions.isEmpty() && connectedDevice == null && !virtualTransportAttached) { "A device is already connected" }
+		installListeners()
 		val previous = _driver
 		previous.sendClearLed()
 		previous.onDisconnected()

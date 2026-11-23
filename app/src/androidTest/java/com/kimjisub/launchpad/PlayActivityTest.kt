@@ -446,7 +446,7 @@ class PlayActivityTest : BaseUITest() {
         takeScreenshot("before_reconnect_launchpad")
 
         device.findObject(By.desc(str(R.string.setting))).click()
-        val reconnect = device.wait(Until.findObject(By.textStartsWith(str(R.string.reconnect_launchpad))), 5000L)
+        val reconnect = device.wait(Until.findObject(By.textStartsWith(str(R.string.midi_connect_title))), 5000L)
         assertNotNull("Reconnect Launchpad not found in settings", reconnect)
         reconnect!!.click()
         assertTrue(
