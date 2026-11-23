@@ -84,6 +84,8 @@ class UsbPeripheralConnectionTest {
         connection.connect(endpoint,0,0)
         await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT) }
         assertTrue(peer.deviceClosed)
+        // The failure is published before the ended session's ports finish closing; until then a connect is ignored.
+        await { !connection.portsClosing.value }
         peer.noInput = false
         peer.noOutput = true
         connection.connect(endpoint,0,0)
