@@ -147,7 +147,8 @@ internal class ComputerPadController(
 	/** After leaving: connect the same choice again if it is still there, otherwise show what was found. */
 	fun reconnect(names: (PeripheralDevice.Port) -> String) {
 		val devices = connection.devices.value
-		if (devices.any { it.id == deviceId }) connect(devices, names) else search()
+		// A remembered device that is gone, or now has no port for presses, is chosen again from a fresh list.
+		if (devices.any { it.id == deviceId } && canConnect(devices)) connect(devices, names) else search()
 	}
 
 	fun useWithoutLights() { withoutLights = true }

@@ -132,9 +132,13 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 		val generation = (phase as? ComputerPadPhase.Open)?.generation?.takeIf { !tooSmall }
 		LaunchedEffect(generation) { controller.input.accept(generation) }
 		val panel: @Composable (Modifier) -> Unit = { modifier ->
-			Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-				Header(phase, onBack)
-				PhaseContent(phase, controller, onBack = onBack, onHelp = { showHelp = true })
+			// The guide scrolls when it does not fit; the actions below it always stay in the window.
+			Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+				Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+					Header(phase, onBack)
+					PhaseContent(phase, controller)
+				}
+				PhaseActions(phase, controller, onBack = onBack, onHelp = { showHelp = true })
 			}
 		}
 		val grid: @Composable () -> Unit = { PadArea(phase, controller, gridSide, tooSmall) }
@@ -215,41 +219,20 @@ internal fun failureText(failure: Failure): Int = when (failure) {
 }
 
 @Composable
-private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: ComputerPadController, onBack: () -> Unit, onHelp: () -> Unit) {
-	val resources = LocalResources.current
-	val portName: (PeripheralDevice.Port) -> String = { port ->
-		port.name.ifBlank { resources.getString(R.string.computer_pad_port_number, port.number + 1) }
-	}
+private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: ComputerPadController) {
+	val portName = portNamer()
 	when (phase) {
-		ComputerPadPhase.Unsupported -> {
-			Note(stringResource(R.string.computer_pad_unsupported_desc))
-			Buttons { PrimaryButton(R.string.computer_pad_back, onClick = onBack) }
-		}
+		ComputerPadPhase.Unsupported -> Note(stringResource(R.string.computer_pad_unsupported_desc))
 		is ComputerPadPhase.NotFound -> {
 			Steps()
-			Buttons {
-				PrimaryButton(R.string.computer_pad_search_again) { controller.search() }
-				SecondaryButton(R.string.computer_pad_help, onHelp)
-			}
 			Note(stringResource(R.string.computer_pad_preview))
 		}
 		is ComputerPadPhase.Ready -> {
 			Choices(phase.devices, controller, portName)
 			if (phase.previousClosing) Note(stringResource(R.string.computer_pad_closing_previous), Warning)
-			Buttons {
-				PrimaryButton(R.string.computer_pad_connect, enabled = !phase.previousClosing && controller.canConnect(phase.devices)) {
-					controller.connect(phase.devices, portName)
-				}
-				SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
-				SecondaryButton(R.string.computer_pad_help, onHelp)
-			}
 			Note(stringResource(R.string.computer_pad_preview))
 		}
-		ComputerPadPhase.Connecting -> Buttons { SecondaryButton(R.string.cancel) { controller.disconnect() } }
-		ComputerPadPhase.LightsUnavailable -> Buttons {
-			PrimaryButton(R.string.computer_pad_use_without_lights) { controller.useWithoutLights() }
-			SecondaryButton(R.string.cancel) { controller.disconnect() }
-		}
+		ComputerPadPhase.Connecting, ComputerPadPhase.LightsUnavailable, ComputerPadPhase.Closing -> Unit
 		is ComputerPadPhase.Open -> {
 			val connected = controller.connected
 			InfoCard(
@@ -270,39 +253,71 @@ private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: Comput
 			)
 			InfoCard(stringResource(R.string.computer_pad_layout), stringResource(R.string.computer_pad_no_sound), null)
 			if (phase.lights == ComputerPadPhase.Lights.NO_SIGNAL_YET) Note(stringResource(R.string.computer_pad_set_output))
-			Buttons {
-				SecondaryButton(R.string.computer_pad_help, onHelp)
-				PrimaryButton(R.string.computer_pad_disconnect) { controller.disconnect() }
-			}
 		}
-		ComputerPadPhase.Closing -> Unit
 		is ComputerPadPhase.Failed -> {
 			Note(stringResource(failureText(phase.failure)), TextPrimary)
 			when (ComputerPadRules.kind(phase.failure)) {
-				ComputerPadFailureKind.NOT_CONNECTED -> Buttons {
-					PrimaryButton(R.string.computer_pad_search_again) { controller.search() }
-					SecondaryButton(R.string.computer_pad_help, onHelp)
-				}
-				ComputerPadFailureKind.OTHER_CONNECTION -> {
-					Note(stringResource(R.string.computer_pad_busy_no_takeover))
-					Buttons {
-						PrimaryButton(R.string.computer_pad_back, onClick = onBack)
-						SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
-					}
-				}
+				ComputerPadFailureKind.NOT_CONNECTED -> Unit
+				ComputerPadFailureKind.OTHER_CONNECTION -> Note(stringResource(R.string.computer_pad_busy_no_takeover))
 				ComputerPadFailureKind.DISCONNECTED -> {
 					Note(stringResource(R.string.computer_pad_disconnected_desc))
 					Note(stringResource(R.string.computer_pad_stop_sound), TextPrimary)
-					Buttons { PrimaryButton(R.string.computer_pad_search_again) { controller.search() } }
 				}
 			}
 		}
 		ComputerPadPhase.Paused -> {
 			Note(stringResource(R.string.computer_pad_paused_desc))
 			Note(stringResource(R.string.computer_pad_stop_sound))
-			Buttons { PrimaryButton(R.string.computer_pad_reconnect) { controller.reconnect(portName) } }
 		}
 	}
+}
+
+@Composable
+private fun PhaseActions(phase: ComputerPadPhase, controller: ComputerPadController, onBack: () -> Unit, onHelp: () -> Unit) {
+	val portName = portNamer()
+	when (phase) {
+		ComputerPadPhase.Unsupported -> Buttons { PrimaryButton(R.string.computer_pad_back, onClick = onBack) }
+		is ComputerPadPhase.NotFound -> Buttons {
+			PrimaryButton(R.string.computer_pad_search_again) { controller.search() }
+			SecondaryButton(R.string.computer_pad_help, onHelp)
+		}
+		is ComputerPadPhase.Ready -> Buttons {
+			PrimaryButton(R.string.computer_pad_connect, enabled = !phase.previousClosing && controller.canConnect(phase.devices)) {
+				controller.connect(phase.devices, portName)
+			}
+			SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
+			SecondaryButton(R.string.computer_pad_help, onHelp)
+		}
+		ComputerPadPhase.Connecting -> Buttons { SecondaryButton(R.string.cancel) { controller.disconnect() } }
+		ComputerPadPhase.LightsUnavailable -> Buttons {
+			PrimaryButton(R.string.computer_pad_use_without_lights) { controller.useWithoutLights() }
+			SecondaryButton(R.string.cancel) { controller.disconnect() }
+		}
+		is ComputerPadPhase.Open -> Buttons {
+			SecondaryButton(R.string.computer_pad_help, onHelp)
+			PrimaryButton(R.string.computer_pad_disconnect) { controller.disconnect() }
+		}
+		ComputerPadPhase.Closing -> Unit
+		is ComputerPadPhase.Failed -> when (ComputerPadRules.kind(phase.failure)) {
+			ComputerPadFailureKind.NOT_CONNECTED -> Buttons {
+				PrimaryButton(R.string.computer_pad_search_again) { controller.search() }
+				SecondaryButton(R.string.computer_pad_help, onHelp)
+			}
+			ComputerPadFailureKind.OTHER_CONNECTION -> Buttons {
+				PrimaryButton(R.string.computer_pad_back, onClick = onBack)
+				SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
+			}
+			ComputerPadFailureKind.DISCONNECTED -> Buttons { PrimaryButton(R.string.computer_pad_search_again) { controller.search() } }
+		}
+		ComputerPadPhase.Paused -> Buttons { PrimaryButton(R.string.computer_pad_reconnect) { controller.reconnect(portName) } }
+	}
+}
+
+/** A port without a name is shown by its number. */
+@Composable
+private fun portNamer(): (PeripheralDevice.Port) -> String {
+	val resources = LocalResources.current
+	return { port -> port.name.ifBlank { resources.getString(R.string.computer_pad_port_number, port.number + 1) } }
 }
 
 @Composable

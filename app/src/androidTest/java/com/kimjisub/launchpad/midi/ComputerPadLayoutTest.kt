@@ -91,8 +91,9 @@ class ComputerPadLayoutTest {
 		compose.onNodeWithTag(ComputerPadTags.TOO_SMALL).assertDoesNotExist()
 		val grid = compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot
 		assertTrue("the pads must keep their place: $grid", grid.top >= 0f && grid.width > 0f)
-		compose.onNode(hasText(context.getString(R.string.computer_pad_help)) and hasClickAction()).performScrollTo().assertIsDisplayed()
-		assertEquals(grid, compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot)
+		// The actions stay below the guide without scrolling; the guide above them scrolls.
+		compose.onNode(hasText(context.getString(R.string.computer_pad_help)) and hasClickAction()).assertIsDisplayed()
 		compose.onNodeWithText(context.getString(R.string.computer_pad_preview)).performScrollTo().assertIsDisplayed()
+		assertEquals(grid, compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot)
 	}
 }

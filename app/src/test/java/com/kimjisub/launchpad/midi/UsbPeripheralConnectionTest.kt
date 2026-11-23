@@ -1,5 +1,8 @@
 package com.kimjisub.launchpad.midi
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -92,6 +95,23 @@ class UsbPeripheralConnectionTest {
         await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == false }
         assertTrue(connection.sendCurrent(PadChange(0,true)))
         await { peer.sent.size == 1 }
+    }
+
+    @Test fun aFailureIsPublishedOnlyOnceItsPortsAreMarkedClosing() {
+        val (connection, peer) = connection()
+        peer.noInput = true
+        val closingWhenFailed = Collections.synchronizedList(mutableListOf<Boolean>())
+        // Unconfined runs the collector inside the state update, before anything that follows it.
+        val watcher = CoroutineScope(Dispatchers.Unconfined).launch {
+            connection.state.collect {
+                if (it.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT)) closingWhenFailed.add(connection.portsClosing.value)
+            }
+        }
+        try {
+            connection.connect(endpoint,0,0)
+            await { closingWhenFailed.isNotEmpty() }
+            assertEquals(listOf(true), closingWhenFailed.toList())
+        } finally { watcher.cancel() }
     }
 
     @Test fun throwingOutputIsAlsoLightsUnavailable() {

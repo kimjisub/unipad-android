@@ -18,6 +18,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -40,6 +41,7 @@ import com.kimjisub.launchpad.activity.cellDescription
 import com.kimjisub.launchpad.ui.compose.PadGridGeometry
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -149,16 +151,51 @@ class ComputerPadScreenTest {
 				ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 		}
 		awaitPresses(listOf(0x90, 65, 127), listOf(0x80, 65, 0), listOf(0x90, 59, 127), listOf(0x80, 59, 0))
-		// The port survives the rotation; the finger still down presses nothing, even moving over other pads.
+		// The port survives the rotation. The pads are laid out again in the other orientation, so the
+		// finger still down no longer reaches them; a finger kept on the same pads is covered by the resize test.
 		compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_port_open))
 		capture("open_${orientation()}_after_rotation")
-		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { moveTo(0, cell(20)); moveTo(0, cell(75)); up(0) }
-		Thread.sleep(300)
-		assertEquals(4, presses().size)
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { up(0) }
 		// Only a new touch presses again.
 		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(0, cell(20)); up(0) }
 		awaitPresses(listOf(0x90, 65, 127), listOf(0x80, 65, 0), listOf(0x90, 59, 127), listOf(0x80, 59, 0),
 			listOf(0x90, 65, 127), listOf(0x80, 65, 0))
+	}
+
+	/** A phone on its side at the default text size: the guide may scroll, but no action button is cut off. */
+	@Test fun aLandscapePhoneShowsTheConnectedScreensButtonsWhole() {
+		open()
+		scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+		awaitTrue { orientation() == "landscape" }
+		compose.waitForIdle()
+		// In landscape the pads take the whole height, so their bottom is where the window's content ends.
+		val contentBottom = compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot.bottom
+		for (button in listOf(R.string.computer_pad_help, R.string.computer_pad_disconnect)) {
+			val bounds = compose.onNode(hasText(context.getString(button)) and hasClickAction()).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+			assertTrue("${context.getString(button)} ends at ${bounds.bottom}, below the content at $contentBottom", bounds.bottom <= contentBottom + 1f)
+		}
+		capture("open_landscape_buttons")
+	}
+
+	@Test fun aResizeReleasesHeldPadsAndTheFingerStaysSilentUntilItLifts() {
+		open()
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(0, cell(75)) }
+		awaitPresses(listOf(0x90, 59, 127))
+		val before = compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().size
+		// Both sides shrink alike, so the orientation and the pads' place in the layout stay; only their size changes.
+		scenario!!.onActivity {
+			val window = it.window.decorView
+			it.window.setLayout(window.width * 85 / 100, window.height * 85 / 100)
+		}
+		awaitPresses(listOf(0x90, 59, 127), listOf(0x80, 59, 0))
+		compose.waitForIdle()
+		assertNotEquals(before, compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().size)
+		// The same finger, still on the same pads, presses nothing until it lifts.
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { moveTo(0, cell(20)); moveTo(0, cell(10)); up(0) }
+		Thread.sleep(300)
+		assertEquals(2, presses().size)
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(1, cell(20)); up(1) }
+		awaitPresses(listOf(0x90, 59, 127), listOf(0x80, 59, 0), listOf(0x90, 65, 127), listOf(0x80, 65, 0))
 	}
 
 	@Test fun leavingReleasesClosesAndComingBackWaitsForTheUser() {

@@ -10,6 +10,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class ComputerPadControllerTest {
 	private val access = object : PeripheralMidiAccess {
@@ -36,6 +38,29 @@ class ComputerPadControllerTest {
 		assertFalse("The chosen device decides, not the first usable one", controller.canConnect(listOf(lightsOnly, usable)))
 		controller.deviceId = 4
 		assertTrue(controller.canConnect(listOf(lightsOnly, usable)))
+	}
+
+	@Test fun reconnectingToADeviceWithoutAPressPortSearchesAgainInsteadOfDoingNothing() {
+		val lightsOnly = PeripheralDevice(3, "Lights only", inputs = emptyList(), outputs = listOf(port))
+		val reads = AtomicInteger()
+		val listing = object : PeripheralMidiAccess by access {
+			override fun devices(): List<PeripheralDevice> { reads.incrementAndGet(); return listOf(lightsOnly) }
+		}
+		UsbPeripheralConnection(listing, MidiTransportGate()).use { found ->
+			val screen = ComputerPadController(found, midiSupported = true)
+			awaitTrue { found.devices.value == listOf(lightsOnly) }
+			screen.deviceId = 3
+			val before = reads.get()
+			screen.reconnect { it.name }
+			assertEquals(UsbPeripheralConnection.State.Idle, found.state.value)
+			awaitTrue { reads.get() > before }
+		}
+	}
+
+	private fun awaitTrue(check: () -> Boolean) {
+		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+		while (!check() && System.nanoTime() < deadline) Thread.sleep(5)
+		assertTrue("Condition did not complete", check())
 	}
 
 	@Test fun aDeviceWithoutANameIsShownWithTheSameNameWhileConnected() {

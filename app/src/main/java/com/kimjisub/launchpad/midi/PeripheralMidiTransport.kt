@@ -236,10 +236,11 @@ internal class PeripheralMidiTransport(
             session.timeout?.cancel(false)
             session.writer.shutdownNow()
             session.rules.clearReceived()
-            val waitForClose = result == State.Idle
-            if (waitForClose) mutableState.value = State.Closing else finish(session, result)
+            // Marked before the result is published, so whoever sees the failure also sees the ports closing.
             closingSessions++
             mutablePortsClosing.value = true
+            val waitForClose = result == State.Idle
+            if (waitForClose) mutableState.value = State.Closing else finish(session, result)
             closer.execute {
                 val closedCleanly = synchronized(session.resourcesLock) {
                     val outputClosed = safelyClose(session.output)
