@@ -22,6 +22,22 @@ class UniPackImportPathTest {
 	@After
 	fun tearDown() = env.tearDown()
 
+	@Test fun multiplePacksReportTheActualReasonAndLeaveNoInstallation() {
+		val bytes = java.io.ByteArrayOutputStream()
+		java.util.zip.ZipOutputStream(bytes).use { zip ->
+			for (root in listOf("One", "Two")) {
+				zip.putNextEntry(java.util.zip.ZipEntry("$root/info"))
+				zip.write("title=$root\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray())
+				zip.closeEntry()
+			}
+		}
+		val result = Recorder()
+		env.finish(env.import(bytes.toByteArray(), result))
+		assertTrue("Actual reason: ${result.error}", result.error?.message.orEmpty().contains("multiple packs", ignoreCase = true))
+		assertNull(result.installedFolder)
+		assertEquals(emptyList<String>(), env.workspaceContents())
+	}
+
 	@Test
 	fun dotsInArchiveName_areKeptExceptForTheExtension() {
 		val result = Recorder()

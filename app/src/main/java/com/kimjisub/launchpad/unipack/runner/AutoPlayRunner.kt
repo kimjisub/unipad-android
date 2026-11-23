@@ -300,6 +300,8 @@ class AutoPlayRunner(
 				chain.addObserver(wakeOnChainChange)
 				try {
 					var delayAccum: Long = 0
+					var lastTimedDelay = -1
+					val lastOn = autoPlay.elements.indexOfLast { it is AutoPlay.Element.On }
 					var startTime = SystemClock.elapsedRealtime()
 					var accountedPauseMs = totalPausedAt(startTime)
 					var prevPracticeGuide = practiceGuide
@@ -325,11 +327,14 @@ class AutoPlayRunner(
 						waitingForChain = -1
 					}
 					var currTime = startTime
-					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
+					// Step practice may finish by hand, but a timed wait already past the last note remains owed.
+					fun hasPendingDelay() = delayAccum > currTime - startTime &&
+						(!(stepMode && practiceGuide) || lastTimedDelay > lastOn)
 					// A timed hint still on screen after the last command keeps the loop until it expires.
 					fun hasTimedHint() = practiceGuide && playmode && synchronized(activeGuides) { activeGuides.isNotEmpty() }
-					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
-						stepMode && practiceGuide && hasPendingStep() || suspended || hasPendingDelay() || hasTimedHint()) && isActive) {
+					fun hasPendingWork() = progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
+						stepMode && practiceGuide && hasPendingStep() || suspended || hasPendingDelay() || hasTimedHint()
+					while (hasPendingWork() && isActive) {
 						if (suspended) {
 							wakeSignal.receive()
 							continue
@@ -392,9 +397,13 @@ class AutoPlayRunner(
 								stepPlayed.clear()
 							}
 							delayAccum = 0
+							lastTimedDelay = -1
 							for (index in 0 until target) {
 								val element = autoPlay.elements[index]
-								if (element is AutoPlay.Element.Delay) delayAccum += element.delay
+								if (element is AutoPlay.Element.Delay) {
+									delayAccum += element.delay
+									lastTimedDelay = index
+								}
 							}
 							if (!keepSongClock) {
 								startTime = (seek?.wallTimeMs ?: currTime) - (targetSongTimeMs ?: delayAccum)
@@ -433,8 +442,7 @@ class AutoPlayRunner(
 							if (practiceGuide) {
 								// Switched TO practice mode — initialize guide state
 								guideTimeline = buildGuideTimeline(autoPlay)
-								val elapsed = currTime - startTime
-								guideIndex = guideTimeline.indexOfFirst { it.timeMs > elapsed - GUIDE_LOOKAHEAD_MS }
+								guideIndex = guideTimeline.indexOfFirst { it.index >= progress }
 									.let { if (it < 0) guideTimeline.size else it }
 								synchronized(activeGuides) { activeGuides.clear() }
 							} else {
@@ -547,6 +555,7 @@ class AutoPlayRunner(
 											}
 											is AutoPlay.Element.Delay -> {
 												delayAccum += element.delay.toLong()
+												lastTimedDelay = index
 											}
 											is AutoPlay.Element.Chain -> {
 												if (!practiceGuide) {
@@ -606,6 +615,8 @@ class AutoPlayRunner(
 							}
 
 						}
+						// The clock was updated this tick: finish at its deadline without another sleep.
+						if (!hasPendingWork()) break
 						if (!playmode && (progress < autoPlay.elements.size ||
 							stepMode && practiceGuide && hasPendingStep() || hasPendingDelay())) {
 							wakeSignal.receive()

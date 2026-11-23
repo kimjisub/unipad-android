@@ -206,12 +206,13 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertEquals(emptyMap<Int, Int>(), engine.voices)
 	}
 
-	@Test fun handPressOnAnotherChainReplacesTheLoopAutoplayHolds() {
+	@Test fun handPressOnAnotherChainOverlapsTheLoopAutoplayHolds() {
 		start("1 1 1 a.wav 0\n2 1 1 a.wav 0\n")
+		val automatic = engine.voices.toMap()
 		vm.chain.value = 1
 		vm.padTouch(0, 0, true)
 		val manual = mapOf(engine.playCount to -1)
-		assertEquals(manual, engine.voices)
+		assertEquals(automatic + manual, engine.voices)
 		vm.switchPlayMode(PlayMode.None)
 		assertEquals(manual, engine.voices)
 		vm.padTouch(0, 0, false)

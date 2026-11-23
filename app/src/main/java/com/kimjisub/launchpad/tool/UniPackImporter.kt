@@ -46,8 +46,6 @@ class UniPackImporter(
 				val targetWorkspace = workspace()
 				val copyFolder = PackStaging.create(targetWorkspace)
 				copy = copyFolder
-				val stagedFolder = PackStaging.create(targetWorkspace)
-				staged = stagedFolder
 
 				val zipCopy = File(copyFolder, ARCHIVE_NAME)
 				context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -55,6 +53,9 @@ class UniPackImporter(
 						inputStream.copyTo(output)
 					}
 				}
+				val installWorkspace = PackArchive.installationWorkspace(zipCopy, targetWorkspace) { File(context.filesDir, "UniPack") }
+				val stagedFolder = PackStaging.create(installWorkspace)
+				staged = stagedFolder
 				PackArchive.extract(zipCopy, stagedFolder)
 				FileManager.removeDoubleFolder(stagedFolder.path)
 
@@ -71,7 +72,7 @@ class UniPackImporter(
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
-				val targetFolder = FileManager.moveToNextFolder(stagedFolder, targetWorkspace, zipNameWithoutExt)
+				val targetFolder = FileManager.moveToNextFolder(stagedFolder, installWorkspace, zipNameWithoutExt)
 				claimedFolder = targetFolder
 				val unipack = UniPackFolder(targetFolder).load()
 

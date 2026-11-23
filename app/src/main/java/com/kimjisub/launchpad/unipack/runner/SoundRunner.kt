@@ -45,9 +45,9 @@ class SoundRunner(
 
 	private var stopKey: Array<Array<Array<Int>>>
 
-	// Stop key of the infinite loop the press of each held pad (x, y) started, 0 when none. Its release
-	// stops that voice even when the chain or the pad's next sound changed while it was held.
-	private val heldLoop = Array(unipack.buttonX) { IntArray(unipack.buttonY) }
+	private data class HeldPad(val x: Int, val y: Int, val owner: Any)
+	// Releases follow their press, even if another input plays the same pad on a different chain.
+	private val heldLoops = mutableMapOf<HeldPad, Int>()
 	@Volatile
 	private var engineStarted = false
 
@@ -261,15 +261,13 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true) {
+	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true, owner: Any = Unit) {
 		val restarted = stopKey[chain.value][x][y]
 		// Until the engine has started nothing can be playing, and when its native library failed
 		// to load, any call into it throws and would take the app down.
 		if (engineStarted) engine.stopVoice(restarted)
-		// A press made on another chain while the pad is still held replaces its key below; stop
-		// that earlier loop now, as a press on the same chain does, or nothing could stop it.
-		if (heldLoop[x][y] != restarted) soundOff(x, y)
-		heldLoop[x][y] = 0
+		heldLoops.entries.removeAll { it.value == restarted }
+		soundOff(x, y, owner)
 		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
 		// An unavailable sound keeps only its own turn silent, including during loading: the pad
 		// still moves on to its next sound and still follows the sound's chain move.
@@ -282,7 +280,7 @@ class SoundRunner(
 				loop = sound.loop.coerceAtLeast(Int.MIN_VALUE.toLong()).toInt(),
 			)
 			stopKey[chain.value][x][y] = key
-			heldLoop[x][y] = if (sound.loop == -1L) key else 0
+			if (sound.loop == -1L) heldLoops[HeldPad(x, y, owner)] = key
 		}
 		unipack.soundPush(chain.value, x, y)
 		// Auto play has its own chain commands; live input alone schedules the delayed move.
@@ -305,16 +303,14 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOff(x: Int, y: Int) {
-		val key = heldLoop[x][y]
-		if (key == 0) return
-		heldLoop[x][y] = 0
+	fun soundOff(x: Int, y: Int, owner: Any = Unit) {
+		val key = heldLoops.remove(HeldPad(x, y, owner)) ?: return
 		engine.stopVoice(key)
 	}
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
 	fun stopAll() {
-		cancelPendingWormholes()
+		heldLoops.clear()
 		if (engineStarted) engine.stopAllVoices()
 	}
 
@@ -327,7 +323,6 @@ class SoundRunner(
 	 */
 	@MainThread
 	fun pauseStream() {
-		cancelPendingWormholes()
 		if (closing || streamPaused.value) return
 		streamPaused.value = true
 		onStreamThread { applyStreamState() }

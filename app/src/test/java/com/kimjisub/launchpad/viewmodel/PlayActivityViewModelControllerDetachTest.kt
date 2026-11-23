@@ -7,6 +7,7 @@ import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
@@ -43,6 +44,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 	private lateinit var vm: PlayActivityViewModel
 	private val sound = mockk<SoundRunner>(relaxed = true)
+	private val pressOwners = mutableMapOf<Pair<Int, Int>, MutableList<Any>>()
 	private lateinit var screen: PadTouchTracker
 
 	@Before
@@ -51,6 +53,9 @@ class PlayActivityViewModelControllerDetachTest {
 		vm.unipack = GridPack()
 		vm.channelManager = ChannelManager(8, 8)
 		vm.soundRunner = sound
+		every { sound.soundOn(any(), any(), any(), any()) } answers {
+			pressOwners.getOrPut(firstArg<Int>() to secondArg<Int>()) { mutableListOf() }.add(arg(3))
+		}
 		vm.scbFeedbackLight.setChecked(true)
 		screen = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }.apply { setGrid(8, 8) }
 	}
@@ -69,7 +74,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 1) { sound.soundOff(2, 3) }
+		verify(exactly = 1) { sound.soundOff(2, 3, owner = any()) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -81,13 +86,14 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 0) { sound.soundOff(2, 3) }
-		verify(exactly = 1) { sound.soundOff(5, 5) }
+		verify(exactly = 1) { sound.soundOff(2, 3, owner = pressOwners.getValue(2 to 3)[0]) }
+		verify(exactly = 0) { sound.soundOff(2, 3, owner = pressOwners.getValue(2 to 3)[1]) }
+		verify(exactly = 1) { sound.soundOff(5, 5, owner = any()) }
 		assertEquals(Channel.PRESSED, pressedLight(2, 3))
 		assertNull(pressedLight(5, 5))
 
 		screen.up(0)
-		verify(exactly = 1) { sound.soundOff(2, 3) }
+		verify(exactly = 1) { sound.soundOff(2, 3, owner = pressOwners.getValue(2 to 3)[1]) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -97,11 +103,11 @@ class PlayActivityViewModelControllerDetachTest {
 		unplug()
 
 		vm.controllerPadTouch(2, 3, true)
-		verify(exactly = 2) { sound.soundOn(2, 3) }
+		verify(exactly = 2) { sound.soundOn(2, 3, owner = any()) }
 		assertEquals(Channel.PRESSED, pressedLight(2, 3))
 
 		vm.controllerPadTouch(2, 3, false)
-		verify(exactly = 2) { sound.soundOff(2, 3) }
+		verify(exactly = 2) { sound.soundOff(2, 3, owner = any()) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -112,7 +118,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 1) { sound.soundOff(2, 3) }
+		verify(exactly = 1) { sound.soundOff(2, 3, owner = any()) }
 	}
 
 	@Test
@@ -124,7 +130,7 @@ class PlayActivityViewModelControllerDetachTest {
 		assertNull(pressedLight(2, 3))
 		vm.controllerPadTouch(2, 3, false)
 
-		verify(exactly = 1) { sound.soundOff(2, 3) }
+		verify(exactly = 1) { sound.soundOff(2, 3, owner = any()) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -136,8 +142,8 @@ class PlayActivityViewModelControllerDetachTest {
 		vm.controllerPadTouch(2, 3, false)
 		unplug()
 
-		verify(exactly = 0) { sound.soundOn(2, 3) }
-		verify(exactly = 0) { sound.soundOff(2, 3) }
+		verify(exactly = 0) { sound.soundOn(2, 3, owner = any()) }
+		verify(exactly = 0) { sound.soundOff(2, 3, owner = any()) }
 	}
 	@Test
 	fun controllerHeldAcrossOptionsCannotPressAgainUntilItsRelease() {

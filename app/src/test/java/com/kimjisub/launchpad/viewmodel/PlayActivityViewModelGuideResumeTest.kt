@@ -93,6 +93,42 @@ class PlayActivityViewModelGuideResumeTest {
         assertTrue("Guide state: targets=$animationTargets hardware=$hardware progress=${vm.autoPlayRunner?.progress}", check())
     }
 
+    @Test fun onePlayAfterInterruptedPausedGuideMatchesOnePlayWithoutInterruption() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        clock.set(100)
+        vm.autoPlayPause()
+        await { animationTargets[0 to 0] == 0L }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+        main.runAll()
+        clock.set(3100)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        await { vm.autoPlayRunner!!.playmode && !vm.autoPlayRunner!!.stepMode }
+        assertEquals(PlayMode.GuidePlay, vm.playMode)
+        assertTrue(vm.isAutoPlayPlaying)
+        assertTrue(vm.isPracticeMode)
+        assertTrue(vm.autoPlayRunner!!.practiceGuide)
+        await { animationTargets[0 to 0] == 3500L }
+    }
+
+    @Test fun selectingStepsAfterPausingAGuidePreservesThatChoiceOnReturn() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        vm.autoPlayPause()
+        vm.switchPlayMode(PlayMode.AutoPlay)
+        vm.switchPlayMode(PlayMode.StepPractice)
+        await { animationTargets[0 to 0] == 0L }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+        main.runAll()
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        await { animationTargets[0 to 0] == 0L }
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue(!vm.isAutoPlayPlaying)
+        assertTrue(vm.autoPlayRunner!!.stepMode)
+    }
+
     @Test fun interruptionKeepsGuideModeAndPositionWithoutRelighting() {
         vm.switchPlayMode(PlayMode.GuidePlay)
         await { animationTargets[0 to 0] == 500L }

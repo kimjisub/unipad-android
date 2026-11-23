@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * eventOn queues a pressed pad's animation for the next tick, which plays it from the press time. A
- * release, or the eventOffAll an autoplay control sends to every pad, that lands before that tick must
+ * release, or an explicit all-loop shutdown, that lands before that tick must
  * still reach it, otherwise an endless (loop 0) animation starts after it was told to stop.
  * Ticks are driven through the private loop() at a controlled clock, as in [LedRunnerToggleTest].
  */
