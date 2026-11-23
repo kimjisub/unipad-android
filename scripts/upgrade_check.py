@@ -14,6 +14,13 @@ tap-order setting (absent, on, off):
 4. compares pack files, database rows, settings values and the packs listed
    on screen before and after, and requires no crash or ANR of the app.
 
+The `legacy-theme` scenario also leaves, just before the upgrade, what builds
+before 4.3.0 left for a user who chose the bundled S skin: `SelectedTheme` set to
+`zip://sskin` and the theme extracted to `files/themes/sskin` in the app's external files
+folder. The newer build
+must change the setting to `asset://sskin`, delete that folder and draw its play
+screen in the S skin.
+
 Bundles are turned into universal APKs with bundletool's default debug key, so
 release bundles can be installed over each other; this is not a Play-signed
 update. Needs `adb root` (release builds cannot be read with run-as) and turns
@@ -47,7 +54,21 @@ PREFS_NAME = 'data.xml'
 TRACE_KEY = 'TraceLogClassic'
 # Settings 4.1.9 already stored, with the values chosen in the hand check.
 SEEDED_PREFS = {'SortMethod': ('int', 0), 'SortOrder': ('boolean', False), 'SlideMode': ('boolean', True)}
-SCENARIOS = {'trace-absent': None, 'trace-on': True, 'trace-off': False}
+SCENARIOS = {'trace-absent': None, 'trace-on': True, 'trace-off': False, 'legacy-theme': None}
+# Scenarios that leave an older build's extracted bundled theme selected before the upgrade.
+LEGACY_THEMES = {'legacy-theme': 'sskin'}
+THEME_KEY = 'SelectedTheme'
+THEME_ASSETS = Path(__file__).resolve().parents[1] / 'app/src/main/assets/themes'
+# agent-device's snapshot helper holds the accessibility connection, and `uiautomator dump`
+# then writes an empty file, which read as packs missing from the list.
+SNAPSHOT_HELPER = 'com.callstack.agentdevice.snapshothelper'
+# Play screen comparison: grey levels of a 16x9 grid of blocks.
+GRID = (16, 9)
+PLAY_TIMEOUT_S = 30
+# The migrated play screen must differ from the default theme's by at least this mean grey
+# level (0-255) and by THEME_MARGIN times more than it differs from the S skin chosen directly.
+THEME_MIN_DIFFERENCE = 8
+THEME_MARGIN = 4
 PACKS = [
     dict(id='upgrade_check_a', title='Upgrade Check A', bookmark=True, open_count=0, opened=False),
     dict(id='upgrade_check_b', title='Upgrade Check B', bookmark=False, open_count=3, opened=True,
@@ -72,6 +93,10 @@ class SetupError(Exception):
 
 class AppNotReady(Exception):
     """The app did not reach its pack list, or stopped soon after."""
+
+
+class EmptyScreenDump(SetupError):
+    """`uiautomator dump` gave nothing to read, so the screen cannot be judged."""
 
 
 # --- pure helpers (unit tested) -------------------------------------------------
@@ -256,6 +281,55 @@ def screen_texts(ui_xml: str) -> set[str]:
     return {node.get('text') for node in root.iter('node') if node.get('text')}
 
 
+def raw_screen(data: bytes) -> tuple[int, int, memoryview]:
+    """(width, height, RGBA bytes) of `screencap` output without -p: a 12- or 16-byte header, then the pixels."""
+    if len(data) < 16:
+        raise ValueError(f'screencap gave {len(data)} bytes')
+    width, height = struct.unpack('<II', data[:8])
+    header = len(data) - width * height * 4
+    if header not in (12, 16):
+        raise ValueError(f'screencap gave {len(data)} bytes for {width}x{height}')
+    return width, height, memoryview(data)[header:]
+
+
+def screen_signature(raw: bytes, grid: tuple[int, int] = GRID, step: int = 4) -> list[float]:
+    """Mean grey level of each block of a grid laid over a raw screenshot, sampling every `step`th pixel."""
+    width, height, pixels = raw_screen(raw)
+    columns, lines = grid
+    sums, counts = [0.0] * (columns * lines), [0] * (columns * lines)
+    for y in range(0, height, step):
+        row, block_row = pixels[y * width * 4:(y + 1) * width * 4], y * lines // height * columns
+        stride = 4 * step
+        for index, (r, g, b) in enumerate(zip(row[0::stride], row[1::stride], row[2::stride])):
+            block = block_row + index * step * columns // width
+            sums[block] += r * 0.299 + g * 0.587 + b * 0.114
+            counts[block] += 1
+    return [total / count if count else 0.0 for total, count in zip(sums, counts)]
+
+
+def signature_difference(a: list[float], b: list[float]) -> float:
+    return sum(abs(x - y) for x, y in zip(a, b)) / len(a)
+
+
+def theme_screen_problems(migrated: list[float], default: list[float], chosen: list[float], theme: str) -> list[str]:
+    """Whether the play screen after the migration is drawn in `theme` (chosen directly) and not the default theme."""
+    to_default, to_chosen = signature_difference(migrated, default), signature_difference(migrated, chosen)
+    if to_default >= THEME_MIN_DIFFERENCE and to_default >= THEME_MARGIN * to_chosen:
+        return []
+    return [f'the play screen after the theme migration does not look like {theme}: grey-level difference '
+            f'{to_default:.1f} from the default theme, {to_chosen:.1f} from {theme} chosen directly '
+            f'(needs at least {THEME_MIN_DIFFERENCE} and {THEME_MARGIN}x the second)']
+
+
+def legacy_theme_problems(prefs: dict[str, tuple[str, object]], folder_left: bool, theme: str) -> list[str]:
+    problems = []
+    if prefs.get(THEME_KEY) != ('string', f'asset://{theme}'):
+        problems.append(f'setting {THEME_KEY}: expected asset://{theme} after the upgrade, read {prefs.get(THEME_KEY)}')
+    if folder_left:
+        problems.append(f'the older build\'s extracted theme folder files/themes/{theme} was not deleted')
+    return problems
+
+
 def build_tools_order(name: str) -> tuple:
     """Sort key for build-tools folders: by version, with a preview (`37.0.0-rc1`) before its release."""
     release, _, preview = name.partition('-')
@@ -351,17 +425,27 @@ class UpgradeRun:
     def __init__(self, device: Device, old: Path, new: Path, package: str, out: Path):
         self.d, self.old, self.new, self.package, self.out = device, old, new, package, out
         self.data = f'/data/data/{package}'
-        self.packs_dir = f'/data/media/0/Android/data/{package}/files/UniPack'
+        # The app's external files folder (getExternalFilesDir), where packs and extracted themes live.
+        self.external = f'/data/media/0/Android/data/{package}/files'
+        self.packs_dir = f'{self.external}/UniPack'
 
     def scenario(self, name: str, trace: bool | None) -> dict:
         folder = self.out / name
         folder.mkdir(parents=True, exist_ok=True)
         before = self.prepare(folder, trace)
+        theme = LEGACY_THEMES.get(name)
+        if theme:
+            self.leave_legacy_theme(folder, theme)
         upgraded_at = self.d.device_time()
         launch_problems = self.upgrade()
         after = self.snapshot(folder / 'after')
         self.stop()
-        problems = compare(before, after, trace, launch_problems)
+        # The legacy theme scenario replaced the selected theme after `before`; it is judged on its own.
+        compared = {**before, 'prefs': {k: v for k, v in before['prefs'].items() if k != THEME_KEY}} if theme else before
+        problems = compare(compared, after, trace, launch_problems)
+        if theme and not launch_problems:
+            problems += legacy_theme_problems(after['prefs'], self.d.exists(self.theme_dir(theme)), theme)
+            problems += self.theme_screen(folder / 'after', theme)
         problems += [f'crash or ANR: {line}' for line in self.events(upgraded_at)]
         result = dict(scenario=name, trace_saved=trace, passed=not problems, problems=problems,
                       before={k: v for k, v in before.items() if k != 'files'},
@@ -399,6 +483,76 @@ class UpgradeRun:
         if events := self.events(started):
             raise SetupError(f'{name}: the older build crashed before the upgrade: {events[0]}')
         return before
+
+    def theme_dir(self, theme: str) -> str:
+        return f'{self.external}/themes/{theme}'
+
+    def leave_legacy_theme(self, folder: Path, theme: str) -> None:
+        """With the app stopped: the setting and extracted folder a build before 4.3.0 left for `theme`."""
+        themes = f'{self.external}/themes'
+        packs = q(self.packs_dir)
+        self.d.sh(f'mkdir -p {q(themes)} && chown $(stat -c %u:%g {packs}) {q(themes)} '
+                  f'&& chmod $(stat -c %a {packs}) {q(themes)} && restorecon {q(themes)}')
+        self.d.put(THEME_ASSETS / theme, self.theme_dir(theme), owner_of=themes)
+        self.write_theme_setting(folder / 'legacy-theme', f'zip://{theme}')
+        listing = self.d.sh(f'ls -lZ {q(self.theme_dir(theme))}', check=False)
+        (folder / 'legacy-theme' / 'themes-before.txt').write_text(listing)
+        if not self.d.exists(f'{self.theme_dir(theme)}/theme.json'):
+            raise SetupError(f'could not leave the extracted {theme} folder: {listing}')
+
+    def write_theme_setting(self, folder: Path, value: str | None) -> None:
+        """Sets (or with None removes) the selected theme in the stopped app's settings file and reads it back."""
+        folder.mkdir(parents=True, exist_ok=True)
+        prefs_remote = f'{self.data}/shared_prefs/{PREFS_NAME}'
+        prefs = parse_prefs(self.read(prefs_remote))
+        prefs.pop(THEME_KEY, None)
+        if value is not None:
+            prefs[THEME_KEY] = ('string', value)
+        (folder / PREFS_NAME).write_text(render_prefs(prefs))
+        self.d.put(folder / PREFS_NAME, prefs_remote, owner_of=f'{self.data}/shared_prefs')
+        self.d.sh(f'chmod 660 {q(prefs_remote)}')
+        read = parse_prefs(self.read(prefs_remote)).get(THEME_KEY)
+        if read != (None if value is None else ('string', value)):
+            raise SetupError(f'could not set {THEME_KEY} to {value}: read {read}')
+
+    def theme_screen(self, folder: Path, theme: str) -> list[str]:
+        """Play screen after the migration against the default theme and `theme` chosen directly."""
+        shots = {}
+        for label, setting in (('migrated', ...), ('default', None), (theme, f'asset://{theme}')):
+            if setting is not ...:
+                self.write_theme_setting(folder / f'play-{label}', setting)
+            shots[label] = self.open_play(PACKS[0]['id'], folder / f'play-{label}.png')
+            self.stop()
+        differences = dict(to_default=signature_difference(shots['migrated'], shots['default']),
+                           to_chosen=signature_difference(shots['migrated'], shots[theme]))
+        (folder / 'theme-screen.json').write_text(json.dumps(differences, indent=1) + '\n')
+        return theme_screen_problems(shots['migrated'], shots['default'], shots[theme], theme)
+
+    def open_play(self, pack_id: str, png: Path) -> list[float]:
+        """Opens the play screen of a pack (root may start the activity directly); its signature once at rest.
+
+        The screenshot at rest, or the last one taken, is saved as `png`."""
+        path = f'/storage/emulated/0/Android/data/{self.package}/files/UniPack/{pack_id}'
+        self.d.sh(f'am start -n {self.package}/.activity.PlayActivity --es path {q(path)}')
+        deadline, previous, top = time.monotonic() + PLAY_TIMEOUT_S, None, ''
+        while time.monotonic() < deadline:
+            time.sleep(2)
+            top = self.d.sh('dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity"', check=False)
+            if '.activity.PlayActivity' not in top:
+                continue
+            raw = subprocess.run([*self.d.adb, 'exec-out', 'screencap'], capture_output=True, timeout=60).stdout
+            signature = screen_signature(raw)
+            if previous and signature_difference(signature, previous) < 1:
+                self.screenshot(png)
+                return signature
+            previous = signature
+        self.screenshot(png)
+        raise SetupError(f'the play screen of {pack_id} did not open and come to rest within {PLAY_TIMEOUT_S} s '
+                         f'(on top: {" ".join(top.split())}; see {png.name})')
+
+    def screenshot(self, png: Path) -> None:
+        with png.open('wb') as out:
+            subprocess.run([*self.d.adb, 'exec-out', 'screencap', '-p'], stdout=out, timeout=60)
 
     def upgrade(self) -> list[str]:
         """Installs the newer build over the older one and leaves it open the second time; what went wrong."""
@@ -491,17 +645,20 @@ class UpgradeRun:
         for attempt in range(SCREEN_ATTEMPTS):
             if attempt:
                 time.sleep(2)
-            ui = self.d.sh('uiautomator dump /data/local/tmp/upgrade_check_ui.xml >/dev/null && '
-                           'cat /data/local/tmp/upgrade_check_ui.xml', check=False)
+            ui = self.d.sh('rm -f /data/local/tmp/upgrade_check_ui.xml; uiautomator dump /data/local/tmp/upgrade_check_ui.xml '
+                           '>/dev/null; cat /data/local/tmp/upgrade_check_ui.xml', check=False)
             if {p['title'] for p in PACKS} <= screen_texts(ui):
                 break
+        if '<hierarchy' not in ui:
+            raise EmptyScreenDump(f'uiautomator dump gave no screen hierarchy {SCREEN_ATTEMPTS} times; another UI '
+                                  f'automation may hold the accessibility connection (stop {SNAPSHOT_HELPER})')
         return ui
 
     def snapshot(self, folder: Path) -> dict:
         folder.mkdir(parents=True, exist_ok=True)
         ui = self.screen()
         (folder / 'screen.xml').write_text(ui)
-        subprocess.run([*self.d.adb, 'exec-out', 'screencap', '-p'], stdout=(folder / 'screen.png').open('wb'))
+        self.screenshot(folder / 'screen.png')
         prefs_text = self.read(f'{self.data}/shared_prefs/{PREFS_NAME}')
         (folder / PREFS_NAME).write_text(prefs_text or '')
         listing = self.d.sh(f'find {q(self.packs_dir)} -type f -exec sha256sum {{}} +', check=False)
@@ -535,7 +692,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--new', type=Path, required=True, help='the candidate build, signed with the same key')
     parser.add_argument('--out', type=Path, required=True, help='new folder for the evidence')
     parser.add_argument('--scenario', choices=sorted(SCENARIOS), action='append',
-                        help='run only these saved states of the tap-order setting (default all three)')
+                        help='run only these scenarios (default all four)')
     args = parser.parse_args(argv)
     if not args.serial:
         parser.error('pass --serial or set ANDROID_SERIAL')
@@ -573,6 +730,8 @@ def main(argv: list[str] | None = None) -> int:
         analytics = device.sh('getprop debug.firebase.analytics.app').strip() or '.none.'
         device.sh(f'setprop debug.firebase.analytics.app {package}')
         restore.append(f'analytics:{analytics}')
+        # Its own next command restarts the helper, so stopping it only frees `uiautomator dump`.
+        device.sh(f'am force-stop {SNAPSHOT_HELPER}', check=False)
         upgrade = UpgradeRun(device, old, new, package, args.out)
         installed.append(f'uninstall:{package}')
         results: list[dict] = []

@@ -407,5 +407,147 @@ class PackTest(unittest.TestCase):
             self.assertTrue((root / 'autoPlay').is_file())
 
 
+
+def raw_halves(left, right, width=64, height=36, header=16):
+    """`screencap` raw output: left half one grey level, right half another."""
+    import struct
+    row = bytes([left, left, left, 255]) * (width // 2) + bytes([right, right, right, 255]) * (width - width // 2)
+    return struct.pack('<III', width, height, 1) + b'\0' * (header - 12) + row * height
+
+
+class LegacyThemeTest(unittest.TestCase):
+    def test_raw_screenshots_with_either_header_are_read(self):
+        for header in (12, 16):
+            width, height, pixels = uc.raw_screen(raw_halves(0, 200, header=header))
+            self.assertEqual((width, height, len(pixels)), (64, 36, 64 * 36 * 4))
+        with self.assertRaises(ValueError):
+            uc.raw_screen(raw_halves(0, 200)[:-2])
+
+    def test_signature_is_the_grey_level_of_each_block(self):
+        signature = uc.screen_signature(raw_halves(0, 200), step=1)
+        self.assertEqual(len(signature), 16 * 9)
+        self.assertEqual(signature[:8], [0.0] * 8)
+        self.assertEqual([round(v, 6) for v in signature[8:16]], [200.0] * 8)
+        self.assertEqual(uc.screen_signature(raw_halves(0, 200), step=4)[:16], signature[:16])
+
+    def test_the_migrated_screen_must_look_like_the_theme_and_not_the_default(self):
+        skin, default = uc.screen_signature(raw_halves(30, 120)), uc.screen_signature(raw_halves(10, 10))
+        nearly_skin = [value + 1 for value in skin]
+        self.assertEqual(uc.theme_screen_problems(nearly_skin, default, skin, 'sskin'), [])
+        problems = uc.theme_screen_problems(default, default, skin, 'sskin')
+        self.assertIn('does not look like sskin', problems[0])
+        between = [(a + b) / 2 for a, b in zip(skin, default)]
+        self.assertTrue(uc.theme_screen_problems(between, default, skin, 'sskin'))
+
+    def test_the_setting_must_become_the_bundled_id_and_the_folder_must_go(self):
+        migrated = {uc.THEME_KEY: ('string', 'asset://sskin'), 'SortMethod': ('int', 0)}
+        self.assertEqual(uc.legacy_theme_problems(migrated, False, 'sskin'), [])
+        kept = uc.legacy_theme_problems({uc.THEME_KEY: ('string', 'zip://sskin')}, True, 'sskin')
+        self.assertEqual(len(kept), 2)
+        self.assertIn('expected asset://sskin', kept[0])
+        self.assertIn('files/themes/sskin was not deleted', kept[1])
+        self.assertIn('read None', uc.legacy_theme_problems({}, False, 'sskin')[0])
+
+    def test_the_seeded_theme_folder_is_the_bundled_theme(self):
+        self.assertTrue((uc.THEME_ASSETS / 'sskin' / 'theme.json').is_file())
+        self.assertEqual(uc.LEGACY_THEMES, {'legacy-theme': 'sskin'})
+        self.assertIn('legacy-theme', uc.SCENARIOS)
+
+    def test_the_legacy_state_is_left_after_the_older_build_and_judged_after_the_upgrade(self):
+        class ThemeDevice(FakeDevice):
+            folder_left = False
+
+            def exists(self, remote):
+                return self.folder_left
+
+        with tempfile.TemporaryDirectory() as tmp:
+            device = ThemeDevice()
+            run = uc.UpgradeRun(device, Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            order = []
+            after = snapshot()
+            after['prefs'] = {**after['prefs'], uc.THEME_KEY: ('string', 'asset://sskin')}
+            with mock.patch.object(run, 'prepare', return_value=snapshot()), \
+                    mock.patch.object(run, 'leave_legacy_theme', side_effect=lambda f, t: order.append(('leave', t))), \
+                    mock.patch.object(run, 'upgrade', side_effect=lambda: order.append('upgrade') or []), \
+                    mock.patch.object(run, 'snapshot', return_value=after), \
+                    mock.patch.object(run, 'theme_screen', return_value=[]) as screen, \
+                    mock.patch.object(run, 'events', return_value=[]):
+                passed = run.scenario('legacy-theme', None)
+                device.folder_left = True
+                after['prefs'] = snapshot()['prefs']
+                failed = run.scenario('legacy-theme', None)
+                skipped = run.scenario('trace-absent', None)
+        self.assertEqual(order[:2], [('leave', 'sskin'), 'upgrade'])
+        self.assertTrue(passed['passed'], passed['problems'])
+        self.assertFalse(failed['passed'])
+        self.assertEqual(len(failed['problems']), 2)
+        self.assertTrue(skipped['passed'])
+        self.assertEqual(screen.call_count, 2)
+        self.assertNotIn(('leave', 'sskin'), order[4:])
+
+    def test_theme_checks_wait_for_a_newer_build_that_opened(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            with mock.patch.object(run, 'prepare', return_value=snapshot()), mock.patch.object(run, 'leave_legacy_theme'), \
+                    mock.patch.object(run, 'upgrade', return_value=['after the upgrade, p stopped right after opening']), \
+                    mock.patch.object(run, 'snapshot', return_value=snapshot()), \
+                    mock.patch.object(run, 'theme_screen') as screen, mock.patch.object(run, 'events', return_value=[]):
+                result = run.scenario('legacy-theme', None)
+        self.assertEqual(result['problems'], ['after the upgrade, p stopped right after opening'])
+        screen.assert_not_called()
+
+    def test_play_screens_are_taken_migrated_then_default_then_chosen(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            settings = []
+            shots = iter([uc.screen_signature(raw_halves(30, 120)), uc.screen_signature(raw_halves(10, 10)),
+                          uc.screen_signature(raw_halves(31, 121))])
+            with mock.patch.object(run, 'write_theme_setting', side_effect=lambda f, v: settings.append(v)), \
+                    mock.patch.object(run, 'open_play', side_effect=lambda pack, png: next(shots)) as open_play:
+                problems = run.theme_screen(Path(tmp), 'sskin')
+        self.assertEqual(problems, [])
+        self.assertEqual(settings, [None, 'asset://sskin'])
+        self.assertEqual([c.args for c in open_play.call_args_list],
+                         [('upgrade_check_a', Path(tmp) / f'play-{n}.png') for n in ('migrated', 'default', 'sskin')])
+
+    def test_the_theme_setting_is_written_beside_the_other_settings_and_read_back(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            written = {}
+
+            def put(local, remote, owner_of):
+                written['xml'] = local.read_text()
+            run.d.put = put
+            with mock.patch.object(run, 'read', side_effect=lambda remote: written.get('xml', PREFS_419)):
+                run.write_theme_setting(Path(tmp) / 'w', 'zip://sskin')
+                prefs = uc.parse_prefs(written['xml'])
+                self.assertEqual(prefs[uc.THEME_KEY], ('string', 'zip://sskin'))
+                self.assertEqual(prefs['PrevStoreCount'], ('long', 78))
+                run.write_theme_setting(Path(tmp) / 'w', None)
+                self.assertNotIn(uc.THEME_KEY, uc.parse_prefs(written['xml']))
+            with mock.patch.object(run, 'read', return_value=PREFS_419), self.assertRaisesRegex(uc.SetupError, 'could not set'):
+                run.write_theme_setting(Path(tmp) / 'w', 'zip://sskin')
+
+    def test_an_empty_screen_dump_is_reported_as_such(self):
+        run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'p', Path('.'))
+        with mock.patch.object(uc.time, 'sleep'), self.assertRaisesRegex(uc.EmptyScreenDump, uc.SNAPSHOT_HELPER):
+            run.screen()
+        self.assertTrue(issubclass(uc.EmptyScreenDump, uc.SetupError))
+
+    def test_the_snapshot_helper_is_stopped_before_the_scenarios(self):
+        devices = []
+
+        def make(serial):
+            devices.append(FakeDevice())
+            return devices[-1]
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(uc, 'Device', side_effect=make), \
+                mock.patch.object(uc, 'universal_apk', side_effect=lambda source, work: source), \
+                mock.patch.object(uc, 'apk_identity', side_effect=[dict(package='p', signers=['k'], version_code=1, version_name='a'),
+                                                                   dict(package='p', signers=['k'], version_code=2, version_name='b')]), \
+                mock.patch.object(uc.UpgradeRun, 'scenario', side_effect=uc.SetupError('stop here')), \
+                contextlib.redirect_stderr(io.StringIO()):
+            uc.main(['--serial', 's', '--old', 'o.apk', '--new', 'n.apk', '--out', f'{tmp}/out', '--scenario', 'legacy-theme'])
+        self.assertIn(('shell', f'am force-stop {uc.SNAPSHOT_HELPER}'), devices[0].calls)
+
 if __name__ == '__main__':
     unittest.main()
