@@ -1,0 +1,6 @@
+Launchpad connection status and “Not connecting?” help.
+• Connect MIDI device: choose a MIDI app on this phone.
+• Keep playing beside a MIDI app in split screen and through rotation.
+• Fix USB mode setup and Launchpad Pro MK3 reconnection.
+• Release held pads when opening options or when touch is cancelled.
+• Fix startup crashes when Firebase is unavailable and crashes while fitting autoplay.
