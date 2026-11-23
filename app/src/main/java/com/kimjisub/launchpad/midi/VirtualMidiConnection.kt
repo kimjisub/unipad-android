@@ -217,23 +217,28 @@ internal class VirtualMidiConnection(
 	 * The driver's connect callback is the play screen's attach-time redraw, which clears the device
 	 * before lighting every pad. A pack lighting heavily during it can overflow the queue again, so
 	 * redraws are kept [REDRAW_INTERVAL_MS] apart instead of clearing the device back to back.
+	 * The writer asks for a redraw once the queue drains; lights queued again before the main thread
+	 * runs it do not postpone it, because the redraw reads the newest state and is queued after them.
 	 */
 	private fun redraw(current: Attempt) {
 		if (!current.redrawing.compareAndSet(false, true)) return
 		scope.launch(main) {
 			try {
-				while (attempt === current && current.receiving.get() && current.outgoing.isEmpty &&
-					current.lightsDropped.getAndSet(false)) {
+				while (isLive(current) && current.lightsDropped.getAndSet(false)) {
 					current.driver.onConnected()
 					delay(REDRAW_INTERVAL_MS)
 				}
 			} finally {
 				current.redrawing.set(false)
 			}
-			// A drop seen while this redraw was ending is redrawn by the writer once the queue drains.
-			if (current.outgoing.isEmpty && current.lightsDropped.get()) redraw(current)
+			// A drop flagged after the last check, whose writer request was refused while this ran.
+			// A session being torn down never redraws: on an immediate main dispatcher this would
+			// otherwise relaunch itself without ever yielding to the teardown.
+			if (isLive(current) && current.lightsDropped.get()) redraw(current)
 		}
 	}
+
+	private fun isLive(current: Attempt) = attempt === current && current.receiving.get()
 
 	private fun overflow(current: Attempt) {
 		if (current.overflowing.compareAndSet(false, true)) scope.launch(main) {
