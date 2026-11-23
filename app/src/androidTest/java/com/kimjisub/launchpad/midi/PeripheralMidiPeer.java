@@ -32,9 +32,10 @@ public class PeripheralMidiPeer extends MidiDeviceService {
                 public void onSend(byte[] data, int offset, int count, long timestamp) throws IOException {
                     if (count == 0) return;
                     if (data[offset] == 2) {
+                        // The new stall is in place before the previous one lets its sender go on.
                         CountDownLatch previous = stalled;
-                        if (previous != null) previous.countDown();
                         stalled = new CountDownLatch(1);
+                        if (previous != null) previous.countDown();
                         byte[] stalling = {(byte) 0xb0, 111, 127};
                         getOutputPortReceivers()[0].send(stalling, 0, stalling.length);
                         return;
@@ -46,6 +47,10 @@ public class PeripheralMidiPeer extends MidiDeviceService {
                         return;
                     }
                     if (data[offset] == 0) {
+                        // A reset also ends a stall left by an earlier test.
+                        CountDownLatch stall = stalled;
+                        stalled = null;
+                        if (stall != null) stall.countDown();
                         messages = 0;
                         byte[] reset = {(byte) 0xb0, 111, 0};
                         getOutputPortReceivers()[0].send(reset, 0, reset.length);

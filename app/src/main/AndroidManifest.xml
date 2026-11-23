@@ -5,6 +5,10 @@
 	<uses-feature
 		android:name="android.hardware.usb.host"
 		android:required="false" />
+	<!-- The computer MIDI pad checks for MIDI when it opens; phones without it still install the app. -->
+	<uses-feature
+		android:name="android.software.midi"
+		android:required="false" />
 	<uses-feature
 		android:glEsVersion="0x00020000"
 		android:required="true" />
@@ -103,6 +107,12 @@
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
+		<activity
+			android:name=".activity.ComputerPadActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|density|layoutDirection"
+			android:exported="false"
+			android:resizeableActivity="true"
+			android:theme="@style/SettingTheme" />
 		<activity
 			android:name=".activity.SettingsActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"

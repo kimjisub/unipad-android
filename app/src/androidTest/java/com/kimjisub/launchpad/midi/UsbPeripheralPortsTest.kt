@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Real Android byte-stream ports against a test-only virtual peer. This is not USB testing. */
 @Suppress("DEPRECATION")
@@ -30,6 +31,8 @@ class UsbPeripheralPortsTest {
     private val partial = mutableListOf<Int>()
     private val connections = mutableListOf<UsbPeripheralConnection>()
     private val resources = mutableListOf<AutoCloseable>()
+    /** Devices opened for a connection under test; a failed session closes its ports after reporting. */
+    private val openDevices = AtomicInteger()
     private val endpoint get() = PeripheralDevice(info.id,"test peer",listOf(PeripheralDevice.Port(0,"press")),listOf(PeripheralDevice.Port(0,"lights")))
 
     @Suppress("DEPRECATION")
@@ -59,6 +62,8 @@ class UsbPeripheralPortsTest {
     @After fun cleanup() {
         connections.forEach { it.close() }
         connections.forEach { c -> await { c.state.value !is UsbPeripheralConnection.State.Closing } }
+        // The next test needs the exclusive input port, so wait until every device has really closed.
+        await { openDevices.get() == 0 }
         resources.reversed().forEach { try { it.close() } catch (_: Exception) { } }
         if (::observedPort.isInitialized) observedPort.close()
         if (::observer.isInitialized) observer.close()
@@ -85,7 +90,7 @@ class UsbPeripheralPortsTest {
         resources.add(occupied)
         val connection = connection()
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.INPUT_PORT) }
+        await { (connection.state.value as? UsbPeripheralConnection.State.Failed)?.reason == UsbPeripheralConnection.Failure.INPUT_PORT }
         occupied.close()
         connect(connection)
     }
@@ -167,13 +172,13 @@ class UsbPeripheralPortsTest {
         try {
             await { echoed.contains(listOf(0xb0,111,127)) }
             fill(connection)
-            awaitWithin(4) { connection.state.value == UsbPeripheralConnection.State.Failed(expected) }
+            awaitWithin(4) { (connection.state.value as? UsbPeripheralConnection.State.Failed)?.reason == expected }
             assertNotNull("the transport was not handed back", gate.acquireUsb()?.also { it.close() })
         } finally {
             control.send(byteArrayOf(3),0,1)
-            // The stuck port closes once the peer reads again; the next test needs the port free.
-            devicesClosed.await(15,TimeUnit.SECONDS)
         }
+        // Checked outside finally, so a failure above is reported instead of this one.
+        assertTrue("the stuck port never closed after the peer read again", devicesClosed.await(15,TimeUnit.SECONDS))
     }
 
     private fun UsbPeripheralConnection.sendCurrent(change: PadChange): Boolean {
@@ -196,10 +201,10 @@ class UsbPeripheralPortsTest {
             override fun open(id: Int, completed: (PeripheralMidiAccess.Device?) -> Unit) {
                 manager.openDevice(info, { device ->
                     val ports = device?.let(::AndroidMidiPorts)
-                    val wrapped = ports?.let { object : PeripheralMidiAccess.Device by it {
+                    val wrapped = ports?.let { openDevices.incrementAndGet(); object : PeripheralMidiAccess.Device by it {
                         override fun output(number: Int, receive: (ByteArray,Int,Int) -> Unit): AutoCloseable? =
                             if (noLights) null else it.output(number,receive)
-                        override fun close() { try { it.close() } finally { onClosed() } }
+                        override fun close() { try { it.close() } finally { openDevices.decrementAndGet(); onClosed() } }
                     } }
                     val action = { completed(wrapped) }
                     val delay = delayedOpen

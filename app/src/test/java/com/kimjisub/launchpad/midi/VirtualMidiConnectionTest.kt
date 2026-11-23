@@ -117,7 +117,7 @@ class VirtualMidiConnectionTest {
 		val connection = VirtualMidiConnection(backend, backgroundScope, dispatcher, dispatcher, gate) { _,_,_ -> error("Must not attach") }
 		assertFalse(connection.connect(selection, Matrix()))
 		runCurrent()
-		assertEquals(VirtualMidiConnection.Failure.USB_BUSY, (connection.state as VirtualMidiConnection.State.Failed).reason)
+		assertEquals(VirtualMidiConnection.Failure.BUSY, (connection.state as VirtualMidiConnection.State.Failed).reason)
 		assertNull(backend.removed)
 		assertNull(gate.acquireUsb())
 		peripheral.close()

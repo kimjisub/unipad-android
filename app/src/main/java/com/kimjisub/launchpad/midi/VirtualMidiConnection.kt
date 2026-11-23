@@ -37,7 +37,8 @@ internal class VirtualMidiConnection(
 		data class Connected(val lights: Boolean) : State
 		data class Failed(val reason: Failure) : State
 	}
-	enum class Failure { USB_BUSY, INVALID_PORT, UNAVAILABLE, INPUT_PORT, TIMEOUT, DISCONNECTED, IO, OVERFLOW }
+	/** [BUSY]: another MIDI connection (a USB launchpad or the computer pad) holds the transport, as the computer pad reports it. */
+	enum class Failure { BUSY, INVALID_PORT, UNAVAILABLE, INPUT_PORT, TIMEOUT, DISCONNECTED, IO, OVERFLOW }
 	var state: State = State.Idle
 		private set
 	var onStateChanged: ((State) -> Unit)? = null
@@ -72,7 +73,7 @@ internal class VirtualMidiConnection(
 			(selection.lightPort != null && selection.device.lightPorts.none { it.number == selection.lightPort })) {
 			publish(State.Failed(Failure.INVALID_PORT)); return false
 		}
-		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.USB_BUSY)); return false }
+		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.BUSY)); return false }
 		val current = Attempt(selection, driver, lease)
 		attempt = current
 		current.timer = scope.launch(main) {
