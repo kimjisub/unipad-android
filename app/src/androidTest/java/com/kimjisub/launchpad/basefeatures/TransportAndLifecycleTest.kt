@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.app.ActivityManager
 import android.os.Process
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -7,7 +8,6 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.launchpad.R
-import com.kimjisub.launchpad.TestUniPack
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -19,16 +19,18 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class TransportAndLifecycleTest : PlaybackScreenTest() {
-    private fun hintedPad(): Int? = screen.onMain {
+    private fun hintedPads(): Set<Int> = screen.onMain {
         val lights = screen.vm().channelManager
-        (0 until 64).firstOrNull { index ->
+        (0 until 64).filterTo(sortedSetOf()) { index ->
             val item = lights.get(index / 8, index % 8)
             item?.channel == ChannelManager.Channel.GUIDE && item.code > 0
         }
     }
 
+    private fun hintedPad(): Int? = hintedPads().firstOrNull()
+
     private fun guidedChain(): Int? = screen.onMain {
-        (0 until TestUniPack.CHAINS).firstOrNull {
+        (0 until screen.vm().unipack.chain).firstOrNull {
             screen.vm().channelManager.get(-1, PlayActivityViewModel.CHAIN_INDEX_OFFSET + it)?.channel == ChannelManager.Channel.GUIDE
         }
     }
@@ -39,9 +41,15 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
     private fun currentProgress() = screen.onMain { screen.vm().autoPlayProgress }
 
     /** The runner lights the hint before it moves the progress on, so both are awaited together. */
-    private fun awaitHint(message: String, pad: Int?, chain: Int?, progress: Int) {
-        screen.await({ "$message: pad ${hintedPad()}, chain ${guidedChain()}, progress ${currentProgress()} (expected $pad, $chain, $progress)" }) {
-            hintedPad() == pad && guidedChain() == chain && currentProgress() == progress
+    private fun awaitHint(message: String, pad: Int?, chain: Int?, progress: Int) =
+        awaitHints(message, setOfNotNull(pad), chain, progress)
+
+    private fun awaitHints(message: String, pads: Set<Int>, chain: Int?, progress: Int) {
+        screen.await({
+            "$message: pads ${hintedPads()}, chain ${guidedChain()}, progress ${currentProgress()}, " +
+                "mode ${screen.onMain { screen.vm().playMode }} (expected $pads, $chain, $progress)"
+        }) {
+            hintedPads() == pads && guidedChain() == chain && currentProgress() == progress
         }
     }
 
@@ -229,6 +237,88 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         screen.await("Practice controls stayed on screen") { !transportShown() }
         assertEquals("A hint stayed lit after practice ended", null, hintedPad())
         screen.capture("step-practice-complete")
+    }
+
+    /**
+     * Steps through a whole song on a pack the size of a real one: 8 chains and an autoPlay of hundreds
+     * of commands (see [LongPracticeSong]). Every hint must match the song's next group of pads on the
+     * right chain, a group that opens another chain waits for its chain button, and practice ends only
+     * once the last pad is pressed, with the app still running and responsive throughout.
+     */
+    @Test fun stepPracticeFollowsALongSongOverEightChainsToItsLastPad() {
+        val song = LongPracticeSong()
+        val pack = screen.pack()
+        File(pack, "info").let { it.writeText(it.readText().replace(Regex("(?m)^chain=.*$"), "chain=${LongPracticeSong.CHAINS}")) }
+        File(pack, "keySound").appendText(buildString {
+            for (c in 3..LongPracticeSong.CHAINS) for (x in 1..8) for (y in 1..8) append("$c $x $y silence.wav\n")
+        })
+        File(pack, "autoPlay").writeText(song.script)
+        val process = Process.myPid()
+        val started = SystemClock.elapsedRealtime()
+        screen.openPlay()
+        assertEquals("The long pack did not load cleanly", null, screen.onMain { screen.vm().unipack.errorDetail })
+        screen.chooseOption(R.string.stepPractice)
+        screen.await("Step mode did not start") { screen.onMain { screen.vm().playMode == PlayMode.StepPractice } }
+        screen.await({ "The long song was not loaded whole: ${screen.onMain { screen.vm().autoPlayProgressMax }} of ${song.elementCount}" }) {
+            screen.onMain { screen.vm().autoPlayProgressMax } == song.elementCount
+        }
+        val last = song.steps.last()
+        val lastPad = last.pads.last()
+        var slowestHintMs = 0L
+        var lastPress = SystemClock.elapsedRealtime()
+        fun hinted(message: String, pads: Set<Int>, chain: Int?, progress: Int) {
+            awaitHints(message, pads, chain, progress)
+            slowestHintMs = maxOf(slowestHintMs, SystemClock.elapsedRealtime() - lastPress)
+        }
+        for ((number, step) in song.steps.withIndex()) {
+            val label = "Step ${number + 1} of ${song.steps.size}"
+            step.chainHintProgress?.let { progress ->
+                hinted("$label did not hint chain ${step.chain + 1} first", emptySet(), step.chain, progress)
+                if (step.chain == LongPracticeSong.CHAINS - 1) screen.capture("long-practice-chain-${step.chain + 1}-hint")
+                val button = chainButton(step.chain)
+                lastPress = SystemClock.elapsedRealtime()
+                assertTrue(screen.device.click(button.x, button.y))
+                screen.await({ "$label: chain button did not select chain ${step.chain + 1}: ${screen.onMain { screen.vm().chain.value } + 1}" }) {
+                    screen.onMain { screen.vm().chain.value } == step.chain
+                }
+            }
+            val remaining = step.pads.toMutableSet()
+            hinted("$label did not hint the song's next pads", remaining, null, step.progress)
+            screen.onMain {
+                assertEquals("$label is on the wrong chain", step.chain, screen.vm().chain.value)
+                assertTrue("$label: practice runner stopped", screen.vm().autoPlayRunner!!.active)
+            }
+            for (pad in step.pads) {
+                if (step === last && pad == lastPad) break
+                lastPress = SystemClock.elapsedRealtime()
+                pressPad(pad)
+                remaining -= pad
+                if (remaining.isNotEmpty()) hinted("$label: the rest of the group was not left hinted", remaining, null, step.progress)
+            }
+        }
+        assertStillPractising(last.progress, "before the last pad")
+        assertEquals("The last pad is not the only one left", setOf(lastPad), hintedPads())
+        screen.capture("long-practice-last")
+        pressPad(lastPad)
+        screen.await({ "Practice did not end after the last pad: progress ${currentProgress()} of ${song.elementCount}" }) {
+            screen.onMain {
+                val vm = screen.vm()
+                vm.playMode == PlayMode.None && !vm.autoPlayRunner!!.active && !vm.autoPlayControlVisible &&
+                    vm.autoPlayProgress == song.elementCount
+            }
+        }
+        screen.await("Practice controls stayed on screen") { !transportShown() }
+        assertEquals("A hint stayed lit after practice ended", emptySet<Int>(), hintedPads())
+        assertEquals("The app process was replaced during practice", process, Process.myPid())
+        val errors = screen.context.getSystemService(ActivityManager::class.java).processesInErrorState.orEmpty()
+            .filter { it.pid == process }
+        assertTrue("The app crashed or stopped responding: ${errors.map { "${it.condition} ${it.shortMsg}" }}", errors.isEmpty())
+        screen.capture("long-practice-complete")
+        println(
+            "Long step practice: ${song.steps.size} steps, ${song.steps.sumOf { it.pads.size }} pads, " +
+                "${song.steps.count { it.chainHintProgress != null }} chain moves, ${song.elementCount} commands, " +
+                "slowest hint ${slowestHintMs} ms, ${SystemClock.elapsedRealtime() - started} ms in all"
+        )
     }
 
     /** Drop activity-scoped state before rebuilding the stopped window; instrumentation survives. */
