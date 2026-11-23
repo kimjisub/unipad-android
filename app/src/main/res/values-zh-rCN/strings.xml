@@ -373,6 +373,8 @@
 	<string name="computer_pad_help_name">电脑上显示的手机名称因手机和系统而异，可能不会显示为 UniPad。</string>
 	<string name="computer_pad_help_numbers">通道 1：打击垫发送音符 11–88，右侧按钮发送音符 19–89，顶部按钮发送 CC 104–111，力度均为 127。</string>
 	<string name="computer_pad_help_lights">电脑发送编号和颜色 0–127 即可点亮打击垫；0 或音符关闭会熄灭灯光。</string>
+	<string name="computer_pad_help_no_midi_mode">USB 设置中没有 MIDI 的手机无法使用此功能。</string>
+	<string name="computer_pad_help_check_on_computer">电脑是否收到按下信号，只能在电脑应用中查看。</string>
 	<string name="computer_pad_disconnect">断开连接</string>
     <string name="midi_tab_usb">USB 设备</string>
     <string name="midi_tab_apps">本机应用</string>

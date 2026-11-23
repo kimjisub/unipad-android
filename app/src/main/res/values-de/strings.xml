@@ -372,6 +372,8 @@
 	<string name="computer_pad_help_name">Der Name des Smartphones auf dem Computer hängt von Smartphone und System ab; er lautet vielleicht nicht UniPad.</string>
 	<string name="computer_pad_help_numbers">Kanal 1: Pads senden Noten 11–88, rechte Tasten Noten 19–89, obere Tasten CC 104–111, jeweils mit 127.</string>
 	<string name="computer_pad_help_lights">Der Computer beleuchtet ein Pad, indem er dessen Nummer mit einer Farbe 0–127 sendet; 0 oder Note-Off schaltet es aus.</string>
+	<string name="computer_pad_help_no_midi_mode">Smartphones ohne MIDI in den USB-Einstellungen können diese Funktion nicht nutzen.</string>
+	<string name="computer_pad_help_check_on_computer">Ob der Computer die Tastendrücke empfängt, zeigt nur die Computer-App.</string>
 	<string name="computer_pad_disconnect">Trennen</string>
     <string name="midi_tab_usb">USB-Geräte</string>
     <string name="midi_tab_apps">Apps auf diesem Telefon</string>

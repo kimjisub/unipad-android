@@ -372,6 +372,8 @@
 	<string name="computer_pad_help_name">Telefonun bilgisayardaki adı telefona ve sisteme göre değişir; UniPad olarak görünmeyebilir.</string>
 	<string name="computer_pad_help_numbers">Kanal 1: pad\'ler 11–88, sağ düğmeler 19–89 notalarını, üst düğmeler CC 104–111 gönderir; hepsi 127 ile.</string>
 	<string name="computer_pad_help_lights">Bilgisayar bir pad\'in numarasını 0–127 arası bir renkle gönderince pad yanar; 0 veya note off söndürür.</string>
+	<string name="computer_pad_help_no_midi_mode">USB ayarlarında MIDI olmayan telefonlar bu özelliği kullanamaz.</string>
+	<string name="computer_pad_help_check_on_computer">Bilgisayarın basışları alıp almadığı yalnızca bilgisayar uygulamasında görünür.</string>
 	<string name="computer_pad_disconnect">Bağlantıyı kes</string>
     <string name="midi_tab_usb">USB cihazları</string>
     <string name="midi_tab_apps">Bu telefondaki uygulamalar</string>

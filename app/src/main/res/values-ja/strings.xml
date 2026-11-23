@@ -371,6 +371,8 @@
 	<string name="computer_pad_help_name">パソコンに表示されるスマホの名前は機種やOSによって異なり、UniPadと表示されないことがあります。</string>
 	<string name="computer_pad_help_numbers">チャンネル1：パッドはノート11–88、右ボタンはノート19–89、上ボタンはCC 104–111をベロシティ127で送ります。</string>
 	<string name="computer_pad_help_lights">パソコンが番号と色0–127を送るとパッドが光ります。0またはノートオフで消えます。</string>
+	<string name="computer_pad_help_no_midi_mode">USB設定にMIDIがないスマホではこの機能を使えません。</string>
+	<string name="computer_pad_help_check_on_computer">パソコンが受け取ったかどうかは、パソコンのアプリで確認してください。</string>
 	<string name="computer_pad_disconnect">接続を解除</string>
     <string name="midi_tab_usb">USBデバイス</string>
     <string name="midi_tab_apps">このスマホのアプリ</string>

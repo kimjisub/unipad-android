@@ -361,6 +361,8 @@
 	<string name="computer_pad_help_name">Iba-iba ang pangalan ng phone sa computer depende sa phone at system; maaaring hindi ito lumabas bilang UniPad.</string>
 	<string name="computer_pad_help_numbers">Channel 1: ang mga pad ay nagpapadala ng note 11–88, kanang button note 19–89, itaas na button CC 104–111, lahat sa 127.</string>
 	<string name="computer_pad_help_lights">Pinapailaw ng computer ang pad sa pagpapadala ng numero nito na may kulay 0–127; pinapatay ito ng 0 o note off.</string>
+	<string name="computer_pad_help_no_midi_mode">Hindi magagamit ang feature na ito sa phone na walang MIDI sa USB settings.</string>
+	<string name="computer_pad_help_check_on_computer">Sa app ng computer lang makikita kung natatanggap ng computer ang mga pindot.</string>
 	<string name="computer_pad_disconnect">Idiskonekta</string>
     <string name="midi_tab_usb">Mga USB device</string>
     <string name="midi_tab_apps">Mga app sa teleponong ito</string>

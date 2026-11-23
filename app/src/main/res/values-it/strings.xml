@@ -373,6 +373,8 @@
 	<string name="computer_pad_help_name">Il nome del telefono sul computer dipende da telefono e sistema; potrebbe non apparire come UniPad.</string>
 	<string name="computer_pad_help_numbers">Canale 1: i pad inviano le note 11–88, i tasti destri 19–89, quelli superiori CC 104–111, tutti a 127.</string>
 	<string name="computer_pad_help_lights">Il computer accende un pad inviando il suo numero con un colore 0–127; 0 o note off lo spegne.</string>
+	<string name="computer_pad_help_no_midi_mode">I telefoni senza MIDI nelle impostazioni USB non possono usare questa funzione.</string>
+	<string name="computer_pad_help_check_on_computer">Solo l\'app del computer mostra se il computer riceve le pressioni.</string>
 	<string name="computer_pad_disconnect">Disconnetti</string>
     <string name="midi_tab_usb">Dispositivi USB</string>
     <string name="midi_tab_apps">App su questo telefono</string>
