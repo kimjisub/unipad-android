@@ -180,7 +180,10 @@ object MidiConnection {
 		var announcedName: String = "Unknown"
 		var manuallyChosen = false
 		var detectedFirmware: String? = null
-		var modelUnknown = false
+		var detectedAsKeyboard = false
+		// Unknown only while the keyboard fallback chosen at detection is still in use; a model
+		// applied by hand ends it for this connection, and plugging in again detects afresh.
+		val modelUnknown: Boolean get() = detectedAsKeyboard && driver is MasterKeyboard
 		val inputObservation = MidiInputObservation(SystemClock.elapsedRealtime())
 	}
 
@@ -721,7 +724,7 @@ object MidiConnection {
 		}
 
 		session.detectedFirmware = detectedFirmwareOf(session.driver)
-		session.modelUnknown = session.driver is MasterKeyboard
+		session.detectedAsKeyboard = session.driver is MasterKeyboard
 
 		// Log all interfaces
 		for (i in 0 until device.interfaceCount) {
