@@ -29,15 +29,22 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
 
     @After fun restoreScreen() {
         try {
-            if (resized) {
-                screen.device.executeShellCommand("wm size reset")
-                screen.await("Display size override remained after cleanup") {
-                    !screen.device.executeShellCommand("wm size").contains("Override size")
+            try {
+                if (resized) {
+                    screen.device.executeShellCommand("wm size reset")
+                    screen.await("Display size override remained after cleanup") {
+                        !screen.device.executeShellCommand("wm size").contains("Override size")
+                    }
                 }
+            } finally {
+                display.close()
             }
         } finally {
-            display.close()
+            restoreRequestedOrientation()
         }
+    }
+
+    private fun restoreRequestedOrientation() {
         // A failed launch may have left no activity; the next launch uses the manifest orientation.
         val activity = runCatching { screen.resumed() }.getOrNull() ?: return
         screen.onMain { activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE }

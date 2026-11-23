@@ -20,7 +20,15 @@ internal object DisplaySettings {
         val rotation: String,
     )
 
-    fun read(device: UiDevice): State {
+    /** The size and density overrides, which `wm` has on every supported version. */
+    private data class Metrics(
+        val size: Pair<Int, Int>,
+        val density: Int,
+        val sizeOverride: Pair<Int, Int>?,
+        val densityOverride: Int?,
+    )
+
+    private fun readMetrics(device: UiDevice): Metrics {
         val sizes = device.executeShellCommand("wm size")
         fun size(prefix: String) = sizes.lineSequence().firstOrNull { it.startsWith(prefix) }
             ?.let { SIZE.find(it)!!.destructured.let { (w, h) -> w.toInt() to h.toInt() } }
@@ -29,13 +37,27 @@ internal object DisplaySettings {
             ?.substringAfter(":")?.trim()?.toInt()
         val sizeOverride = size("Override size:")
         val densityOverride = density("Override density:")
-        val rotation = device.executeShellCommand("wm user-rotation").trim()
-        check(rotation.matches(Regex("free|lock [0-3]"))) { "Cannot save display rotation: $rotation" }
-        return State(
+        return Metrics(
             sizeOverride ?: checkNotNull(size("Physical size:")),
             densityOverride ?: checkNotNull(density("Physical density:")),
-            sizeOverride, densityOverride, rotation,
+            sizeOverride, densityOverride,
         )
+    }
+
+    /** Also reads the user rotation preference, which `wm` can read and set only from Android 11. */
+    fun read(device: UiDevice): State {
+        val metrics = readMetrics(device)
+        val rotation = device.executeShellCommand("wm user-rotation").trim()
+        check(rotation.matches(Regex("free|lock [0-3]"))) { "Cannot save display rotation: $rotation" }
+        return State(metrics.size, metrics.density, metrics.sizeOverride, metrics.densityOverride, rotation)
+    }
+
+    private fun setSize(device: UiDevice, size: Pair<Int, Int>?) {
+        device.executeShellCommand(size?.let { "wm size ${it.first}x${it.second}" } ?: "wm size reset")
+    }
+
+    private fun setDensity(device: UiDevice, density: Int?) {
+        device.executeShellCommand(density?.let { "wm density $it" } ?: "wm density reset")
     }
 
     /**
@@ -48,7 +70,7 @@ internal object DisplaySettings {
 
     /** The display rotation that shows [orientation], an [ActivityInfo] screen orientation, on this display. */
     fun rotationShowing(device: UiDevice, orientation: Int): Int {
-        val (width, height) = read(device).size
+        val (width, height) = readMetrics(device).size
         val naturallyLandscape = width > height
         return when (orientation) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE ->
@@ -86,10 +108,25 @@ internal object DisplaySettings {
     /**
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
-     * portrait and shows the landscape app in a small letterboxed window.
+     * portrait and shows the landscape app in a small letterboxed window. Before Android 11 `wm`
+     * cannot lock the rotation, so there only the size and density change, and the landscape app
+     * turns a phone display itself.
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
-        with(device, size, density, Surface.ROTATION_90, block)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) with(device, size, density, Surface.ROTATION_90, block)
+        else withSizeAndDensity(device, size, density, block)
+
+    private fun <T> withSizeAndDensity(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T {
+        val previous = readMetrics(device)
+        try {
+            setSize(device, size)
+            setDensity(device, density)
+            return block()
+        } finally {
+            setSize(device, previous.sizeOverride)
+            setDensity(device, previous.densityOverride)
+        }
+    }
 
     /** The display transition encloses overlay changes, so neither apply nor restore races them. */
     fun <T> with(
@@ -102,8 +139,8 @@ internal object DisplaySettings {
         val previous = read(device)
         var failure: Throwable? = null
         try {
-            if (size != null) device.executeShellCommand("wm size ${size.first}x${size.second}")
-            if (density != null) device.executeShellCommand("wm density $density")
+            if (size != null) setSize(device, size)
+            if (density != null) setDensity(device, density)
             device.executeShellCommand("wm user-rotation lock $rotation")
             awaitApplied(device, size ?: previous.size, density ?: previous.density, "lock $rotation")
             return block()
@@ -112,13 +149,8 @@ internal object DisplaySettings {
             throw t
         } finally {
             try {
-                if (size != null) {
-                    val old = previous.sizeOverride
-                    device.executeShellCommand(if (old == null) "wm size reset" else "wm size ${old.first}x${old.second}")
-                }
-                if (density != null) {
-                    device.executeShellCommand(previous.densityOverride?.let { "wm density $it" } ?: "wm density reset")
-                }
+                if (size != null) setSize(device, previous.sizeOverride)
+                if (density != null) setDensity(device, previous.densityOverride)
                 device.executeShellCommand("wm user-rotation ${previous.rotation}")
                 awaitApplied(device, previous.size, previous.density, previous.rotation)
             } catch (t: Throwable) {
