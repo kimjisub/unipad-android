@@ -62,6 +62,28 @@ internal object DisplaySettings {
     }
 
     /**
+     * Turns the display itself to the orientation an activity requested, on a display that ignores
+     * that request ([ignoresOrientationRequests]); elsewhere it does nothing. Closing it returns the
+     * rotation preference saved before the first turn and waits until the display has applied it.
+     */
+    class OrientationOverride(private val device: UiDevice, private val context: Context) : AutoCloseable {
+        private var previous: State? = null
+
+        fun show(orientation: Int) {
+            if (!ignoresOrientationRequests(context)) return
+            if (previous == null) previous = read(device)
+            device.executeShellCommand("wm user-rotation lock ${rotationShowing(device, orientation)}")
+        }
+
+        override fun close() {
+            val state = previous ?: return
+            previous = null
+            device.executeShellCommand("wm user-rotation ${state.rotation}")
+            awaitApplied(device, state.size, state.density, state.rotation)
+        }
+    }
+
+    /**
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
      * portrait and shows the landscape app in a small letterboxed window.

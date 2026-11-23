@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 
@@ -22,6 +23,7 @@ internal object LegacyStorage {
             automation.grantRuntimePermission(context.packageName, permission)
             assertEquals("Storage access was not granted: $permission",
                 PackageManager.PERMISSION_GRANTED, context.checkSelfPermission(permission))
+            Log.i("LegacyStorage", "Storage access granted: $permission")
         }
     }
 }

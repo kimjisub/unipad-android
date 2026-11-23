@@ -178,6 +178,8 @@ class FeatureScreen {
         while (SystemClock.elapsedRealtime() < deadline) {
             if (freshNode(tip) != null) {
                 capture("launcher-taskbar-tip-${SystemClock.uptimeMillis()}")
+                // Back with the tip already gone would close the app instead.
+                if (freshNode(tip) == null) return
                 device.pressBack()
                 await("The launcher's taskbar tip did not close on Back") { freshNode(tip) == null }
                 return
