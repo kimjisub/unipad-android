@@ -1,5 +1,8 @@
 package com.kimjisub.launchpad.midi
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -82,14 +85,33 @@ class UsbPeripheralConnectionTest {
         val (connection, peer) = connection()
         peer.noInput = true
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.INPUT_PORT) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT) }
         assertTrue(peer.deviceClosed)
+        // The failure is published before the ended session's ports finish closing; until then a connect is ignored.
+        await { !connection.portsClosing.value }
         peer.noInput = false
         peer.noOutput = true
         connection.connect(endpoint,0,0)
         await { (connection.state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == false }
         assertTrue(connection.sendCurrent(PadChange(0,true)))
         await { peer.sent.size == 1 }
+    }
+
+    @Test fun aFailureIsPublishedOnlyOnceItsPortsAreMarkedClosing() {
+        val (connection, peer) = connection()
+        peer.noInput = true
+        val closingWhenFailed = Collections.synchronizedList(mutableListOf<Boolean>())
+        // Unconfined runs the collector inside the state update, before anything that follows it.
+        val watcher = CoroutineScope(Dispatchers.Unconfined).launch {
+            connection.state.collect {
+                if (it.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT)) closingWhenFailed.add(connection.portsClosing.value)
+            }
+        }
+        try {
+            connection.connect(endpoint,0,0)
+            await { closingWhenFailed.isNotEmpty() }
+            assertEquals(listOf(true), closingWhenFailed.toList())
+        } finally { watcher.cancel() }
     }
 
     @Test fun throwingOutputIsAlsoLightsUnavailable() {
@@ -106,7 +128,7 @@ class UsbPeripheralConnectionTest {
         await { connection.discoveryFailure.value == UsbPeripheralConnection.Failure.DISCOVERY }
         peer.openThrows = true
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OPEN) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.OPEN) }
     }
 
     @Test fun sendFailureAndRemovalCloseEverythingAndClearLights() {
@@ -114,13 +136,13 @@ class UsbPeripheralConnectionTest {
         open(connection)
         peer.sendThrows = true
         connection.sendCurrent(PadChange(0,true))
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.SEND) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.SEND) }
         await { peer.inputClosed && peer.outputClosed && peer.deviceClosed }
         peer.sendThrows = false
         open(connection)
         peer.receive!!(byteArrayOf(0x90.toByte(),81,5),0,3)
         peer.removed!!(1)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.REMOVED) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.REMOVED) }
         assertTrue(connection.lights.snapshot().all { it == 0 })
     }
 
@@ -133,7 +155,7 @@ class UsbPeripheralConnectionTest {
         repeat(1024) { assertTrue("Queue entry $it", connection.sendCurrent(PadChange(1,true))) }
         assertFalse(connection.sendCurrent(PadChange(0,false)))
         peer.unblock.countDown()
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OVERFLOW) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.OVERFLOW) }
     }
 
     @Test fun hostAndVirtualOwnersAreNeverStolenAndPeripheralBlocksBoth() {
@@ -143,7 +165,7 @@ class UsbPeripheralConnectionTest {
             val lease = acquire()!!
             try {
                 connection.connect(endpoint,0,0)
-                assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.BUSY),connection.state.value)
+                assertTrue(connection.state.value.failedWith(UsbPeripheralConnection.Failure.BUSY))
             } finally { lease.close() }
         }
         open(connection)
@@ -178,7 +200,7 @@ class UsbPeripheralConnectionTest {
     @Test fun missingOutputPortNumberIsReportedAsLightPortFailure() {
         val (connection, _) = connection()
         connection.connect(endpoint,0,7)
-        assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OUTPUT_PORT),connection.state.value)
+        assertTrue(connection.state.value.failedWith(UsbPeripheralConnection.Failure.OUTPUT_PORT))
     }
 
     @Test fun deviceAddedWhileListingIsReadAgainAfterTheRunningRead() {
@@ -198,10 +220,10 @@ class UsbPeripheralConnectionTest {
     @Test fun missingInputOrThrowingInputNeverEscapes() {
         val (connection, peer) = connection()
         connection.connect(endpoint,7,0)
-        assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.INPUT_PORT),connection.state.value)
+        assertTrue(connection.state.value.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT))
         peer.inputThrows = true
         connection.connect(endpoint,0,0)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.INPUT_PORT) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.INPUT_PORT) }
         await { peer.deviceClosed }
     }
 
@@ -213,7 +235,7 @@ class UsbPeripheralConnectionTest {
         assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
         connection.disconnect()
         assertEquals(UsbPeripheralConnection.State.Closing, connection.state.value)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.RELEASE) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.RELEASE) }
         await { peer.deviceClosed }
     }
 
@@ -226,7 +248,7 @@ class UsbPeripheralConnectionTest {
         connection.sendCurrent(PadChange(0,true))
         assertTrue(peer.entered.await(10,TimeUnit.SECONDS))
         connection.disconnect()
-        awaitWithin(3) { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.RELEASE) }
+        awaitWithin(3) { connection.state.value.failedWith(UsbPeripheralConnection.Failure.RELEASE) }
         assertNotNull(gate.acquireUsb()?.also { it.close() })
         assertFalse(peer.inputClosed)
         peer.unblock.countDown()
@@ -244,7 +266,7 @@ class UsbPeripheralConnectionTest {
         var accepted = 0
         while (accepted < 5_000 && connection.sendCurrent(PadChange(accepted % 64, accepted % 2 == 0))) accepted++
         assertTrue("the queue must refuse before 5,000 sends", accepted < 5_000)
-        awaitWithin(3) { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.OVERFLOW) }
+        awaitWithin(3) { connection.state.value.failedWith(UsbPeripheralConnection.Failure.OVERFLOW) }
         assertNotNull(gate.acquireUsb()?.also { it.close() })
         peer.unblock.countDown()
         await { peer.inputClosed && peer.deviceClosed }
@@ -256,7 +278,7 @@ class UsbPeripheralConnectionTest {
         connection.connect(endpoint,0,0)
         await { peer.completion != null }
         peer.removed!!(1)
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.REMOVED) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.REMOVED) }
         val late = FakeAccess()
         peer.completion!!(late.device)
         await { late.deviceClosed }
@@ -271,7 +293,7 @@ class UsbPeripheralConnectionTest {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20)
         while (connection.state.value !is UsbPeripheralConnection.State.Failed && System.nanoTime() < deadline)
             Thread.sleep(10)
-        assertEquals(UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.TIMEOUT),connection.state.value)
+        assertTrue(connection.state.value.failedWith(UsbPeripheralConnection.Failure.TIMEOUT))
         val late = FakeAccess()
         peer.completion!!(late.device)
         await { late.deviceClosed }
@@ -283,7 +305,7 @@ class UsbPeripheralConnectionTest {
         open(connection)
         peer.closeThrows = true
         connection.disconnect()
-        await { connection.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.CLOSE) }
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.CLOSE) }
         assertTrue(peer.inputClosed && peer.outputClosed && peer.deviceClosed)
     }
 
@@ -298,9 +320,9 @@ class UsbPeripheralConnectionTest {
         start.countDown()
         threads.forEach { it.join(10000); assertFalse(it.isAlive) }
         await { listOf(first,second).all { it.state.value is UsbPeripheralConnection.State.Open ||
-            it.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.BUSY) } }
+            it.state.value.failedWith(UsbPeripheralConnection.Failure.BUSY) } }
         assertEquals(1,listOf(first,second).count { it.state.value is UsbPeripheralConnection.State.Open })
-        assertEquals(1,listOf(first,second).count { it.state.value == UsbPeripheralConnection.State.Failed(UsbPeripheralConnection.Failure.BUSY) })
+        assertEquals(1,listOf(first,second).count { it.state.value.failedWith(UsbPeripheralConnection.Failure.BUSY) })
     }
 
     @Test fun reconnectHasDistinctIdentityForLateReleases() {
@@ -319,6 +341,56 @@ class UsbPeripheralConnectionTest {
         assertFalse(connection.send(PadChange(0,false), first.generation))
         assertEquals(3,peer.sent.size)
     }
+
+    @Test fun aRepeatedFailureIsStillANewState() {
+        val gate = MidiTransportGate()
+        val (connection, _) = connection(gate)
+        val lease = gate.acquireUsb()!!
+        try {
+            connection.connect(endpoint,0,0)
+            val first = connection.state.value
+            connection.connect(endpoint,0,0)
+            val second = connection.state.value
+            assertTrue(first.failedWith(UsbPeripheralConnection.Failure.BUSY) && second.failedWith(UsbPeripheralConnection.Failure.BUSY))
+            assertNotEquals(first, second)
+        } finally { lease.close() }
+    }
+
+    @Test fun reconnectWaitsUntilTheEndedSessionsPortsHaveClosed() {
+        val (connection, peer) = connection()
+        open(connection)
+        val closing = CountDownLatch(1)
+        peer.holdInputClose = closing
+        peer.sendThrows = true
+        connection.sendCurrent(PadChange(0,true))
+        await { connection.state.value.failedWith(UsbPeripheralConnection.Failure.SEND) }
+        assertTrue(connection.portsClosing.value)
+        peer.sendThrows = false
+        val opened = peer.inputsOpened
+        connection.connect(endpoint,0,0)
+        assertTrue(connection.state.value.failedWith(UsbPeripheralConnection.Failure.SEND))
+        assertEquals(opened, peer.inputsOpened)
+        closing.countDown()
+        await { !connection.portsClosing.value }
+        open(connection)
+    }
+
+    @Test fun aFailedDeviceWatchIsRegisteredAgainOnTheNextSearch() {
+        val peer = FakeAccess()
+        peer.watchThrows = true
+        val connection = UsbPeripheralConnection(peer, MidiTransportGate())
+        peers.add(connection to peer)
+        await { connection.discoveryFailure.value == UsbPeripheralConnection.Failure.UNAVAILABLE }
+        assertEquals(0, peer.listCalls.get())
+        peer.watchThrows = false
+        peer.listed = listOf(endpoint)
+        connection.refresh()
+        await { peer.removed != null && connection.devices.value == listOf(endpoint) }
+        assertNull(connection.discoveryFailure.value)
+    }
+
+    private fun UsbPeripheralConnection.State.failedWith(reason: UsbPeripheralConnection.Failure) =
+        (this as? UsbPeripheralConnection.State.Failed)?.reason == reason
 
     private fun UsbPeripheralConnection.sendCurrent(change: PadChange): Boolean {
         val opened = state.value as? UsbPeripheralConnection.State.Open ?: return false
@@ -359,6 +431,8 @@ class UsbPeripheralConnectionTest {
         @Volatile var noOutput = false
         @Volatile var outputThrows = false
         @Volatile var listThrows = false
+        @Volatile var watchThrows = false
+        @Volatile var holdInputClose: CountDownLatch? = null
         @Volatile var openThrows = false
         @Volatile var sendThrows = false
         @Volatile var blockSend = false
@@ -393,6 +467,7 @@ class UsbPeripheralConnectionTest {
             return snapshot
         }
         override fun watch(changed: () -> Unit, removed: (Int) -> Unit): AutoCloseable {
+            if (watchThrows) throw SecurityException("watch")
             this.changed = changed
             this.removed = removed
             return AutoCloseable { }
@@ -417,6 +492,7 @@ class UsbPeripheralConnectionTest {
                         }
                     }
                     override fun close() {
+                        holdInputClose?.await(10, TimeUnit.SECONDS)
                         if (closeWaitsForSend) synchronized(sendLock) { inputClosed = true }
                         else { inputClosed = true; unblock.countDown() }
                     }

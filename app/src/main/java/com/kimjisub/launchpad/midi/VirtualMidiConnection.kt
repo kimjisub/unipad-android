@@ -37,6 +37,7 @@ internal class VirtualMidiConnection(
 		data class Connected(val lights: Boolean) : State
 		data class Failed(val reason: Failure) : State
 	}
+	/** [USB_BUSY]: another MIDI connection (a USB launchpad or the computer pad) holds the transport. */
 	enum class Failure { USB_BUSY, INVALID_PORT, UNAVAILABLE, INPUT_PORT, TIMEOUT, DISCONNECTED, IO, OVERFLOW }
 	var state: State = State.Idle
 		private set

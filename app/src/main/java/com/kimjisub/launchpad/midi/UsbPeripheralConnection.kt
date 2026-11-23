@@ -13,7 +13,8 @@ class UsbPeripheralConnection internal constructor(
         data object Connecting : State
         data class Open(val lightsAvailable: Boolean, val generation: Long) : State
         data object Closing : State
-        data class Failed(val reason: Failure) : State
+        /** [attempt] differs between failures, so the same reason twice in a row is still a new state. */
+        data class Failed(val reason: Failure, val attempt: Long) : State
     }
     companion object {
         fun create(context: Context): UsbPeripheralConnection = UsbPeripheralConnection(AndroidPeripheralMidiAccess(context), MidiConnection.transportGate)
@@ -24,6 +25,7 @@ class UsbPeripheralConnection internal constructor(
     val state get() = transport.state
     val devices get() = transport.devices
     val discoveryFailure get() = transport.discoveryFailure
+    val portsClosing get() = transport.portsClosing
     fun refresh() = transport.refresh()
     fun connect(device: PeripheralDevice, inputPort: Int, outputPort: Int?) = transport.connect(device,inputPort,outputPort)
     /** Keep the generation captured on pointer down, including for its eventual release. */
