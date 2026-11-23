@@ -171,8 +171,10 @@ class ComputerPadScreenTest {
 		// In landscape the pads take the whole height, so their bottom is where the window's content ends.
 		val contentBottom = compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot.bottom
 		for (button in listOf(R.string.computer_pad_help, R.string.computer_pad_disconnect)) {
-			val bounds = compose.onNode(hasText(context.getString(button)) and hasClickAction()).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-			assertTrue("${context.getString(button)} ends at ${bounds.bottom}, below the content at $contentBottom", bounds.bottom <= contentBottom + 1f)
+			// boundsInRoot is clipped to the scrolling guide, which would hide a cut-off button; its unclipped end is checked.
+			val node = compose.onNode(hasText(context.getString(button)) and hasClickAction()).assertIsDisplayed().fetchSemanticsNode()
+			val bottom = node.positionInRoot.y + node.size.height
+			assertTrue("${context.getString(button)} ends at $bottom, below the content at $contentBottom", bottom <= contentBottom + 1f)
 		}
 		capture("open_landscape_buttons")
 	}
