@@ -358,7 +358,7 @@ class MidiSelectScreenTest {
             compose.activity.setContent {
                 UniPadTheme {
                     MidiSelectScreen(
-                        status = status.value, onAllow = {}, onBrowse = {}, selectedIndex = selected.intValue,
+                        status = status.value, virtualDeviceName = null, onAllow = {}, onBrowse = {}, selectedIndex = selected.intValue,
                         dualPadModeEnabled = false, reflectedModeEnabled = false, reflectedSwapSides = false,
                         connectedSessions = emptyList(), selectedSessionId = null, onSessionTargetSelect = {},
                         onDeviceSelect = { index ->
