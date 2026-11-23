@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">अपवाद हुआ</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpad पुनः कनेक्ट करें</string>
+	<string name="midi_connect_title">MIDI डिवाइस कनेक्ट करें</string>
 	<string name="import_unipack">UniPack आयात करें</string>
 	<string name="store">स्टोर</string>
 
@@ -304,4 +304,6 @@
 	<string name="autoPlayRestoreApply">बहाल करें</string>
 	<string name="autoPlayRestored">पिछला क्रम बहाल हुआ। मेन्यू से फिर बदल सकते हैं।</string>
 	<string name="autoPlayRestoreFailed">बहाल नहीं कर सके। वर्तमान क्रम और बैकअप बदले नहीं हैं।</string>
+    <string name="midi_tab_usb">USB डिवाइस</string>
+    <string name="midi_tab_apps">इस फ़ोन के ऐप</string>
 </resources>

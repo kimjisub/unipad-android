@@ -558,6 +558,23 @@ object MidiConnection {
 			}
 		}
 
+		installListeners()
+
+		// Re-wire whichever session(s) were created above now that the listeners exist
+		// (mirrors the original ordering, where setDriverListener() was called again at
+		// the end of initConnection to finish wiring the driver created inside initDevice()).
+		for (session in sessions.values) {
+			setDriverListener(session.driver, makeSendListener(session), makeReceiveListener(session))
+		}
+	}
+
+	/**
+	 * The listeners between the drivers and the play screen's controller. A USB attach installs them
+	 * through [initConnection]; a virtual connection installs them itself, so a phone that never had a
+	 * USB device plugged in still delivers pads and lights without a USB scan.
+	 */
+	private fun installListeners() {
+		if (onCycleListener != null) return
 		onCycleListener = object : DriverRef.OnCycleListener {
 			override fun onConnected() {
 				controller?.onAttach()
@@ -621,12 +638,6 @@ object MidiConnection {
 			}
 		}
 
-		// Re-wire whichever session(s) were created above now that the listeners exist
-		// (mirrors the original ordering, where setDriverListener() was called again at
-		// the end of initConnection to finish wiring the driver created inside initDevice()).
-		for (session in sessions.values) {
-			setDriverListener(session.driver, makeSendListener(session), makeReceiveListener(session))
-		}
 	}
 
 	// Used to filter both the app-launch scan loop above and to decide whether a freshly
@@ -767,7 +778,7 @@ object MidiConnection {
 		// openDevice throws SecurityException for a device we were not granted (only the device
 		// that fired the attach intent is auto-granted).
 		val transportLease = transportGate.acquireUsb() ?: run {
-			Log.midiDetail("Disconnect virtual MIDI before reconnecting USB")
+			Log.midiDetail("USB device ignored: another MIDI connection holds the transport")
 			return
 		}
 		val connection = try {
@@ -1270,7 +1281,9 @@ object MidiConnection {
 		else -> null
 	}
 
-	private var virtualTransportAttached = false
+	/** A virtual device (another app on this phone) owns the driver; read on the main thread. */
+	internal var virtualTransportAttached = false
+		private set
 
 	/** Call on the main thread, after initConnection; closing also releases held controller input. */
 	internal fun attachTransport(
@@ -1279,6 +1292,7 @@ object MidiConnection {
 		output: DriverRef.OnSendSignalListener,
 	): AutoCloseable {
 		check(sessions.isEmpty() && connectedDevice == null && !virtualTransportAttached) { "A device is already connected" }
+		installListeners()
 		val previous = _driver
 		previous.sendClearLed()
 		previous.onDisconnected()
@@ -1293,10 +1307,11 @@ object MidiConnection {
 		val attachment = AutoCloseable {
 			if (!closed) {
 				closed = true
+				// Cleared first so the controller's detach callback already sees the device gone.
+				virtualTransportAttached = false
 				// Each cleanup is independent: a failed LED write must still release held sounds.
 				runCatching { deviceDriver.sendClearLed() }
 				runCatching { deviceDriver.onDisconnected() }
-				virtualTransportAttached = false
 				transportObservation?.takeIf { it.input === observation }?.let {
 					lastDisconnected = it.status.copy(phase = MidiConnectionStatus.Phase.DISCONNECTED)
 					transportObservation = null

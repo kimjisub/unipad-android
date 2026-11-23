@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">ခြွင်းချက်ဖြစ်ပွားခဲ့သည်</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpad ပြန်ချိတ်ဆက်</string>
+	<string name="midi_connect_title">MIDI စက် ချိတ်ဆက်ရန်</string>
 	<string name="import_unipack">UniPack ထည့်သွင်း</string>
 	<string name="store">စတိုး</string>
 
@@ -295,4 +295,6 @@
 	<string name="autoPlayRestoreApply">ပြန်ယူရန်</string>
 	<string name="autoPlayRestored">ယခင်တီးခတ်မှုကို ပြန်ယူပြီးပါပြီ။ မီနူးမှ ထပ်လဲနိုင်ပါသည်။</string>
 	<string name="autoPlayRestoreFailed">ပြန်မယူနိုင်ပါ။ လက်ရှိတီးခတ်မှုနှင့် အရန် မပြောင်းလဲပါ။</string>
+    <string name="midi_tab_usb">USB စက်များ</string>
+    <string name="midi_tab_apps">ဤဖုန်းရှိ အက်ပ်များ</string>
 </resources>

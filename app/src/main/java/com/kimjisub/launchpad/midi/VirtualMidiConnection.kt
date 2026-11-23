@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -48,7 +49,12 @@ internal class VirtualMidiConnection(
 		val receiving = AtomicBoolean(false)
 		val overflowing = AtomicBoolean(false)
 		val incoming = Channel<IntArray>(256)
-		val outgoing = Channel<ByteArray>(256)
+		// Lights are state: a burst longer than the queue drops the oldest writes. Later writes of
+		// the same burst supersede only the pads they name, so the device is redrawn once the queue
+		// has drained after a drop.
+		val lightsDropped = AtomicBoolean(false)
+		val redrawing = AtomicBoolean(false)
+		val outgoing = Channel<ByteArray>(256, BufferOverflow.DROP_OLDEST) { lightsDropped.set(true) }
 		var job: Job? = null
 		var timer: Job? = null
 		var watch: AutoCloseable? = null
@@ -67,9 +73,10 @@ internal class VirtualMidiConnection(
 		if (attempt != null) return false
 		if (selection.device.performancePorts.none { it.number == selection.performancePort } ||
 			(selection.lightPort != null && selection.device.lightPorts.none { it.number == selection.lightPort })) {
-			publish(State.Failed(Failure.INVALID_PORT)); return false
+			publish(State.Failed(Failure.INVALID_PORT), force = true); return false
 		}
-		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.USB_BUSY)); return false }
+		// Forced: the same refusal twice in a row is still an answer the screen must show.
+		val lease = gate.acquireVirtual() ?: run { publish(State.Failed(Failure.USB_BUSY), force = true); return false }
 		val current = Attempt(selection, driver, lease)
 		attempt = current
 		current.timer = scope.launch(main) {
@@ -118,8 +125,8 @@ internal class VirtualMidiConnection(
 			failure = Failure.IO
 			while (true) {
 				delay(1_000)
-				// Status callbacks can be delayed by Android's main looper. A timeout is
-				// unknown, not proof of a closed port; explicit closure still disconnects.
+				// A timeout or an unknown status is not proof of a closed port; the device
+				// reports closure, including the silence of a server that died.
 				if (withTimeoutOrNull(2_000) { device.isAlive() } == false) {
 					withContext(main) { if (attempt === current) stop(State.Failed(Failure.DISCONNECTED)) }
 					break
@@ -172,7 +179,7 @@ internal class VirtualMidiConnection(
 	private fun activate(current: Attempt) {
 		val sender = object : DriverRef.OnSendSignalListener {
 			private fun send(bytes: ByteArray?) {
-				if (current.light != null && bytes != null && !current.outgoing.trySend(bytes).isSuccess) overflow(current)
+				if (current.light != null && bytes != null) current.outgoing.trySend(bytes)
 			}
 			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) = send(MidiStreamEncoder.packet(cmd, sig, note, velocity))
 			override fun onSendPackets(packets: ByteArray) = send(MidiStreamEncoder.packets(packets))
@@ -181,6 +188,17 @@ internal class VirtualMidiConnection(
 			}
 		}
 		try {
+			// Started before attaching, so the attach-time redraw drains while it is queued.
+			current.writer = scope.launch(io) {
+				try {
+					for (bytes in current.outgoing) {
+						current.light?.send(bytes)
+						if (current.outgoing.isEmpty && current.lightsDropped.get()) redraw(current)
+					}
+				}
+				catch (e: CancellationException) { throw e }
+				catch (_: Exception) { withContext(main) { if (attempt === current) stop(State.Failed(Failure.IO)) } }
+			}
 			current.attachment = attach(current.selection.device.name, current.driver, sender)
 			current.receiving.set(true)
 			publish(State.Connected(current.light != null))
@@ -192,13 +210,35 @@ internal class VirtualMidiConnection(
 				} catch (e: CancellationException) { throw e }
 				catch (_: Exception) { if (attempt === current) stop(State.Failed(Failure.IO)) }
 			}
-			current.writer = scope.launch(io) {
-				try { for (bytes in current.outgoing) current.light?.send(bytes) }
-				catch (e: CancellationException) { throw e }
-				catch (_: Exception) { withContext(main) { if (attempt === current) stop(State.Failed(Failure.IO)) } }
-			}
 		} catch (_: Exception) { stop(State.Failed(Failure.IO)) }
 	}
+
+	/**
+	 * The driver's connect callback is the play screen's attach-time redraw, which clears the device
+	 * before lighting every pad. A pack lighting heavily during it can overflow the queue again, so
+	 * redraws are kept [REDRAW_INTERVAL_MS] apart instead of clearing the device back to back.
+	 * The writer asks for a redraw once the queue drains; lights queued again before the main thread
+	 * runs it do not postpone it, because the redraw reads the newest state and is queued after them.
+	 */
+	private fun redraw(current: Attempt) {
+		if (!current.redrawing.compareAndSet(false, true)) return
+		scope.launch(main) {
+			try {
+				while (isLive(current) && current.lightsDropped.getAndSet(false)) {
+					current.driver.onConnected()
+					delay(REDRAW_INTERVAL_MS)
+				}
+			} finally {
+				current.redrawing.set(false)
+			}
+			// A drop flagged after the last check, whose writer request was refused while this ran.
+			// A session being torn down never redraws: on an immediate main dispatcher this would
+			// otherwise relaunch itself without ever yielding to the teardown.
+			if (isLive(current) && current.lightsDropped.get()) redraw(current)
+		}
+	}
+
+	private fun isLive(current: Attempt) = attempt === current && current.receiving.get()
 
 	private fun overflow(current: Attempt) {
 		if (current.overflowing.compareAndSet(false, true)) scope.launch(main) {
@@ -220,6 +260,10 @@ internal class VirtualMidiConnection(
 		// Keep the reason readable immediately, but notify only after teardown finishes.
 		state = next
 		current.job?.cancel()
+	}
+
+	private companion object {
+		const val REDRAW_INTERVAL_MS = 1_000L
 	}
 
 	private fun publish(value: State, force: Boolean = false) {

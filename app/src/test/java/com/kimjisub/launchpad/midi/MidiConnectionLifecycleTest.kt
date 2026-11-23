@@ -454,6 +454,15 @@ class MidiConnectionLifecycleTest {
 		} finally { lease.close() }
 	}
 
+	@Test fun usbAttachCannotOpenWhileAComputerConnectionHoldsTheTransport() {
+		val lease = requireNotNull(MidiConnection.transportGate.acquirePeripheral())
+		try {
+			val (device, _) = launchpad(deviceId = 1)
+			attach(device)
+			verify(exactly = 0) { usbManager.openDevice(any()) }
+		} finally { lease.close() }
+	}
+
 	@Test fun pendingUsbMidiInitializationPreventsVirtualOpen() {
 		val (device, connection) = launchpad(deviceId = 1)
 		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo(device))

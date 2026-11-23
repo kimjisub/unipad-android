@@ -64,6 +64,10 @@ public class MidiFixtureService extends MidiDeviceService {
                 && current.isInputPortOpen(port));
         }
         result.putInt("pid", Process.myPid());
+        result.putInt("padPresses", MidiFixturePadActivity.PRESSES.get());
+        result.putInt("padReleases", MidiFixturePadActivity.RELEASES.get());
+        MidiFixturePadActivity pad = MidiFixturePadActivity.current;
+        result.putInt("padTask", pad != null ? pad.getTaskId() : -1);
         return result;
     }
 

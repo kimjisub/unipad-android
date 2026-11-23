@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">예외 오류 발생</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
+	<string name="midi_connect_title">MIDI 장치 연결</string>
 	<string name="import_unipack">유니팩 불러오기</string>
 	<string name="store">스토어</string>
 
@@ -378,4 +378,57 @@
     <string name="midi_help_crash_body">장치 연결을 풀고 앱 버전, 휴대폰이나 태블릿 모델, 운영체제, 종료된 단계를 기록해 주세요. 같은 종료를 반복할 필요는 없어요.</string>
     <string name="midi_source_auto">자동으로 알아봄</string>
     <string name="midi_source_manual">직접 고름 · 다시 꽂으면 자동으로 돌아가요</string>
+    <string name="midi_tab_usb">USB 장치</string>
+    <string name="midi_tab_apps">이 휴대폰의 앱</string>
+    <string name="midi_apps_search">다시 찾기</string>
+    <string name="midi_apps_searching">이 휴대폰의 MIDI 앱을 찾는 중…</string>
+    <string name="midi_apps_search_cancel">찾기 멈추기</string>
+    <string name="midi_apps_empty">MIDI 앱을 찾지 못했어요</string>
+    <string name="midi_apps_empty_detail">런치패드 에뮬레이터처럼 MIDI 장치를 제공하는 앱을 설치해 실행한 뒤 ‘다시 찾기’를 누르세요.</string>
+    <string name="midi_apps_list_failed">MIDI 장치 목록을 읽지 못했어요. ‘다시 찾기’를 누르세요.</string>
+    <string name="midi_apps_unavailable">이 휴대폰은 앱끼리의 MIDI 연결을 지원하지 않아요. USB 장치와 화면 연주는 그대로 쓸 수 있어요.</string>
+    <string name="midi_apps_device_ports">연주 포트 %1$d개 · 불빛 포트 %2$d개</string>
+    <string name="midi_apps_provider">제공 앱: %1$s</string>
+    <string name="midi_apps_missing">마지막 연결 · 현재 찾을 수 없음</string>
+    <string name="midi_apps_selected">선택됨</string>
+    <string name="midi_apps_connected_badge">연결됨</string>
+    <string name="midi_apps_pick_device">목록에서 앱의 장치를 고르세요.</string>
+    <string name="midi_apps_input_title">연주 입력</string>
+    <string name="midi_apps_input_direction">상대 앱 → UniPad</string>
+    <string name="midi_apps_lights_title">불빛 보내기</string>
+    <string name="midi_apps_lights_direction">UniPad → 상대 앱</string>
+    <string name="midi_apps_port">포트 %1$d · %2$s</string>
+    <string name="midi_apps_lights_off">사용 안 함</string>
+    <string name="midi_apps_lights_none">불빛 출력 없음 · 입력만 사용</string>
+    <string name="midi_apps_no_input">이 장치는 다른 앱에 패드 신호를 보내지 않아 이번에는 연결할 수 없어요.</string>
+    <string name="midi_apps_model">기종</string>
+    <string name="midi_apps_model_recommended">%1$s (추천)</string>
+    <string name="midi_apps_model_choose">기종 고르기</string>
+    <string name="midi_apps_model_unknown">UniPad가 이 장치의 패드 배치를 알 수 없어요. 패드 배치가 맞는 기종을 고르세요.</string>
+    <string name="midi_apps_connect">연결</string>
+    <string name="midi_apps_idle">연결 안 됨</string>
+    <string name="midi_apps_connecting">%1$s 연결 중…</string>
+    <string name="midi_apps_connect_cancel">연결 취소</string>
+    <string name="midi_apps_connected">%1$s · 연결됨</string>
+    <string name="midi_apps_status_input">연주 입력: 켜짐</string>
+    <string name="midi_apps_status_lights_on">불빛: 켜짐</string>
+    <string name="midi_apps_status_lights_off">불빛: 꺼짐</string>
+    <string name="midi_apps_disconnect">연결 해제</string>
+    <string name="midi_apps_retry">다시 연결</string>
+    <string name="midi_apps_lights_failed">연주 입력은 준비됐지만 불빛 포트를 열지 못했어요. 다른 앱이 쓰고 있을 수 있어요.</string>
+    <string name="midi_apps_without_lights">불빛 없이 연결</string>
+    <string name="midi_apps_failed">연결하지 못했어요</string>
+    <string name="midi_apps_failed_timeout">%1$s 연결이 10초 안에 열리지 않았어요.</string>
+    <string name="midi_apps_failed_unavailable">%1$s 장치를 열지 못했어요. 그 앱이 실행 중인지 확인하세요.</string>
+    <string name="midi_apps_failed_input">연주 입력 포트를 열지 못했어요. 다른 앱이 쓰고 있을 수 있어요.</string>
+    <string name="midi_apps_failed_usb">USB 장치가 연결되어 있어요. 분리한 뒤 다시 연결하세요.</string>
+    <string name="midi_apps_failed_port">고른 포트가 더 이상 없어요. 다시 찾은 뒤 다시 고르세요.</string>
+    <string name="midi_apps_lost">연결 끊김</string>
+    <string name="midi_apps_lost_detail">%1$s 연결이 끊겼어요. 그 앱을 열고 ‘다시 찾기’를 누른 뒤 다시 고르세요.</string>
+    <string name="midi_apps_usb_in_use">USB 장치가 연결되어 있어요. 이 휴대폰의 앱을 쓰려면 먼저 USB 장치를 분리하세요.</string>
+    <string name="midi_usb_virtual_active">이 휴대폰의 앱(%1$s)과 연결되어 있어요. USB 장치를 쓰려면 ‘이 휴대폰의 앱’에서 연결을 해제한 뒤 USB 장치를 다시 꽂으세요.</string>
+    <string name="midi_help_apps_play">이 휴대폰의 다른 앱으로 연주하려면?</string>
+    <string name="midi_help_apps_play_body">1. 런치패드 에뮬레이터 같은 상대 앱을 열어 실행해 두세요.\n2. 여기 ‘이 휴대폰의 앱’에서 그 장치를 고르고 포트와 기종을 확인한 뒤 ‘연결’을 누르세요.\n3. 두 앱을 분할 화면으로 나란히 띄우고(최근 앱 화면에서 앱 아이콘을 눌러 분할 화면 선택) UniPad에서 팩을 여세요.\n• UniPad 연주 화면이 보이는 동안에는 다른 창에서 누른 패드도 계속 연주돼요. 홈, 화면 잠금, 다른 전체 화면 앱에서는 소리가 멈춰요.\n• 분할 화면은 휴대폰과 상대 앱이 모두 지원해야 해요. 어느 한쪽이 지원하지 않으면 나란히 놓고 계속 연주할 수 없어요.</string>
+    <string name="midi_help_apps_missing">목록에 앱이 없어요</string>
+    <string name="midi_help_apps_missing_body">• 상대 앱을 먼저 여세요. 실행 중일 때만 MIDI 장치를 제공하는 앱도 있어요.\n• ‘다시 찾기’를 누르세요. UniPad는 요청할 때만 목록을 읽어요.\n• 블루투스·네트워크 MIDI 장치는 여기 나오지 않아요.</string>
 </resources>

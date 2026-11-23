@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<devices>
+    <device name="Peripheral port test peer" manufacturer="Test" product="Byte stream peer">
+        <input-port name="Presses" />
+        <input-port name="Stop test peer" />
+        <output-port name="Lights" />
+    </device>
+</devices>

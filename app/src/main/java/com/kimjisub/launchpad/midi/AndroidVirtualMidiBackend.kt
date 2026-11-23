@@ -8,8 +8,10 @@ import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiManager
 import android.media.midi.MidiReceiver
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Only virtual MIDI 1.0 devices; USB continues to use the existing USB host implementation. */
@@ -33,7 +35,7 @@ internal class AndroidVirtualMidiBackend(context: Context) : VirtualMidiBackend 
 		val info = service.devices.firstOrNull { it.id == id && it.type == MidiDeviceInfo.TYPE_VIRTUAL } ?: return null
 		return suspendCancellableCoroutine { continuation ->
 			service.openDevice(info, { device ->
-				val opened = device?.let { Device(it, service, handler) }
+				val opened = device?.let { Device(it, service) }
 				// Cancellation owns a late device, including cancellation during dispatch of resume.
 				continuation.resume(opened) { _, value, _ -> try { value?.close() } catch (_: Exception) { } }
 			}, handler)
@@ -49,13 +51,26 @@ internal class AndroidVirtualMidiBackend(context: Context) : VirtualMidiBackend 
 		return AutoCloseable { service.unregisterDeviceCallback(observer) }
 	}
 
-	private class Device(private val device: MidiDevice, private val manager: MidiManager, private val handler: Handler) : VirtualMidiBackend.Device {
+	private class Device(private val device: MidiDevice, private val manager: MidiManager) : VirtualMidiBackend.Device {
 		private var performancePort = -1
+		private var silentChecks = 0
 
-		// A static virtual device stays in the device list after its service dies. The public
-		// callback registration supplies its current port status; refresh only this connection's
-		// status, without discovering devices or reopening anything.
-		override suspend fun isAlive(): Boolean = suspendCancellableCoroutine { continuation ->
+		// A static virtual device stays in the device list after its service dies. Registering a
+		// callback replays the current port status of a device whose server is running; refresh
+		// only this connection's status, without discovering devices or reopening anything. A
+		// server that died keeps no status, and Android restarts the other app's service while
+		// this connection is still bound to it, so the device never reports a closed port: two
+		// silent checks in a row mean the device has closed.
+		override suspend fun isAlive(): Boolean? {
+			val alive = withTimeoutOrNull(STATUS_WAIT_MS) { currentStatus() }
+			if (alive != null) {
+				silentChecks = 0
+				return alive
+			}
+			return if (++silentChecks >= 2) false else null
+		}
+
+		private suspend fun currentStatus(): Boolean = suspendCancellableCoroutine { continuation ->
 			val completed = AtomicBoolean(false)
 			val observer = object : MidiManager.DeviceCallback() {
 				override fun onDeviceStatusChanged(status: MidiDeviceStatus) {
@@ -65,7 +80,7 @@ internal class AndroidVirtualMidiBackend(context: Context) : VirtualMidiBackend 
 					}
 				}
 			}
-			manager.registerDeviceCallback(observer, handler)
+			manager.registerDeviceCallback(observer, statusHandler)
 			continuation.invokeOnCancellation {
 				if (completed.compareAndSet(false, true)) {
 					try { manager.unregisterDeviceCallback(observer) } catch (_: RuntimeException) { }
@@ -92,5 +107,12 @@ internal class AndroidVirtualMidiBackend(context: Context) : VirtualMidiBackend 
 			}
 		}
 		override fun close() = device.close()
+	}
+
+	private companion object {
+		const val STATUS_WAIT_MS = 1_500L
+
+		// Status callbacks run on their own thread, so a busy main thread does not look like silence.
+		val statusHandler: Handler by lazy { Handler(HandlerThread("VirtualMidiStatus").apply { start() }.looper) }
 	}
 }

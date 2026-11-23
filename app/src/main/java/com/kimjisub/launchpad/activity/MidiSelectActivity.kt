@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,9 +37,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,8 +54,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -93,6 +100,8 @@ class MidiSelectActivity : BaseActivity() {
 	private val reflectedSwapSides = mutableStateOf(false)
 	private val connectedSessions = mutableStateOf<List<MidiConnection.SessionSummary>>(emptyList())
 	private val selectedSessionId = mutableStateOf<Int?>(null)
+	private val virtualDeviceName = mutableStateOf<String?>(null)
+	private val picker by lazy { VirtualMidiPicker.shared(this) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -105,6 +114,7 @@ class MidiSelectActivity : BaseActivity() {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				while (true) {
 					readConnectionState()
+					picker.refreshUsb()
 					// Pad input needs a quick sample; without a connection each read also lists the
 					// USB devices to spot one waiting for permission, which can wait longer.
 					delay(if (status.value.connected) 250 else 1000)
@@ -113,9 +123,38 @@ class MidiSelectActivity : BaseActivity() {
 		}
 		setContent {
 			UniPadTheme {
-				MidiSelectScreen(
+				var tab by rememberSaveable { mutableIntStateOf(TAB_USB) }
+				val barsAndCutout = WindowInsets.barsAndCutout
+				Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+					PrimaryTabRow(
+						selectedTabIndex = tab,
+						containerColor = MaterialTheme.colorScheme.background,
+						modifier = Modifier.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
+					) {
+						Tab(selected = tab == TAB_USB, onClick = { tab = TAB_USB }, modifier = Modifier.testTag("midiTabUsb"),
+							text = { Text(stringResource(R.string.midi_tab_usb)) })
+						Tab(selected = tab == TAB_APPS, onClick = { tab = TAB_APPS }, modifier = Modifier.testTag("midiTabApps"),
+							text = { Text(stringResource(R.string.midi_tab_apps)) })
+					}
+					Box(Modifier.weight(1f).fillMaxWidth()) {
+						if (tab == TAB_APPS) {
+							// Opening the tab reads the list once; it never connects or changes a connection.
+							LaunchedEffect(Unit) { picker.open() }
+							val appUi by picker.ui.collectAsState()
+							Box(Modifier.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal))) {
+								MidiAppTab(
+									ui = appUi,
+									modelNames = midiDevices.map { stringResource(it.nameResId) },
+									providerName = ::providerName,
+									actions = picker,
+									onBrowse = { browse(it) },
+									bottomPadding = barsAndCutout.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding(),
+								)
+							}
+						} else MidiSelectScreen(
 					status = status.value,
-					onAllow = { MidiConnection.requestUsbPermission(this, status.value.sessionId) },
+					virtualDeviceName = virtualDeviceName.value,
+					onAllow = { MidiConnection.requestUsbPermission(this@MidiSelectActivity, status.value.sessionId) },
 					onBrowse = { browse(it) },
 					selectedIndex = selectedIndex.intValue,
 					dualPadModeEnabled = dualPadModeEnabled.value,
@@ -155,9 +194,16 @@ class MidiSelectActivity : BaseActivity() {
 					},
 					onClose = { finish() },
 				)
+					}
+				}
 			}
 		}
 	}
+
+	// The app offering a virtual device, by its label when this app may see it.
+	private fun providerName(packageName: String): String = try {
+		packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0)).toString()
+	} catch (_: Exception) { packageName }
 
 
 	override fun onSaveInstanceState(outState: Bundle) {
@@ -181,6 +227,7 @@ class MidiSelectActivity : BaseActivity() {
 		dualPadModeEnabled.value = MidiConnection.dualPadModeEnabled
 		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
 		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
+		virtualDeviceName.value = if (MidiConnection.virtualTransportAttached) MidiConnection.connectedDevice?.name.orEmpty() else null
 		updateSelectedIndexForTarget()
 		status.value = if (target == previousTarget) previousStatus else MidiConnection.connectionStatus(target, usbManager)
 	}
@@ -224,6 +271,14 @@ internal fun midiModelIndexForTarget(
 internal fun midiDriverForPick(index: Int, current: DriverRef?): DriverRef =
 	current?.takeIf { it::class == midiDevices[index].driverClass } ?: midiDevices[index].createDriver()
 
+private const val TAB_USB = 0
+private const val TAB_APPS = 1
+
+internal fun midiModelIndex(driverClass: KClass<out DriverRef>): Int? =
+	midiDevices.indexOfFirst { it.driverClass == driverClass }.takeIf { it >= 0 }
+
+internal fun midiModelDriver(index: Int): DriverRef = midiDevices[index].createDriver()
+
 private data class MidiDeviceData(
 	val iconResId: Int,
 	val nameResId: Int,
@@ -249,6 +304,7 @@ private val midiDevices = listOf(
 @Composable
 internal fun MidiSelectScreen(
 	status: MidiConnectionStatus,
+	virtualDeviceName: String?,
 	onAllow: () -> Unit,
 	onBrowse: (String) -> Unit,
 	selectedIndex: Int,
@@ -301,6 +357,10 @@ internal fun MidiSelectScreen(
 			) {
 
 				MidiStatusPanel(status, onAllow)
+				virtualDeviceName?.let {
+					Text(stringResource(R.string.midi_usb_virtual_active, it), color = MaterialTheme.colorScheme.tertiary,
+						style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp).semantics { traversalIndex = 0.5f })
+				}
 				androidx.compose.material3.TextButton(
 					onClick = toggleHelp,
 					modifier = Modifier.semantics {
@@ -520,12 +580,15 @@ private fun DeviceCard(
 		label = "backgroundColor",
 	)
 
+	val name = stringResource(device.nameResId)
 	Column(
 		modifier = Modifier
 			.clip(RoundedCornerShape(12.dp))
 			.background(backgroundColor)
 			.border(2.dp, borderColor, RoundedCornerShape(12.dp))
 			.clickable { onClick() }
+			// Named on the card itself: a card cut off at the screen's edge keeps its name for screen readers.
+			.semantics { contentDescription = name }
 			.padding(12.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center,
@@ -537,7 +600,7 @@ private fun DeviceCard(
 		)
 		Spacer(modifier = Modifier.height(6.dp))
 		Text(
-			text = stringResource(device.nameResId),
+			text = name,
 			color = MaterialTheme.colorScheme.onSurface,
 			fontSize = 11.sp,
 			textAlign = TextAlign.Center,

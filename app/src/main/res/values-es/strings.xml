@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Ocurrió una Excepción</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Reconectar Launchpad</string>
+	<string name="midi_connect_title">Conectar dispositivo MIDI</string>
 	<string name="import_unipack">Importar UniPack</string>
 	<string name="store">Tienda</string>
 
@@ -311,4 +311,6 @@
 	<string name="autoPlayRestoreApply">Restaurar</string>
 	<string name="autoPlayRestored">Reproducción anterior restaurada. Puedes volver a intercambiarlas desde el menú.</string>
 	<string name="autoPlayRestoreFailed">No se pudo restaurar. La reproducción actual y la copia no han cambiado.</string>
+    <string name="midi_tab_usb">Dispositivos USB</string>
+    <string name="midi_tab_apps">Apps de este teléfono</string>
 </resources>
