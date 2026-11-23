@@ -165,6 +165,26 @@ class FeatureScreen {
     }
     /** Whether [selector] is on screen now; unlike [UiDevice.hasObject] it waits at most 0.5 s for idle and reads a fresh tree. */
     fun has(selector: BySelector): Boolean = freshNode(selector) != null
+    /**
+     * Opening an app from a tablet's launcher can show the launcher's first-use taskbar tip (Pixel
+     * launcher: "Slow-swipe up to show the Taskbar") over it. The tip holds input focus until it is
+     * dismissed, so the app's window cannot become ready behind it. Back goes to the focused tip and
+     * closes it without reaching the app. Phones have no taskbar and are not waited on.
+     */
+    fun closeTaskbarTip(launcher: String) {
+        if (context.resources.configuration.smallestScreenWidthDp < 600) return
+        val tip = By.res(launcher, "taskbar_edu_title")
+        val deadline = SystemClock.elapsedRealtime() + 3000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            if (freshNode(tip) != null) {
+                capture("launcher-taskbar-tip-${SystemClock.uptimeMillis()}")
+                device.pressBack()
+                await("The launcher's taskbar tip did not close on Back") { freshNode(tip) == null }
+                return
+            }
+            SystemClock.sleep(50)
+        }
+    }
     fun clickText(id: Int) = click(By.text(text(id)))
     /**
      * On the skin screen, selecting the applied skin [applied] must not offer Apply. Tapping the skin

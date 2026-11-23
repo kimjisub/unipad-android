@@ -1,6 +1,10 @@
 package com.kimjisub.launchpad
 
+import android.content.Context
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.SystemClock
+import android.view.Surface
 import androidx.test.uiautomator.UiDevice
 
 /** Device-wide display overrides, restored only after their window configuration has settled. */
@@ -33,6 +37,37 @@ internal object DisplaySettings {
             sizeOverride, densityOverride, rotation,
         )
     }
+
+    /**
+     * From Android 16, a display at least 600dp wide ignores the orientation an app targeting
+     * API 36 or later requests, so such a test has to turn the display itself.
+     */
+    fun ignoresOrientationRequests(context: Context): Boolean =
+        Build.VERSION.SDK_INT >= 36 && context.applicationInfo.targetSdkVersion >= 36 &&
+            context.resources.configuration.smallestScreenWidthDp >= 600
+
+    /** The display rotation that shows [orientation], an [ActivityInfo] screen orientation, on this display. */
+    fun rotationShowing(device: UiDevice, orientation: Int): Int {
+        val (width, height) = read(device).size
+        val naturallyLandscape = width > height
+        return when (orientation) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE ->
+                if (naturallyLandscape) Surface.ROTATION_0 else Surface.ROTATION_90
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE ->
+                if (naturallyLandscape) Surface.ROTATION_180 else Surface.ROTATION_270
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT ->
+                if (naturallyLandscape) Surface.ROTATION_270 else Surface.ROTATION_0
+            else -> throw IllegalArgumentException("No single display rotation shows orientation $orientation")
+        }
+    }
+
+    /**
+     * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
+     * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
+     * portrait and shows the landscape app in a small letterboxed window.
+     */
+    fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
+        with(device, size, density, Surface.ROTATION_90, block)
 
     /** The display transition encloses overlay changes, so neither apply nor restore races them. */
     fun <T> with(

@@ -28,25 +28,22 @@ class AppUpdateWrappingTest : BaseUITest() {
     @get:Rule val compose = createEmptyComposeRule()
     @get:Rule val errors = ErrorCollector()
 
-    @Test fun englishSmallLarge() = checkWrapping("en", "720x1440", 320, 2f)
-    @Test fun koreanSmallLarge() = checkWrapping("ko", "720x1440", 320, 2f)
-    @Test fun englishDefault() = checkWrapping("en", "1080x2400", 420, 1f)
-    @Test fun koreanDefault() = checkWrapping("ko", "1080x2400", 420, 1f)
-    @Test fun englishLarge() = checkWrapping("en", "1080x2400", 420, 2f)
-    @Test fun koreanLarge() = checkWrapping("ko", "1080x2400", 420, 2f)
+    @Test fun englishSmallLarge() = checkWrapping("en", 720 to 1440, 320, 2f)
+    @Test fun koreanSmallLarge() = checkWrapping("ko", 720 to 1440, 320, 2f)
+    @Test fun englishDefault() = checkWrapping("en", 1080 to 2400, 420, 1f)
+    @Test fun koreanDefault() = checkWrapping("ko", 1080 to 2400, 420, 1f)
+    @Test fun englishLarge() = checkWrapping("en", 1080 to 2400, 420, 2f)
+    @Test fun koreanLarge() = checkWrapping("ko", 1080 to 2400, 420, 2f)
 
-    private fun checkWrapping(language: String, size: String, density: Int, scale: Float) {
+    private fun checkWrapping(language: String, size: Pair<Int, Int>, density: Int, scale: Float) =
+        DisplaySettings.withPhoneDisplay(device, size, density) { checkWrappingOnDisplay(language, size, density, scale) }
+
+    private fun checkWrappingOnDisplay(language: String, size: Pair<Int, Int>, density: Int, scale: Float) {
         val oldLanguage = AppLanguage.get()
         val oldScale = device.executeShellCommand("settings get system font_scale").trim()
-        fun overrideValue(command: String) = device.executeShellCommand(command).lineSequence()
-            .firstOrNull { it.startsWith("Override") }?.substringAfter(":")?.trim() ?: "reset"
-        val oldSize = overrideValue("wm size")
-        val oldDensity = overrideValue("wm density")
         val source = ControlledSource()
-        val prefix = "update_wrap_${language}_${size}_${density}_${scale}"
+        val prefix = "update_wrap_${language}_${size.first}x${size.second}_${density}_${scale}"
         try {
-            device.executeShellCommand("wm size $size")
-            device.executeShellCommand("wm density $density")
             device.executeShellCommand("settings put system font_scale $scale")
             AppLanguage.set(language)
             PreferenceAppUpdateStore(context).apply {
@@ -93,8 +90,6 @@ class AppUpdateWrappingTest : BaseUITest() {
             }
         } finally {
             MainActivity.appUpdateSourceForTest = null
-            device.executeShellCommand("wm size $oldSize")
-            device.executeShellCommand("wm density $oldDensity")
             device.executeShellCommand(if (oldScale == "null") "settings delete system font_scale" else "settings put system font_scale $oldScale")
             AppLanguage.set(oldLanguage)
         }

@@ -183,6 +183,7 @@ class AutoMappingDeviceTest : BaseUITest() {
             val icon = screen.node(selector)
             takeScreenshot("automapping_launcher_icon")
             icon.click()
+            screen.closeTaskbarTip(launcherPackage)
             screen.awaitActivity(MainActivity::class.java)
             takeScreenshot("automapping_list_after_launcher_return")
             assertTrue("The pack list must cover the same PlayActivity", screen.onMain {
@@ -218,6 +219,7 @@ class AutoMappingDeviceTest : BaseUITest() {
         takeScreenshot("automapping_before_lock")
         val activity = screen.resumed()
         val orientation = screen.onMain { activity.requestedOrientation }
+        var userRotation: String? = null
         try {
             device.sleep()
             assertTrue("Lock did not hide the play screen", waitUntil(10_000L) {
@@ -239,10 +241,12 @@ class AutoMappingDeviceTest : BaseUITest() {
             })
             takeScreenshot("automapping_after_unlock")
             val rotation = device.displayRotation
-            screen.onMain {
-                activity.requestedOrientation = if (rotation == Surface.ROTATION_270)
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+            val requested = if (rotation == Surface.ROTATION_270) ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+            screen.onMain { activity.requestedOrientation = requested }
+            if (DisplaySettings.ignoresOrientationRequests(context)) {
+                userRotation = device.executeShellCommand("wm user-rotation").trim()
+                device.executeShellCommand("wm user-rotation lock ${DisplaySettings.rotationShowing(device, requested)}")
             }
             assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
                 device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
@@ -260,6 +264,7 @@ class AutoMappingDeviceTest : BaseUITest() {
         } finally {
             device.wakeUp()
             device.executeShellCommand("wm dismiss-keyguard")
+            userRotation?.let { device.executeShellCommand("wm user-rotation $it") }
             screen.onMain { activity.requestedOrientation = orientation }
         }
     }
