@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.ActivityReadiness
+import com.kimjisub.launchpad.LegacyStorage
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
@@ -30,6 +31,7 @@ class LibraryAndFileTest {
     @After fun tearDown() { screen.close() }
 
     @Test fun launcherEmptyLibrarySettingsThenPopulatedLibrary() {
+        LegacyStorage.grant(screen.context)
         val launch = screen.context.packageManager.getLaunchIntentForPackage(screen.context.packageName)!!
         launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
         screen.context.startActivity(launch)
