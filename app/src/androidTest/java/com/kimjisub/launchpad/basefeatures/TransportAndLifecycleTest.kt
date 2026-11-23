@@ -98,10 +98,12 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
             runner.progressOffset(41 - runner.progress)
             runner.playmode = true
         }
-        // Save the same post-seek screen even on the base code, before asserting the new hint.
+        // The new hint lasts only the 700 ms until its pad is due, and a screenshot can take longer,
+        // so read it first. The post-seek screen is still saved before the assertion, even on failure.
         SystemClock.sleep(150)
+        val hinted = hintedPad()
         screen.capture("seek-moved-guide")
-        assertEquals("Seeking must guide the pad at the new position", 1, hintedPad())
+        assertEquals("Seeking must guide the pad at the new position", 1, hinted)
     }
 
     @Test fun manualChainSelectionKeepsItsChainAfterAWormholePad() {

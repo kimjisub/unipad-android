@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.os.Build
 import android.os.SystemClock
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.UpdateStatus
 import org.junit.Assert.assertEquals
@@ -29,6 +30,8 @@ class MainScreenReaderOrderTest : BaseUITest() {
         val source = ControlledSource()
         try {
             AppLanguage.set(language)
+            // The expected row name has no bookmark; a saved row from an earlier test may carry one.
+            AppDatabase.getInstance(context).unipackDAO().delete(TestUniPack.FOLDER_NAME)
             resetUpdatePrompts()
             MainActivity.appUpdateSourceForTest = { source }
             launchToMainScreen()
