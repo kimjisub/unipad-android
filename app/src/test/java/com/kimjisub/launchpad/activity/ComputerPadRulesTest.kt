@@ -18,7 +18,7 @@ class ComputerPadRulesTest {
 	private val base = ComputerPadRules.Inputs(
 		midiSupported = true, state = State.Idle, devices = listOf(device), discoveryFailure = null,
 		portsClosing = false, lightsRequested = true, withoutLights = false, paused = false,
-		dismissedAttempt = null, lastLightNanos = null, nowNanos = 10_000_000_000L,
+		dismissedAttempt = null, lightsRecent = false,
 	)
 	private fun phase(change: ComputerPadRules.Inputs.() -> ComputerPadRules.Inputs = { this }) = ComputerPadRules.phase(base.change())
 
@@ -39,13 +39,13 @@ class ComputerPadRulesTest {
 	}
 
 	@Test fun anOpenPortIsNotReportedAsReceivedUntilAValidLightArrivesAndOnlyForThreeSeconds() {
-		val now = base.nowNanos
+		val now = 10_000_000_000L
 		assertEquals(ComputerPadPhase.Open(4, ComputerPadPhase.Lights.NO_SIGNAL_YET), phase { copy(state = State.Open(true, 4)) })
-		assertEquals(ComputerPadPhase.Open(4, ComputerPadPhase.Lights.RECENT),
-			phase { copy(state = State.Open(true, 4), lastLightNanos = now - 2_999_000_000L) })
+		assertEquals(ComputerPadPhase.Open(4, ComputerPadPhase.Lights.RECENT), phase { copy(state = State.Open(true, 4), lightsRecent = true) })
+		assertFalse(ComputerPadRules.recent(null, now))
+		assertTrue(ComputerPadRules.recent(now - 2_999_000_000L, now))
 		// A quiet computer is not a lost one: the port stays open, only the recent label goes.
-		assertEquals(ComputerPadPhase.Open(4, ComputerPadPhase.Lights.NO_SIGNAL_YET),
-			phase { copy(state = State.Open(true, 4), lastLightNanos = now - 3_000_000_000L) })
+		assertFalse(ComputerPadRules.recent(now - 3_000_000_000L, now))
 	}
 
 	@Test fun onlyTheLightsPortFailingAsksBeforeUseAndCanContinueWithoutLights() {

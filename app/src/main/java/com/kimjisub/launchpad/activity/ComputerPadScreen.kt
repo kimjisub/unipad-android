@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.activity
 
+import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,13 +39,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -71,6 +71,7 @@ import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.LaunchpadPadGrid
 import com.kimjisub.launchpad.ui.compose.PadGridGeometry
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 internal object ComputerPadTags {
@@ -88,6 +89,8 @@ private val Good = Color(0xFF4CD9A0)
 private val Warning = Color(0xFFFFA24E)
 private val MinButton = 48.dp
 private val MinPad = 32.dp
+/** About one display frame; the lights are state, so a burst between two polls shows its final colors. */
+private const val LIGHT_POLL_MS = 16L
 
 @Composable
 internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> Unit) {
@@ -101,7 +104,10 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 	var showHelp by remember { mutableStateOf(false) }
 
 	LaunchedEffect(Unit) {
-		while (isActive) withFrameNanos { controller.pollLights() }
+		while (isActive) {
+			controller.pollLights()
+			delay(LIGHT_POLL_MS)
+		}
 	}
 
 	BoxWithConstraints(
@@ -109,7 +115,7 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 			.fillMaxSize()
 			.background(ScreenBg)
 			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Vertical))
-			.padding(16.dp),
+			.padding(8.dp),
 	) {
 		val landscape = maxWidth >= maxHeight
 		val gridSide = if (landscape) minOf(maxHeight, maxWidth * 0.6f) else minOf(maxWidth, maxHeight * 0.6f)
@@ -118,7 +124,7 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 		val generation = (phase as? ComputerPadPhase.Open)?.generation?.takeIf { !tooSmall }
 		LaunchedEffect(generation) { controller.input.accept(generation) }
 		val panel: @Composable (Modifier) -> Unit = { modifier ->
-			Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+			Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
 				Header(phase, onBack)
 				PhaseContent(phase, controller, onBack = onBack, onHelp = { showHelp = true })
 			}
@@ -202,9 +208,9 @@ internal fun failureText(failure: Failure): Int = when (failure) {
 
 @Composable
 private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: ComputerPadController, onBack: () -> Unit, onHelp: () -> Unit) {
-	val context = LocalContext.current
+	val resources = LocalResources.current
 	val portName: (PeripheralDevice.Port) -> String = { port ->
-		port.name.ifBlank { context.getString(R.string.computer_pad_port_number, port.number + 1) }
+		port.name.ifBlank { resources.getString(R.string.computer_pad_port_number, port.number + 1) }
 	}
 	when (phase) {
 		ComputerPadPhase.Unsupported -> {
@@ -322,7 +328,7 @@ private fun Choices(devices: List<PeripheralDevice>, controller: ComputerPadCont
 
 @Composable
 private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, side: Dp, tooSmall: Boolean) {
-	val context = LocalContext.current
+	val resources = LocalResources.current
 	val open = phase is ComputerPadPhase.Open
 	val active = open && !tooSmall
 	val pressAction = stringResource(R.string.computer_pad_press_action)
@@ -359,7 +365,7 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 				},
 			cellSemantics = { index ->
 				{
-					contentDescription = cellDescription(context, index, controller.colors[index].takeIf { open } ?: 0)
+					contentDescription = cellDescription(resources, index, controller.colors[index].takeIf { open } ?: 0)
 					role = Role.Button
 					if (controller.pressed[index]) stateDescription = pressedState
 					if (active) onClick(label = pressAction) { controller.input.click(index); true } else disabled()
@@ -381,13 +387,13 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 }
 
 /** Row, column, number and light for the screen reader; color is never the only signal. */
-internal fun cellDescription(context: android.content.Context, index: Int, color: Int): String {
-	val light = if (color == 0) context.getString(R.string.computer_pad_light_off) else context.getString(R.string.computer_pad_light_on, color)
+internal fun cellDescription(resources: Resources, index: Int, color: Int): String {
+	val light = if (color == 0) resources.getString(R.string.computer_pad_light_off) else resources.getString(R.string.computer_pad_light_on, color)
 	val number = Mk2Layout.address(index)!!.number
 	return when {
-		index < 64 -> context.getString(R.string.computer_pad_cell_pad, index / 8 + 1, index % 8 + 1, number, light)
-		index < 72 -> context.getString(R.string.computer_pad_cell_top, index - 64 + 1, number, light)
-		else -> context.getString(R.string.computer_pad_cell_right, index - 72 + 1, number, light)
+		index < 64 -> resources.getString(R.string.computer_pad_cell_pad, index / 8 + 1, index % 8 + 1, number, light)
+		index < 72 -> resources.getString(R.string.computer_pad_cell_top, index - 64 + 1, number, light)
+		else -> resources.getString(R.string.computer_pad_cell_right, index - 72 + 1, number, light)
 	}
 }
 
@@ -397,7 +403,7 @@ private fun InfoCard(title: String, direction: String?, detail: String?) {
 		Modifier
 			.fillMaxWidth()
 			.background(CardBg, RoundedCornerShape(10.dp))
-			.padding(horizontal = 12.dp, vertical = 8.dp)
+			.padding(horizontal = 12.dp, vertical = 6.dp)
 			.semantics(mergeDescendants = true) {},
 	) {
 		Text(title, color = TextPrimary, fontSize = 14.sp)

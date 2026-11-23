@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -94,7 +93,8 @@ internal class ComputerPadController(
 	private var withoutLights by mutableStateOf(false)
 	private var paused by mutableStateOf(false)
 	private var dismissedAttempt by mutableStateOf<Long?>(null)
-	var now by mutableLongStateOf(clock())
+	/** Written only when it changes, so an idle screen does not recompose. */
+	var lightsRecent by mutableStateOf(false)
 		private set
 
 	val input = ComputerPadInput(connection::send) { index, down -> pressed[index] = down }
@@ -110,8 +110,7 @@ internal class ComputerPadController(
 			withoutLights = withoutLights,
 			paused = paused,
 			dismissedAttempt = dismissedAttempt,
-			lastLightNanos = connection.lights.lastSignalNanos,
-			nowNanos = now,
+			lightsRecent = lightsRecent,
 		),
 	)
 
@@ -131,6 +130,10 @@ internal class ComputerPadController(
 	fun connect(devices: List<PeripheralDevice>, names: (PeripheralDevice.Port) -> String) {
 		val (device, press, light) = selection(devices) ?: return
 		press ?: return
+		// Remembered so that connecting again after leaving uses the same choice.
+		deviceId = device.id
+		pressPort = press.number
+		if (light != null) lightPort = light.number
 		acknowledge()
 		withoutLights = false
 		lightsRequested = light != null
@@ -159,10 +162,11 @@ internal class ComputerPadController(
 		}
 	}
 
-	/** Called every frame while the screen is drawn: only changed lights are copied. */
+	/** Called often while the screen is shown: copies only changed lights and a changed recent flag. */
 	fun pollLights() {
-		for ((index, color) in connection.lights.drainChanges()) colors[index] = color
-		now = clock()
+		for ((index, color) in connection.lights.drainChanges()) if (colors[index] != color) colors[index] = color
+		val recent = ComputerPadRules.recent(connection.lights.lastSignalNanos, clock())
+		if (recent != lightsRecent) lightsRecent = recent
 	}
 
 	private fun acknowledge() {

@@ -34,7 +34,7 @@ object PadGridGeometry {
 	const val CELLS = 9
 	const val SIZE = 80
 	/** Share of a cell's pitch left as the gap around the drawn pad. */
-	const val GAP_FRACTION = 0.1f
+	const val GAP_FRACTION = 0.08f
 
 	fun index(row: Int, column: Int): Int? = when {
 		row !in 0 until CELLS || column !in 0 until CELLS -> null

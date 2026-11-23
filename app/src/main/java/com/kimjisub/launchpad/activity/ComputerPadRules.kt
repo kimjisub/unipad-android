@@ -44,8 +44,8 @@ internal object ComputerPadRules {
 		val withoutLights: Boolean,
 		val paused: Boolean,
 		val dismissedAttempt: Long?,
-		val lastLightNanos: Long?,
-		val nowNanos: Long,
+		/** A valid light arrived within [RECENT_LIGHT_NANOS]; see [recent]. */
+		val lightsRecent: Boolean,
 	)
 
 	fun phase(inputs: Inputs): ComputerPadPhase = with(inputs) {
@@ -55,7 +55,7 @@ internal object ComputerPadRules {
 			State.Closing -> return ComputerPadPhase.Closing
 			is State.Open -> return when {
 				!state.lightsAvailable && lightsRequested && !withoutLights -> ComputerPadPhase.LightsUnavailable
-				else -> ComputerPadPhase.Open(state.generation, lights(state.lightsAvailable, lastLightNanos, nowNanos))
+				else -> ComputerPadPhase.Open(state.generation, lights(state.lightsAvailable, lightsRecent))
 			}
 			else -> Unit
 		}
@@ -65,9 +65,12 @@ internal object ComputerPadRules {
 		return ComputerPadPhase.Ready(devices, portsClosing)
 	}
 
-	fun lights(available: Boolean, lastLightNanos: Long?, nowNanos: Long): ComputerPadPhase.Lights = when {
+	fun recent(lastLightNanos: Long?, nowNanos: Long): Boolean =
+		lastLightNanos != null && nowNanos - lastLightNanos < RECENT_LIGHT_NANOS
+
+	fun lights(available: Boolean, recent: Boolean): ComputerPadPhase.Lights = when {
 		!available -> ComputerPadPhase.Lights.NOT_RECEIVING
-		lastLightNanos != null && nowNanos - lastLightNanos < RECENT_LIGHT_NANOS -> ComputerPadPhase.Lights.RECENT
+		recent -> ComputerPadPhase.Lights.RECENT
 		else -> ComputerPadPhase.Lights.NO_SIGNAL_YET
 	}
 
