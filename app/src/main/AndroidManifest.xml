@@ -5,7 +5,7 @@
 	<uses-feature
 		android:name="android.hardware.usb.host"
 		android:required="false" />
-	<!-- Another app on this phone can offer a MIDI device; phones without the MIDI service still install. -->
+	<!-- Checked at runtime by the computer pad and the phone-app connection; phones without MIDI still install. -->
 	<uses-feature
 		android:name="android.software.midi"
 		android:required="false" />
@@ -114,6 +114,12 @@
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
+		<activity
+			android:name=".activity.ComputerPadActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|density|layoutDirection|colorMode|fontWeightAdjustment|grammaticalGender"
+			android:exported="false"
+			android:resizeableActivity="true"
+			android:theme="@style/SettingTheme" />
 		<activity
 			android:name=".activity.SettingsActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"

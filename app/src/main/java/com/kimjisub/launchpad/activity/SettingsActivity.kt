@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.ui.compose.resizeVerticalScroll
 import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.barsAndCutout
@@ -141,6 +142,9 @@ class SettingsActivity : AppCompatActivity() {
 						browse(url, action)
 					},
 					onReconnectClick = { start<MidiSelectActivity>() },
+					onComputerPadClick = if (BuildConfig.COMPUTER_PAD_ENTRY) {
+						{ start<ComputerPadActivity>() }
+					} else null,
 					onTransferClick = { sourcePath ->
 						startActivity(Intent(this@SettingsActivity, TransferActivity::class.java).apply {
 							putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
@@ -249,6 +253,7 @@ private fun SettingsScreen(
 	onCommunityItemClick: (action: String, url: String) -> Unit,
 	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
+	onComputerPadClick: (() -> Unit)? = null,
 	onTransferClick: (sourcePath: String) -> Unit = {},
 	onBackupClick: () -> Unit = {},
 	onRestoreClick: () -> Unit = {},
@@ -289,6 +294,7 @@ private fun SettingsScreen(
 					onCommunityItemClick = onCommunityItemClick,
 					onLanguageClick = onLanguageClick,
 					onReconnectClick = onReconnectClick,
+					onComputerPadClick = onComputerPadClick,
 					traceLogClassic = traceLogClassic,
 					onTraceLogClassicChange = {
 						prefManager.traceLogClassic = it
@@ -503,6 +509,7 @@ private fun InfoContent(
 	onCommunityItemClick: (action: String, url: String) -> Unit,
 	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
+	onComputerPadClick: (() -> Unit)? = null,
 	traceLogClassic: Boolean = true,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
 	slideMode: Boolean = false,
@@ -525,6 +532,14 @@ private fun InfoContent(
 				title = stringResource(R.string.midi_connect_title),
 				onClick = onReconnectClick,
 			)
+			if (onComputerPadClick != null) {
+				CardDivider()
+				SettingsRow(
+					title = stringResource(R.string.computer_pad_title),
+					subtitle = stringResource(R.string.computer_pad_entry_desc),
+					onClick = onComputerPadClick,
+				)
+			}
 		}
 
 		Spacer(Modifier.height(24.dp))

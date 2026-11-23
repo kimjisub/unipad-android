@@ -62,6 +62,8 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig = signingConfigs.release
 			debuggable = false
+			// The computer MIDI pad entry in Settings; this one value shows or hides it.
+			buildConfigField "boolean", "COMPUTER_PAD_ENTRY", "false"
 			// Ship native debug symbols inside the bundle so Play vitals can resolve
 			// liboboe / libunipad_audio frames (#37).
 			ndk {
@@ -93,6 +95,7 @@ android {
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
 			debuggable = true
+			buildConfigField "boolean", "COMPUTER_PAD_ENTRY", "true"
 
 			minifyEnabled = false
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

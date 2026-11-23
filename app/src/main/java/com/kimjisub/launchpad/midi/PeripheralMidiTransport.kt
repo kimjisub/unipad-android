@@ -10,6 +10,7 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 /** Lifecycle and ordered raw bytes; no layout, palette, pointers or byte-stream parser. */
 internal class PeripheralMidiTransport(
@@ -28,6 +29,11 @@ internal class PeripheralMidiTransport(
     val devices = mutableDevices.asStateFlow()
     private val mutableDiscoveryFailure = MutableStateFlow<Failure?>(null)
     val discoveryFailure = mutableDiscoveryFailure.asStateFlow()
+    private val mutablePortsClosing = MutableStateFlow(false)
+    /** Ports of an ended session still closing; the same endpoint cannot be opened again until they are. */
+    val portsClosing = mutablePortsClosing.asStateFlow()
+    private var closingSessions = 0
+    private val failures = AtomicLong()
     private var generation = 0L
     private var current: Session? = null
     private var closed = false
@@ -46,21 +52,13 @@ internal class PeripheralMidiTransport(
         var ending = false
     }
 
-    init {
-        io.execute {
-            try {
-                val registered = access.watch(::refresh) { id ->
-                    synchronized(lock) { current?.takeIf { it.id == id } }?.let { end(it, State.Failed(Failure.REMOVED)) }
-                }
-                synchronized(lock) { if (closed) safelyClose(registered) else watcher = registered }
-                refresh()
-            } catch (_: Exception) { mutableDiscoveryFailure.value = Failure.UNAVAILABLE }
-        }
-    }
+    init { refresh() }
 
     /**
      * Enumeration errors are separate from an already open session. A change reported while a read
      * is running may not be in that read, so it is followed by one more read instead of being dropped.
+     * Without the device-change callback a removed endpoint would go unnoticed, so each read first
+     * registers it again if an earlier registration failed, and does not list devices while it cannot.
      */
     fun refresh() {
         synchronized(lock) {
@@ -70,6 +68,10 @@ internal class PeripheralMidiTransport(
             io.execute {
                 do {
                     synchronized(lock) { refreshAgain = false }
+                    if (!watching()) {
+                        synchronized(lock) { if (!closed) { mutableDevices.value = emptyList(); mutableDiscoveryFailure.value = Failure.UNAVAILABLE } }
+                        continue
+                    }
                     try {
                         val found = access.devices()
                         synchronized(lock) { if (!closed) { mutableDevices.value = found; mutableDiscoveryFailure.value = null } }
@@ -81,23 +83,38 @@ internal class PeripheralMidiTransport(
         }
     }
 
+    private fun watching(): Boolean {
+        if (synchronized(lock) { closed || watcher != null }) return true
+        return try {
+            val registered = access.watch(::refresh) { id ->
+                synchronized(lock) { current?.takeIf { it.id == id } }?.let { end(it, failed(Failure.REMOVED)) }
+            }
+            synchronized(lock) { if (closed) safelyClose(registered) else watcher = registered }
+            true
+        } catch (_: Exception) { false }
+    }
+
+    /** Every failure is a distinct value, so a repeated failure is still delivered to the screen. */
+    private fun failed(reason: Failure) = State.Failed(reason, failures.incrementAndGet())
+
+    /** Ignored while a connection exists or an ended session's ports are still closing. */
     fun connect(device: PeripheralDevice, inputPort: Int, outputPort: Int?) {
         synchronized(lock) {
-            if (closed || current != null) return
-            if (device.inputs.none { it.number == inputPort }) { mutableState.value = State.Failed(Failure.INPUT_PORT); return }
+            if (closed || current != null || closingSessions > 0) return
+            if (device.inputs.none { it.number == inputPort }) { mutableState.value = failed(Failure.INPUT_PORT); return }
             if (outputPort != null && device.outputs.none { it.number == outputPort }) {
-                mutableState.value = State.Failed(Failure.OUTPUT_PORT)
+                mutableState.value = failed(Failure.OUTPUT_PORT)
                 return
             }
             val lease = gate.acquirePeripheral()
-            if (lease == null) { mutableState.value = State.Failed(Failure.BUSY); return }
+            if (lease == null) { mutableState.value = failed(Failure.BUSY); return }
             val session = Session(++generation, device.id, lease, newRules())
             current = session
             session.rules.clearReceived()
             mutableState.value = State.Connecting
             // cancel() cannot stop a timer that already started, so it checks whether the open finished first.
             session.timeout = timer.schedule({
-                synchronized(lock) { if (session.device == null) end(session, State.Failed(Failure.TIMEOUT)) }
+                synchronized(lock) { if (session.device == null) end(session, failed(Failure.TIMEOUT)) }
             }, 10, TimeUnit.SECONDS)
             io.execute {
                 try {
@@ -105,7 +122,7 @@ internal class PeripheralMidiTransport(
                         // This callback can arrive after close(), when the pool is already shut down.
                         dispatchOrClose(opened) { finishOpen(session, opened, inputPort, outputPort) }
                     }
-                } catch (_: Exception) { end(session, State.Failed(Failure.OPEN)) }
+                } catch (_: Exception) { end(session, failed(Failure.OPEN)) }
             }
         }
     }
@@ -114,12 +131,12 @@ internal class PeripheralMidiTransport(
         synchronized(session.resourcesLock) {
             val valid = synchronized(lock) { current === session && !session.ending && session.generation == generation }
             if (!valid) { safelyClose(opened); return }
-            if (opened == null) { end(session, State.Failed(Failure.OPEN)); return }
+            if (opened == null) { end(session, failed(Failure.OPEN)); return }
             var input: PeripheralMidiAccess.Sender? = null
             var output: AutoCloseable? = null
             try {
                 input = opened.input(inputPort)
-                if (input == null) { safelyClose(opened); end(session, State.Failed(Failure.INPUT_PORT)); return }
+                if (input == null) { safelyClose(opened); end(session, failed(Failure.INPUT_PORT)); return }
                 if (outputPort != null) {
                     try {
                         output = opened.output(outputPort) { bytes, offset, count ->
@@ -141,7 +158,7 @@ internal class PeripheralMidiTransport(
                         return
                     }
                 }
-            } catch (_: Exception) { end(session, State.Failed(Failure.INPUT_PORT)) }
+            } catch (_: Exception) { end(session, failed(Failure.INPUT_PORT)) }
             safelyClose(output); safelyClose(input); safelyClose(opened)
         }
     }
@@ -155,7 +172,7 @@ internal class PeripheralMidiTransport(
                     try {
                         session.input!!.send(bytes)
                         session.rules.sent(bytes)
-                    } catch (_: Exception) { end(session, State.Failed(Failure.SEND)) }
+                    } catch (_: Exception) { end(session, failed(Failure.SEND)) }
                 }
                 return true
             } catch (_: RejectedExecutionException) { overflow(session); return false }
@@ -172,13 +189,13 @@ internal class PeripheralMidiTransport(
             ++generation // Invalidate incoming bytes immediately.
             session.rules.clearReceived()
             mutableState.value = State.Closing
-            session.timeout = timer.schedule({ end(session, State.Failed(Failure.RELEASE)) }, 1, TimeUnit.SECONDS)
+            session.timeout = timer.schedule({ end(session, failed(Failure.RELEASE)) }, 1, TimeUnit.SECONDS)
             try {
                 session.writer.execute {
                     try {
                         for (release in session.rules.releases()) session.input!!.send(release)
                         end(session, State.Idle)
-                    } catch (_: Exception) { end(session, State.Failed(Failure.SEND)) }
+                    } catch (_: Exception) { end(session, failed(Failure.SEND)) }
                 }
             } catch (_: RejectedExecutionException) { overflow(session) }
         }
@@ -193,15 +210,15 @@ internal class PeripheralMidiTransport(
             session.rules.clearReceived()
             mutableState.value = State.Closing
             session.timeout?.cancel(false)
-            session.timeout = timer.schedule({ end(session, State.Failed(Failure.OVERFLOW)) }, 1, TimeUnit.SECONDS)
+            session.timeout = timer.schedule({ end(session, failed(Failure.OVERFLOW)) }, 1, TimeUnit.SECONDS)
             try {
                 session.writer.execute {
                     try {
                         for (release in session.rules.releases()) session.input!!.send(release)
                     } catch (_: Exception) { }
-                    end(session, State.Failed(Failure.OVERFLOW))
+                    end(session, failed(Failure.OVERFLOW))
                 }
-            } catch (_: RejectedExecutionException) { end(session, State.Failed(Failure.OVERFLOW)) }
+            } catch (_: RejectedExecutionException) { end(session, failed(Failure.OVERFLOW)) }
         }
     }
 
@@ -219,6 +236,9 @@ internal class PeripheralMidiTransport(
             session.timeout?.cancel(false)
             session.writer.shutdownNow()
             session.rules.clearReceived()
+            // Marked before the result is published, so whoever sees the failure also sees the ports closing.
+            closingSessions++
+            mutablePortsClosing.value = true
             val waitForClose = result == State.Idle
             if (waitForClose) mutableState.value = State.Closing else finish(session, result)
             closer.execute {
@@ -228,9 +248,12 @@ internal class PeripheralMidiTransport(
                     val deviceClosed = safelyClose(session.device)
                     outputClosed && inputClosed && deviceClosed
                 }
-                if (waitForClose) synchronized(lock) {
-                    finish(session, if (closedCleanly) result else State.Failed(Failure.CLOSE))
-                    if (closed) shutdown()
+                synchronized(lock) {
+                    if (--closingSessions == 0) mutablePortsClosing.value = false
+                    if (waitForClose) {
+                        finish(session, if (closedCleanly) result else failed(Failure.CLOSE))
+                        if (closed) shutdown()
+                    }
                 }
             }
             if (closed && !waitForClose) shutdown()
