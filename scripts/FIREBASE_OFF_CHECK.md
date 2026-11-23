@@ -43,9 +43,9 @@ the build must not be debuggable. Screen actions (open, read, press, Back, scree
 through the rental's UI entry; adb only installs, disables and enables the provider, sets
 the language and reads logs. API 33 is the lowest level accepted (per-app language).
 
-Whatever happens, the provider is enabled again, the app stopped, its language restored
-and the screen session closed; each of these runs even if an earlier one fails, and the
-provider's state is read back. The candidate and the test pack stay installed.
+Whatever happens, the provider is enabled again, the app stopped, its language restored,
+`adb root` undone if the check turned it on, and the screen session closed; each of these runs even if an earlier one fails, and the
+provider's state and adb's user are read back. The candidate and the test pack stay installed.
 
 Exit status:
 
@@ -54,8 +54,15 @@ Exit status:
   the app gone after the walk, or Firebase not starting once the provider is enabled
   again. This verdict stands even when a later step or the clean-up also fails;
 - `2` the check could not run or finish (no root, install refused, the screen tool
-  failing, Firebase starting although the provider was disabled) or could not restore the
-  device. `result.json` keeps the verdict reached before, if any.
+  failing, the run interrupted, Firebase starting although the provider was disabled) or
+  could not restore the device. `result.json` keeps the verdict reached before, if any.
+
+When the walk stops early, the logs are still read. A crash or ANR there is the app's
+failure (exit 1): a build that needs Firebase dies on opening, and the screen tool then
+fails with no process to look at. The app no longer running counts against it only once
+the main screen had appeared; the walk stops the app before opening it, so a screen tool
+failure or an interruption before that point is exit 2. Firebase starting although the
+provider was disabled is exit 2 even if the walk stopped on a missing screen.
 
 `--out` must be a new or empty folder. It receives `result.json` (steps, device, app
 version, APK hash, the Firebase lines seen in each run, crash lines, `cleanup_errors`),

@@ -442,11 +442,13 @@ class UpgradeRun:
             self.leave_legacy_theme(folder, theme)
         upgraded_at = self.d.device_time()
         launch_problems = self.upgrade()
-        after = self.snapshot(folder / 'after')
+        after = self.snapshot(folder / 'after', empty_screen_is_problem=True)
         self.stop()
         # The legacy theme scenario replaced the selected theme after `before`; it is judged on its own.
         compared = {**before, 'prefs': {k: v for k, v in before['prefs'].items() if k != THEME_KEY}} if theme else before
         problems = compare(compared, after, trace, launch_problems)
+        if 'screen_error' in after:
+            problems.append(f'screen after the upgrade: {after["screen_error"]}')
         if theme and not launch_problems:
             problems += legacy_theme_problems(after['prefs'], self.d.exists(self.theme_dir(theme)), theme)
             problems += self.theme_screen(folder / 'after', theme)
@@ -670,9 +672,18 @@ class UpgradeRun:
                                   f'automation may hold the accessibility connection (stop {SNAPSHOT_HELPER})')
         return ui
 
-    def snapshot(self, folder: Path) -> dict:
+    def snapshot(self, folder: Path, empty_screen_is_problem: bool = False) -> dict:
+        """Screen, settings, pack files and database rows. Before the upgrade an empty screen dump means the check
+        cannot read the screen (EmptyScreenDump); after it, with the older build's dumps read, it is the newer
+        build's problem and is returned as `screen_error`."""
         folder.mkdir(parents=True, exist_ok=True)
-        ui = self.screen()
+        screen_error = None
+        try:
+            ui = self.screen()
+        except EmptyScreenDump as error:
+            if not empty_screen_is_problem:
+                raise
+            ui, screen_error = '', str(error)
         (folder / 'screen.xml').write_text(ui)
         self.screenshot(folder / 'screen.png')
         prefs_text = self.read(f'{self.data}/shared_prefs/{PREFS_NAME}')
@@ -681,7 +692,10 @@ class UpgradeRun:
         files = file_hashes(listing, self.packs_dir)
         (folder / 'pack-files.txt').write_text(listing)
         titles = sorted(screen_texts(ui) & {p['title'] for p in PACKS})
-        return dict(db=self.pull_db(folder / 'db'), prefs=parse_prefs(prefs_text), files=files, titles=titles)
+        snapshot = dict(db=self.pull_db(folder / 'db'), prefs=parse_prefs(prefs_text), files=files, titles=titles)
+        if screen_error:
+            snapshot['screen_error'] = screen_error
+        return snapshot
 
 
 def restore_device(device: Device, steps: list[str]) -> None:

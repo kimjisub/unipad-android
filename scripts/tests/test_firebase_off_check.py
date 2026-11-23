@@ -21,10 +21,11 @@ class FakeAdb:
     """Answers the adb commands the check sends; `fail_on` makes one command fail."""
 
     def __init__(self, apk_sha, *, crash_disabled='', firebase_while_disabled=False, firebase_lines_enabled=True,
-                 root=True, fail_on=(), alive=True, stuck_on=None):
+                 root=True, rooted=True, fail_on=(), alive=True, stuck_on=None):
         self.apk_sha, self.crash_disabled = apk_sha, crash_disabled
         self.firebase_while_disabled, self.firebase_lines_enabled = firebase_while_disabled, firebase_lines_enabled
-        self.is_root, self.fail_on, self.alive = root, fail_on, alive
+        # `root`: adb root is allowed; `rooted`: adbd already runs as root when the check starts.
+        self.root_allowed, self.is_root, self.fail_on, self.alive = root, rooted and root, fail_on, alive
         self.disabled = False
         # Activities above the main screen, top last; `stuck_on` keeps one there when Back is pressed.
         self.activities, self.stuck_on = [], stuck_on
@@ -36,6 +37,9 @@ class FakeAdb:
         if any(part in command for part in self.fail_on):
             if check:
                 raise CheckFailed(f'adb {command} failed: simulated')
+            return b''
+        if command == 'unroot':
+            self.is_root = False
             return b''
         if command.startswith('logcat -d -b crash'):
             return (self.crash_disabled if self.disabled else '').encode()
@@ -83,15 +87,17 @@ class FakeAdb:
         return ''
 
     def root(self):
+        self.is_root = self.root_allowed
         if self.shell('id', '-u') != '0':
             raise CheckFailed('adb root is not available on this device; use an emulator image that allows it')
 
 
 class FakeScreen:
-    """Every wait finds a node at once, except the one named in `missing`; `close_fails` fails closing the session."""
+    """Every wait finds a node at once, except the one named in `missing`; `close_fails` fails closing the session
+    and `launch_error` is raised by the first launch, before the app is open."""
 
-    def __init__(self, adb, missing=None, close_fails=False):
-        self.adb, self.missing, self.close_fails = adb, missing, close_fails
+    def __init__(self, adb, missing=None, close_fails=False, launch_error=None):
+        self.adb, self.missing, self.close_fails, self.launch_error = adb, missing, close_fails, launch_error
         self.actions = []
 
     def node(self, what):
@@ -107,6 +113,9 @@ class FakeScreen:
 
     def launch(self, package):
         self.actions.append('launch')
+        if self.launch_error:
+            error, self.launch_error = self.launch_error, None
+            raise error
 
     def tap(self, node):
         self.actions.append(f'tap {node.text}')
@@ -130,7 +139,7 @@ class FakeScreen:
 
 class RunTest(unittest.TestCase):
     def run_check(self, **options):
-        screen_options = {k: options.pop(k) for k in ('missing', 'close_fails') if k in options}
+        screen_options = {k: options.pop(k) for k in ('missing', 'close_fails', 'launch_error') if k in options}
         with tempfile.TemporaryDirectory() as tmp:
             apk = Path(tmp) / 'universal.apk'
             apk.write_bytes(b'apk')
@@ -216,6 +225,51 @@ class RunTest(unittest.TestCase):
         code, result, adb, screen = self.run_check(crash_disabled=CRASH, close_fails=True)
         self.assertEqual((code, result['verdict']), (1, 'failed'))
         self.assertTrue(result['cleanup_errors'])
+
+    def test_a_screen_tool_failure_before_the_app_opens_is_not_the_apps_failure(self):
+        code, result, adb, screen = self.run_check(launch_error=CheckFailed('ui open failed: simulated'), alive=False)
+        self.assertEqual((code, result['verdict'], result['failures']), (2, None, []))
+        self.assertIn('ui open failed', result['error'])
+        self.assertEqual(result['disabled_run']['opened'], False)
+        self.assert_cleaned(adb, screen)
+
+    def test_an_interruption_before_the_app_opens_is_not_the_apps_failure(self):
+        code, result, adb, screen = self.run_check(launch_error=KeyboardInterrupt('Signal 15'), alive=False)
+        self.assertEqual((code, result['verdict'], result['failures']), (2, None, []))
+        self.assertIn('KeyboardInterrupt', result['error'])
+        self.assert_cleaned(adb, screen)
+
+    def test_a_crash_that_stops_the_app_from_opening_is_still_the_apps_failure(self):
+        # A build that needs Firebase dies on opening, and the screen tool then finds no process.
+        code, result, adb, screen = self.run_check(launch_error=CheckFailed('no running process after open'),
+                                                   crash_disabled=CRASH, alive=False)
+        self.assertEqual((code, result['verdict']), (1, 'failed'))
+        self.assertIn('crash or ANR with Firebase off', result['failures'][0])
+        self.assertFalse(any('no longer running' in f for f in result['failures']))
+        self.assert_cleaned(adb, screen)
+
+    def test_an_app_that_stops_after_opening_still_fails_when_the_screen_tool_then_fails(self):
+        code, result, adb, screen = self.run_check(missing='Settings button', alive=False)
+        self.assertEqual((code, result['verdict']), (1, 'failed'))
+        self.assertTrue(any('no longer running' in f for f in result['failures']), result['failures'])
+
+    def test_firebase_starting_while_disabled_is_a_setup_error_even_when_the_walk_stopped(self):
+        code, result, adb, screen = self.run_check(missing='Store message', firebase_while_disabled=True)
+        self.assertEqual((code, result['verdict'], result['failures']), (2, None, []))
+        self.assertIn('Firebase started although', result['error'])
+        self.assert_cleaned(adb, screen)
+
+    def test_adb_root_is_undone_when_the_check_turned_it_on(self):
+        code, result, adb, screen = self.run_check(rooted=False)
+        self.assertEqual(code, 0)
+        self.assertIn('unroot', adb.commands)
+        self.assertLess(adb.commands.index(f'shell pm enable {PACKAGE}/{fo.PROVIDER}'), adb.commands.index('unroot'))
+        self.assertFalse(adb.is_root)
+
+    def test_adb_root_is_left_on_when_it_was_on_before(self):
+        code, result, adb, screen = self.run_check()
+        self.assertEqual(code, 0)
+        self.assertNotIn('unroot', adb.commands)
 
     def test_a_provider_left_disabled_is_a_cleanup_error(self):
         code, result, adb, screen = self.run_check(fail_on=('pm enable',))

@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
                     raise SetupError(f'{source} does not exist')
                 builds[name] = read_build(source, Path(tmp) / name)
                 shutil.copy(Path(tmp) / name / 'AndroidManifest.xml', args.out / f'manifest-{name}.xml')
-    except (SetupError, subprocess.SubprocessError, OSError, zipfile.BadZipFile) as error:
+    except (SetupError, subprocess.SubprocessError, OSError, zipfile.BadZipFile, ET.ParseError) as error:
         print(f'bundle check could not run: {error}', file=sys.stderr)
         (args.out / 'setup-error.txt').write_text(f'{error}\n')
         return 2

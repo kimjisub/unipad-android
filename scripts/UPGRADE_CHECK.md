@@ -95,8 +95,11 @@ The screen is read with `uiautomator dump`. The device rental's snapshot helper
 (`com.callstack.agentdevice.snapshothelper`) holds the accessibility connection while it
 runs and the dump then comes back empty, so the run stops that helper before the first
 scenario (the rental's next screen command starts it again). If the dump is still empty
-after three tries, the run stops with exit status 2 and says so, rather than reporting the
-packs as missing from the list.
+after three tries before the upgrade, the run stops with exit status 2 and says so, rather
+than reporting the packs as missing from the list. After the upgrade the older build's
+screens have already been read, so an empty dump there is the newer build's problem: the
+scenario fails with `screen after the upgrade: …`, its crash lines and `result.json`, and
+the run ends with exit status 1.
 
 To check the fixtures and failure verdicts without an emulator:
 

@@ -185,6 +185,11 @@ class MainTest(unittest.TestCase):
         self.assertIn('bundletool', files['setup-error.txt'])
         self.assertNotIn('report.json', files)
 
+    def test_a_manifest_that_is_not_xml_exits_2(self):
+        code, files = self.run_main(error=crb.ET.ParseError('not well-formed (invalid token): line 1, column 0'))
+        self.assertEqual(code, 2)
+        self.assertIn('not well-formed', files['setup-error.txt'])
+
     def test_an_unreadable_version_code_fails(self):
         candidate = self.build(123)
         candidate['version_code'] = None

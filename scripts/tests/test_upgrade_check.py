@@ -230,6 +230,32 @@ class ScenarioTest(unittest.TestCase):
         self.assertIn(f'crash or ANR: {crash}', result['problems'])
         events.assert_called_once_with('10-26 12:00:00.000')
 
+    def test_an_empty_screen_dump_after_the_upgrade_fails_the_scenario_with_its_crash_lines(self):
+        class EmptyAfterDevice(FakeDevice):
+            def sh(self, command, check=True):
+                self.calls.append(('shell', command))
+                return '' if 'uiautomator dump' in command else self.answers.get(command, '')
+
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(EmptyAfterDevice(), Path('old.apk'), Path('new.apk'), 'p', Path(tmp))
+            crash = '10-26 12:00:05.000  E ActivityManager: ANR in p'
+            with mock.patch.object(run, 'prepare', return_value=snapshot()), \
+                    mock.patch.object(run, 'upgrade', return_value=[]), mock.patch.object(run, 'screenshot'), \
+                    mock.patch.object(run, 'read', return_value=PREFS_419), \
+                    mock.patch.object(run, 'pull_db', return_value=snapshot()['db']), \
+                    mock.patch.object(uc, 'file_hashes', return_value=snapshot()['files']), \
+                    mock.patch.object(run, 'stop'), mock.patch.object(uc.time, 'sleep'), \
+                    mock.patch.object(run, 'events', return_value=[crash]):
+                result = run.scenario('trace-absent', None)
+            written = json.loads((Path(tmp) / 'trace-absent' / 'result.json').read_text())
+            with mock.patch.object(uc.time, 'sleep'), self.assertRaises(uc.EmptyScreenDump):
+                run.snapshot(Path(tmp) / 'before-again')
+        self.assertFalse(result['passed'])
+        self.assertTrue(any(p.startswith('screen after the upgrade: uiautomator dump gave no screen hierarchy')
+                            for p in result['problems']), result['problems'])
+        self.assertIn(f'crash or ANR: {crash}', result['problems'])
+        self.assertEqual(written['problems'], result['problems'])
+
     def test_a_newer_build_that_does_not_install_fails_the_check(self):
         class RefusingDevice(FakeDevice):
             def __call__(self, *args, check=True, timeout=600):

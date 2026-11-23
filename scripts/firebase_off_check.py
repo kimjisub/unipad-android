@@ -9,12 +9,15 @@ the app then runs without a default FirebaseApp. On one rented, rooted emulator 
 2. opens the app and walks main screen -> Store (which must say it cannot reach the
    server) -> Back -> Settings -> Back -> the test pack's play screen -> Back;
 3. requires that Firebase did not start, the app is still running and the crash and event
-   logs hold no crash or ANR of the app;
+   logs hold no crash or ANR of the app (if the walk stops early, a crash or ANR still fails
+   the app, but an app no longer running does so only once the main screen had appeared:
+   before that, a screen tool failure or an interruption leaves the app closed and the check
+   could not run);
 4. enables the provider again, reopens the app and requires Firebase and Crashlytics to
    start (`FirebaseApp initialization successful`, `Initializing Firebase Crashlytics`).
 
-Whatever happens, the provider is enabled again, the app language restored and the screen
-session closed; each of these steps runs even if an earlier one fails. The app stays
+Whatever happens, the provider is enabled again, the app language restored, adb root undone
+if the check turned it on, and the screen session closed; each of these steps runs even if an earlier one fails. The app stays
 installed. Screen actions use the rental's UI entry; adb only prepares and inspects.
 
 Exit status: 0 passed; 1 the app failed a check; 2 the check could not run or could not
@@ -30,9 +33,11 @@ from pathlib import Path
 import re
 import shlex
 import signal
+import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 
 from release_store_check import (DOWNLOAD_NEW_PACKS, RELEASE_PACKAGE, SCREEN_TIMEOUT, STORE_BUTTON_DESCRIPTION, Adb,
                                  CheckFailed, Screen, ScreenTimeout, app_locales, device_facts, find, open_play_screen,
@@ -84,6 +89,8 @@ class FirebaseOffCheck:
         self.result = dict(package=package, verdict=None, steps=[], failures=[], cleanup_errors=[],
                            checker_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
         self.locales = None
+        self.was_root = None
+        self.app_opened = False
 
     def step(self, name, detail=''):
         self.result['steps'].append(dict(step=name, detail=detail, at=datetime.now(timezone.utc).isoformat()))
@@ -96,6 +103,7 @@ class FirebaseOffCheck:
     # --- preparation (a problem here is the check's, exit 2) ---
 
     def prepare(self):
+        self.was_root = self.adb.shell('id', '-u') == '0'
         self.adb.root()
         facts = self.result['device'] = device_facts(self.adb)
         if not facts['api'].isdigit() or int(facts['api']) < MIN_SDK:
@@ -154,6 +162,7 @@ class FirebaseOffCheck:
         self.adb.shell('am', 'force-stop', self.package)
         self.screen.launch(self.package)
         store = self.screen.settled(main_entry, SCREEN_TIMEOUT, "The main screen's Store entry", 'main-screen')
+        self.app_opened = True
         self.screen.capture('1-main')
         self.step('main screen')
         self.screen.tap(store)
@@ -182,13 +191,14 @@ class FirebaseOffCheck:
         (self.out / 'disabled-logcat.txt').write_text(log)
         (self.out / 'disabled-crash-events.txt').write_text(crashes)
         events = app_events(crashes, self.package)
-        self.result['disabled_run'] = dict(firebase=firebase_lines(log), crash_or_anr=events,
+        self.result['disabled_run'] = dict(firebase=firebase_lines(log), crash_or_anr=events, opened=self.app_opened,
                                            alive=bool(self.adb.shell('pidof', self.package, check=False)))
         if self.result['disabled_run']['firebase'][FIREBASE_STARTED]:
             raise SetupError('Firebase started although its provider was disabled; the check did not run as intended')
         for line in events:
             self.fail(f'crash or ANR with Firebase off: {line}')
-        if not self.result['disabled_run']['alive'] and not events:
+        # The walk stops the app before opening it, so an app that never showed the main screen is not running anyway.
+        if self.app_opened and not self.result['disabled_run']['alive'] and not events:
             self.fail(f'{self.package} is no longer running after the walk with Firebase off')
 
     # --- Firebase back on ---
@@ -229,9 +239,12 @@ class FirebaseOffCheck:
         try:
             self.walk()
         except BaseException:
-            # A crash explains a screen that never appeared, so read the logs; the walk's error stays the cause.
+            # A crash explains a screen that never appeared, so read the logs; the walk's error stays the cause
+            # unless the logs show the check itself did not run as intended.
             try:
                 self.judge_disabled_run()
+            except SetupError:
+                raise
             except Exception as error:
                 self.result['log_read_error'] = f'{type(error).__name__}: {error}'
             raise
@@ -255,6 +268,14 @@ class FirebaseOffCheck:
                 self.result['cleanup_errors'].append(f'{self.component} is still disabled')
         except Exception as error:
             self.result['cleanup_errors'].append(f'read back provider: {type(error).__name__}: {error}')
+        if self.was_root is False:
+            try:
+                self.adb.run('unroot', timeout=30)
+                self.adb.run('wait-for-device', timeout=60)
+                if self.adb.shell('id', '-u') == '0':
+                    self.result['cleanup_errors'].append('adb still runs as root after adb unroot')
+            except Exception as error:
+                self.result['cleanup_errors'].append(f'adb unroot: {type(error).__name__}: {error}')
 
 
 def run_and_record(check: FirebaseOffCheck) -> int:
@@ -310,7 +331,7 @@ def main(argv=None):
     with tempfile.TemporaryDirectory() as work:
         try:
             apk = universal_apk(args.apk.resolve(), Path(work))
-        except SetupError as error:
+        except (SetupError, subprocess.SubprocessError, OSError, zipfile.BadZipFile) as error:
             print(f'firebase-off check could not run: {error}', file=sys.stderr)
             return 2
         screen = Screen(args.devices_tool.resolve(), args.serial, args.generation, args.out)
