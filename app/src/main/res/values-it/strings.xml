@@ -325,6 +325,7 @@
 	<string name="computer_pad_busy_desc">Termina prima di suonare il pack o la connessione del dispositivo.</string>
 	<string name="computer_pad_fail_open">Impossibile aprire USB MIDI. Controlla il cavo e che MIDI sia scelto nelle impostazioni USB del telefono.</string>
 	<string name="computer_pad_fail_input_port">Impossibile aprire la porta delle pressioni. Forse un\'altra app la sta usando.</string>
+	<string name="computer_pad_no_press_port">Questo dispositivo non ha una porta per inviare le pressioni, quindi non si può collegare. Scegli un altro dispositivo o cerca di nuovo.</string>
 	<string name="computer_pad_fail_output_port">La porta delle luci scelta non c\'è più. Cerca di nuovo.</string>
 	<string name="computer_pad_fail_send">Impossibile inviare una pressione.</string>
 	<string name="computer_pad_fail_release">Il computer non ha ricevuto in tempo i rilasci.</string>

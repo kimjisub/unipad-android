@@ -149,12 +149,16 @@ class ComputerPadScreenTest {
 				ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 		}
 		awaitPresses(listOf(0x90, 65, 127), listOf(0x80, 65, 0), listOf(0x90, 59, 127), listOf(0x80, 59, 0))
-		// The port survives the rotation; only a new touch presses again.
+		// The port survives the rotation; the finger still down presses nothing, even moving over other pads.
 		compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_port_open))
 		capture("open_${orientation()}_after_rotation")
-		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { up(0) }
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { moveTo(0, cell(20)); moveTo(0, cell(75)); up(0) }
 		Thread.sleep(300)
 		assertEquals(4, presses().size)
+		// Only a new touch presses again.
+		compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(0, cell(20)); up(0) }
+		awaitPresses(listOf(0x90, 65, 127), listOf(0x80, 65, 0), listOf(0x90, 59, 127), listOf(0x80, 59, 0),
+			listOf(0x90, 65, 127), listOf(0x80, 65, 0))
 	}
 
 	@Test fun leavingReleasesClosesAndComingBackWaitsForTheUser() {
@@ -185,15 +189,22 @@ class ComputerPadScreenTest {
 	}
 
 	@Test fun anotherConnectionInUseIsNamedAndNotTakenOver() {
-		val gate = MidiTransportGate()
-		val held = gate.acquireUsb()!!
-		try {
-			launch(gate)
-			compose.onNodeWithText(context.getString(R.string.computer_pad_connect)).performClick()
-			compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_busy_title))
-			compose.onNodeWithText(context.getString(R.string.computer_pad_busy_desc)).assertIsDisplayed()
-			capture("other_connection_in_use")
-		} finally { held.close() }
+		// A USB launchpad, or a MIDI app on this phone picked in the device connection screen.
+		for ((label, acquire) in listOf("usb" to MidiTransportGate::acquireUsb, "phone_app" to MidiTransportGate::acquireVirtual)) {
+			val gate = MidiTransportGate()
+			val held = acquire(gate)!!
+			try {
+				launch(gate)
+				compose.onNodeWithText(context.getString(R.string.computer_pad_connect)).performClick()
+				compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_busy_title))
+				compose.onNodeWithText(context.getString(R.string.computer_pad_busy_desc)).assertIsDisplayed()
+				capture("other_connection_in_use_$label")
+			} finally {
+				held.close()
+				scenario?.close()
+				scenario = null
+			}
+		}
 	}
 
 	@Test fun losingTheEndpointClearsPressesAndLightsAndAsksToStopTheComputersSound() {

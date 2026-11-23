@@ -325,6 +325,7 @@
 	<string name="computer_pad_busy_desc">请先结束音色包演奏或设备连接。</string>
 	<string name="computer_pad_fail_open">无法打开 USB MIDI。请检查数据线，并确认手机 USB 设置中已选择 MIDI。</string>
 	<string name="computer_pad_fail_input_port">无法打开发送按键的端口。可能有其他应用正在使用。</string>
+	<string name="computer_pad_no_press_port">此设备没有发送按键的端口，无法连接。请选择其他设备或重新搜索。</string>
 	<string name="computer_pad_fail_output_port">所选的接收灯光端口已不存在。请重新查找。</string>
 	<string name="computer_pad_fail_send">无法发送按键。</string>
 	<string name="computer_pad_fail_release">电脑未及时接收松开信号。</string>

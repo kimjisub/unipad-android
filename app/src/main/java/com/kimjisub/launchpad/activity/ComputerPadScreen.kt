@@ -62,6 +62,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.LaunchpadColor
 import com.kimjisub.launchpad.midi.Mk2Layout
@@ -92,6 +95,15 @@ private val MinPad = 32.dp
 /** About one display frame; the lights are state, so a burst between two polls shows its final colors. */
 private const val LIGHT_POLL_MS = 16L
 
+/** A stopped screen has closed its connection and draws nothing, so it does not poll. */
+internal suspend fun pollWhileStarted(lifecycle: Lifecycle, intervalMs: Long, poll: () -> Unit) =
+	lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+		while (isActive) {
+			poll()
+			delay(intervalMs)
+		}
+	}
+
 @Composable
 internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> Unit) {
 	val connection = controller.connection
@@ -103,12 +115,8 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 	val phase = controller.phase()
 	var showHelp by remember { mutableStateOf(false) }
 
-	LaunchedEffect(Unit) {
-		while (isActive) {
-			controller.pollLights()
-			delay(LIGHT_POLL_MS)
-		}
-	}
+	val lifecycle = LocalLifecycleOwner.current.lifecycle
+	LaunchedEffect(lifecycle) { pollWhileStarted(lifecycle, LIGHT_POLL_MS, controller::pollLights) }
 
 	BoxWithConstraints(
 		Modifier
@@ -229,7 +237,9 @@ private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: Comput
 			Choices(phase.devices, controller, portName)
 			if (phase.previousClosing) Note(stringResource(R.string.computer_pad_closing_previous), Warning)
 			Buttons {
-				PrimaryButton(R.string.computer_pad_connect, enabled = !phase.previousClosing) { controller.connect(phase.devices, portName) }
+				PrimaryButton(R.string.computer_pad_connect, enabled = !phase.previousClosing && controller.canConnect(phase.devices)) {
+					controller.connect(phase.devices, portName)
+				}
 				SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
 				SecondaryButton(R.string.computer_pad_help, onHelp)
 			}
@@ -309,14 +319,14 @@ private fun Choices(devices: List<PeripheralDevice>, controller: ComputerPadCont
 	if (devices.size > 1) {
 		SectionTitle(stringResource(R.string.computer_pad_device))
 		devices.forEachIndexed { i, candidate ->
-			Choice("${i + 1}. ${candidate.name.ifBlank { "USB MIDI" }}", candidate.id == device.id) { controller.deviceId = candidate.id }
+			Choice("${i + 1}. ${ComputerPadRules.deviceName(candidate)}", candidate.id == device.id) { controller.deviceId = candidate.id }
 		}
-	} else InfoCard(device.name.ifBlank { "USB MIDI" }, null, null)
+	} else InfoCard(ComputerPadRules.deviceName(device), null, null)
 	SectionTitle(stringResource(R.string.computer_pad_send) + ": " + stringResource(R.string.computer_pad_send_direction))
 	FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 		device.inputs.forEach { port -> Choice(portName(port), port.number == press?.number) { controller.pressPort = port.number } }
 	}
-	if (device.inputs.isEmpty()) Note(stringResource(R.string.computer_pad_fail_input_port), Warning)
+	if (press == null) Note(stringResource(R.string.computer_pad_no_press_port), Warning)
 	SectionTitle(stringResource(R.string.computer_pad_receive) + ": " + stringResource(R.string.computer_pad_receive_direction))
 	FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 		device.outputs.forEach { port ->
@@ -346,17 +356,17 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 				.size(side)
 				.testTag(ComputerPadTags.GRID)
 				.onSizeChanged { controller.input.cancel() }
-				.pointerInput(active) {
-					if (!active) return@pointerInput
+				// Fingers are followed even while input is locked, so one held when a session opens presses nothing until it lifts.
+				.pointerInput(Unit) {
 					try {
 						awaitPointerEventScope {
 							while (true) {
 								val event = awaitPointerEvent()
 								for (change in event.changes) {
 									val pointer = (change.id.value and 0x3fffffff).toInt()
-									val index = if (change.pressed)
-										PadGridGeometry.indexAt(change.position.x, change.position.y, size.width.toFloat()) else null
-									controller.input.move(pointer, index)
+									if (change.pressed)
+										controller.input.move(pointer, PadGridGeometry.indexAt(change.position.x, change.position.y, size.width.toFloat()))
+									else controller.input.up(pointer)
 									change.consume()
 								}
 							}

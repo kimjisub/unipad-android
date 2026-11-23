@@ -324,6 +324,7 @@
 	<string name="computer_pad_busy_desc">पहले पैक बजाना या डिवाइस कनेक्शन खत्म करें।</string>
 	<string name="computer_pad_fail_open">USB MIDI नहीं खुल सका। केबल जाँचें और देखें कि फ़ोन की USB सेटिंग में MIDI चुना है।</string>
 	<string name="computer_pad_fail_input_port">दबाव भेजने का पोर्ट नहीं खुल सका। शायद कोई दूसरा ऐप उसे इस्तेमाल कर रहा है।</string>
+	<string name="computer_pad_no_press_port">इस डिवाइस में दबाव भेजने का पोर्ट नहीं है, इसलिए इसे कनेक्ट नहीं किया जा सकता। कोई दूसरा डिवाइस चुनें या फिर से खोजें।</string>
 	<string name="computer_pad_fail_output_port">चुना गया लाइट पोर्ट अब नहीं है। फिर से खोजें।</string>
 	<string name="computer_pad_fail_send">एक दबाव भेजा नहीं जा सका।</string>
 	<string name="computer_pad_fail_release">कंप्यूटर ने छोड़ने के संकेत समय पर नहीं लिए।</string>

@@ -323,6 +323,7 @@
 	<string name="computer_pad_busy_desc">Hãy kết thúc chơi gói hoặc kết nối thiết bị trước.</string>
 	<string name="computer_pad_fail_open">Không mở được USB MIDI. Kiểm tra cáp và MIDI đã được chọn trong cài đặt USB của điện thoại.</string>
 	<string name="computer_pad_fail_input_port">Không mở được cổng gửi lần nhấn. Có thể ứng dụng khác đang dùng.</string>
+	<string name="computer_pad_no_press_port">Thiết bị này không có cổng gửi lần nhấn nên không thể kết nối. Hãy chọn thiết bị khác hoặc tìm lại.</string>
 	<string name="computer_pad_fail_output_port">Cổng nhận đèn đã chọn không còn. Hãy tìm lại.</string>
 	<string name="computer_pad_fail_send">Không gửi được một lần nhấn.</string>
 	<string name="computer_pad_fail_release">Máy tính không nhận kịp tín hiệu nhả.</string>

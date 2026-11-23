@@ -325,6 +325,7 @@
 	<string name="computer_pad_busy_desc">Terminez d\'abord le jeu d\'un pack ou la connexion de l\'appareil.</string>
 	<string name="computer_pad_fail_open">Impossible d\'ouvrir USB MIDI. Vérifiez le câble et que MIDI est choisi dans les réglages USB du téléphone.</string>
 	<string name="computer_pad_fail_input_port">Impossible d\'ouvrir le port des appuis. Une autre app l\'utilise peut-être.</string>
+	<string name="computer_pad_no_press_port">Cet appareil n\'a pas de port pour envoyer les appuis, il ne peut donc pas être connecté. Choisissez un autre appareil ou relancez la recherche.</string>
 	<string name="computer_pad_fail_output_port">Le port des lumières choisi a disparu. Recherchez à nouveau.</string>
 	<string name="computer_pad_fail_send">Un appui n\'a pas pu être envoyé.</string>
 	<string name="computer_pad_fail_release">L\'ordinateur n\'a pas pris les relâchements à temps.</string>

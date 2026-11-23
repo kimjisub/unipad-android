@@ -411,6 +411,7 @@
     <string name="computer_pad_busy_desc">Finish pack playing or the device connection first.</string>
     <string name="computer_pad_fail_open">Couldn\'t open USB MIDI. Check the cable and that MIDI is chosen in the phone\'s USB settings.</string>
     <string name="computer_pad_fail_input_port">Couldn\'t open the press port. Another app may be using it.</string>
+    <string name="computer_pad_no_press_port">This device has no port for sending presses, so it can\'t be connected. Choose another device or search again.</string>
     <string name="computer_pad_fail_output_port">The chosen lights port is gone. Search again.</string>
     <string name="computer_pad_fail_send">A press couldn\'t be sent.</string>
     <string name="computer_pad_fail_release">The computer didn\'t take the releases in time.</string>

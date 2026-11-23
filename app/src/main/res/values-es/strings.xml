@@ -331,6 +331,7 @@
 	<string name="computer_pad_busy_desc">Termina primero de tocar el pack o la conexión del dispositivo.</string>
 	<string name="computer_pad_fail_open">No se pudo abrir USB MIDI. Revisa el cable y que MIDI esté elegido en los ajustes USB del teléfono.</string>
 	<string name="computer_pad_fail_input_port">No se pudo abrir el puerto de pulsaciones. Puede que otra app lo esté usando.</string>
+	<string name="computer_pad_no_press_port">Este dispositivo no tiene puerto para enviar pulsaciones, así que no se puede conectar. Elige otro dispositivo o busca de nuevo.</string>
 	<string name="computer_pad_fail_output_port">El puerto de luces elegido ya no está. Busca de nuevo.</string>
 	<string name="computer_pad_fail_send">No se pudo enviar una pulsación.</string>
 	<string name="computer_pad_fail_release">El ordenador no recibió a tiempo las señales de soltar.</string>

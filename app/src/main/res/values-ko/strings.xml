@@ -398,6 +398,7 @@
     <string name="computer_pad_busy_desc">팩 연주·장치 연결을 먼저 마쳐 주세요.</string>
     <string name="computer_pad_fail_open">USB MIDI를 열지 못했어요. 케이블과 휴대폰 USB 설정의 MIDI 선택을 확인해 주세요.</string>
     <string name="computer_pad_fail_input_port">누름 보내기 포트를 열지 못했어요. 다른 앱이 쓰고 있을 수 있어요.</string>
+    <string name="computer_pad_no_press_port">이 장치에는 누름을 보낼 포트가 없어 연결할 수 없어요. 다른 장치를 고르거나 다시 찾으세요.</string>
     <string name="computer_pad_fail_output_port">고른 불빛 받기 포트가 없어요. 다시 찾아 주세요.</string>
     <string name="computer_pad_fail_send">누름을 보내지 못했어요.</string>
     <string name="computer_pad_fail_release">컴퓨터가 놓기 신호를 제때 받지 않았어요.</string>

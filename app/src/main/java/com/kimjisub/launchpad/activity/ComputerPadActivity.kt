@@ -122,6 +122,9 @@ internal class ComputerPadController(
 		return Triple(device, press, light)
 	}
 
+	/** A device without a port for presses cannot be connected; the screen says so instead of doing nothing. */
+	fun canConnect(devices: List<PeripheralDevice>): Boolean = selection(devices)?.second != null
+
 	fun search() {
 		acknowledge()
 		connection.refresh()
@@ -137,7 +140,7 @@ internal class ComputerPadController(
 		acknowledge()
 		withoutLights = false
 		lightsRequested = light != null
-		connected = Connected(device.name, names(press), light?.let(names))
+		connected = Connected(ComputerPadRules.deviceName(device), names(press), light?.let(names))
 		connection.connect(device, press.number, light?.number)
 	}
 

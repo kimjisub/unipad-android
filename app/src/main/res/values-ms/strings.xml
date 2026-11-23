@@ -323,6 +323,7 @@
 	<string name="computer_pad_busy_desc">Tamatkan dahulu permainan pek atau sambungan peranti.</string>
 	<string name="computer_pad_fail_open">USB MIDI tidak dapat dibuka. Semak kabel dan pastikan MIDI dipilih dalam tetapan USB telefon.</string>
 	<string name="computer_pad_fail_input_port">Port tekanan tidak dapat dibuka. Mungkin apl lain sedang menggunakannya.</string>
+	<string name="computer_pad_no_press_port">Peranti ini tiada port untuk menghantar tekanan, jadi ia tidak boleh disambungkan. Pilih peranti lain atau cari semula.</string>
 	<string name="computer_pad_fail_output_port">Port lampu yang dipilih sudah tiada. Cari semula.</string>
 	<string name="computer_pad_fail_send">Tekanan tidak dapat dihantar.</string>
 	<string name="computer_pad_fail_release">Komputer tidak menerima isyarat lepas tepat pada masanya.</string>

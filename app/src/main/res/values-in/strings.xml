@@ -323,6 +323,7 @@
 	<string name="computer_pad_busy_desc">Selesaikan dulu memainkan paket atau koneksi perangkat.</string>
 	<string name="computer_pad_fail_open">USB MIDI tidak dapat dibuka. Periksa kabel dan pastikan MIDI dipilih di setelan USB ponsel.</string>
 	<string name="computer_pad_fail_input_port">Port tekanan tidak dapat dibuka. Mungkin aplikasi lain sedang memakainya.</string>
+	<string name="computer_pad_no_press_port">Perangkat ini tidak punya port untuk mengirim tekanan, jadi tidak bisa dihubungkan. Pilih perangkat lain atau cari lagi.</string>
 	<string name="computer_pad_fail_output_port">Port lampu yang dipilih sudah tidak ada. Cari lagi.</string>
 	<string name="computer_pad_fail_send">Tekanan tidak dapat dikirim.</string>
 	<string name="computer_pad_fail_release">Komputer tidak menerima sinyal lepas tepat waktu.</string>

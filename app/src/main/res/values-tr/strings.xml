@@ -324,6 +324,7 @@
 	<string name="computer_pad_busy_desc">Önce paket çalmayı veya cihaz bağlantısını bitirin.</string>
 	<string name="computer_pad_fail_open">USB MIDI açılamadı. Kabloyu ve telefonun USB ayarlarında MIDI seçili olduğunu kontrol edin.</string>
 	<string name="computer_pad_fail_input_port">Basış portu açılamadı. Başka bir uygulama kullanıyor olabilir.</string>
+	<string name="computer_pad_no_press_port">Bu cihazda basış gönderecek port yok, bu yüzden bağlanamaz. Başka bir cihaz seçin veya yeniden arayın.</string>
 	<string name="computer_pad_fail_output_port">Seçilen ışık portu artık yok. Tekrar arayın.</string>
 	<string name="computer_pad_fail_send">Bir basış gönderilemedi.</string>
 	<string name="computer_pad_fail_release">Bilgisayar bırakma sinyallerini zamanında almadı.</string>

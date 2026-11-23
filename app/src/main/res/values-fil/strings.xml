@@ -313,6 +313,7 @@
 	<string name="computer_pad_busy_desc">Tapusin muna ang pagtugtog ng pack o ang koneksyon ng device.</string>
 	<string name="computer_pad_fail_open">Hindi mabuksan ang USB MIDI. Tingnan ang cable at kung MIDI ang napili sa USB settings ng phone.</string>
 	<string name="computer_pad_fail_input_port">Hindi mabuksan ang port ng pindot. Maaaring ginagamit ito ng ibang app.</string>
+	<string name="computer_pad_no_press_port">Walang port ang device na ito para magpadala ng pindot, kaya hindi ito maikokonekta. Pumili ng ibang device o maghanap ulit.</string>
 	<string name="computer_pad_fail_output_port">Wala na ang napiling port ng ilaw. Maghanap ulit.</string>
 	<string name="computer_pad_fail_send">Hindi naipadala ang isang pindot.</string>
 	<string name="computer_pad_fail_release">Hindi natanggap ng computer sa oras ang mga signal ng pagbitaw.</string>

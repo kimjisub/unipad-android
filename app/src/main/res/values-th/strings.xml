@@ -323,6 +323,7 @@
 	<string name="computer_pad_busy_desc">โปรดจบการเล่นแพ็กหรือการเชื่อมต่ออุปกรณ์ก่อน</string>
 	<string name="computer_pad_fail_open">เปิด USB MIDI ไม่ได้ ตรวจสอบสายและการเลือก MIDI ในการตั้งค่า USB ของโทรศัพท์</string>
 	<string name="computer_pad_fail_input_port">เปิดพอร์ตส่งการกดไม่ได้ แอปอื่นอาจใช้อยู่</string>
+	<string name="computer_pad_no_press_port">อุปกรณ์นี้ไม่มีพอร์ตส่งการกด จึงเชื่อมต่อไม่ได้ เลือกอุปกรณ์อื่นหรือค้นหาอีกครั้ง</string>
 	<string name="computer_pad_fail_output_port">ไม่มีพอร์ตรับไฟที่เลือกแล้ว โปรดค้นหาอีกครั้ง</string>
 	<string name="computer_pad_fail_send">ส่งการกดไม่ได้</string>
 	<string name="computer_pad_fail_release">คอมพิวเตอร์ไม่รับสัญญาณปล่อยทันเวลา</string>

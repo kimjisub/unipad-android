@@ -81,6 +81,9 @@ internal object ComputerPadRules {
 			ComputerPadFailureKind.NOT_CONNECTED
 	}
 
+	/** Some USB MIDI devices report no name; the same fallback is shown in the list and while connected. */
+	fun deviceName(device: PeripheralDevice): String = device.name.ifBlank { "USB MIDI" }
+
 	/** Leaving the screen stops a connection that was open or being opened; the user resumes it explicitly. */
 	fun pausesOnLeave(phase: ComputerPadPhase): Boolean =
 		phase is ComputerPadPhase.Open || phase == ComputerPadPhase.Connecting || phase == ComputerPadPhase.LightsUnavailable
@@ -89,6 +92,7 @@ internal object ComputerPadRules {
 /**
  * Finger ownership to MIDI messages. Each pad keeps the session generation it was pressed in, so its
  * release goes to that session or nowhere. Input is accepted only while a generation is set.
+ * A cancel releases every held pad, and the fingers that were down then press nothing until they lift.
  */
 internal class ComputerPadInput(
 	private val send: (PadChange, Long) -> Boolean,
@@ -102,6 +106,8 @@ internal class ComputerPadInput(
 	private val pointers = PadPointers()
 	private val pressedIn = LongArray(Mk2Layout.SIZE)
 	private var generation: Long? = null
+	private val down = mutableSetOf<Int>()
+	private val cancelled = mutableSetOf<Int>()
 
 	/** Releases everything held when input stops or a different session takes over. */
 	fun accept(generation: Long?) {
@@ -110,18 +116,31 @@ internal class ComputerPadInput(
 		this.generation = generation
 	}
 
+	/** A finger that is down at [index], or outside the pads when null. */
 	fun move(pointer: Int, index: Int?) {
+		down += pointer
+		if (pointer in cancelled) return
 		val current = generation ?: return
 		apply(pointers.move(pointer, index), current)
 	}
 
-	fun click(index: Int) {
-		move(CLICK_POINTER, index)
-		move(CLICK_POINTER, null)
+	/** A finger that lifted. */
+	fun up(pointer: Int) {
+		down -= pointer
+		if (cancelled.remove(pointer)) return
+		apply(pointers.move(pointer, null), generation)
 	}
 
-	/** For system cancels, lifecycle changes and coordinate changes; new presses need new touches. */
-	fun cancel() = apply(pointers.cancel(), generation)
+	fun click(index: Int) {
+		move(CLICK_POINTER, index)
+		up(CLICK_POINTER)
+	}
+
+	/** For system cancels, lifecycle changes and coordinate changes. */
+	fun cancel() {
+		cancelled += down
+		apply(pointers.cancel(), generation)
+	}
 
 	private fun apply(changes: List<PadChange>, current: Long?) {
 		for (change in changes) {

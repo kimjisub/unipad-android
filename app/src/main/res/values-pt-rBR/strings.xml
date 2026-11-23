@@ -325,6 +325,7 @@
 	<string name="computer_pad_busy_desc">Termine primeiro de tocar o pack ou a conexão do dispositivo.</string>
 	<string name="computer_pad_fail_open">Não foi possível abrir o USB MIDI. Verifique o cabo e se MIDI está escolhido nas configurações USB do celular.</string>
 	<string name="computer_pad_fail_input_port">Não foi possível abrir a porta de toques. Outro app pode estar usando.</string>
+	<string name="computer_pad_no_press_port">Este dispositivo não tem porta para enviar toques, então não pode ser conectado. Escolha outro dispositivo ou busque de novo.</string>
 	<string name="computer_pad_fail_output_port">A porta de luzes escolhida sumiu. Busque de novo.</string>
 	<string name="computer_pad_fail_send">Não foi possível enviar um toque.</string>
 	<string name="computer_pad_fail_release">O computador não recebeu a tempo os sinais de soltar.</string>

@@ -113,10 +113,10 @@ class ComputerPadInputTest {
 		input.accept(1)
 		input.move(0, 5)
 		input.move(1, 5)
-		input.move(0, null)
+		input.up(0)
 		assertEquals(listOf(PadChange(5, true) to 1L), sent)
 		assertTrue(held[5])
-		input.move(1, null)
+		input.up(1)
 		assertEquals(PadChange(5, false) to 1L, sent.last())
 		assertFalse(held[5])
 	}
@@ -131,15 +131,39 @@ class ComputerPadInputTest {
 		assertTrue(held[9])
 	}
 
-	@Test fun aCancelReleasesEveryHeldPadAndNeedsNewTouches() {
+	@Test fun aCancelReleasesEveryHeldPadAndTheFingersStillDownPressNothingUntilTheyLift() {
 		input.accept(1)
 		input.move(0, 5)
 		input.move(1, 70)
+		input.move(2, null)
 		input.cancel()
 		assertEquals(setOf(PadChange(5, false), PadChange(70, false)), sent.drop(2).map { it.first }.toSet())
 		assertTrue(held.none { it })
+		// Rotation or a resize: the same fingers keep moving over the new pad positions.
 		input.move(0, 5)
-		assertEquals(PadChange(5, true), sent.last().first)
+		input.move(0, 6)
+		input.move(1, 70)
+		input.move(2, 9)
+		input.up(0)
+		assertEquals(4, sent.size)
+		assertTrue(held.none { it })
+		input.move(0, 5)
+		assertEquals(PadChange(5, true) to 1L, sent.last())
+		input.up(1)
+		input.up(2)
+		input.move(3, 9)
+		assertEquals(PadChange(9, true) to 1L, sent.last())
+		assertEquals(6, sent.size)
+	}
+
+	@Test fun aFingerHeldWhenASessionOpensPressesNothingUntilItLifts() {
+		input.move(0, 5)
+		input.accept(1)
+		input.move(0, 6)
+		assertTrue(sent.isEmpty())
+		input.up(0)
+		input.move(0, 6)
+		assertEquals(listOf(PadChange(6, true) to 1L), sent)
 	}
 
 	@Test fun aReleaseKeepsTheGenerationItWasPressedInAndANewSessionReleasesFirst() {
@@ -147,6 +171,7 @@ class ComputerPadInputTest {
 		input.move(0, 5)
 		input.accept(2)
 		assertEquals(PadChange(5, false) to 1L, sent.last())
+		input.up(0)
 		input.move(0, 5)
 		assertEquals(PadChange(5, true) to 2L, sent.last())
 		input.accept(null)

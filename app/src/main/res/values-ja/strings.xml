@@ -323,6 +323,7 @@
 	<string name="computer_pad_busy_desc">先にパックの演奏・デバイス接続を終えてください。</string>
 	<string name="computer_pad_fail_open">USB MIDIを開けませんでした。ケーブルと、スマホのUSB設定でMIDIが選ばれているか確認してください。</string>
 	<string name="computer_pad_fail_input_port">押下を送るポートを開けませんでした。別のアプリが使用中かもしれません。</string>
+	<string name="computer_pad_no_press_port">このデバイスには押下を送るポートがないため接続できません。別のデバイスを選ぶか、もう一度検索してください。</string>
 	<string name="computer_pad_fail_output_port">選んだ光を受けるポートがありません。もう一度探してください。</string>
 	<string name="computer_pad_fail_send">押下を送信できませんでした。</string>
 	<string name="computer_pad_fail_release">パソコンが離す信号を時間内に受け取りませんでした。</string>

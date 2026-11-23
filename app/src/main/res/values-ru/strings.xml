@@ -326,6 +326,7 @@
 	<string name="computer_pad_busy_desc">Сначала завершите игру пака или подключение устройства.</string>
 	<string name="computer_pad_fail_open">Не удалось открыть USB MIDI. Проверьте кабель и выбор MIDI в настройках USB телефона.</string>
 	<string name="computer_pad_fail_input_port">Не удалось открыть порт нажатий. Возможно, его использует другое приложение.</string>
+	<string name="computer_pad_no_press_port">У этого устройства нет порта для отправки нажатий, поэтому его нельзя подключить. Выберите другое устройство или повторите поиск.</string>
 	<string name="computer_pad_fail_output_port">Выбранного порта подсветки больше нет. Найдите снова.</string>
 	<string name="computer_pad_fail_send">Не удалось отправить нажатие.</string>
 	<string name="computer_pad_fail_release">Компьютер не принял сигналы отпускания вовремя.</string>

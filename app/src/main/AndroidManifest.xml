@@ -116,7 +116,7 @@
 
 		<activity
 			android:name=".activity.ComputerPadActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|density|layoutDirection"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|density|layoutDirection|colorMode|fontWeightAdjustment|grammaticalGender"
 			android:exported="false"
 			android:resizeableActivity="true"
 			android:theme="@style/SettingTheme" />

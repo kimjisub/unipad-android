@@ -315,6 +315,7 @@
 	<string name="computer_pad_busy_desc">ပက်ခ်တီးခြင်း သို့မဟုတ် စက်ချိတ်ဆက်မှုကို အရင်ပြီးဆုံးပါ။</string>
 	<string name="computer_pad_fail_open">USB MIDI ကို မဖွင့်နိုင်ပါ။ ကြိုးနှင့် ဖုန်း USB ဆက်တင်တွင် MIDI ရွေးထားခြင်းကို စစ်ပါ။</string>
 	<string name="computer_pad_fail_input_port">နှိပ်မှုပို့ပေါက်ကို မဖွင့်နိုင်ပါ။ အခြားအက်ပ် သုံးနေနိုင်သည်။</string>
+	<string name="computer_pad_no_press_port">ဤစက်တွင် နှိပ်မှုပို့ပေါက် မရှိသောကြောင့် ချိတ်ဆက်၍မရပါ။ အခြားစက်ကို ရွေးပါ သို့မဟုတ် ထပ်ရှာပါ။</string>
 	<string name="computer_pad_fail_output_port">ရွေးထားသော မီးလက်ခံပေါက် မရှိတော့ပါ။ ပြန်ရှာပါ။</string>
 	<string name="computer_pad_fail_send">နှိပ်မှုကို မပို့နိုင်ပါ။</string>
 	<string name="computer_pad_fail_release">ကွန်ပျူတာက လွှတ်အချက်ပြမှုများကို အချိန်မီ မယူပါ။</string>
