@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Ocorreu uma Exceção</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Reconectar Launchpad</string>
+	<string name="midi_connect_title">Conectar dispositivo MIDI</string>
 	<string name="import_unipack">Importar UniPack</string>
 	<string name="store">Loja</string>
 
@@ -373,4 +373,6 @@
 	<string name="computer_pad_help_numbers">Canal 1: pads enviam notas 11–88, botões da direita notas 19–89, botões de cima CC 104–111, todos em 127.</string>
 	<string name="computer_pad_help_lights">O computador acende um pad enviando o número dele com uma cor 0–127; 0 ou note off apaga.</string>
 	<string name="computer_pad_disconnect">Desconectar</string>
+    <string name="midi_tab_usb">Dispositivos USB</string>
+    <string name="midi_tab_apps">Apps deste celular</string>
 </resources>

@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Pengecualian Berlaku</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Sambung Semula Launchpad</string>
+	<string name="midi_connect_title">Sambungkan peranti MIDI</string>
 	<string name="import_unipack">Import UniPack</string>
 	<string name="store">Kedai</string>
 
@@ -371,4 +371,6 @@
 	<string name="computer_pad_help_numbers">Saluran 1: pad menghantar not 11–88, butang kanan not 19–89, butang atas CC 104–111, semuanya 127.</string>
 	<string name="computer_pad_help_lights">Komputer menyalakan pad dengan menghantar nombornya bersama warna 0–127; 0 atau note off memadamkannya.</string>
 	<string name="computer_pad_disconnect">Putuskan sambungan</string>
+    <string name="midi_tab_usb">Peranti USB</string>
+    <string name="midi_tab_apps">Apl pada telefon ini</string>
 </resources>

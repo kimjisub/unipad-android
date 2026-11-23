@@ -5,7 +5,7 @@
 	<uses-feature
 		android:name="android.hardware.usb.host"
 		android:required="false" />
-	<!-- The computer MIDI pad checks for MIDI when it opens; phones without it still install the app. -->
+	<!-- Checked at runtime by the computer pad and the phone-app connection; phones without MIDI still install. -->
 	<uses-feature
 		android:name="android.software.midi"
 		android:required="false" />
@@ -27,6 +27,13 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<!-- Download/import progress notifications; without it they are dropped on Android 13+ -->
 	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+	<!-- Names the app that offers each virtual MIDI device in the device list. -->
+	<queries>
+		<intent>
+			<action android:name="android.media.midi.MidiDeviceService" />
+		</intent>
+	</queries>
 
 	<application
 		android:name=".BaseApplication"

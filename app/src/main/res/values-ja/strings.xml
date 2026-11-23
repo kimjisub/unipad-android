@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">例外が発生しました</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpadを再接続</string>
+	<string name="midi_connect_title">MIDIデバイスを接続</string>
 	<string name="import_unipack">UniPackをインポート</string>
 	<string name="store">ストア</string>
 
@@ -371,4 +371,6 @@
 	<string name="computer_pad_help_numbers">チャンネル1：パッドはノート11–88、右ボタンはノート19–89、上ボタンはCC 104–111をベロシティ127で送ります。</string>
 	<string name="computer_pad_help_lights">パソコンが番号と色0–127を送るとパッドが光ります。0またはノートオフで消えます。</string>
 	<string name="computer_pad_disconnect">接続を解除</string>
+    <string name="midi_tab_usb">USBデバイス</string>
+    <string name="midi_tab_apps">このスマホのアプリ</string>
 </resources>

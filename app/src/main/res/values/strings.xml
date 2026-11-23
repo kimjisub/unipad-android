@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Reconnect Launchpad</string>
+	<string name="midi_connect_title">Connect MIDI device</string>
 	<string name="import_unipack">Import UniPack</string>
 	<string name="store">Store</string>
 
@@ -459,4 +459,57 @@
     <string name="computer_pad_help_numbers">Channel 1: pads send notes 11–88, right buttons notes 19–89, top buttons CC 104–111, all at 127.</string>
     <string name="computer_pad_help_lights">The computer lights a pad by sending its number with a color 0–127; 0 or a note off turns it off.</string>
     <string name="computer_pad_disconnect">Disconnect</string>
+    <string name="midi_tab_usb">USB devices</string>
+    <string name="midi_tab_apps">Apps on this phone</string>
+    <string name="midi_apps_search">Search again</string>
+    <string name="midi_apps_searching">Looking for MIDI apps on this phone…</string>
+    <string name="midi_apps_search_cancel">Stop searching</string>
+    <string name="midi_apps_empty">No MIDI app found</string>
+    <string name="midi_apps_empty_detail">Install and open an app that offers a MIDI device, such as a Launchpad emulator, then tap “Search again”.</string>
+    <string name="midi_apps_list_failed">Couldn\'t read the list of MIDI devices. Tap “Search again”.</string>
+    <string name="midi_apps_unavailable">This phone doesn\'t offer MIDI connections between apps. USB devices and playing on the screen still work.</string>
+    <string name="midi_apps_device_ports">Play ports: %1$d · Light ports: %2$d</string>
+    <string name="midi_apps_provider">Offered by %1$s</string>
+    <string name="midi_apps_missing">Last connected · can\'t be found now</string>
+    <string name="midi_apps_selected">Selected</string>
+    <string name="midi_apps_connected_badge">Connected</string>
+    <string name="midi_apps_pick_device">Pick an app\'s device from the list.</string>
+    <string name="midi_apps_input_title">Play input</string>
+    <string name="midi_apps_input_direction">Other app → UniPad</string>
+    <string name="midi_apps_lights_title">Send lights</string>
+    <string name="midi_apps_lights_direction">UniPad → other app</string>
+    <string name="midi_apps_port">Port %1$d · %2$s</string>
+    <string name="midi_apps_lights_off">Off</string>
+    <string name="midi_apps_lights_none">No light output · input only</string>
+    <string name="midi_apps_no_input">This device doesn\'t send pad presses to other apps, so UniPad can\'t connect to it yet.</string>
+    <string name="midi_apps_model">Model</string>
+    <string name="midi_apps_model_recommended">%1$s (recommended)</string>
+    <string name="midi_apps_model_choose">Choose a model</string>
+    <string name="midi_apps_model_unknown">UniPad can\'t tell this device\'s pad layout. Choose the model its pads follow.</string>
+    <string name="midi_apps_connect">Connect</string>
+    <string name="midi_apps_idle">Not connected</string>
+    <string name="midi_apps_connecting">Connecting to %1$s…</string>
+    <string name="midi_apps_connect_cancel">Cancel connection</string>
+    <string name="midi_apps_connected">%1$s · Connected</string>
+    <string name="midi_apps_status_input">Play input: on</string>
+    <string name="midi_apps_status_lights_on">Lights: on</string>
+    <string name="midi_apps_status_lights_off">Lights: off</string>
+    <string name="midi_apps_disconnect">Disconnect</string>
+    <string name="midi_apps_retry">Connect again</string>
+    <string name="midi_apps_lights_failed">Play input is ready, but the light port couldn\'t be opened. Another app may be using it.</string>
+    <string name="midi_apps_without_lights">Connect without lights</string>
+    <string name="midi_apps_failed">Couldn\'t connect</string>
+    <string name="midi_apps_failed_timeout">%1$s didn\'t open within 10 seconds.</string>
+    <string name="midi_apps_failed_unavailable">%1$s couldn\'t be opened. Check that its app is running.</string>
+    <string name="midi_apps_failed_input">The play input port couldn\'t be opened. Another app may be using it.</string>
+    <string name="midi_apps_failed_usb">A USB device is connected. Unplug it, then connect again.</string>
+    <string name="midi_apps_failed_port">The chosen port is gone. Search again and pick it again.</string>
+    <string name="midi_apps_lost">Disconnected</string>
+    <string name="midi_apps_lost_detail">%1$s stopped. Open its app, tap “Search again” and pick it again.</string>
+    <string name="midi_apps_usb_in_use">A USB device is connected. To use an app on this phone, unplug the USB device first.</string>
+    <string name="midi_usb_virtual_active">Connected to an app on this phone (%1$s). To use a USB device, disconnect it under “Apps on this phone”, then plug the USB device in again.</string>
+    <string name="midi_help_apps_play">How do I play with another app on this phone?</string>
+    <string name="midi_help_apps_play_body">1. Open the other app, such as a Launchpad emulator, and keep it running.\n2. Here, under “Apps on this phone”, pick its device, check the ports and the model, then tap “Connect”.\n3. Show both apps side by side in split screen (in Recents, tap the app\'s icon and choose split screen), then open a pack in UniPad.\n• Pads pressed in the other window keep playing while UniPad\'s play screen is visible. Home, locking the phone or another full-screen app stops the sound.\n• Split screen needs support from both your phone and the other app. Where either doesn\'t offer it, UniPad can\'t keep playing beside it.</string>
+    <string name="midi_help_apps_missing">The app isn\'t in the list</string>
+    <string name="midi_help_apps_missing_body">• Open the other app first. Some apps offer their MIDI device only while they run.\n• Tap “Search again”. UniPad reads the list only when you ask.\n• Bluetooth and network MIDI devices aren\'t listed here.</string>
 </resources>

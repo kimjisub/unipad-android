@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">अपवाद हुआ</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpad पुनः कनेक्ट करें</string>
+	<string name="midi_connect_title">MIDI डिवाइस कनेक्ट करें</string>
 	<string name="import_unipack">UniPack आयात करें</string>
 	<string name="store">स्टोर</string>
 
@@ -372,4 +372,6 @@
 	<string name="computer_pad_help_numbers">चैनल 1: पैड नोट 11–88, दाएँ बटन नोट 19–89, ऊपरी बटन CC 104–111 भेजते हैं, सभी 127 पर।</string>
 	<string name="computer_pad_help_lights">कंप्यूटर पैड का नंबर रंग 0–127 के साथ भेजकर उसे जलाता है; 0 या note off उसे बुझाता है।</string>
 	<string name="computer_pad_disconnect">डिस्कनेक्ट करें</string>
+    <string name="midi_tab_usb">USB डिवाइस</string>
+    <string name="midi_tab_apps">इस फ़ोन के ऐप</string>
 </resources>

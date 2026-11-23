@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Ausnahme aufgetreten</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Launchpad neu verbinden</string>
+	<string name="midi_connect_title">MIDI-Gerät verbinden</string>
 	<string name="import_unipack">UniPack importieren</string>
 	<string name="store">Store</string>
 
@@ -372,4 +372,6 @@
 	<string name="computer_pad_help_numbers">Kanal 1: Pads senden Noten 11–88, rechte Tasten Noten 19–89, obere Tasten CC 104–111, jeweils mit 127.</string>
 	<string name="computer_pad_help_lights">Der Computer beleuchtet ein Pad, indem er dessen Nummer mit einer Farbe 0–127 sendet; 0 oder Note-Off schaltet es aus.</string>
 	<string name="computer_pad_disconnect">Trennen</string>
+    <string name="midi_tab_usb">USB-Geräte</string>
+    <string name="midi_tab_apps">Apps auf diesem Telefon</string>
 </resources>

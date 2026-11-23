@@ -42,7 +42,7 @@
 	<string name="exceptionOccurred">Đã Xảy Ra Ngoại Lệ</string>
 
 	<!--Menu-->
-	<string name="reconnect_launchpad">Kết nối lại Launchpad</string>
+	<string name="midi_connect_title">Kết nối thiết bị MIDI</string>
 	<string name="import_unipack">Nhập UniPack</string>
 	<string name="store">Cửa hàng</string>
 
@@ -371,4 +371,6 @@
 	<string name="computer_pad_help_numbers">Kênh 1: pad gửi nốt 11–88, nút phải nốt 19–89, nút trên CC 104–111, tất cả với giá trị 127.</string>
 	<string name="computer_pad_help_lights">Máy tính bật đèn pad bằng cách gửi số của pad kèm màu 0–127; 0 hoặc note off sẽ tắt.</string>
 	<string name="computer_pad_disconnect">Ngắt kết nối</string>
+    <string name="midi_tab_usb">Thiết bị USB</string>
+    <string name="midi_tab_apps">Ứng dụng trên điện thoại này</string>
 </resources>

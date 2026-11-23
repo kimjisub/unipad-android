@@ -529,7 +529,7 @@ private fun InfoContent(
 
 		SettingsCard {
 			SettingsRow(
-				title = stringResource(R.string.reconnect_launchpad),
+				title = stringResource(R.string.midi_connect_title),
 				onClick = onReconnectClick,
 			)
 			if (onComputerPadClick != null) {
