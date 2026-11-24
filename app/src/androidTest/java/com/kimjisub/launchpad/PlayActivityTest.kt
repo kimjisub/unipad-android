@@ -614,7 +614,7 @@ class PlayActivityTest : BaseUITest() {
                 .firstOrNull { it.startsWith("Override size:") }?.substringAfter(":")?.trim()
             try {
                 device.executeShellCommand("wm size 1600x2560")
-                rotateTo(Surface.ROTATION_270)
+                DisplayRotation.freeze(device, Surface.ROTATION_270)
                 settledGeometry(landscape = true)
                 assertEquals("Resizing or rotating lost tap orders", recorded, shownTapOrders().keys)
                 takeScreenshot("tap_order_resized_rotated")
@@ -930,7 +930,7 @@ class PlayActivityTest : BaseUITest() {
         try {
             device.executeShellCommand("wm set-ignore-orientation-request true")
             device.executeShellCommand("wm size 1270x1600")
-            rotateTo(Surface.ROTATION_0)
+            DisplayRotation.freeze(device, Surface.ROTATION_0)
             val geometry = settledGeometry(landscape = false)
             takeScreenshot("right_only_narrow_window")
             println("Narrow window: $geometry")
@@ -1146,18 +1146,6 @@ class PlayActivityTest : BaseUITest() {
         return problems
     }
 
-    /** Freezes the display at [rotation], asking again when a request made right after a resize is dropped. */
-    private fun rotateTo(rotation: Int) {
-        repeat(3) {
-            when (rotation) {
-                Surface.ROTATION_90 -> device.setOrientationLeft()
-                Surface.ROTATION_270 -> device.setOrientationRight()
-                else -> device.setOrientationNatural()
-            }
-            if (waitUntil(5000L) { device.displayRotation == rotation }) return
-        }
-    }
-
     /**
      * Geometry once the resized window has been laid out: the same reading twice in a row, and a
      * landscape window when [landscape] (right after a rotation the window can still be upright).
@@ -1214,7 +1202,7 @@ class PlayActivityTest : BaseUITest() {
         readRotation: () -> Int = { device.displayRotation },
     ): List<String> {
         // A resize can override a rotation that was briefly reported as complete.
-        if (rotation != null) rotateTo(rotation)
+        if (rotation != null) DisplayRotation.freeze(device, rotation)
         Thread.sleep(500)
         val geometry = settledGeometry(landscape = orientationOverrideSupported && (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270), timeoutMs = layoutTimeoutMs)
         val problems = mutableListOf<String>()

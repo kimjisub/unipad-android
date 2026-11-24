@@ -550,7 +550,16 @@ and unchanged autoplay state must survive beyond the focus grace period. Opening
 the notification shade must still release sounds and lights and require manual
 resume. Audio assertions record real runner requests; they do not prove speaker output.
 `LogoLedEvidenceTest` also enables animations explicitly so Gradle's animation
-disabling cannot hide a rotation regression.
+disabling cannot hide a rotation regression. On Android 10 a rotation requested within about
+two seconds after `wm size` is written and then put back to the previous value by the system,
+with or without an orientation request from the app; at 720x840 Android 10 also ignores the
+app's landscape request, so the play screen stayed portrait. The shared `DisplayRotation.freeze`
+(also used by `PlayActivityTest`) therefore counts a rotation only once the display still has it
+three seconds after the request, asks again otherwise, and the test prints the number of requests
+per layout (`rotationRequests=`). Each layout must still reach its own width, orientation,
+density and 32 visible chain buttons, and the rotation is checked again before the captures.
+This test runs on API 29 on its own (verified on the Android 10 emulator); the rest of the base
+feature suite still needs API 33+.
 
 ### Scroll position through resizing
 
