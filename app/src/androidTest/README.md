@@ -70,7 +70,7 @@ release into the next round. All 80 positions show every palette color 0–127 a
 at any velocity, note on 0 and CC 0, with no byte sent back. A flood of 40,000 lights leaves the main
 thread answering within Android's five-second input limit and each position at its last color, and
 a press right after still goes out. `touchToSendCallTimesInsideThePhone` injects 10,000 press–release
-pairs at 100 a second (about two minutes; `-e computerPadLatencyPairs <n>` changes the count) and
+pairs at 100 a second (about two minutes; `-Pandroid.testInstrumentationRunnerArguments.computerPadLatencyPairs=<n>` changes the count) and
 saves the time from the window receiving each touch to the MIDI send call as
 `computer_pad/touch_to_send.txt`; only missing or reordered messages fail it. On an emulator these
 times are the emulator's. The check with a real phone and computer is

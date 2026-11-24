@@ -45,6 +45,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -71,7 +72,8 @@ class ComputerPadPortLoadTest {
 	private lateinit var control: MidiInputPort
 	private val wire = PeerWire()
 	private val originalFactory = ComputerPadActivity.connectionFactory
-	private val created = mutableListOf<UsbPeripheralConnection>()
+	/** Added on the main thread by the screen, read by the test thread. */
+	private val created = CopyOnWriteArrayList<UsbPeripheralConnection>()
 	private var scenario: ActivityScenario<ComputerPadActivity>? = null
 	private val connection get() = created.single()
 
@@ -132,6 +134,8 @@ class ComputerPadPortLoadTest {
 			compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { up(1) }
 			computerSends(light(lit + 1, LIGHT + round))
 			awaitPressesSince(start, press(tapped), release(tapped), press(held), release(held))
+			assertTrue("round $round: a light after the disconnect was kept: ${connection.lights.snapshot().toList()}", connection.lights.snapshot().all { it == 0 })
+			awaitScreen("round $round after the disconnect", IntArray(Mk2Layout.SIZE).asMap())
 			assertEquals("round $round: the app stopped", Lifecycle.State.RESUMED, scenario!!.state)
 			ended = generation to held
 		}
@@ -181,20 +185,23 @@ class ComputerPadPortLoadTest {
 		fun color(packet: Int, index: Int) = 1 + (packet * 7 + index) % 126
 		val start = wire.size()
 		val began = SystemClock.elapsedRealtimeNanos()
+		val last = IntArray(Mk2Layout.SIZE) { color(packets - 1, it) }
 		val probe = MainThreadProbe()
 		val sentMs: Long
+		val deliveredMs: Long
+		// The app reads lights on its own port, so the probe runs until the last color is on the screen.
 		try {
 			for (packet in 0 until packets) computerSends(*Array(Mk2Layout.SIZE) { light(it, color(packet, it)) })
 			sentMs = (SystemClock.elapsedRealtimeNanos() - began) / 1_000_000
 			awaitTrue(60) { wire.size() - start >= FLOOD_MESSAGES }
+			deliveredMs = (SystemClock.elapsedRealtimeNanos() - began) / 1_000_000
+			awaitScreen("after the flood", last.asMap())
 		} finally { probe.close() }
-		val deliveredMs = (SystemClock.elapsedRealtimeNanos() - began) / 1_000_000
-		println("Light flood: $FLOOD_MESSAGES messages sent in $sentMs ms, at the peer's other listener after $deliveredMs ms; " +
-			"main thread answered ${probe.answered} probes, longest wait ${probe.longestMs} ms")
+		val shownMs = (SystemClock.elapsedRealtimeNanos() - began) / 1_000_000
+		println("Light flood: $FLOOD_MESSAGES messages sent in $sentMs ms, at the peer's other listener after $deliveredMs ms, " +
+			"last colors on the screen after $shownMs ms; main thread answered ${probe.answered} probes, longest wait ${probe.longestMs} ms")
 		assertTrue("the main thread never answered during the flood", probe.answered > 0)
 		assertTrue("the main thread was blocked for ${probe.longestMs} ms", probe.longestMs < BLOCKED_MS)
-		val last = IntArray(Mk2Layout.SIZE) { color(packets - 1, it) }
-		awaitScreen("after the flood", last.asMap())
 		assertArrayEquals(last, connection.lights.snapshot())
 		Thread.sleep(SETTLE_MS)
 		assertEquals("lights were sent back to the computer", 0L, pressBytesAtPeer())
@@ -271,7 +278,9 @@ class ComputerPadPortLoadTest {
 			append(report.describe())
 		}
 		println(summary)
-		TestCaptures.save(UiDevice.getInstance(instrumentation), "computer_pad/touch_to_send.txt") { it.writeText(summary); true }
+		check(TestCaptures.save(UiDevice.getInstance(instrumentation), "computer_pad/touch_to_send.txt") { it.writeText(summary); true }) {
+			"the measurement was not saved"
+		}
 		assertEquals("touches received by the window", events, touches.size())
 		assertEquals("messages not sent: ${report.missing}; out of order: ${report.outOfOrder}", 0, report.missing + report.outOfOrder)
 		assertEquals("bytes at the press port", events * 3L, pressBytesAtPeer())

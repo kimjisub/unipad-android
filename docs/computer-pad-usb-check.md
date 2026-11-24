@@ -134,19 +134,33 @@ half of a round trip as one-way time.
 
 1. **Inside the phone, touch received → MIDI send call.** This starts when the screen's window
    receives the touch; the touch screen and the system's input dispatch before it are left out.
-   Run the device test on the phone over adb
-   (before switching the cable to MIDI, or over wireless debugging):
+   Run the device test on the phone over adb (before switching the cable to MIDI, or over
+   wireless debugging) with Gradle itself, from the repository root:
 
    ```sh
-   ANDROID_SERIAL=<phone> bash scripts/ci-connected-tests.sh \
-     com.kimjisub.launchpad.midi.ComputerPadPortLoadTest#touchToSendCallTimesInsideThePhone
+   ANDROID_SERIAL=<phone> ./gradlew --no-daemon :app:connectedDebugAndroidTest \
+     -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.midi.ComputerPadPortLoadTest#touchToSendCallTimesInsideThePhone
    ```
 
-   It sends 10,000 press–release pairs at 100 pairs a second (about two minutes) and writes the
-   median, 95th and 99th percentile, maximum, missing and out-of-order counts to
-   `computer_pad/touch_to_send.txt` among the captures. `-e computerPadLatencyPairs <n>` changes the
-   number of pairs. Only missing or reordered messages fail the test. Figures from an emulator are
-   that emulator's own and are not phone figures.
+   Do not use `scripts/ci-connected-tests.sh` on a phone: it is for emulators only, removes
+   UniPad's debug build before and after the run, and changes the device's font scale and animation
+   settings.
+
+   The Gradle command also installs its own debug build of UniPad over the one on the phone and
+   **removes it when the test ends**, together with its packs and settings. Run this part first,
+   before steps 1–6, and then install the build under test again; or run it last, after every other
+   result is recorded. Write down which order you used. Add
+   `-Pandroid.testInstrumentationRunnerArguments.computerPadLatencyPairs=<n>` to change the number
+   of pairs.
+
+   It sends 10,000 press–release pairs at 100 pairs a second (about two minutes) and prints the
+   median, 95th and 99th percentile, maximum, missing and out-of-order counts to the test's logcat,
+   which Gradle keeps under `app/build/outputs/androidTest-results/connected/debug/`. Copy it
+   before the next run replaces that folder. On the phone the same text is saved as
+   `/data/local/tmp/unipad_tests/computer_pad/touch_to_send.txt`; read it with
+   `adb -s <phone> shell cat /data/local/tmp/unipad_tests/computer_pad/touch_to_send.txt`. Only
+   missing or reordered messages fail the test. Figures from an emulator are that emulator's own
+   and are not phone figures.
 2. **Computer → USB → phone light → computer.** Needs a test-only reply in a test build; the app
    has none. Record **not measured**.
 3. **Real touch → computer sound, computer light → phone screen.** Needs high-speed video or
