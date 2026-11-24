@@ -48,7 +48,11 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         val vm = screen.vm()
         val chains = CopyOnWriteArrayList<Int>()
         screen.onMain { vm.chain.addObserver { c, _ -> chains += c } }
-        screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
+        pauseOnPress(0, 1, plays = 3)
+        record("voice-before-move", chains)
+        assertEquals(listOf("first.wav", "move.wav", "voice.wav"), soundNames())
+        assertEquals(0, screen.onMain { vm.chain.value })
+        screen.onMain { vm.autoPlayResume() }
         screen.await("The final press was not delivered") { audio.plays.size >= 4 }
         screen.await("The new page's light was not delivered") { screen.onMain {
             vm.channelManager.get(0, 1)?.let { it.channel == Channel.LED && it.code == 9 } == true
@@ -90,8 +94,8 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         assertEquals(listOf("first.wav", "voice.wav", "move.wav"), soundNames())
     }
 
-    /** Pauses in the actual first press callback, before the runner can process its next element. */
-    private fun pauseOnMovingPress(): AtomicBoolean {
+    /** Pauses in the actual press callback, before the runner can process its next element. */
+    private fun pauseOnPress(padX: Int = 0, padY: Int = 0, plays: Int? = null) {
         val paused = AtomicBoolean()
         screen.onMain {
             val vm = screen.vm()
@@ -100,21 +104,21 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
             vm.uiCallback = object : PlayActivityViewModel.UiCallback by drawn {
                 override fun setLedPad(x: Int, y: Int) {
                     drawn.setLedPad(x, y)
-                    if (x == 0 && y == 0 && vm.channelManager.get(x, y)?.channel == Channel.PRESSED &&
+                    if (x == padX && y == padY && (plays == null || audio.plays.size == plays) &&
+                        vm.channelManager.get(x, y)?.channel == Channel.PRESSED &&
                         paused.compareAndSet(false, true)) vm.autoPlayPause()
                 }
             }
             vm.switchPlayMode(PlayMode.AutoPlay)
         }
-        screen.await("The moving press did not pause playback") { paused.get() }
-        return paused
+        screen.await("The selected press did not pause playback") { paused.get() }
     }
 
     @Test fun aPausedMoveWaitsForResume_andNormalEndAppliesIt() {
         fixture("on 1 1\nd 30\n")
         screen.openPlay()
         val vm = screen.vm()
-        pauseOnMovingPress()
+        pauseOnPress()
         SystemClock.sleep(250)
         record("paused")
         assertEquals(0, screen.onMain { vm.chain.value })
@@ -130,7 +134,7 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         fixture("on 1 1\nd 1000\n")
         screen.openPlay()
         val vm = screen.vm()
-        pauseOnMovingPress()
+        pauseOnPress()
         screen.onMain { vm.switchPlayMode(PlayMode.None) }
         SystemClock.sleep(250)
         record("stopped")
@@ -144,7 +148,7 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         val vm = screen.vm()
         val chains = CopyOnWriteArrayList<Int>()
         screen.onMain { vm.chain.addObserver { c, _ -> chains += c } }
-        pauseOnMovingPress()
+        pauseOnPress()
         scenario.close()
         SystemClock.sleep(250)
         assertEquals(emptyList<Int>(), chains.toList())
