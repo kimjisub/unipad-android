@@ -63,6 +63,18 @@ and final releases. It also makes the peer stop reading, like a computer with no
 MIDI, and checks that the release and overflow deadlines still hand the connection back. The production endpoint filter rejects this virtual service. These checks do
 not establish USB peripheral support, desktop compatibility, or USB cable latency.
 
+`LargeTextLayoutTest` checks both languages at default and enlarged text sizes. Below API 30,
+it checks the download and import actions and requires the recovery action to be absent; from
+API 30 it also checks the recovery action's rendered text. `ZipThemeResourcesTest` creates its
+WebP fixture with the legacy encoder below API 30, so the alias and extension check runs there too.
+
+`LibraryAndFileTest.launcherEmptyLibrarySettingsThenPopulatedLibrary` grants legacy storage
+access before checking that every workspace the app reads is empty, including `Documents/Unipad`
+below API 30. Remaining packs cause a precondition failure that names their full paths; the
+check never deletes them. `emptyLibraryPreconditionRejectsPacksInEveryWorkspace` creates a
+temporary pack in each available workspace and checks both that diagnostic and preservation of
+the pack's contents, then removes only its own fixture.
+
 ## Run on an API 35 emulator
 
 Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using

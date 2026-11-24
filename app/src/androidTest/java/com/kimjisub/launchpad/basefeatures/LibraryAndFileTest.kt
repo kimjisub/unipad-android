@@ -12,6 +12,8 @@ import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.ActivityReadiness
 import com.kimjisub.launchpad.LegacyStorage
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.manager.WorkspaceManager
+import java.io.File
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
 import org.junit.After
@@ -32,6 +34,7 @@ class LibraryAndFileTest {
 
     @Test fun launcherEmptyLibrarySettingsThenPopulatedLibrary() {
         LegacyStorage.grant(screen.context)
+        screen.assertEmptyLibrary()
         val launch = screen.context.packageManager.getLaunchIntentForPackage(screen.context.packageName)!!
         launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
         screen.context.startActivity(launch)
@@ -48,6 +51,32 @@ class LibraryAndFileTest {
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         screen.capture("populated-library")
+    }
+
+    @Test fun emptyLibraryPreconditionRejectsPacksInEveryWorkspace() {
+        LegacyStorage.grant(screen.context)
+        screen.assertEmptyLibrary()
+        for (workspace in WorkspaceManager(screen.context).availableWorkspaces) {
+            val pack = File(workspace.file, "empty-library-precondition-test")
+            assertFalse("Precondition fixture already exists: $pack", pack.exists())
+            assertTrue("Cannot create precondition fixture: $pack", pack.mkdir())
+            val marker = File(pack, "info").apply { writeText("preserve this pack") }
+            try {
+                val failure = try {
+                    screen.assertEmptyLibrary()
+                    null
+                } catch (error: AssertionError) {
+                    error
+                }
+                assertNotNull("Empty-library precondition ignored $pack", failure)
+                assertTrue("Diagnostic must name the remaining pack: $failure",
+                    failure!!.message.orEmpty().contains(pack.absolutePath))
+                assertEquals("Precondition must not delete existing packs", "preserve this pack", marker.readText())
+            } finally {
+                assertTrue("Cannot remove precondition fixture: $pack", pack.deleteRecursively())
+            }
+        }
+        screen.assertEmptyLibrary()
     }
 
     @Test fun filePickerImportsZipShowsResultAndOpensImportedPack() {
