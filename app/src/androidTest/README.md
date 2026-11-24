@@ -487,7 +487,7 @@ adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.UniPackImportOverlapDeviceTest \
-  com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.BrowserTestRunner
 ```
 
 Keep the device offline during this check so application startup cannot send test traffic.
@@ -575,3 +575,19 @@ A controlled Compose clock checks that content growth does not interrupt a fling
 control cases establish that scrolling and restoration work without the competing changes.
 All nine cases run on a phone-sized window or larger and save resize captures under
 `resize-mutation/`.
+
+## Browser visit analytics
+
+`BrowserTestRunner` marks only the current instrumented app process as a test run. The shared
+`browse` helper adds `no_analytics=1` to `unipad.io` pages in that process, including the
+getting-started, theme, homepage and MIDI help links. Existing query text and fragments are
+preserved; other hosts are unchanged. No preference or file stores this signal. A normal app
+launch, including a manual launch on an emulator without instrumentation, keeps its original
+addresses. Such manual test visits require a separate analytics exclusion mechanism.
+
+`BrowserLinksTest` checks the URL policy on the JVM. `BrowserLinksDeviceTest` checks the runner
+signal and outgoing intents; `PackWebsiteDeviceTest` checks the same path for pack metadata.
+For an offline Chrome capture of the real theme button, pass the instrumentation argument
+`captureBrowserLinks=true`; without it the test intercepts the outgoing intent without opening
+an external app. Save the emulator's network state, disable its Wi-Fi and mobile data before a
+normal-launch comparison, and restore that state after capturing both addresses.

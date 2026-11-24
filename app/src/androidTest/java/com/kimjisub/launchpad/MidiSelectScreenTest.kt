@@ -178,7 +178,7 @@ class MidiSelectScreenTest {
     }
 
     @Test fun browserReturnKeepsTheExpandedHelp() {
-        val page = "https://unipad.io/docs/guide#custom-firmware"
+        val page = "https://unipad.io/docs/guide?no_analytics=1#custom-firmware"
         val appPackage = compose.activity.packageName
         val browsers = device.executeShellCommand("cmd package query-activities --brief -a android.intent.action.VIEW -d $page")
             .lines().map { it.trim().substringBefore('/') }
@@ -222,7 +222,7 @@ class MidiSelectScreenTest {
         var attempted = false
         val monitor = object : Instrumentation.ActivityMonitor() {
             override fun onStartActivity(intent: Intent): Instrumentation.ActivityResult? {
-                if (intent.action == Intent.ACTION_VIEW && intent.dataString == "https://unipad.io/docs/guide#custom-firmware") {
+                if (intent.action == Intent.ACTION_VIEW && intent.dataString == "https://unipad.io/docs/guide?no_analytics=1#custom-firmware") {
                     attempted = true
                     throw ActivityNotFoundException("No browser for this test")
                 }
