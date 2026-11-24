@@ -124,7 +124,6 @@ internal fun inspectOgg(d: AudioData): AudioFileFacts {
                         audioRequire(mode < modes.size)
                         val block = if (modes[mode]) longBlock else shortBlock
                         if (modes[mode]) bits.skip(2)
-                        lastPacketFrames = block.toLong()
                         if (previousBlock != 0) calculated = audioAdd(calculated, (previousBlock + block) / 4L)
                         previousBlock = block
                     }
@@ -146,8 +145,9 @@ internal fun inspectOgg(d: AudioData): AudioFileFacts {
         } else audioRequire(completed == 0)
         if (flags and 4 != 0) {
             audioRequire(!unset && packetSize == 0L && calculated > 0 && granule >= preSkip)
-            // Only the final packet may be trimmed, not an arbitrarily shortened timeline.
-            audioRequire(calculated - granule <= lastPacketFrames)
+            // Only the end may be trimmed, not an arbitrarily shortened timeline. Opus trims within
+            // its final packet. Vorbis encoders may pad a run of short blocks by up to a long block.
+            audioRequire(calculated - granule <= if (opus) lastPacketFrames else longBlock.toLong())
             ended = true
         }
         at += pageSize
