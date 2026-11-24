@@ -6,6 +6,8 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
@@ -13,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.AppLanguage
 import com.kimjisub.launchpad.DisplaySettings
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.ui.compose.PlayModeSelectorTags
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.assertEquals
@@ -48,14 +51,22 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
             AppLanguage.set(language)
             DisplaySettings.withPhoneDisplay(screen.device, display.first, display.second) {
                 File(screen.pack(), "autoPlay").writeText("delay 500\ntouch 1 1\ndelay 60000\n")
-                screen.openPlay()
+                // Async loading and layout need Compose frames, which the sleeping screen helper cannot advance.
+                screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+                compose.waitUntil(timeoutMillis = 10000) {
+                    screen.onMain { !screen.vm().unipackLoading && !screen.vm().soundLoadingActive && screen.vm().uiLoaded }
+                }
                 assertEquals(scale, screen.resumed().resources.configuration.fontScale, 0.01f)
-                screen.options()
+                openOptions()
                 screen.capture("play-mode-$language-${display.first.first}x${display.first.second}-${display.second}-$scale")
                 MODES.forEach { (_, label) -> assertDrawnWhole(screen.text(label)) }
-                MODES.forEach { (mode, label) ->
-                    screen.chooseOption(label)
-                    screen.await("${screen.text(label)} was not selected") { screen.onMain { screen.vm().playMode == mode } }
+                MODES.forEachIndexed { index, (mode, label) ->
+                    if (index > 0) openOptions()
+                    compose.onNode(hasText(screen.text(label)) and hasAnyAncestor(hasTestTag(PlayModeSelectorTags.SELECTOR)))
+                        .performScrollTo().performClick()
+                    compose.waitUntil(timeoutMillis = 10000) {
+                        screen.onMain { screen.vm().playMode == mode && !screen.vm().isOptionWindowVisible }
+                    }
                 }
             }
         } finally {
@@ -64,6 +75,10 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
             )
             AppLanguage.set(oldLanguage)
         }
+    }
+
+    private fun openOptions() {
+        compose.onNodeWithContentDescription(screen.text(R.string.menu)).performClick()
     }
 
     private fun assertDrawnWhole(label: String) {
