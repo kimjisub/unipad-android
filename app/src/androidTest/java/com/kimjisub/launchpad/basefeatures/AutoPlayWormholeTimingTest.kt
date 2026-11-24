@@ -72,15 +72,11 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         assertEquals(listOf("move.wav", "drum.wav"), soundNames())
     }
 
-    @Test fun stepPracticeKeepsTheVoiceOnTheOriginalPage() {
-        fixture("touch 1 2\nd 1000\ntouch 1 1\nd 1\ntouch 1 2\nd 199\n")
+    @Test fun stepPracticeGuidesBothPadsOnTheOriginalPage() {
+        fixture("touch 1 1\nd 1\ntouch 1 2\nd 199\n")
         screen.openPlay()
         val vm = screen.vm()
         screen.onMain { vm.switchPlayMode(PlayMode.StepPractice) }
-        screen.await("The first voice pad must be guided") { screen.onMain {
-            vm.channelManager.get(0, 1)?.channel == Channel.GUIDE
-        } }
-        pressPad(1)
         screen.await("The moving pad and voice must be guided together on page one") { screen.onMain {
             vm.channelManager.get(0, 0)?.channel == Channel.GUIDE &&
                 vm.channelManager.get(0, 1)?.channel == Channel.GUIDE && vm.chain.value == 0
@@ -91,7 +87,7 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         pressPad(1)
         pressPad(0)
         screen.await("The final practice group did not finish") { screen.onMain { !vm.autoPlayRunner!!.active } }
-        assertEquals(listOf("first.wav", "voice.wav", "move.wav"), soundNames())
+        assertEquals(listOf("first.wav", "move.wav"), soundNames())
     }
 
     /** Pauses in the actual press callback, before the runner can process its next element. */
