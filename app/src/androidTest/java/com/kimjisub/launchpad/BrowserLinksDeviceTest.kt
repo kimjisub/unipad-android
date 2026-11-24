@@ -35,6 +35,10 @@ class BrowserLinksDeviceTest {
 		instrumentation.addMonitor(monitor)
 		try {
 			ActivityScenario.launch(ThemeActivity::class.java).use {
+				val builtIn = instrumentation.targetContext.getString(R.string.theme_type_builtin)
+				assertTrue("Built-in themes did not load", device.wait(Until.hasObject(By.text(builtIn)), 10000L))
+				val add = instrumentation.targetContext.getString(R.string.theme_add_title)
+				requireNotNull(device.wait(Until.findObject(By.desc(add)), 10000L)).click()
 				val title = instrumentation.targetContext.getString(R.string.theme_add_create)
 				requireNotNull(device.wait(Until.findObject(By.text(title)), 10000L)).click()
 				instrumentation.waitForIdleSync()
