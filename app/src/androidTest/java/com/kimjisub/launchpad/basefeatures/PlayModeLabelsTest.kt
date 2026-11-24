@@ -79,6 +79,8 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
 
     private fun openOptions() {
         compose.onNodeWithContentDescription(screen.text(R.string.menu)).performClick()
+        compose.waitForIdle()
+        compose.onNode(hasTestTag(PlayModeSelectorTags.SELECTOR)).assertIsDisplayed()
     }
 
     private fun assertDrawnWhole(label: String) {
@@ -90,9 +92,15 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
         val layouts = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val layout = layouts.single()
-        println("Mode '$label': lines=${layout.lineCount}, size=${layout.size}")
-        assertFalse("'$label' is cut short", layout.hasVisualOverflow)
+        println("Mode '$label': lines=${layout.lineCount}, size=${layout.size}, " +
+            "paragraph=${layout.multiParagraph.width}x${layout.multiParagraph.height}, overflow=${layout.hasVisualOverflow}")
+        assertFalse("'$label' is cut short", layout.multiParagraph.didExceedMaxLines)
         for (line in 0 until layout.lineCount) {
+            assertFalse("'$label' is ellipsized", layout.isLineEllipsized(line))
+            // Text layout sizes round to whole pixels; allow that rounding at the glyph boundaries.
+            assertTrue("'$label' is clipped vertically", layout.getLineBottom(line) <= layout.size.height + 1)
+            assertTrue("'$label' is clipped horizontally",
+                layout.getLineRight(line) - layout.getLineLeft(line) <= layout.size.width + 1)
             val end = layout.getLineEnd(line)
             assertTrue("'$label' breaks inside a word at $end",
                 end >= label.length || label[end].isWhitespace() || label[end - 1].isWhitespace())
