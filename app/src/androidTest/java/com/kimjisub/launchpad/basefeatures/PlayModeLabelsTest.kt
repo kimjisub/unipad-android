@@ -42,6 +42,8 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
     @Test fun indonesianDefault() = check("in", DEFAULT, 1f)
     @Test fun portugueseSmallLarge() = check("pt-BR", SMALL, 2f)
     @Test fun portugueseDefault() = check("pt-BR", DEFAULT, 1f)
+    @Test fun englishDefault() = check("en", DEFAULT, 1f)
+    @Test fun koreanDefault() = check("ko", DEFAULT, 1f)
 
     private fun check(language: String, display: Pair<Pair<Int, Int>, Int>, scale: Float) {
         val oldLanguage = AppLanguage.get()
@@ -58,14 +60,20 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
                 }
                 assertEquals(scale, screen.resumed().resources.configuration.fontScale, 0.01f)
                 openOptions()
-                screen.capture("play-mode-$language-${display.first.first}x${display.first.second}-${display.second}-$scale")
-                MODES.forEach { (_, label) -> assertDrawnWhole(screen.text(label)) }
-                MODES.forEachIndexed { index, (mode, label) ->
-                    if (index > 0) openOptions()
+                val captureName = "play-mode-$language-${display.first.first}x${display.first.second}-${display.second}-$scale"
+                val keepOneRow = scale == 1f && language in listOf("en", "ko")
+                screen.capture(captureName)
+                assertLabelsAndTargets(keepOneRow)
+                MODES.forEach { (mode, label) ->
                     compose.onNode(hasText(screen.text(label)) and hasAnyAncestor(hasTestTag(PlayModeSelectorTags.SELECTOR)))
                         .performScrollTo().performClick()
                     compose.waitUntil(timeoutMillis = 10000) {
                         screen.onMain { screen.vm().playMode == mode && !screen.vm().isOptionWindowVisible }
+                    }
+                    openOptions()
+                    assertLabelsAndTargets(keepOneRow)
+                    if (language == "es" && scale == 2f && mode == PlayMode.AutoPlay) {
+                        screen.capture("$captureName-selected-autoplay")
                     }
                 }
             }
@@ -81,6 +89,26 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
         compose.onNodeWithContentDescription(screen.text(R.string.menu)).performClick()
         compose.waitForIdle()
         compose.onNode(hasTestTag(PlayModeSelectorTags.SELECTOR)).assertIsDisplayed()
+    }
+
+    private fun assertLabelsAndTargets(keepOneRow: Boolean) {
+        val targets = MODES.map { (_, resource) ->
+            val label = screen.text(resource)
+            assertDrawnWhole(label)
+            val target = compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag(PlayModeSelectorTags.SELECTOR)))
+                .performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val density = screen.onMain { screen.resumed().resources.displayMetrics.density }
+            println("Mode '$label' displayed option height: ${target.height / density}dp")
+            assertTrue("'$label' displayed option height ${target.height / density}dp is below the previous 44dp option",
+                target.height >= BASELINE_OPTION_HEIGHT_DP * density - 1)
+            target
+        }
+        if (keepOneRow) {
+            targets.forEach { target ->
+                assertEquals("Short default mode names must keep their side-by-side layout",
+                    targets.first().top, target.top, 1f)
+            }
+        }
     }
 
     private fun assertDrawnWhole(label: String) {
@@ -108,6 +136,7 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
     }
 
     private companion object {
+        const val BASELINE_OPTION_HEIGHT_DP = 44f
         val SMALL = (720 to 1440) to 320
         val DEFAULT = (1080 to 2400) to 420
         val MODES = listOf(
