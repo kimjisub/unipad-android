@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,7 +39,6 @@ object PlayModeSelectorTags {
 private val OuterPadding = 3.dp
 private val Gap = 2.dp
 private const val SIDE_BY_SIDE_MAX_LINES = 2
-private val LabelStyle = TextStyle(fontSize = 12.sp, textAlign = TextAlign.Center)
 
 /**
  * The play screen's mode choice. The options sit side by side while every name fits its third
@@ -48,12 +48,14 @@ private val LabelStyle = TextStyle(fontSize = 12.sp, textAlign = TextAlign.Cente
 @Composable
 fun PlayModeSelector(options: List<PlayModeOption>, textColor: Color, fillColor: Color, modifier: Modifier = Modifier) {
 	BoxWithConstraints(modifier.fillMaxWidth()) {
+		// Keep the inherited line height and letter spacing of the existing mode labels.
+		val labelStyle = LocalTextStyle.current.copy(fontSize = 12.sp, textAlign = TextAlign.Center)
 		val measurer = rememberTextMeasurer()
 		val cellWidth = with(LocalDensity.current) {
 			((maxWidth - OuterPadding * 2 - Gap * (options.size - 1)) / options.size).roundToPx()
 		}
 		// Measured bold, as a selected name is drawn, so selecting a mode never changes the layout.
-		val sideBySide = options.all { fitsSideBySide(measurer, it.label, cellWidth) }
+		val sideBySide = options.all { fitsSideBySide(measurer, it.label, cellWidth, labelStyle) }
 		val container = Modifier
 			.fillMaxWidth()
 			.testTag(PlayModeSelectorTags.SELECTOR)
@@ -61,18 +63,18 @@ fun PlayModeSelector(options: List<PlayModeOption>, textColor: Color, fillColor:
 			.padding(OuterPadding)
 		if (sideBySide) {
 			Row(container.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Gap)) {
-				options.forEach { Option(it, textColor, Modifier.weight(1f).fillMaxHeight(), SIDE_BY_SIDE_MAX_LINES) }
+				options.forEach { Option(it, textColor, Modifier.weight(1f).fillMaxHeight(), SIDE_BY_SIDE_MAX_LINES, labelStyle) }
 			}
 		} else {
 			Column(container, verticalArrangement = Arrangement.spacedBy(Gap)) {
-				options.forEach { Option(it, textColor, Modifier.fillMaxWidth(), Int.MAX_VALUE) }
+				options.forEach { Option(it, textColor, Modifier.fillMaxWidth(), Int.MAX_VALUE, labelStyle) }
 			}
 		}
 	}
 }
 
 @Composable
-private fun Option(option: PlayModeOption, textColor: Color, modifier: Modifier, maxLines: Int) {
+private fun Option(option: PlayModeOption, textColor: Color, modifier: Modifier, maxLines: Int, labelStyle: TextStyle) {
 	Box(
 		modifier = modifier
 			.background(if (option.selected) option.color else Color.Transparent, RoundedCornerShape(8.dp))
@@ -84,17 +86,17 @@ private fun Option(option: PlayModeOption, textColor: Color, modifier: Modifier,
 		Text(
 			text = option.label,
 			color = if (option.selected) Color.Black else textColor,
-			style = LabelStyle,
+			style = labelStyle,
 			fontWeight = if (option.selected) FontWeight.Bold else FontWeight.Normal,
 			maxLines = maxLines,
 		)
 	}
 }
 
-private fun fitsSideBySide(measurer: TextMeasurer, label: String, width: Int): Boolean {
+private fun fitsSideBySide(measurer: TextMeasurer, label: String, width: Int, labelStyle: TextStyle): Boolean {
 	val layout = measurer.measure(
 		text = label,
-		style = LabelStyle.copy(fontWeight = FontWeight.Bold),
+		style = labelStyle.copy(fontWeight = FontWeight.Bold),
 		maxLines = SIDE_BY_SIDE_MAX_LINES,
 		constraints = Constraints(maxWidth = width),
 	)
