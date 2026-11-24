@@ -44,7 +44,8 @@ class BrowserLinksDeviceTest {
 				instrumentation.waitForIdleSync()
 				assertEquals("https://unipad.io/docs/theme?no_analytics=1", opened)
 				if (capture) {
-					assertTrue("Browser address bar did not appear", device.wait(Until.hasObject(By.res("com.android.chrome", "url_bar")), 20000L))
+					assertTrue("Marked browser address did not appear", device.wait(Until.hasObject(By.res("com.android.chrome", "url_bar").textContains("no_analytics=1")), 20000L))
+					device.waitForIdle()
 					assertTrue(TestCaptures.screenshot(device, "theme-guide-test-run.png"))
 				}
 			}
