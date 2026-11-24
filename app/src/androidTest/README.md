@@ -68,6 +68,13 @@ it checks the download and import actions and requires the recovery action to be
 API 30 it also checks the recovery action's rendered text. `ZipThemeResourcesTest` creates its
 WebP fixture with the legacy encoder below API 30, so the alias and extension check runs there too.
 
+`AppUpdateWrappingTest` changes only size and density through API 30, letting the phone app's
+landscape orientation turn the display. The `wm user-rotation` read-back used to save and restore
+the rotation preference is available from API 31; API 30 only has a write-only
+`wm set-user-rotation` command. From API 31 the test also locks rotation and waits for the window
+configuration. Every version still checks the activity's density and font scale and the rendered
+text layout.
+
 `LibraryAndFileTest.launcherEmptyLibrarySettingsThenPopulatedLibrary` grants legacy storage
 access before checking that every workspace the app reads is empty, including `Documents/Unipad`
 below API 30. Remaining packs cause a precondition failure that names their full paths; the

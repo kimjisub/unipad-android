@@ -44,7 +44,7 @@ internal object DisplaySettings {
         )
     }
 
-    /** Also reads the user rotation preference, which `wm` can read and set only from Android 11. */
+    /** Also reads the user rotation preference, which `wm` can read back from Android 12. */
     fun read(device: UiDevice): State {
         val metrics = readMetrics(device)
         val rotation = device.executeShellCommand("wm user-rotation").trim()
@@ -108,12 +108,12 @@ internal object DisplaySettings {
     /**
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
-     * portrait and shows the landscape app in a small letterboxed window. Before Android 11 `wm`
-     * cannot lock the rotation, so there only the size and density change, and the landscape app
-     * turns a phone display itself.
+     * portrait and shows the landscape app in a small letterboxed window. Before Android 12 `wm`
+     * cannot read back the user rotation preference to restore it, so there only the size and
+     * density change, and the landscape app turns a phone display itself.
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) with(device, size, density, Surface.ROTATION_90, block)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) with(device, size, density, Surface.ROTATION_90, block)
         else withSizeAndDensity(device, size, density, block)
 
     private fun <T> withSizeAndDensity(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T {
