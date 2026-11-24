@@ -52,7 +52,8 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
             screen.device.executeShellCommand("settings put system font_scale $scale")
             AppLanguage.set(language)
             DisplaySettings.withPhoneDisplay(screen.device, display.first, display.second) {
-                File(screen.pack(), "autoPlay").writeText("delay 500\ntouch 1 1\ndelay 60000\n")
+                // Step practice needs a future note after timed guidance has passed the first one.
+                File(screen.pack(), "autoPlay").writeText("delay 500\ntouch 1 1\ndelay 60000\ntouch 1 1\ndelay 60000\n")
                 // Async loading and layout need Compose frames, which the sleeping screen helper cannot advance.
                 screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
                 compose.waitUntil(timeoutMillis = 10000) {
