@@ -7,7 +7,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-/** `touch` is `on` + `off` in one line, so a pad whose sound moves the chain moves it on `touch` too. */
+/** `touch` is `on` + `off` in one line, so a pad whose sound moves the chain moves it 100 ms after `touch` too. */
 class UniPackFolderAutoPlayTouchTest {
 
 	@get:Rule
@@ -43,8 +43,8 @@ class UniPackFolderAutoPlayTouchTest {
 			listOf(
 				"on 0 0 0 #0",
 				"off 0 0 0",
-				"chain 2",
 				"delay 100",
+				"chain 2",
 				"on 2 1 1 #0",
 				"off 2 1 1",
 			),
@@ -56,7 +56,7 @@ class UniPackFolderAutoPlayTouchTest {
 	fun touchesAcrossWormholesAndChains_followEveryMove() {
 		val elements = autoPlayOf(
 			keySound = "1 1 1 a.wav\n1 2 2 a.wav 1 2\n1 2 2 b.wav\n2 1 1 b.wav\n",
-			autoPlay = "t 1 1\nt 2 2\nt 1 1\nc 1\nt 2 2\n",
+			autoPlay = "t 1 1\nt 2 2\nd 100\nt 1 1\nc 1\nt 2 2\n",
 		)
 
 		assertEquals(
@@ -65,6 +65,7 @@ class UniPackFolderAutoPlayTouchTest {
 				"off 0 0 0",
 				"on 0 1 1 #0",
 				"off 0 1 1",
+				"delay 100",
 				"chain 1",
 				"on 1 0 0 #0",
 				"off 1 0 0",

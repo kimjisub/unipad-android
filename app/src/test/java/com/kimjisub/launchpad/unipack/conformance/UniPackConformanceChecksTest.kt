@@ -65,7 +65,7 @@ class UniPackConformanceChecksTest {
 	@Test
 	fun everyG6InputRejectsAChangedFile() {
 		val added = corpus.cases.filter { "-G6" in it.id }
-		assertEquals("The complete G6 addition must be registered", 55, added.size)
+		assertEquals("The complete G6 addition must be registered", 57, added.size)
 		for (c in added) {
 			verifyFingerprint(c, corpus)
 			val at = c.files.indexOfFirst { it.text != null }
@@ -82,7 +82,7 @@ class UniPackConformanceChecksTest {
 	@Test
 	fun noG6CaseAcceptsAnInjectedObservation() {
 		val added = corpus.cases.filter { "-G6" in it.id }
-		assertEquals(55, added.size)
+		assertEquals(57, added.size)
 		for (c in added) {
 			val wrong = buildJsonObject { put("injectedObservation", true) }
 			assertEquals(c.id, "fail", classify(c, wrong).status)
