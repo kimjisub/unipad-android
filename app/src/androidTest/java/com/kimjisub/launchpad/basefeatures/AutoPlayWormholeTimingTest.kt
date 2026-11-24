@@ -99,7 +99,6 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         val paused = AtomicBoolean()
         screen.onMain {
             val vm = screen.vm()
-            vm.scbFeedbackLight.setChecked(true)
             val drawn = checkNotNull(vm.uiCallback)
             vm.uiCallback = object : PlayActivityViewModel.UiCallback by drawn {
                 override fun setLedPad(x: Int, y: Int) {
@@ -110,6 +109,10 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
                 }
             }
             vm.switchPlayMode(PlayMode.AutoPlay)
+            // Starting a mode restores the pack's light defaults. Enable press feedback after
+            // that reset, on this same main-thread turn before any autoplay press is delivered.
+            vm.scbFeedbackLight.setChecked(true)
+            assertTrue("Press feedback must be enabled for the observation", vm.scbFeedbackLight.isChecked())
         }
         screen.await("The selected press did not pause playback") { paused.get() }
     }
