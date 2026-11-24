@@ -54,6 +54,13 @@ For shared-corpus observations, see [UniPack conformance](../test/resources/unip
 The device checks include ten screen recorders (eight scenarios, two of them again with the press light) and thirteen file parser checks on internal storage.
 A completed screen recorder remains an unverified corpus case; it is not a conformance pass.
 
+`basefeatures.AutoPlayWormholeTimingTest` checks the parsed 100 ms song-time move through
+the real play screen and runners: the voice queue before a move, silence on an unmapped pad,
+the destination page's light, step-practice hints, pause/resume, normal end, stop and closing
+the screen. It records decoded sound requests using silent fixture files; it does not capture
+speaker output. Exact 99/100 ms boundaries are checked with the parser's unit tests rather
+than inferred from the time Android takes to deliver a physical tap.
+
 `SafMigrationDeletionDeviceTest` runs the three file-source move routes on internal and app-specific external storage, including moves from internal to external storage. It checks source removal, copied pack contents, and preservation of a linked sibling pack where the filesystem supports symbolic links. It also moves packs from a backup folder into the app's storage, checking that a backup with a folder that cannot be read fails and stays in place. It uses file-backed `DocumentFile` destinations, so system document-provider permission handling is outside this check.
 
 `UsbPeripheralPortsTest` opens real Android MIDI ports against `PeripheralMidiPeer`, a service
