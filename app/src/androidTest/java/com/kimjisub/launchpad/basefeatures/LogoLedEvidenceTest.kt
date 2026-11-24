@@ -8,13 +8,13 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Paint
 import android.graphics.Path
-import android.os.SystemClock
 import android.view.Surface
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.DisplayRotation
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.LaunchpadColor
@@ -32,7 +32,6 @@ import java.util.zip.ZipOutputStream
 class LogoLedEvidenceTest : PlaybackScreenTest() {
     private val logo = By.res("play_logo_led")
     private val off = 0xFF2A3A52.toInt()
-    private companion object { const val ROTATION_RETRY_MS = 2000L }
 
     @Test fun packCommandsAndThemeMasksAcrossPhoneAndTabletLayouts() = withWindowAnimations {
         val prefs = PreferenceManager(screen.context)
@@ -67,28 +66,23 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 screen.device.executeShellCommand("wm density 320")
                 screen.device.executeShellCommand("wm size $size")
                 screen.onMain { screen.resumed().requestedOrientation = orientation }
-                // Android 17 ignores app orientation requests on tablet-sized displays.
-                // Rotate the device as well so each layout is exercised on every API level.
-                val rotation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Surface.ROTATION_0 else Surface.ROTATION_90
-                screen.instrumentation.uiAutomation.setRotation(rotation)
-                var rotationRequests = 1
-                var lastRotationRequest = SystemClock.elapsedRealtime()
-                val expectedWidth = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
-                val expectedOrientation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
-                screen.await({ "Display did not settle for $name after $rotationRequests rotation request(s)" }) {
-                    // Android 10 puts the rotation back to its previous value when it was requested
-                    // within about two seconds after `wm size`; ask again until the display keeps it.
-                    if (screen.device.displayRotation != rotation && SystemClock.elapsedRealtime() - lastRotationRequest >= ROTATION_RETRY_MS) {
-                        screen.instrumentation.uiAutomation.setRotation(rotation)
-                        rotationRequests++
-                        lastRotationRequest = SystemClock.elapsedRealtime()
-                    }
+                val portrait = orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                // Android 17 ignores app orientation requests on tablet-sized displays, and Android 10
+                // ignores them at 720x840. Rotate the device as well so each layout is exercised on
+                // every API level.
+                val rotation = if (portrait) Surface.ROTATION_0 else Surface.ROTATION_90
+                val rotationRequests = DisplayRotation.freeze(screen.device, rotation)
+                assertNotNull("Display did not keep rotation $rotation for $name", rotationRequests)
+                val expectedWidth = if (portrait) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
+                val expectedOrientation = if (portrait) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
+                screen.await("Display did not settle for $name") {
                     // Older Android keeps the decor inside the cutout; wm size describes the whole display.
                     screen.device.displayWidth == expectedWidth && screen.onMain {
                         screen.resumed().resources.configuration.orientation == expectedOrientation &&
                         screen.resumed().resources.displayMetrics.densityDpi == 320 &&
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
+                assertEquals("Display rotation was put back for $name", rotation, screen.device.displayRotation)
                 // Cutouts and system bars can leave the app window narrower than the display.
                 screen.freshControls()
                 screen.instrumentation.waitForIdleSync()
