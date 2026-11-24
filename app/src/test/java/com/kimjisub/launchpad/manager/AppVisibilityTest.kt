@@ -13,6 +13,19 @@ class AppVisibilityTest {
 		every { it.isChangingConfigurations } returns changingConfigurations
 	}
 
+	@Test fun accountingWaitsForARealScreenAndStopsWhenTheLastScreenCloses() {
+		assertFalse(visibility.foreground.value)
+		val first = screen()
+		val second = screen()
+		visibility.onActivityStarted(first)
+		assertTrue(visibility.foreground.value)
+		visibility.onActivityStarted(second)
+		visibility.onActivityStopped(first)
+		assertTrue(visibility.foreground.value)
+		visibility.onActivityStopped(second)
+		assertFalse(visibility.foreground.value)
+	}
+
 	@Test fun coveringOneScreenWithAnotherKeepsTheAppVisible() {
 		val play = screen()
 		val list = screen()

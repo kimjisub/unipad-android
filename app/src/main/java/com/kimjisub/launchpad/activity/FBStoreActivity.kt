@@ -66,6 +66,8 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.network.accounting.StoreDownloadAccounting
+import com.kimjisub.launchpad.network.accounting.StoreDownloadSource
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.Log
@@ -112,6 +114,8 @@ class FBStoreActivity : BaseActivity() {
 	}
 
 	private val catalog: StoreCatalog by inject()
+	private val accounting: StoreDownloadAccounting by inject()
+	private val downloadSource by lazy { StoreDownloadSource() }
 	private val storeItems = mutableStateListOf<StoreItemState>()
 	private var downloadList: List<UniPackItem> = emptyList()
 	private var requestingNotificationPermission = false
@@ -219,6 +223,7 @@ class FBStoreActivity : BaseActivity() {
 		item.downloadFraction = 0f
 		item.downloading = true
 
+		val attempt = accounting.begin(itemCode)
 		UniPackDownloader(
 			context = this,
 			title = item.storeVO.title ?: "",
@@ -262,9 +267,11 @@ class FBStoreActivity : BaseActivity() {
 					item.flagColorOverride = Green
 					item.downloading = false
 					item.downloaded = true
+					attempt.installed()
 				}
 
 				override fun onException(throwable: Throwable) {
+					attempt.cancelled()
 					Log.err("Store download failed", throwable)
 					item.playText = getString(R.string.failed)
 					item.flagColorOverride = Red
@@ -273,6 +280,7 @@ class FBStoreActivity : BaseActivity() {
 			},
 			usage = usageAnalytics.packImport(PackImportSource.STORE),
 			scope = lifecycleScope,
+			resolveUrl = downloadSource::resolve,
 		)
 		requestNotificationPermissionIfUnanswered()
 	}

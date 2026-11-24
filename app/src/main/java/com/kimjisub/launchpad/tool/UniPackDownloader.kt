@@ -37,6 +37,7 @@ class UniPackDownloader(
 	private var listener: Listener,
 	private val usage: PackImportReport,
 	scope: CoroutineScope,
+	resolveUrl: suspend (String) -> String = { it },
 ) {
 	companion object {
 		private const val DOWNLOAD_BUFFER_SIZE = 1024
@@ -87,7 +88,7 @@ class UniPackDownloader(
 				val unipackFile = File(downloadFolder, ARCHIVE_NAME)
 
 				stage = FailureStage.NETWORK
-				val call = FileApi.service.download(url)
+				val call = FileApi.service.download(resolveUrl(url))
 				// Run cancellation on the cancelling thread, even while this IO thread is
 				// blocked in execute/read. Cancelling the call closes its socket immediately.
 				cancellationWatcher = launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
