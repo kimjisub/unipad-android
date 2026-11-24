@@ -51,8 +51,8 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
                 screen.openPlay()
                 assertEquals(scale, screen.resumed().resources.configuration.fontScale, 0.01f)
                 screen.options()
-                MODES.forEach { (_, label) -> assertDrawnWhole(screen.text(label)) }
                 screen.capture("play-mode-$language-${display.first.first}x${display.first.second}-${display.second}-$scale")
+                MODES.forEach { (_, label) -> assertDrawnWhole(screen.text(label)) }
                 MODES.forEach { (mode, label) ->
                     screen.chooseOption(label)
                     screen.await("${screen.text(label)} was not selected") { screen.onMain { screen.vm().playMode == mode } }
