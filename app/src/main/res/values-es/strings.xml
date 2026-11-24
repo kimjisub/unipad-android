@@ -108,6 +108,10 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Comprobar actualizaciones</string>
+	<string name="update_check_failed">No se pudo comprobar si hay actualizaciones. Revisa tu conexión e inténtalo de nuevo.</string>
+	<string name="update_check_again">Comprobar de nuevo</string>
+	<string name="update_check_in_store">Comprobar en la tienda</string>
 
 	<string name="permissionRequire">Se requiere acceso al almacenamiento externo para guardar archivos del proyecto.\nObtener permiso para este privilegio.</string>
 	<string name="permissionDenied">La app requiere acceso al almacenamiento externo.\nPor favor active los permisos en [Configuración] > [Permisos]</string>

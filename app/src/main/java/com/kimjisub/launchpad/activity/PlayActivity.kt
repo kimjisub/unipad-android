@@ -158,6 +158,8 @@ import com.kimjisub.launchpad.ui.compose.PressOverlayIconButton
 import com.kimjisub.launchpad.ui.compose.PressOverlayTextButton
 import com.kimjisub.launchpad.ui.compose.WithoutRipple
 import com.kimjisub.launchpad.ui.compose.focusRing
+import com.kimjisub.launchpad.ui.compose.PlayModeOption
+import com.kimjisub.launchpad.ui.compose.PlayModeSelector
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -1157,39 +1159,17 @@ class PlayActivity : BaseActivity() {
 			Triple(PlayMode.GuidePlay, string.guidePlay, PlayPalette.modeGuidePlay),
 			Triple(PlayMode.StepPractice, string.stepPractice, PlayPalette.modeStepPractice),
 		)
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(horizontal = 24.dp)
-				.background(fillColor, RoundedCornerShape(10.dp))
-				.padding(3.dp),
-			horizontalArrangement = Arrangement.spacedBy(2.dp),
-		) {
-			modes.forEach { (mode, labelRes, color) ->
-				val active = vm.playMode == mode
-				Box(
-					modifier = Modifier
-						.weight(1f)
-						.background(if (active) color else Color.Transparent, RoundedCornerShape(8.dp))
-						.focusRing()
-						.clickable {
-							vm.switchPlayMode(mode)
-							vm.toggleOptionWindow(false)
-						}
-						.padding(vertical = 10.dp),
-					contentAlignment = Alignment.Center,
-				) {
-					Text(
-						text = stringResource(labelRes),
-						color = if (active) Color.Black else textColor,
-						fontSize = 12.sp,
-						fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-						maxLines = 1,
-						overflow = TextOverflow.Ellipsis,
-					)
+		PlayModeSelector(
+			options = modes.map { (mode, labelRes, color) ->
+				PlayModeOption(stringResource(labelRes), color, selected = vm.playMode == mode) {
+					vm.switchPlayMode(mode)
+					vm.toggleOptionWindow(false)
 				}
-			}
-		}
+			},
+			textColor = textColor,
+			fillColor = fillColor,
+			modifier = Modifier.padding(horizontal = 24.dp),
+		)
 	}
 
 	@Composable

@@ -106,12 +106,22 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Periksa pembaruan</string>
+	<string name="update_check_failed">Tidak dapat memeriksa pembaruan. Periksa koneksi Anda lalu coba lagi.</string>
+	<string name="update_check_again">Periksa lagi</string>
+	<string name="update_check_in_store">Periksa di toko</string>
 
 	<string name="permissionRequire">Akses penyimpanan eksternal diperlukan untuk menyimpan file proyek.\nDapatkan izin untuk hak ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke penyimpanan eksternal.\nSilakan aktifkan izin di [Pengaturan] > [Izin]</string>
 	<string name="guide_download_new">Unduh pack baru</string>
 	<string name="guide_import_external">Impor pack yang diunduh</string>
 	<string name="guide_restore_packs">Pulihkan pack yang hilang</string>
+	<string name="guide_empty_title">Mainkan UniPack pertama Anda</string>
+	<string name="guide_empty_step_get">Dapatkan pack: ketuk %1$s untuk memakai Toko, atau %2$s untuk file .zip yang sudah Anda miliki.</string>
+	<string name="guide_empty_step_play">Ketuk pack di daftar, lalu ketuk %1$s.</string>
+	<string name="guide_empty_step_pads">Tidak punya Launchpad? Cukup ketuk pad di layar.</string>
+	<string name="guide_empty_link">Panduan memulai</string>
+	<string name="unipack_play">Main</string>
 	<string name="doYouWantToDeleteUniPack">Apakah Anda ingin menghapus proyek ini?</string>
 	<string name="importComplete">Pack berhasil diimpor!</string>
 	<string name="importPlayNow">Main sekarang</string>
