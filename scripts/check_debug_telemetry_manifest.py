@@ -27,9 +27,19 @@ def metadata(root: ET.Element) -> dict[str, str | None]:
     return {e.get(ANDROID + 'name'): e.get(ANDROID + 'value') for e in root.findall('application/meta-data')}
 
 
+def permission_names(root: ET.Element) -> list[str]:
+    return [e.get(ANDROID + 'name') for e in root if e.tag in ('uses-permission', 'uses-permission-sdk-23')]
+
+
+def advertising_id_problems(values: dict[str, str | None], permissions) -> list[str]:
+    """Advertising ID collection must be off and no advertising permission requested."""
+    found = [] if values.get(AD_ID_COLLECTION) == 'false' else \
+        [f'{AD_ID_COLLECTION} is {values.get(AD_ID_COLLECTION)!r}, must be false']
+    return found + [f'advertising permission {name} is present' for name in sorted(AD_PERMISSIONS & set(permissions))]
+
+
 def has_internet(root: ET.Element) -> bool:
-    return any(e.tag in ('uses-permission', 'uses-permission-sdk-23') and e.get(ANDROID + 'name') == INTERNET
-               for e in root)
+    return INTERNET in permission_names(root)
 
 
 def problems(debug: Path, release: Path) -> list[str]:
@@ -42,11 +52,7 @@ def problems(debug: Path, release: Path) -> list[str]:
     if not has_internet(public):
         found.append(f'release: {INTERNET} is missing')
     found += [f'release: debug-only {name} is present' for name in DEBUG_COLLECTION_OFF if name in metadata(public)]
-    if metadata(public).get(AD_ID_COLLECTION) != 'false':
-        found.append(f'release: {AD_ID_COLLECTION} must be false')
-    for element in public:
-        if element.tag in ('uses-permission', 'uses-permission-sdk-23') and element.get(ANDROID + 'name') in AD_PERMISSIONS:
-            found.append(f'release: advertising permission {element.get(ANDROID + "name")} is present')
+    found += [f'release: {problem}' for problem in advertising_id_problems(metadata(public), permission_names(public))]
     return found
 
 

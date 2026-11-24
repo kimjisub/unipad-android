@@ -529,6 +529,17 @@ installs the published build and the candidate over each other on a rooted emula
 compares packs, database rows and settings before and after. See [its usage, scenarios and
 evidence](../../../scripts/UPGRADE_CHECK.md).
 
+### Release candidate without Firebase, and its bytecode and manifest
+
+Also outside the instrumented suite, run on the release candidate:
+`scripts/firebase_off_check.py` disables Firebase's start-up provider on a rented, rooted
+emulator and walks the main screen, Store, Settings and a play screen without a crash, then
+checks Firebase starts once enabled again ([usage](../../../scripts/FIREBASE_OFF_CHECK.md)).
+`scripts/check_release_bundle.py` compares the candidate with the published build without a
+device: diagnostic keys kept after R8, no system media player construction, and permission,
+feature, query and receiver changes in the merged manifest
+([usage](../../../scripts/RELEASE_BUNDLE_CHECK.md)).
+
 ### Rotation and covering windows
 
 `RotationPlaybackTest` enables all three system animation scales at 1.0 and restores
