@@ -119,7 +119,13 @@ class AppUpdateLayoutTest : BaseUITest() {
         } finally { MainActivity.appUpdateSourceForTest = null }
     }
 
+    /** The information panel only needs to scroll on a phone, so a tablet runs this as a phone. */
     @Test fun largeTextInformationStaysAboveTheUpdateControl() {
+        if (context.resources.configuration.smallestScreenWidthDp < 600) largeTextInformationStaysAboveUpdateControl()
+        else DisplaySettings.withPhoneDisplay(device, 1080 to 2400, 420) { largeTextInformationStaysAboveUpdateControl() }
+    }
+
+    private fun largeTextInformationStaysAboveUpdateControl() {
         val originalLanguage = AppLanguage.get()
         val originalScale = device.executeShellCommand("settings get system font_scale").trim()
         try {

@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.util.Log
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kimjisub.launchpad.DisplaySettings
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,14 +25,26 @@ import org.junit.runner.RunWith
 class HeldPadLayoutChangeTest : HeldPadTest() {
     private var resized = false
     private var originalBounds: Rect? = null
+    private val display by lazy { DisplaySettings.OrientationOverride(screen.device, screen.context) }
 
     @After fun restoreScreen() {
-        if (resized) {
-            screen.device.executeShellCommand("wm size reset")
-            screen.await("Display size override remained after cleanup") {
-                !screen.device.executeShellCommand("wm size").contains("Override size")
+        try {
+            try {
+                if (resized) {
+                    screen.device.executeShellCommand("wm size reset")
+                    screen.await("Display size override remained after cleanup") {
+                        !screen.device.executeShellCommand("wm size").contains("Override size")
+                    }
+                }
+            } finally {
+                display.close()
             }
+        } finally {
+            restoreRequestedOrientation()
         }
+    }
+
+    private fun restoreRequestedOrientation() {
         // A failed launch may have left no activity; the next launch uses the manifest orientation.
         val activity = runCatching { screen.resumed() }.getOrNull() ?: return
         screen.onMain { activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE }
@@ -124,6 +137,7 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
         val activity = screen.resumed()
         relayout("Screen did not turn to orientation $orientation") {
             screen.onMain { activity.requestedOrientation = requested }
+            display.show(requested)
             screen.await("Requested orientation did not reach the play screen") {
                 screen.onMain { activity.resources.configuration.orientation == orientation }
             }

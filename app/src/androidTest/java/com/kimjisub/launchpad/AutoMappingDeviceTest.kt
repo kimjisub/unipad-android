@@ -3,7 +3,6 @@ package com.kimjisub.launchpad
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.SystemClock
-import android.view.Surface
 import com.kimjisub.launchpad.basefeatures.FeatureScreen
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SplashActivity
@@ -183,6 +182,7 @@ class AutoMappingDeviceTest : BaseUITest() {
             val icon = screen.node(selector)
             takeScreenshot("automapping_launcher_icon")
             icon.click()
+            screen.closeTaskbarTip(launcherPackage)
             screen.awaitActivity(MainActivity::class.java)
             takeScreenshot("automapping_list_after_launcher_return")
             assertTrue("The pack list must cover the same PlayActivity", screen.onMain {
@@ -218,49 +218,50 @@ class AutoMappingDeviceTest : BaseUITest() {
         takeScreenshot("automapping_before_lock")
         val activity = screen.resumed()
         val orientation = screen.onMain { activity.requestedOrientation }
-        try {
-            device.sleep()
-            assertTrue("Lock did not hide the play screen", waitUntil(10_000L) {
-                screen.onMain { !vm.screenVisible }
-            })
-            // The duration read already in flight may finish before the next read waits.
-            val paused = screen.onMain { vm.autoMappingProgress }
-            SystemClock.sleep(1000)
-            screen.onMain {
-                assertTrue("Mapping must remain pending while locked", vm.autoMappingActive)
-                assertTrue("Only the in-flight read may finish behind the lock screen", vm.autoMappingProgress <= paused + 2)
-            }
-            assertEquals(input, file.readText())
+        DisplaySettings.OrientationOverride(device, context).use { display ->
+            try {
+                device.sleep()
+                assertTrue("Lock did not hide the play screen", waitUntil(10_000L) {
+                    screen.onMain { !vm.screenVisible }
+                })
+                // The duration read already in flight may finish before the next read waits.
+                val paused = screen.onMain { vm.autoMappingProgress }
+                SystemClock.sleep(1000)
+                screen.onMain {
+                    assertTrue("Mapping must remain pending while locked", vm.autoMappingActive)
+                    assertTrue("Only the in-flight read may finish behind the lock screen", vm.autoMappingProgress <= paused + 2)
+                }
+                assertEquals(input, file.readText())
 
-            device.wakeUp()
-            device.executeShellCommand("wm dismiss-keyguard")
-            assertTrue("Unlock did not resume mapping", waitUntil(30_000L) {
-                screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
-            })
-            takeScreenshot("automapping_after_unlock")
-            val rotation = device.displayRotation
-            screen.onMain {
-                activity.requestedOrientation = if (rotation == Surface.ROTATION_270)
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                else ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                device.wakeUp()
+                device.executeShellCommand("wm dismiss-keyguard")
+                assertTrue("Unlock did not resume mapping", waitUntil(30_000L) {
+                    screen.onMain { vm.screenVisible && vm.autoMappingProgress > paused }
+                })
+                takeScreenshot("automapping_after_unlock")
+                val rotation = device.displayRotation
+                val requested = if (DisplaySettings.rotationShowing(device, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) == rotation)
+                    ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                screen.onMain { activity.requestedOrientation = requested }
+                display.show(requested)
+                assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
+                    device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
+                })
+                takeScreenshot("automapping_after_rotation")
+                assertTrue("Mapping saved notice missing", device.wait(
+                    Until.hasObject(By.text(str(R.string.autoMappingSaved))), 120_000L,
+                ))
+                takeScreenshot("automapping_saved_after_unlock_and_rotation")
+                assertTrue("Mapping remained active after saving", waitUntil(10_000L) {
+                    screen.onMain { !vm.autoMappingActive }
+                })
+                assertEquals("d 1000\n" + "t 1 1\nd 100\n".repeat(999) + "t 1 1\n", file.readText())
+                assertEquals(input, File(file.parentFile, "autoPlay_previous").readText())
+            } finally {
+                device.wakeUp()
+                device.executeShellCommand("wm dismiss-keyguard")
+                screen.onMain { activity.requestedOrientation = orientation }
             }
-            assertTrue("Rotation did not keep mapping on the play screen", waitUntil(10_000L) {
-                device.displayRotation != rotation && screen.onMain { vm.screenVisible && vm.autoMappingActive }
-            })
-            takeScreenshot("automapping_after_rotation")
-            assertTrue("Mapping saved notice missing", device.wait(
-                Until.hasObject(By.text(str(R.string.autoMappingSaved))), 120_000L,
-            ))
-            takeScreenshot("automapping_saved_after_unlock_and_rotation")
-            assertTrue("Mapping remained active after saving", waitUntil(10_000L) {
-                screen.onMain { !vm.autoMappingActive }
-            })
-            assertEquals("d 1000\n" + "t 1 1\nd 100\n".repeat(999) + "t 1 1\n", file.readText())
-            assertEquals(input, File(file.parentFile, "autoPlay_previous").readText())
-        } finally {
-            device.wakeUp()
-            device.executeShellCommand("wm dismiss-keyguard")
-            screen.onMain { activity.requestedOrientation = orientation }
         }
     }
 

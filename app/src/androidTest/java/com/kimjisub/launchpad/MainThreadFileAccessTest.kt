@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.content.Intent
+import android.os.Build
 import android.os.StrictMode
 import android.os.strictmode.Violation
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -82,6 +83,7 @@ class MainThreadFileAccessTest : BaseUITest() {
 
     @Test
     fun storageSettingsAndTransferListWorkspacesOffTheMainThread() {
+        LegacyStorage.grant(context)
         watchMainThread()
         context.startActivity(
             Intent(context, SettingsActivity::class.java)
@@ -94,7 +96,7 @@ class MainThreadFileAccessTest : BaseUITest() {
         assertTrue("Transfer screen did not open", clickFresh { device.findObject(transfer) })
         assertTrue(
             "Transfer screen did not list its targets",
-            device.wait(Until.hasObject(By.text(str(R.string.workspace_backup_documents))), LAUNCH_TIMEOUT)
+            device.wait(Until.hasObject(By.text(str(backupTarget()))), LAUNCH_TIMEOUT)
         )
 
         // Returning recounts the packs of every workspace.
@@ -103,6 +105,11 @@ class MainThreadFileAccessTest : BaseUITest() {
         device.waitForIdle()
         assertNoWatchedViolations()
     }
+
+    /** Below Android 11 the backup target is the Documents/Unipad folder itself, listed as a workspace. */
+    private fun backupTarget() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) R.string.workspace_backup_documents
+        else R.string.workspace_documents_android10
 
     @Test
     fun deletingAZipThemeRemovesItsFolderOffTheMainThread() {

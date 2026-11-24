@@ -213,24 +213,29 @@ class MainActivityTest : BaseUITest() {
             takeScreenshot("after_unipack_reinstall")
         } finally {
             unipackDao.delete(OTHER_PACK_ID)
+            unipackDao.delete(TestUniPack.FOLDER_NAME)
         }
     }
 
     @Test
     fun testUnipackDeletionCancel() {
         seedHistory(TestUniPack.FOLDER_NAME)
-        launchToMainScreen()
+        try {
+            launchToMainScreen()
 
-        confirmDeleteOfTestPack(accept = false)
-        takeScreenshot("after_deletion_cancel")
+            confirmDeleteOfTestPack(accept = false)
+            takeScreenshot("after_deletion_cancel")
 
-        assertTrue(
-            "Delete dialog stayed open after cancel",
-            device.wait(Until.gone(By.text(str(R.string.doYouWantToDeleteUniPack))), 5000L)
-        )
-        assertTrue("Cancel deleted the pack files", TestUniPack.exists(context))
-        assertEquals("Cancel changed the pack's history", 1L to true, history(TestUniPack.FOLDER_NAME))
-        findTestPackRow()
+            assertTrue(
+                "Delete dialog stayed open after cancel",
+                device.wait(Until.gone(By.text(str(R.string.doYouWantToDeleteUniPack))), 5000L)
+            )
+            assertTrue("Cancel deleted the pack files", TestUniPack.exists(context))
+            assertEquals("Cancel changed the pack's history", 1L to true, history(TestUniPack.FOLDER_NAME))
+            findTestPackRow()
+        } finally {
+            unipackDao.delete(TestUniPack.FOLDER_NAME)
+        }
     }
 
     /** A folder the app cannot empty: the error is shown and the history stays. */
@@ -255,6 +260,7 @@ class MainActivityTest : BaseUITest() {
             assertTrue("Failure fixture left folders behind", unreachable.remove())
         } finally {
             unreachable.remove()
+            unipackDao.delete(TestUniPack.FOLDER_NAME)
         }
     }
 
@@ -284,7 +290,11 @@ class MainActivityTest : BaseUITest() {
 
     private val unipackDao by lazy { AppDatabase.getInstance(context).unipackDAO() }
 
-    /** One play and a bookmark, the history a reinstall must not bring back. */
+    /**
+     * One play and a bookmark, the history a reinstall must not bring back. A test that seeds it
+     * deletes the row again: the files are reinstalled for every test but the row is not, and a
+     * bookmark left on the test pack changes how the next test's pack list reads it.
+     */
     private fun seedHistory(id: String) {
         unipackDao.delete(id)
         unipackDao.insert(Unipack.create(id))
