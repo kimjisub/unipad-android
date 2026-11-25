@@ -72,7 +72,13 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		if (::play.isInitialized) screen.onMain { if (!play.isDestroyed) play.finish() }
 		// Before Android 9 the docked stack outlives the other half; removing it closes the play screen.
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) screen.device.executeShellCommand("am stack remove $DOCKED_STACK")
-		screen.await("The other app's window stayed open after the test") { !screen.device.hasObject(By.desc(PAD)) }
+		// A pad window being recreated (a display change, or its process restarted after a test killed
+		// it) misses a single close request, so it is asked again while one is shown.
+		screen.await("The other app's window stayed open after the test") {
+			val open = screen.device.hasObject(By.desc(PAD))
+			if (open) runCatching { fixture.call("closePad") }
+			!open
+		}
 		if (::play.isInitialized) screen.await("The play screen stayed open after the test") { screen.onMain { play.isDestroyed } }
 	}
 
