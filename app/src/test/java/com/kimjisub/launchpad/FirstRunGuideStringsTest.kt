@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -45,6 +46,11 @@ class FirstRunGuideStringsTest {
 		assertTrue(problems.joinToString("\n"), problems.isEmpty())
 	}
 
+	@Test
+	fun updateCheckCoverageIncludesEveryUpdateState() {
+		assertEquals(strings("values").keys.filter { it.startsWith("update_") }.toSet(), UPDATE_CHECK.toSet())
+	}
+
 	/** Every language that has these keys keeps English's placeholders, so formatting never throws or drops a name. */
 	@Test
 	fun everyLanguageKeepsTheGuidePlaceholders() {
@@ -67,6 +73,11 @@ class FirstRunGuideStringsTest {
 			"guide_empty_title", "guide_empty_step_get", "guide_empty_step_play", "guide_empty_step_pads",
 			"guide_empty_link", "unipack_play",
 		)
-		val UPDATE_CHECK = listOf("update_check", "update_check_failed", "update_check_again", "update_check_in_store")
+		val UPDATE_CHECK = listOf(
+			"update_check", "update_offer_title", "update_offer_body", "update_download", "update_later",
+			"update_downloading_title", "update_ready_title", "update_ready_body", "update_install", "update_none",
+			"update_check_failed", "update_check_again", "update_close", "update_failed", "update_retry",
+			"update_check_in_store", "update_unsupported", "update_store_notice", "update_store_open", "update_store_unavailable",
+		)
 	}
 }

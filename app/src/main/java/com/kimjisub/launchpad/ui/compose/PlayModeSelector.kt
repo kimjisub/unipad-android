@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -52,7 +53,7 @@ fun PlayModeSelector(options: List<PlayModeOption>, textColor: Color, fillColor:
 		val labelStyle = LocalTextStyle.current.copy(fontSize = 12.sp, textAlign = TextAlign.Center)
 		val measurer = rememberTextMeasurer()
 		val cellWidth = with(LocalDensity.current) {
-			((maxWidth - OuterPadding * 2 - Gap * (options.size - 1)) / options.size).roundToPx()
+			playModeCellWidth(constraints.maxWidth, options.size)
 		}
 		// Measured bold, as a selected name is drawn, so selecting a mode never changes the layout.
 		val sideBySide = options.all { fitsSideBySide(measurer, it.label, cellWidth, labelStyle) }
@@ -107,3 +108,9 @@ private fun fitsSideBySide(measurer: TextMeasurer, label: String, width: Int, la
 		end >= label.length || label[end].isWhitespace() || label[end - 1].isWhitespace()
 	}
 }
+
+/** The width used to decide whether every weighted option can show its full label. */
+internal fun Density.playModeCellWidth(widthPx: Int, optionCount: Int): Int =
+	// Padding and gaps are rounded individually by the Row. A weighted cell may get
+	// one pixel less than its siblings, so measure against the smallest cell.
+	((widthPx - 2 * OuterPadding.roundToPx() - (optionCount - 1) * Gap.roundToPx()) / optionCount).coerceAtLeast(0)

@@ -108,6 +108,22 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_offer_title">Uma nova versão está disponível</string>
+	<string name="update_offer_body">Baixe agora ou mais tarde. Escolha quando instalar depois de terminar de tocar.</string>
+	<string name="update_download">Baixar nova versão</string>
+	<string name="update_later">Mais tarde</string>
+	<string name="update_downloading_title">Baixando a nova versão</string>
+	<string name="update_ready_title">A nova versão está pronta</string>
+	<string name="update_ready_body">A instalação reinicia o aplicativo. Você voltará à lista de pacotes.</string>
+	<string name="update_install">Instalar e reiniciar</string>
+	<string name="update_none">Nenhuma atualização está disponível no momento.</string>
+	<string name="update_close">Fechar</string>
+	<string name="update_failed">Não foi possível concluir a atualização. Você pode tentar novamente mais tarde.</string>
+	<string name="update_retry">Tentar novamente</string>
+	<string name="update_unsupported">Neste dispositivo, verifique as atualizações na loja.</string>
+	<string name="update_store_notice">Verificando no Google Play. A atualização do aplicativo pode fechar o UniPad.</string>
+	<string name="update_store_open">Abrir loja</string>
+	<string name="update_store_unavailable">Não foi possível abrir a loja. Verifique novamente mais tarde.</string>
 	<string name="update_check">Verificar atualizações</string>
 	<string name="update_check_failed">Não foi possível verificar atualizações. Verifique sua conexão e tente novamente.</string>
 	<string name="update_check_again">Verificar novamente</string>

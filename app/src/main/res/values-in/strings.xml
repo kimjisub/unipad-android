@@ -106,6 +106,22 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_offer_title">Versi baru tersedia</string>
+	<string name="update_offer_body">Unduh sekarang atau nanti. Pilih waktu pemasangan setelah Anda selesai bermain.</string>
+	<string name="update_download">Unduh versi baru</string>
+	<string name="update_later">Nanti</string>
+	<string name="update_downloading_title">Mengunduh versi baru</string>
+	<string name="update_ready_title">Versi baru siap dipasang</string>
+	<string name="update_ready_body">Pemasangan akan memulai ulang aplikasi. Anda akan kembali ke daftar paket.</string>
+	<string name="update_install">Pasang dan mulai ulang</string>
+	<string name="update_none">Tidak ada pembaruan yang tersedia saat ini.</string>
+	<string name="update_close">Tutup</string>
+	<string name="update_failed">Pembaruan tidak dapat diselesaikan. Anda dapat mencoba lagi nanti.</string>
+	<string name="update_retry">Coba lagi</string>
+	<string name="update_unsupported">Di perangkat ini, periksa pembaruan di toko.</string>
+	<string name="update_store_notice">Memeriksa di Google Play. Memperbarui aplikasi dapat menutup UniPad.</string>
+	<string name="update_store_open">Buka toko</string>
+	<string name="update_store_unavailable">Tidak dapat membuka toko. Silakan periksa lagi nanti.</string>
 	<string name="update_check">Periksa pembaruan</string>
 	<string name="update_check_failed">Tidak dapat memeriksa pembaruan. Periksa koneksi Anda lalu coba lagi.</string>
 	<string name="update_check_again">Periksa lagi</string>
