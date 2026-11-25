@@ -10,13 +10,14 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.tool.BrowserLinks
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.packWebsiteAddress
 
 private const val PLAY_STORE_PACKAGE = "com.android.vending"
 
 fun android.content.Context.browse(link: String, action: String = Intent.ACTION_VIEW) {
-	if (!tryStart(Intent(action, link.toUri()))) {
+	if (!tryStart(Intent(action, BrowserLinks.address(link).toUri()))) {
 		// Devices without a browser or YouTube app (Crashlytics d783e2d5)
 		Toast.makeText(this, R.string.no_app_for_link, Toast.LENGTH_SHORT).show()
 	}

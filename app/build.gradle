@@ -39,7 +39,7 @@ android {
 		targetSdkVersion 37
 		versionCode = 119
 		versionName = "4.2.0"
-		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+		testInstrumentationRunner = "com.kimjisub.launchpad.BrowserTestRunner"
 		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
 		// renderscriptSupportModeEnabled true

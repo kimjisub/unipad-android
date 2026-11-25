@@ -399,7 +399,7 @@ def execute_round(args, out, cases):
     instrument_command = ['adb','-s',args.serial,'shell','am','instrument','-w','-r','-e','class',CLASS,
                           '-e','audioOutputSession',session,'-e','audioBlockPlayback',str(args.block_playback).lower(),
                           '-e','audioLoadingOrder',str(getattr(args,'loading_order',False)).lower(),
-                          PACKAGE+'.test/androidx.test.runner.AndroidJUnitRunner']
+                          PACKAGE+'.test/com.kimjisub.launchpad.BrowserTestRunner']
     recordings = []
     instrument = recorder = clock = None
     clock_trace = instrument_trace = None

@@ -73,7 +73,7 @@ output="$results/instrumentation.txt"
 : > "$output"
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
-  com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
+  com.kimjisub.launchpad.dev.test/com.kimjisub.launchpad.BrowserTestRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer
 # for every test the suite's classes declare; a skipped test (status -4) still counts as run.
 base_result=0
