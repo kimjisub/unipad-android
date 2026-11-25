@@ -108,12 +108,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_offer_title">Uma nova versão está disponível</string>
+	<string name="update_offer_body">Baixe agora ou mais tarde. Escolha quando instalar depois de terminar de tocar.</string>
+	<string name="update_download">Baixar nova versão</string>
+	<string name="update_later">Mais tarde</string>
+	<string name="update_downloading_title">Baixando a nova versão</string>
+	<string name="update_ready_title">A nova versão está pronta</string>
+	<string name="update_ready_body">A instalação reinicia o aplicativo. Você voltará à lista de pacotes.</string>
+	<string name="update_install">Instalar e reiniciar</string>
+	<string name="update_none">Nenhuma atualização está disponível no momento.</string>
+	<string name="update_close">Fechar</string>
+	<string name="update_failed">Não foi possível concluir a atualização. Tente novamente mais tarde.</string>
+	<string name="update_retry">Tentar novamente</string>
+	<string name="update_unsupported">Neste dispositivo, verifique as atualizações na loja.</string>
+	<string name="update_store_notice">Verificando no Google Play. A atualização do aplicativo pode fechar o UniPad.</string>
+	<string name="update_store_open">Abrir loja</string>
+	<string name="update_store_unavailable">Não foi possível abrir a loja. Verifique novamente mais tarde.</string>
+	<string name="update_check">Verificar atualizações</string>
+	<string name="update_check_failed">Não foi possível verificar atualizações. Verifique sua conexão e tente novamente.</string>
+	<string name="update_check_again">Verificar novamente</string>
+	<string name="update_check_in_store">Verificar na loja</string>
 
 	<string name="permissionRequire">É necessário acesso ao armazenamento externo para salvar arquivos do projeto.\nObtenha permissão para este privilégio.</string>
 	<string name="permissionDenied">O app requer acesso ao armazenamento externo.\nPor favor ative as permissões em [Configurações] > [Permissões]</string>
 	<string name="guide_download_new">Baixar novos packs</string>
 	<string name="guide_import_external">Importar packs baixados</string>
 	<string name="guide_restore_packs">Recuperar packs perdidos</string>
+	<string name="guide_empty_title">Toque seu primeiro UniPack</string>
+	<string name="guide_empty_step_get">Consiga um pack: toque em %1$s para usar a Loja, ou em %2$s para um .zip que você já tem.</string>
+	<string name="guide_empty_step_play">Toque no pack na lista e depois em %1$s.</string>
+	<string name="guide_empty_step_pads">Sem Launchpad? É só tocar nos pads da tela.</string>
+	<string name="guide_empty_link">Guia de primeiros passos</string>
+	<string name="unipack_play">Tocar</string>
 	<string name="doYouWantToDeleteUniPack">Deseja excluir este projeto?</string>
 	<string name="importComplete">Pack importado!</string>
 	<string name="importPlayNow">Tocar agora</string>
