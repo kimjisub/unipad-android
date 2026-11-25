@@ -106,12 +106,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">ตรวจหาอัปเดต</string>
+	<string name="update_offer_title">มีเวอร์ชันใหม่แล้ว</string>
+	<string name="update_offer_body">รับเลยหรือรับภายหลังก็ได้ เลือกเวลาติดตั้งหลังจากเล่นเสร็จ</string>
+	<string name="update_download">รับเวอร์ชันใหม่</string>
+	<string name="update_later">ภายหลัง</string>
+	<string name="update_downloading_title">กำลังรับเวอร์ชันใหม่</string>
+	<string name="update_ready_title">เวอร์ชันใหม่พร้อมแล้ว</string>
+	<string name="update_ready_body">การติดตั้งจะรีสตาร์ตแอป คุณจะกลับไปที่รายการแพ็ค</string>
+	<string name="update_install">ติดตั้งและรีสตาร์ต</string>
+	<string name="update_none">ขณะนี้ไม่มีอัปเดต</string>
+	<string name="update_check_failed">ตรวจหาอัปเดตไม่ได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
+	<string name="update_check_again">ตรวจอีกครั้ง</string>
+	<string name="update_close">ปิด</string>
+	<string name="update_failed">อัปเดตไม่สำเร็จ คุณลองอีกครั้งภายหลังได้</string>
+	<string name="update_retry">ลองอีกครั้ง</string>
+	<string name="update_check_in_store">ตรวจในร้านค้า</string>
+	<string name="update_unsupported">ในอุปกรณ์นี้ โปรดตรวจหาอัปเดตในร้านค้า</string>
+	<string name="update_store_notice">กำลังตรวจใน Google Play การอัปเดตแอปอาจทำให้ UniPad ปิดลง</string>
+	<string name="update_store_open">เปิดร้านค้า</string>
+	<string name="update_store_unavailable">เปิดร้านค้าไม่ได้ โปรดตรวจอีกครั้งภายหลัง</string>
 
 	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
 	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>
 	<string name="guide_download_new">ดาวน์โหลดแพ็คใหม่</string>
 	<string name="guide_import_external">นำเข้าแพ็คที่ดาวน์โหลด</string>
 	<string name="guide_restore_packs">กู้คืนแพ็คที่หายไป</string>
+	<string name="guide_empty_title">เล่น UniPack แรกของคุณ</string>
+	<string name="guide_empty_step_get">รับแพ็ค: แตะ %1$s เพื่อใช้ร้านค้า หรือ %2$s สำหรับไฟล์ .zip ที่คุณมีอยู่แล้ว</string>
+	<string name="guide_empty_step_play">แตะแพ็คในรายการ แล้วแตะ %1$s</string>
+	<string name="guide_empty_step_pads">ไม่มี Launchpad? แตะแพดบนหน้าจอได้เลย</string>
+	<string name="guide_empty_link">คู่มือเริ่มต้นใช้งาน</string>
+	<string name="unipack_play">เล่น</string>
 	<string name="doYouWantToDeleteUniPack">คุณต้องการลบโปรเจกต์นี้หรือไม่?</string>
 	<string name="importComplete">นำเข้าแพ็คแล้ว!</string>
 	<string name="importPlayNow">เล่นเลย</string>

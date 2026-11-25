@@ -96,12 +96,38 @@
 	<string name="proLightMode">Pro Light Mode</string>
 
 	<!--Version-->
+	<string name="update_check">Tingnan ang mga update</string>
+	<string name="update_offer_title">May bagong bersyon na</string>
+	<string name="update_offer_body">Kunin ito ngayon o mamaya. Piliin kung kailan ito i-install pagkatapos mong tumugtog.</string>
+	<string name="update_download">Kunin ang bagong bersyon</string>
+	<string name="update_later">Mamaya</string>
+	<string name="update_downloading_title">Kinukuha ang bagong bersyon</string>
+	<string name="update_ready_title">Handa na ang bagong bersyon</string>
+	<string name="update_ready_body">Magre-restart ang app kapag nag-install. Babalik ka sa listahan ng pack.</string>
+	<string name="update_install">I-install at i-restart</string>
+	<string name="update_none">Walang available na update sa ngayon.</string>
+	<string name="update_check_failed">Hindi ma-check ang mga update. Tingnan ang iyong koneksyon at subukan ulit.</string>
+	<string name="update_check_again">Tingnan ulit</string>
+	<string name="update_close">Isara</string>
+	<string name="update_failed">Hindi natapos ang update. Maaari mong subukan ulit mamaya.</string>
+	<string name="update_retry">Subukan ulit</string>
+	<string name="update_check_in_store">Tingnan sa tindahan</string>
+	<string name="update_unsupported">Sa device na ito, pakitingnan ang mga update sa tindahan.</string>
+	<string name="update_store_notice">Tinitingnan sa Google Play. Maaaring magsara ang UniPad kapag in-update ang app.</string>
+	<string name="update_store_open">Buksan ang tindahan</string>
+	<string name="update_store_unavailable">Hindi mabuksan ang tindahan. Pakitingnan ulit mamaya.</string>
 
 	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
 	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>
 	<string name="guide_download_new">Mag-download ng bagong packs</string>
 	<string name="guide_import_external">I-import ang na-download na packs</string>
 	<string name="guide_restore_packs">I-recover ang nawawalang packs</string>
+	<string name="guide_empty_title">Laruin ang iyong unang UniPack</string>
+	<string name="guide_empty_step_get">Kumuha ng pack: i-tap ang %1$s para gamitin ang Tindahan, o ang %2$s para sa .zip na mayroon ka na.</string>
+	<string name="guide_empty_step_play">I-tap ang pack sa listahan, pagkatapos ay i-tap ang %1$s.</string>
+	<string name="guide_empty_step_pads">Walang Launchpad? I-tap lang ang mga pad sa screen.</string>
+	<string name="guide_empty_link">Gabay sa pagsisimula</string>
+	<string name="unipack_play">Laruin</string>
 	<string name="doYouWantToDeleteUniPack">Gusto mo bang tanggalin ang project na ito?</string>
 	<string name="importComplete">Na-import ang pack!</string>
 	<string name="importPlayNow">Laruin ngayon</string>
