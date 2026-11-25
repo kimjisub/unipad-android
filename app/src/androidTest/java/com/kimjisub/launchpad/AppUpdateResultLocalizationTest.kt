@@ -10,7 +10,6 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.UpdateStatus
@@ -82,7 +81,11 @@ class AppUpdateResultLocalizationTest : BaseUITest() {
         }
     }
 
-    private fun waitForText(resource: Int) = device.wait(Until.hasObject(By.text(str(resource))), 10000L)
+    private fun waitForText(resource: Int): Boolean {
+        // UI Automator waits alone do not advance Compose's test clock after a tap.
+        compose.waitUntil(timeoutMillis = 10000L) { device.hasObject(By.text(str(resource))) }
+        return device.hasObject(By.text(str(resource)))
+    }
 
     private fun openNotice() {
         compose.waitUntil(timeoutMillis = 10000L) {
@@ -93,7 +96,7 @@ class AppUpdateResultLocalizationTest : BaseUITest() {
 
     private fun closeDialog() {
         device.findObject(By.res("app_update_dialog_dismiss")).click()
-        assertTrue(device.wait(Until.gone(By.res("app_update_dialog")), 5000L))
+        compose.waitUntil(timeoutMillis = 5000L) { !device.hasObject(By.res("app_update_dialog")) }
         assertTrue("closing the result did not return to the pack list", waitForMainScreen())
     }
 
