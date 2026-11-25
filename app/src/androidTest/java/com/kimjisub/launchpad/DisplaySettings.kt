@@ -114,13 +114,25 @@ internal object DisplaySettings {
      * cannot read back the user rotation preference to restore it, and on Android 12 a size or
      * density change re-locks a rotation lock to the portrait home screen's rotation (see [with]),
      * so through Android 12 only the size and density change, and the landscape app turns a phone
-     * display itself.
+     * display itself. A rotation lock it cannot keep is refused (see [withSizeAndDensity]).
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) with(device, size, density, Surface.ROTATION_90, block)
         else withSizeAndDensity(device, size, density, block)
 
+    /**
+     * Below Android 13 a size or density change makes the navigation bar re-lock a locked rotation to
+     * the natural one, and nothing reports when it has, so only a setting that re-locking leaves as
+     * it is (auto-rotate on, or locked to the natural rotation) is changed around; any other lock is
+     * refused before anything changes.
+     */
     private fun <T> withSizeAndDensity(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T {
+        val autoRotate = device.executeShellCommand("settings get system accelerometer_rotation").trim()
+        val userRotation = device.executeShellCommand("settings get system user_rotation").trim()
+        check(autoRotate == "1" || userRotation in setOf("0", "null")) {
+            "Display rotation is locked to $userRotation, which a size or density change before Android 13 " +
+                "re-locks to ${Surface.ROTATION_0}; turn auto-rotate on or lock it to ${Surface.ROTATION_0} first"
+        }
         val previous = readMetrics(device)
         try {
             setSize(device, size)
