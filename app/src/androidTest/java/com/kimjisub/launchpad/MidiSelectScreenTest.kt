@@ -6,6 +6,7 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.content.ActivityNotFoundException
 import android.hardware.usb.UsbManager
+import android.os.Build
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import android.view.ViewGroup
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Direction
@@ -217,6 +219,8 @@ class MidiSelectScreenTest {
         }
     }
 
+    // ActivityMonitor.onStartActivity is API 26+.
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     @Test fun failedGuideLaunchKeepsTheExpandedHelp() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         var attempted = false
