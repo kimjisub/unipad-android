@@ -47,6 +47,37 @@ class DisplaySettingsTest {
         assertTrue(DisplaySettings.applied(windows(), 1600 to 2560, 533, "free", "free"))
     }
 
+    @Test fun android12PrintsTheDisplayConfigurationBeforeItsDisplayLine() {
+        val applied = android12Windows()
+        assertTrue(DisplaySettings.applied(applied, 720 to 1440, 320, "lock 1", "lock 1"))
+        for (stale in listOf(
+            applied.replace("cur=720x1440", "cur=1080x2400"),
+            applied.replace("h625dp 320dpi", "h625dp 420dpi"),
+            applied.replace("mRotation=ROTATION_0", "mRotation=ROTATION_90"),
+            applied.replace("mLayoutNeeded=false", "mLayoutNeeded=true"),
+            applied.replace("mDisplayId=0", "mDisplayId=1"),
+        )) {
+            assertFalse(stale, DisplaySettings.applied(stale, 720 to 1440, 320, "lock 1", "lock 1"))
+        }
+        assertTrue(DisplaySettings.applied(applied.replace("mRotation=ROTATION_0", "mRotation=ROTATION_90"), 1440 to 720, 320, "free", "free"))
+    }
+
+    @Test fun android12UsesOnlyTheConfigurationPrintedForDisplayZero() {
+        val otherDisplayFirst = """
+            WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)
+              overrideConfig={1.0 ?mcc?mnc [en_US] ldltr sw360dp w360dp h640dp 320dpi nrml port winConfig={ mBounds=Rect(0, 0 - 720, 1280) mRotation=ROTATION_0}}
+              Display: mDisplayId=2 rootTasks=1
+                init=720x1280 320dpi cur=720x1280 app=720x1280 rng=720x720-1280x1280
+                deferred=false mLayoutNeeded=false
+              Display areas in top down Z order:
+        """.trimIndent() + "\n" + android12Windows().substringAfter("\n")
+        assertTrue(DisplaySettings.applied(otherDisplayFirst, 720 to 1440, 320, "lock 1", "lock 1"))
+        val withoutOwnConfig = otherDisplayFirst.lines().filterIndexed { i, line ->
+            i < 2 || !line.trimStart().startsWith("overrideConfig=")
+        }.joinToString("\n")
+        assertFalse(DisplaySettings.applied(withoutOwnConfig, 720 to 1440, 320, "lock 1", "lock 1"))
+    }
+
     @Test fun thisDevicesDisplayRestoresExistingOverridesEvenWhenTheBlockFails() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         // A phone's home activity may be portrait-only and ignore the user's rotation lock.
@@ -108,6 +139,18 @@ class DisplaySettingsTest {
         } while (SystemClock.elapsedRealtime() < deadline)
         assertEquals("Requested activity rotation did not reach its window", expected, rotation)
     }
+
+    // The fields used by the wait, as an Android 12 (API 31) emulator printed them with a 720x1440
+    // 320dpi override while its portrait home screen kept rotation 0.
+    private fun android12Windows() = """
+        WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)
+          mLastOrientationSource=WindowedMagnification:0:31@217892158
+          overrideConfig={1.0 310mcc260mnc [en_US] ldltr sw360dp w360dp h625dp 320dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 720, 1440) mAppBounds=Rect(0, 0 - 720, 1314) mMaxBounds=Rect(0, 0 - 720, 1440) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.96 fontWeightAdjustment=0}
+          Display: mDisplayId=0 rootTasks=6
+            init=1080x2400 420dpi base=720x1440 320dpi cur=720x1440 app=720x1314 rng=720x657-1314x1251
+            deferred=false mLayoutNeeded=false mTouchExcludeRegion=SkRegion((0,0,720,1440))
+          Display areas in top down Z order:
+    """.trimIndent()
 
     // The fields used by the wait, as Android 16's dumpsys window displays prints them.
     private fun windows() = """

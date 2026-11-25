@@ -11,6 +11,8 @@ import androidx.test.uiautomator.UiDevice
 internal object DisplaySettings {
     private const val APPLY_TIMEOUT_MS = 10000L
     private val SIZE = Regex("""(\d+)x(\d+)""")
+    private val ROTATION_FIELDS = listOf("mDisplayRotation", "mRotation")
+        .map { Regex("\\b$it=ROTATION_(0|90|180|270)\\b") }
 
     data class State(
         val size: Pair<Int, Int>,
@@ -109,11 +111,13 @@ internal object DisplaySettings {
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
      * portrait and shows the landscape app in a small letterboxed window. Before Android 12 `wm`
-     * cannot read back the user rotation preference to restore it, so there only the size and
-     * density change, and the landscape app turns a phone display itself.
+     * cannot read back the user rotation preference to restore it, and on Android 12 a rotation
+     * lock written within about a second of a size or density change is re-locked to the display's
+     * current rotation (a portrait home screen's), so through Android 12 only the size and density
+     * change, and the landscape app turns a phone display itself.
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) with(device, size, density, Surface.ROTATION_90, block)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) with(device, size, density, Surface.ROTATION_90, block)
         else withSizeAndDensity(device, size, density, block)
 
     private fun <T> withSizeAndDensity(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T {
@@ -179,10 +183,18 @@ internal object DisplaySettings {
         throw AssertionError("Display did not reach size=$size density=$density userRotation=$expectedUserRotation (was $userRotation) at the actual rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
     }
 
+    /**
+     * Android 13 and later print the display's own configuration after its `Display:` line and name
+     * its rotation `mDisplayRotation`; Android 12 prints it just before that line, with only `mRotation`.
+     */
     internal fun applied(windows: String, size: Pair<Int, Int>, density: Int, userRotation: String, expectedUserRotation: String): Boolean {
-        val display = windows.substringAfter("mDisplayId=0 ", "").substringBefore("Display areas")
-        val config = display.lineSequence().firstOrNull { it.trimStart().startsWith("overrideConfig=") } ?: return false
-        val degrees = Regex("mDisplayRotation=ROTATION_(0|90|180|270)\\b").find(config)?.groupValues?.get(1)?.toInt() ?: return false
+        if ("mDisplayId=0 " !in windows) return false
+        val display = windows.substringAfter("mDisplayId=0 ").substringBefore("Display areas")
+        fun String.isConfig() = trimStart().startsWith("overrideConfig=")
+        val config = display.lineSequence().firstOrNull { it.isConfig() }
+            ?: windows.substringBefore("mDisplayId=0 ").substringAfterLast("mDisplayId=").lineSequence().lastOrNull { it.isConfig() }
+            ?: return false
+        val degrees = (ROTATION_FIELDS.firstNotNullOfOrNull { it.find(config) } ?: return false).groupValues[1].toInt()
         val actualRotation = degrees / 90
         val (width, height) = if (actualRotation % 2 == 0) size else size.second to size.first
         return userRotation == expectedUserRotation &&
