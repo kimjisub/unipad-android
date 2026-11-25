@@ -108,6 +108,26 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_offer_title">Hay una nueva versión disponible</string>
+	<string name="update_offer_body">Descárgala ahora o más tarde. Elige cuándo instalarla después de terminar de tocar.</string>
+	<string name="update_download">Obtener nueva versión</string>
+	<string name="update_later">Más tarde</string>
+	<string name="update_downloading_title">Descargando la nueva versión</string>
+	<string name="update_ready_title">La nueva versión está lista</string>
+	<string name="update_ready_body">La instalación reinicia la aplicación. Volverás a la lista de paquetes.</string>
+	<string name="update_install">Instalar y reiniciar</string>
+	<string name="update_none">No hay actualizaciones disponibles en este momento.</string>
+	<string name="update_close">Cerrar</string>
+	<string name="update_failed">No se pudo completar la actualización. Puedes intentarlo de nuevo más tarde.</string>
+	<string name="update_retry">Intentar de nuevo</string>
+	<string name="update_unsupported">En este dispositivo, comprueba las actualizaciones en la tienda.</string>
+	<string name="update_store_notice">Comprobando en Google Play. Actualizar la aplicación puede cerrar UniPad.</string>
+	<string name="update_store_open">Abrir tienda</string>
+	<string name="update_store_unavailable">No se pudo abrir la tienda. Compruébalo de nuevo más tarde.</string>
+	<string name="update_check">Comprobar actualizaciones</string>
+	<string name="update_check_failed">No se pudo comprobar si hay actualizaciones. Revisa tu conexión e inténtalo de nuevo.</string>
+	<string name="update_check_again">Comprobar de nuevo</string>
+	<string name="update_check_in_store">Comprobar en la tienda</string>
 
 	<string name="permissionRequire">Se requiere acceso al almacenamiento externo para guardar archivos del proyecto.\nObtener permiso para este privilegio.</string>
 	<string name="permissionDenied">La app requiere acceso al almacenamiento externo.\nPor favor active los permisos en [Configuración] > [Permisos]</string>
@@ -379,6 +399,8 @@
 	<string name="computer_pad_help_name">El nombre del teléfono en el ordenador depende del teléfono y del sistema; puede que no aparezca como UniPad.</string>
 	<string name="computer_pad_help_numbers">Canal 1: los pads envían notas 11–88, los botones derechos notas 19–89 y los superiores CC 104–111, todo a 127.</string>
 	<string name="computer_pad_help_lights">El ordenador enciende un pad enviando su número con un color 0–127; 0 o note off lo apaga.</string>
+	<string name="computer_pad_help_no_midi_mode">Los teléfonos sin MIDI en los ajustes USB no pueden usar esta función.</string>
+	<string name="computer_pad_help_check_on_computer">Solo la app del ordenador muestra si este recibe las pulsaciones.</string>
 	<string name="computer_pad_disconnect">Desconectar</string>
     <string name="midi_tab_usb">Dispositivos USB</string>
     <string name="midi_tab_apps">Apps de este teléfono</string>

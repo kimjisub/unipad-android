@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.midi
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,6 +27,8 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
@@ -47,6 +50,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.abs
 
 /** Window size and text size, drawn inside the pad screen's own activity with nothing connected. */
 @RunWith(AndroidJUnit4::class)
@@ -67,6 +71,8 @@ class ComputerPadLayoutTest {
 	private val connection = UsbPeripheralConnection(nothingFound, MidiTransportGate())
 	private val found = UsbPeripheralConnection(oneFound, MidiTransportGate())
 	private lateinit var scenario: ActivityScenario<ComputerPadActivity>
+	/** How the phone was held before a test turned it; the next test starts from the same orientation. */
+	private var heldBefore: Boolean? = null
 
 	@Before fun launch() {
 		ComputerPadActivity.connectionFactory = { UsbPeripheralConnection(nothingFound, MidiTransportGate()) }
@@ -74,6 +80,10 @@ class ComputerPadLayoutTest {
 	}
 
 	@After fun cleanup() {
+		heldBefore?.let { landscape ->
+			turn(landscape)
+			scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+		}
 		scenario.close()
 		ComputerPadActivity.connectionFactory = originalFactory
 		connection.close()
@@ -101,6 +111,28 @@ class ComputerPadLayoutTest {
 	@Test fun aWindowTooSmallFor32dpPadsLocksInputAndSaysSo() {
 		show(300, 220)
 		compose.onNodeWithTag(ComputerPadTags.TOO_SMALL).assertIsDisplayed()
+	}
+
+	/** With larger text the lock note can be taller than the pads' square; all of it can still be read. */
+	@Test fun theTooSmallNoteCanBeReadWholeWithLargeText() {
+		val failures = mutableListOf<String>()
+		for ((width, height) in listOf(300 to 220, 220 to 300)) for (fontScale in listOf(1f, 1.3f, 2f)) {
+			show(width, height, fontScale)
+			val label = "${width}x$height dp, text x$fontScale"
+			val note = compose.onNodeWithTag(ComputerPadTags.TOO_SMALL)
+			val text = compose.onNodeWithText(context.getString(R.string.computer_pad_too_small))
+			val layout = mutableListOf<TextLayoutResult>()
+			text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
+			if (layout.single().hasVisualOverflow) failures += "$label: the note's text is cut off by its own height"
+			// The note's end, scrolled to when the note scrolls, lies inside it.
+			if (SemanticsActions.ScrollBy in note.fetchSemanticsNode().config) note.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+			val box = note.fetchSemanticsNode().boundsInRoot
+			val shown = text.fetchSemanticsNode()
+			val end = shown.positionInRoot.y + shown.size.height
+			if (end > box.bottom + 1f) failures += "$label: the note's text ends at $end below the note's ${box.bottom}"
+			capture("too_small_${width}x${height}_text${(fontScale * 10).toInt()}")
+		}
+		assertTrue(failures.joinToString("\n"), failures.isEmpty())
 	}
 
 	/** Sizes stay inside a portrait phone window, which would otherwise clamp them. */
@@ -131,22 +163,27 @@ class ComputerPadLayoutTest {
 		compose.waitUntil(5000) { found.devices.value.isNotEmpty() }
 		val actions = listOf(R.string.computer_pad_connect, R.string.computer_pad_search_again, R.string.computer_pad_help)
 		val failures = mutableListOf<String>()
+		val measured = mutableListOf<String>()
 		for (window in SHORT_WINDOWS) for (fontScale in listOf(1f, 1.3f, 2f)) {
 			turn(window.landscape)
 			show(window.width, window.height, fontScale, found)
 			val label = "${window.name} ${window.width}x${window.height} dp, text x$fontScale"
 			compose.onNodeWithText(context.getString(R.string.computer_pad_found)).assertExists()
 			val bounds = compose.onNodeWithTag(WINDOW).fetchSemanticsNode().boundsInRoot
-			// A window the activity cannot hold would be clamped and measure nothing about the asked size.
+			// A window this device's screen cannot hold is clamped and says nothing about the asked size.
 			val density = context.resources.displayMetrics.density
-			assertEquals(label, window.width * density, bounds.width, 1f)
-			assertEquals(label, window.height * density, bounds.height, 1f)
+			if (abs(window.width * density - bounds.width) > 1f || abs(window.height * density - bounds.height) > 1f) {
+				Log.i(TAG, "$label skipped: this screen holds only ${bounds.width / density}x${bounds.height / density} dp")
+				continue
+			}
+			measured += label
 			failures += listOfNotNull(
 				reach(label, bounds, hasContentDescription(context.getString(R.string.computer_pad_back)) and hasClickAction()),
 				*actions.map { reach(label, bounds, hasText(context.getString(it)) and hasClickAction()) }.toTypedArray(),
 			)
 			capture("short_${window.name}_text${(fontScale * 10).toInt()}")
 		}
+		assertTrue("this screen held none of the windows", measured.isNotEmpty())
 		assertTrue(failures.joinToString("\n"), failures.isEmpty())
 	}
 
@@ -167,6 +204,9 @@ class ComputerPadLayoutTest {
 	}
 
 	private fun turn(landscape: Boolean) {
+		if (heldBefore == null) scenario.onActivity {
+			heldBefore = it.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+		}
 		scenario.onActivity {
 			it.requestedOrientation = if (landscape) ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 		}
@@ -186,6 +226,7 @@ class ComputerPadLayoutTest {
 	private data class ShortWindow(val name: String, val landscape: Boolean, val width: Int, val height: Int)
 
 	private companion object {
+		const val TAG = "ComputerPadLayoutTest"
 		const val WINDOW = "short_window"
 		val SHORT_WINDOWS = listOf(
 			// Upright phone split top and bottom: a nearly square half, wider than tall.

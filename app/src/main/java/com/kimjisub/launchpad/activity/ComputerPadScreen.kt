@@ -353,6 +353,8 @@ private fun PhaseActions(phase: ComputerPadPhase, controller: ComputerPadControl
 		}
 		is ComputerPadPhase.Paused -> Buttons {
 			PrimaryButton(R.string.computer_pad_reconnect, enabled = !phase.previousClosing) { controller.reconnect(portName) }
+			// While the old ports close, searching again is the way out after the cable has been plugged in again.
+			if (phase.previousClosing) SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
 		}
 	}
 }
@@ -443,15 +445,16 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 			},
 		)
 		if (tooSmall) {
-			Text(
-				stringResource(R.string.computer_pad_too_small),
-				color = TextPrimary,
-				fontSize = 13.sp,
-				modifier = Modifier
+			// With large text the note can be taller than the square; it then scrolls instead of being cut off.
+			Box(
+				Modifier
 					.testTag(ComputerPadTags.TOO_SMALL)
 					.background(Color(0xE6111825), RoundedCornerShape(8.dp))
+					.verticalScroll(rememberScrollState())
 					.padding(8.dp),
-			)
+			) {
+				Text(stringResource(R.string.computer_pad_too_small), color = TextPrimary, fontSize = 13.sp)
+			}
 		}
 	}
 }
@@ -540,8 +543,8 @@ private fun HelpDialog(onDismiss: () -> Unit) {
 		text = {
 			Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 				for (line in listOf(
-					R.string.computer_pad_step_cable, R.string.computer_pad_step_usb, R.string.computer_pad_step_app,
-					R.string.computer_pad_help_name, R.string.computer_pad_help_numbers, R.string.computer_pad_help_lights,
+					R.string.computer_pad_step_cable, R.string.computer_pad_step_usb, R.string.computer_pad_help_no_midi_mode,
+					R.string.computer_pad_step_app, R.string.computer_pad_help_check_on_computer, R.string.computer_pad_help_name, R.string.computer_pad_help_numbers, R.string.computer_pad_help_lights,
 					R.string.computer_pad_no_sound,
 				)) Text(stringResource(line))
 			}

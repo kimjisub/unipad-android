@@ -371,6 +371,8 @@
 	<string name="computer_pad_help_name">Nama telefon pada komputer berbeza mengikut telefon dan sistem; mungkin tidak dipaparkan sebagai UniPad.</string>
 	<string name="computer_pad_help_numbers">Saluran 1: pad menghantar not 11–88, butang kanan not 19–89, butang atas CC 104–111, semuanya 127.</string>
 	<string name="computer_pad_help_lights">Komputer menyalakan pad dengan menghantar nombornya bersama warna 0–127; 0 atau note off memadamkannya.</string>
+	<string name="computer_pad_help_no_midi_mode">Telefon tanpa MIDI dalam tetapan USB tidak dapat menggunakan ciri ini.</string>
+	<string name="computer_pad_help_check_on_computer">Sama ada komputer menerima tekanan pad hanya dapat dilihat dalam apl komputer.</string>
 	<string name="computer_pad_disconnect">Putuskan sambungan</string>
     <string name="midi_tab_usb">Peranti USB</string>
     <string name="midi_tab_apps">Apl pada telefon ini</string>

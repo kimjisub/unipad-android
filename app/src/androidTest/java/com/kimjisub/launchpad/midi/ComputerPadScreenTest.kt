@@ -12,7 +12,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -25,6 +24,7 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.Lifecycle
@@ -40,7 +40,6 @@ import com.kimjisub.launchpad.activity.ComputerPadActivity
 import com.kimjisub.launchpad.activity.ComputerPadTags
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.cellDescription
-import com.kimjisub.launchpad.ui.compose.PadGridGeometry
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -113,6 +112,15 @@ class ComputerPadScreenTest {
 			InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
 			awaitTrue { resumed() is SettingsActivity }
 		} finally { settings.close() }
+	}
+
+	/** The help names the limits users meet first: no MIDI choice in the phone's USB settings, and no receipt from the computer. */
+	@Test fun helpSaysWhichPhonesCannotConnectAndWhereToCheckTheComputerReceives() {
+		launch(MidiTransportGate())
+		compose.onNodeWithText(context.getString(R.string.computer_pad_help)).performClick()
+		capture("help")
+		for (line in listOf(R.string.computer_pad_help_no_midi_mode, R.string.computer_pad_help_check_on_computer))
+			compose.onNodeWithText(context.getString(line)).performScrollTo().assertIsDisplayed()
 	}
 
 	@Test fun fingersSendOnePressAndOneReleasePerPadAndLightsStayAfterRelease() {
@@ -240,6 +248,8 @@ class ComputerPadScreenTest {
 			compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_paused_title))
 			compose.onNode(reconnect).assertIsNotEnabled()
 			compose.onNodeWithText(context.getString(R.string.computer_pad_closing_previous)).assertIsDisplayed()
+			// Searching again stays possible, for a cable plugged in again while the old ports close.
+			compose.onNode(hasText(context.getString(R.string.computer_pad_search_again)) and hasClickAction()).assertIsEnabled()
 			capture("paused_while_ports_close")
 		} finally {
 			portsClose.countDown()
@@ -324,8 +334,16 @@ class ComputerPadScreenTest {
 		onClosed: () -> Unit = {},
 		sendFails: () -> Boolean = { false },
 	) {
+		val refusing = { sender: PeripheralMidiAccess.Sender ->
+			object : PeripheralMidiAccess.Sender by sender {
+				override fun send(bytes: ByteArray) {
+					if (sendFails()) throw java.io.IOException("the test peer refuses this send")
+					sender.send(bytes)
+				}
+			}
+		}
 		ComputerPadActivity.connectionFactory = {
-			UsbPeripheralConnection(PeerAccess(manager, info, defer, onClosed, sendFails), gate).also { created.add(it) }
+			UsbPeripheralConnection(PeerAccess(manager, info, defer, onClosed, refusing), gate).also { created.add(it) }
 		}
 		scenario = ActivityScenario.launch(ComputerPadActivity::class.java)
 		compose.onNodeWithText(context.getString(R.string.computer_pad_found)).assertIsDisplayed()
@@ -340,12 +358,6 @@ class ComputerPadScreenTest {
 		var portrait = false
 		scenario?.onActivity { portrait = it.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT }
 		return if (portrait) "portrait" else "landscape"
-	}
-
-	private fun TouchInjectionScope.cell(index: Int): Offset {
-		val (row, column) = PadGridGeometry.position(index)
-		val pitch = width.toFloat() / PadGridGeometry.CELLS
-		return Offset((column + 0.5f) * pitch, (row + 0.5f) * pitch)
 	}
 
 	private fun androidx.compose.ui.test.SemanticsNodeInteractionsProvider.onNodeWithContentDescriptionOf(index: Int) =
@@ -389,43 +401,4 @@ class ComputerPadScreenTest {
 	}
 
 	private companion object { const val PEER = "Peripheral port test peer" }
-}
-
-/** The test peer offered as if the system had listed it as a USB endpoint. */
-private class PeerAccess(
-	private val manager: MidiManager,
-	private val info: MidiDeviceInfo,
-	private var defer: ((() -> Unit) -> Unit)? = null,
-	private val onClosed: () -> Unit = {},
-	private val sendFails: () -> Boolean = { false },
-) : PeripheralMidiAccess {
-	override fun devices() = listOf(PeripheralDevice(info.id, "test peer", listOf(PeripheralDevice.Port(0, "press")), listOf(PeripheralDevice.Port(0, "lights"))))
-	@Suppress("DEPRECATION")
-	override fun watch(changed: () -> Unit, removed: (Int) -> Unit): AutoCloseable {
-		val callback = object : MidiManager.DeviceCallback() {
-			override fun onDeviceRemoved(device: MidiDeviceInfo) { removed(device.id) }
-		}
-		manager.registerDeviceCallback(callback, Handler(Looper.getMainLooper()))
-		return AutoCloseable { manager.unregisterDeviceCallback(callback) }
-	}
-	override fun open(id: Int, completed: (PeripheralMidiAccess.Device?) -> Unit) {
-		manager.openDevice(info, { device ->
-			val ports = device?.let(::AndroidMidiPorts)?.let { ports ->
-				object : PeripheralMidiAccess.Device by ports {
-					override fun input(number: Int) = ports.input(number)?.let { sender ->
-						object : PeripheralMidiAccess.Sender by sender {
-							override fun send(bytes: ByteArray) {
-								if (sendFails()) throw java.io.IOException("the test peer refuses this send")
-								sender.send(bytes)
-							}
-						}
-					}
-					override fun close() { try { ports.close() } finally { onClosed() } }
-				}
-			}
-			val delay = defer
-			defer = null
-			if (delay == null) completed(ports) else delay { completed(ports) }
-		}, Handler(Looper.getMainLooper()))
-	}
 }

@@ -72,6 +72,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		const val MAX_GRID_SIZE = 64
 		val ROUND_TOKENS = setOf("*", "mc")
 		const val LOGO_TOKEN = "l"
+		const val WORMHOLE_DELAY_MS = 100L
 		val AUTO_TOKENS = setOf("auto", "a")
 		val INTEGER_TOKEN = Regex("[+-]?[0-9]+")
 		val RGB_TOKEN = Regex("[0-9a-fA-F]{1,6}")
@@ -543,19 +544,44 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		val map = Array(buttonX) { IntArray(buttonY) }
 		var currChain = 0
 
-		// `touch` is `on` + `off` in one line: it releases the pad on the chain it pressed, then follows
-		// the sound's wormhole as `on` does.
+		// A sound's wormhole moves the chain WORMHOLE_DELAY_MS of song time after its press, as a hand
+		// press does. Presses before that keep the current chain and continue its queues, silent where
+		// that chain maps nothing. A wait is split where a switch falls inside it, so the song keeps its
+		// length. Song time follows the runner: an event comes at the sum of the waits above it, but
+		// never before the event above it (a negative wait only shortens the waits after it).
+		var delaySum = 0L
+		var songTime = 0L
+		val pendingSwitches = ArrayDeque<Pair<Long, Int>>()
+
+		fun applyChain(c: Int, scheduled: Boolean) {
+			autoPlay.elements.add(AutoPlay.Element.Chain(c, scheduled))
+			currChain = c
+			map.forEach { row -> row.fill(0) }
+		}
+
+		fun wait(delay: Int) {
+			val end = delaySum + delay
+			// Every pending switch is due after songTime, so a split part is never empty.
+			while (delay > 0 && pendingSwitches.isNotEmpty() && pendingSwitches.first().first <= end) {
+				val (due, c) = pendingSwitches.removeFirst()
+				autoPlay.elements.add(AutoPlay.Element.Delay((due - delaySum).toInt()))
+				delaySum = due
+				applyChain(c, scheduled = true)
+			}
+			if (end != delaySum || delay == 0) autoPlay.elements.add(AutoPlay.Element.Delay((end - delaySum).toInt()))
+			delaySum = end
+			songTime = maxOf(songTime, delaySum)
+		}
+
+		// `touch` is `on` + `off` in one line: it releases the pad on the chain it pressed, and its
+		// sound's wormhole is scheduled as for `on`.
 		fun press(x: Int, y: Int, release: Boolean) {
 			autoPlay.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
 			if (release) autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
 			val sound = soundGet(currChain, x, y, map[x][y])
 			map[x][y]++
-			if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
-				autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
-					currChain = it
-				}))
-				map.forEach { row -> row.fill(0) }
-			}
+			if (sound != null && sound.wormhole != Sound.NO_WORMHOLE)
+				pendingSwitches.addLast(songTime + WORMHOLE_DELAY_MS to sound.wormhole)
 		}
 
 		val inputStream = try {
@@ -649,20 +675,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					"touch", "t" -> press(x, y, release = true)
 
 					"chain", "c" -> {
-						autoPlay.elements.add(AutoPlay.Element.Chain(chain.also {
-							currChain = it
-						}))
-						map.forEach { row -> row.fill(0) }
+						pendingSwitches.clear()
+						applyChain(chain, scheduled = false)
 					}
 
-					"delay", "d" -> autoPlay.elements.add(
-						AutoPlay.Element.Delay(
-							delay
-						)
-					)
+					"delay", "d" -> wait(delay)
 				}
 			}
 		}
+		// Switches still pending at the normal end of the file apply at the final song time.
+		while (pendingSwitches.isNotEmpty()) applyChain(pendingSwitches.removeFirst().second, scheduled = true)
 	}
 
 	override fun getByteSize(): Long {
