@@ -111,10 +111,20 @@ class AppUpdateResultLocalizationTest : BaseUITest() {
                 val layouts = mutableListOf<TextLayoutResult>()
                 text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                 val layout = layouts.single()
-                assertFalse("result is truncated: $translated", layout.hasVisualOverflow)
                 val bounds = text.fetchSemanticsNode().boundsInRoot
-                assertTrue("result clipped vertically", bounds.height >= layout.getLineBottom(layout.lineCount - 1) - 1)
-                println("Result '$translated': lines=${layout.lineCount}, size=${layout.size}")
+                println("Result '$translated': lines=${layout.lineCount}, size=${layout.size}, " +
+                    "paragraph=${layout.multiParagraph.width}x${layout.multiParagraph.height}, overflow=${layout.hasVisualOverflow}, bounds=$bounds")
+                assertFalse("result exceeds its lines: $translated", layout.multiParagraph.didExceedMaxLines)
+                for (line in 0 until layout.lineCount) {
+                    println("Result line $line: left=${layout.getLineLeft(line)}, right=${layout.getLineRight(line)}, bottom=${layout.getLineBottom(line)}")
+                    assertFalse("result is ellipsized: $translated", layout.isLineEllipsized(line))
+                    // Layout sizes are integer pixels; drawn line coordinates retain fractions.
+                    assertTrue("result clipped on the left", layout.getLineLeft(line) >= -1)
+                    assertTrue("result clipped on the right", layout.getLineRight(line) <= layout.size.width + 1)
+                    assertTrue("result clipped vertically", layout.getLineBottom(line) <= layout.size.height + 1)
+                    assertTrue("visible result clipped horizontally", bounds.width >= layout.getLineRight(line) - layout.getLineLeft(line) - 1)
+                }
+                assertTrue("visible result clipped vertically", bounds.height >= layout.getLineBottom(layout.lineCount - 1) - 1)
             }
         }
     }
