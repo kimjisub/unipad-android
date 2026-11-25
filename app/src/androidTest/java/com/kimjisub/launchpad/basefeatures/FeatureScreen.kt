@@ -227,41 +227,34 @@ class FeatureScreen {
 
     /**
      * Returns the same keyboard boundary observed stable for 500 ms, rather than sampling again,
-     * after closing a keyboard notice ([closeKeyboardNotice]) the way a user would.
+     * after closing Gboard's font size notice ([KeyboardNotice]) the way a user would: a layout
+     * check made while it shows judges the app against a keyboard users see only once.
      */
     fun awaitKeyboardTopOnScreen(): Int {
         val top = awaitStableKeyboardTop()
-        if (!closeKeyboardNotice()) return top
+        if (!closeFontSizeNotice()) return top
         await("The keyboard notice did not close") { keyboardTopOnScreen() > top }
         return awaitStableKeyboardTop().also { println("keyboard_notice_closed top_with_notice=$top top=$it") }
     }
 
-    /**
-     * Gboard announces a changed system font size once, in a strip above its suggestion row that
-     * stays until it is closed ("Keyboard font size updated", OK). The strip raises the keyboard by
-     * more than a row of keys, so a layout check made while it shows judges the app against a
-     * keyboard users see only once. Returns whether a notice was found and pressed closed.
-     */
-    private fun closeKeyboardNotice(): Boolean {
+    /** Returns whether Gboard's font size notice was found and pressed closed. */
+    private fun closeFontSizeNotice(): Boolean {
         val keyboard = instrumentation.uiAutomation.windows
             .firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }?.root ?: return false
-        val header = keyboard.findAccessibilityNodeInfosByViewId("$GBOARD:id/keyboard_header_view_holder")
-            .firstOrNull() ?: return false
-        val headerTop = Rect().also(header::getBoundsInScreen).top
-        val notice = generateSequence(listOf(keyboard)) { level -> level.flatMap { node ->
-                (0 until node.childCount).mapNotNull(node::getChild) }.takeIf { it.isNotEmpty() } }
-            .flatten()
-            .filter { it.isClickable && it.isVisibleToUser && Rect().also(it::getBoundsInScreen).bottom <= headerTop }
-            .toList()
-        if (notice.isEmpty()) return false
-        val close = notice.firstOrNull {
-            it.contentDescription?.toString() == GBOARD_CLOSE_NOTICE || it.text?.toString() == GBOARD_NOTICE_OK
+        return when (val notice = KeyboardNotice.of(KeyboardElement.of(keyboard))) {
+            KeyboardNotice.None -> false
+            is KeyboardNotice.Other -> {
+                println("keyboard_notice_left_open labels=${notice.labels}")
+                false
+            }
+            is KeyboardNotice.FontSizeUnclosable -> throw AssertionError(
+                "Gboard's font size notice has no single close button beside its message: ${notice.labels}"
+            )
+            is KeyboardNotice.FontSize -> {
+                device.click(notice.close.bounds.centerX(), notice.close.bounds.centerY())
+                true
+            }
         }
-        assertNotNull("The keyboard shows a notice above its keys that cannot be closed: " +
-            notice.map { "${it.text ?: it.contentDescription}" }, close)
-        val bounds = Rect().also(close!!::getBoundsInScreen)
-        device.click(bounds.centerX(), bounds.centerY())
-        return true
     }
 
     private fun awaitStableKeyboardTop(): Int {
@@ -553,10 +546,6 @@ class FeatureScreen {
         // The launcher tip over recent apps closes by itself after 10 s; this leaves room for its fade.
         private const val LAUNCHER_TIP_MS = 15000L
         const val TITLE = "Base Features Synthetic Pack"
-        private const val GBOARD = "com.google.android.inputmethod.latin"
-        // Gboard's English labels for its notice's close button (description and text).
-        private const val GBOARD_CLOSE_NOTICE = "Close the banner."
-        private const val GBOARD_NOTICE_OK = "OK"
         const val STORE_ID = "basefeatures-store"
         // Earlier versions of this suite installed a pack here; a device they stopped on still has it.
         private const val OLD_SHARE_ID = "Base Features Synthetic Pack #basefeatures-share"
