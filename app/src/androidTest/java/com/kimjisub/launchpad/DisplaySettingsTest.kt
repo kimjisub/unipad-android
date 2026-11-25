@@ -141,11 +141,12 @@ class DisplaySettingsTest {
         val phone = shortest to maxOf(width, height)
         DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 480) {
             val outer = DisplaySettings.readMetrics(device)
-            assertEquals(phone to shortest * 160 / 480, outer.sizeOverride to outer.densityOverride)
+            // A size equal to the physical size is reported as no override, so compare what applies.
+            assertEquals(phone to shortest * 160 / 480, outer.size to outer.density)
             val failure = IllegalStateException("exercise display restoration")
             val caught = assertThrows(IllegalStateException::class.java) {
                 DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 720) {
-                    assertEquals(shortest * 160 / 720, DisplaySettings.readMetrics(device).densityOverride)
+                    assertEquals(shortest * 160 / 720, DisplaySettings.readMetrics(device).density)
                     throw failure
                 }
             }
