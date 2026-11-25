@@ -8,11 +8,13 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Paint
 import android.graphics.Path
+import android.view.Surface
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.DisplayRotation
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.manager.LaunchpadColor
@@ -64,12 +66,15 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 screen.device.executeShellCommand("wm density 320")
                 screen.device.executeShellCommand("wm size $size")
                 screen.onMain { screen.resumed().requestedOrientation = orientation }
-                // Android 17 ignores app orientation requests on tablet-sized displays.
-                // Rotate the device as well so each layout is exercised on every API level.
-                if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) screen.device.setOrientationNatural()
-                else screen.device.setOrientationLeft()
-                val expectedWidth = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
-                val expectedOrientation = if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
+                val portrait = orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                // Android 17 ignores app orientation requests on tablet-sized displays, and Android 10
+                // ignores them at 720x840. Rotate the device as well so each layout is exercised on
+                // every API level.
+                val rotation = if (portrait) Surface.ROTATION_0 else Surface.ROTATION_90
+                val rotationRequests = DisplayRotation.freeze(screen.device, rotation)
+                assertNotNull("Display did not keep rotation $rotation for $name", rotationRequests)
+                val expectedWidth = if (portrait) size.substringBefore("x").toInt() else size.substringAfter("x").toInt()
+                val expectedOrientation = if (portrait) Configuration.ORIENTATION_PORTRAIT else Configuration.ORIENTATION_LANDSCAPE
                 screen.await("Display did not settle for $name") {
                     // Older Android keeps the decor inside the cutout; wm size describes the whole display.
                     screen.device.displayWidth == expectedWidth && screen.onMain {
@@ -77,6 +82,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                         screen.resumed().resources.displayMetrics.densityDpi == 320 &&
                         screen.vm().uiLoaded && screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().count { it.visibility == View.VISIBLE } == 32 }
                 }
+                assertEquals("Display rotation was put back for $name", rotation, screen.device.displayRotation)
                 // Cutouts and system bars can leave the app window narrower than the display.
                 screen.freshControls()
                 screen.instrumentation.waitForIdleSync()
@@ -96,7 +102,7 @@ class LogoLedEvidenceTest : PlaybackScreenTest() {
                 command(0, 5)
                 restoreColor = true
                 val metrics = screen.onMain { screen.resumed().resources.displayMetrics }
-                println("Logo evidence: $name ${metrics.widthPixels}x${metrics.heightPixels}, densityDpi=${metrics.densityDpi}, widthDp=${screen.onMain { screen.resumed().resources.configuration.screenWidthDp }}, theme=${prefs.selectedTheme}, pack=${pack.name}, commands=o l a 5; o l a 45; f l, emulator display override, watermark=false")
+                println("Logo evidence: $name rotationRequests=$rotationRequests ${metrics.widthPixels}x${metrics.heightPixels}, densityDpi=${metrics.densityDpi}, widthDp=${screen.onMain { screen.resumed().resources.configuration.screenWidthDp }}, theme=${prefs.selectedTheme}, pack=${pack.name}, commands=o l a 5; o l a 45; f l, emulator display override, watermark=false")
             }
             command(0, 5)
             screen.onMain { screen.vm().scbHideUI.setChecked(true) }
