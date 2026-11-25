@@ -371,6 +371,8 @@
 	<string name="computer_pad_help_name">Tên điện thoại trên máy tính tùy điện thoại và hệ điều hành; có thể không hiện là UniPad.</string>
 	<string name="computer_pad_help_numbers">Kênh 1: pad gửi nốt 11–88, nút phải nốt 19–89, nút trên CC 104–111, tất cả với giá trị 127.</string>
 	<string name="computer_pad_help_lights">Máy tính bật đèn pad bằng cách gửi số của pad kèm màu 0–127; 0 hoặc note off sẽ tắt.</string>
+	<string name="computer_pad_help_no_midi_mode">Điện thoại không có MIDI trong cài đặt USB không dùng được tính năng này.</string>
+	<string name="computer_pad_help_check_on_computer">Chỉ ứng dụng trên máy tính cho biết máy tính có nhận được thao tác nhấn hay không.</string>
 	<string name="computer_pad_disconnect">Ngắt kết nối</string>
     <string name="midi_tab_usb">Thiết bị USB</string>
     <string name="midi_tab_apps">Ứng dụng trên điện thoại này</string>

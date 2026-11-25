@@ -371,6 +371,8 @@
 	<string name="computer_pad_help_name">ชื่อโทรศัพท์ที่แสดงในคอมพิวเตอร์ขึ้นกับโทรศัพท์และระบบ อาจไม่แสดงเป็น UniPad</string>
 	<string name="computer_pad_help_numbers">ช่อง 1: แพดส่งโน้ต 11–88 ปุ่มขวาส่งโน้ต 19–89 ปุ่มบนส่ง CC 104–111 ทั้งหมดที่ 127</string>
 	<string name="computer_pad_help_lights">คอมพิวเตอร์เปิดไฟแพดโดยส่งหมายเลขพร้อมสี 0–127 ส่วน 0 หรือ note off จะปิดไฟ</string>
+	<string name="computer_pad_help_no_midi_mode">โทรศัพท์ที่ไม่มี MIDI ในการตั้งค่า USB จะใช้ฟีเจอร์นี้ไม่ได้</string>
+	<string name="computer_pad_help_check_on_computer">คอมพิวเตอร์ได้รับการกดหรือไม่ ดูได้จากแอปของคอมพิวเตอร์เท่านั้น</string>
 	<string name="computer_pad_disconnect">ตัดการเชื่อมต่อ</string>
     <string name="midi_tab_usb">อุปกรณ์ USB</string>
     <string name="midi_tab_apps">แอปในโทรศัพท์นี้</string>

@@ -363,6 +363,8 @@
 	<string name="computer_pad_help_name">ကွန်ပျူတာတွင် ပြသည့် ဖုန်းအမည်သည် ဖုန်းနှင့် စနစ်အလိုက် ကွာသည်။ UniPad ဟု မပြနိုင်ပါ။</string>
 	<string name="computer_pad_help_numbers">ချန်နယ် 1: ပက်ဒ်များ နုတ် 11–88၊ ညာခလုတ်များ နုတ် 19–89၊ အပေါ်ခလုတ်များ CC 104–111 ကို 127 ဖြင့် ပို့သည်။</string>
 	<string name="computer_pad_help_lights">ကွန်ပျူတာက ပက်ဒ်နံပါတ်ကို အရောင် 0–127 နှင့် ပို့လျှင် မီးလင်းသည်။ 0 သို့မဟုတ် note off က မီးပိတ်သည်။</string>
+	<string name="computer_pad_help_no_midi_mode">USB ဆက်တင်တွင် MIDI မပါသော ဖုန်းများတွင် ဤလုပ်ဆောင်ချက်ကို မသုံးနိုင်ပါ။</string>
+	<string name="computer_pad_help_check_on_computer">ကွန်ပျူတာက လက်ခံရရှိမရှိကို ကွန်ပျူတာအက်ပ်တွင်သာ စစ်ဆေးနိုင်သည်။</string>
 	<string name="computer_pad_disconnect">ချိတ်ဆက်မှု ဖြတ်ရန်</string>
     <string name="midi_tab_usb">USB စက်များ</string>
     <string name="midi_tab_apps">ဤဖုန်းရှိ အက်ပ်များ</string>

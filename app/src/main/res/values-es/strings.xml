@@ -399,6 +399,8 @@
 	<string name="computer_pad_help_name">El nombre del teléfono en el ordenador depende del teléfono y del sistema; puede que no aparezca como UniPad.</string>
 	<string name="computer_pad_help_numbers">Canal 1: los pads envían notas 11–88, los botones derechos notas 19–89 y los superiores CC 104–111, todo a 127.</string>
 	<string name="computer_pad_help_lights">El ordenador enciende un pad enviando su número con un color 0–127; 0 o note off lo apaga.</string>
+	<string name="computer_pad_help_no_midi_mode">Los teléfonos sin MIDI en los ajustes USB no pueden usar esta función.</string>
+	<string name="computer_pad_help_check_on_computer">Solo la app del ordenador muestra si este recibe las pulsaciones.</string>
 	<string name="computer_pad_disconnect">Desconectar</string>
     <string name="midi_tab_usb">Dispositivos USB</string>
     <string name="midi_tab_apps">Apps de este teléfono</string>

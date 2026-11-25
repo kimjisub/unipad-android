@@ -495,8 +495,8 @@ private fun HelpDialog(onDismiss: () -> Unit) {
 		text = {
 			Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 				for (line in listOf(
-					R.string.computer_pad_step_cable, R.string.computer_pad_step_usb, R.string.computer_pad_step_app,
-					R.string.computer_pad_help_name, R.string.computer_pad_help_numbers, R.string.computer_pad_help_lights,
+					R.string.computer_pad_step_cable, R.string.computer_pad_step_usb, R.string.computer_pad_help_no_midi_mode,
+					R.string.computer_pad_step_app, R.string.computer_pad_help_check_on_computer, R.string.computer_pad_help_name, R.string.computer_pad_help_numbers, R.string.computer_pad_help_lights,
 					R.string.computer_pad_no_sound,
 				)) Text(stringResource(line))
 			}
