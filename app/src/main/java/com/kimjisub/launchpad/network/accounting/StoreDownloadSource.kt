@@ -19,12 +19,12 @@ internal class StoreDownloadSource(
     suspend fun resolve(url: String): String {
         val parsed = url.toHttpUrlOrNull() ?: return url
         if (parsed.host != legacyHost ||
-            parsed.encodedPath != "/downloadUniPackLegacy") return url
+            parsed.pathSegments.firstOrNull() != "downloadUniPackLegacy") return url
         return sharedClient.newCall(Request.Builder().url(parsed).head().build()).awaitResponse().use { response ->
             val destination = response.header("Location")?.let(parsed::resolve)
             if (response.code !in 300..399 || destination == null || destination.scheme != "https" ||
-                (destination.host == legacyHost && destination.encodedPath in
-                    setOf("/downloadUniPackLegacy", "/increaseDownloadCount"))) throw IOException("Pack download location unavailable")
+                (destination.host == legacyHost && destination.pathSegments.firstOrNull() in
+                    setOf("downloadUniPackLegacy", "increaseDownloadCount"))) throw IOException("Pack download location unavailable")
             destination.toString()
         }
     }

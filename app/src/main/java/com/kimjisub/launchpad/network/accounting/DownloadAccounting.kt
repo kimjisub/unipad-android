@@ -47,14 +47,14 @@ class DownloadAccounting(
     }
 
     /** Only the store's successful installation callback calls this, never imports or playback. */
-    suspend fun completed(code: String, receipt: DownloadReceipt) {
+    suspend fun completed(code: String, receipt: DownloadReceipt, completedAt: Long = now()) {
         bestEffort {
             queueLock.withLock {
                 val time = now()
                 val rows = retained(store.load(), time)
-                val expires = minOf(receipt.expiresAt, time + RETENTION_MS)
+                val expires = minOf(receipt.expiresAt, completedAt + RETENTION_MS)
                 if (expires > time && rows.none { it.receipt == receipt.receipt }) {
-                    store.save((rows + PendingDownload(code, receipt.receipt, time, expires))
+                    store.save((rows + PendingDownload(code, receipt.receipt, completedAt, expires))
                         .sortedBy { it.completedAt }.takeLast(MAX_PENDING))
                 }
             }

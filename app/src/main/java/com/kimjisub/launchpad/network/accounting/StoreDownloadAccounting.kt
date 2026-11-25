@@ -22,14 +22,18 @@ import java.io.IOException
 import java.io.FileNotFoundException
 
 /** Process lifetime storage, but transmission exists only while an app screen is visible. */
-class StoreDownloadAccounting private constructor(create: () -> DownloadAccounting) {
+class StoreDownloadAccounting private constructor(
+    create: () -> DownloadAccounting,
+    private val now: () -> Long,
+) {
     constructor(context: Context) : this({
         val app = context.applicationContext
         DownloadAccounting(HttpDownloadAccountingApi { destination(app) },
             FilePendingDownloadStore(File(app.noBackupFilesDir, "download-completions.json")))
-    })
+    }, System::currentTimeMillis)
 
-    internal constructor(accounting: DownloadAccounting) : this({ accounting })
+    internal constructor(accounting: DownloadAccounting, now: () -> Long = System::currentTimeMillis) :
+        this({ accounting }, now)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val changed = Channel<Unit>(Channel.CONFLATED)
     private val accounting by lazy {
@@ -57,9 +61,10 @@ class StoreDownloadAccounting private constructor(create: () -> DownloadAccounti
         private val issued: Deferred<DownloadReceipt?>,
     ) {
         fun installed() {
+            val completedAt = now()
             scope.launch {
                 val receipt = issued.await() ?: return@launch
-                accounting?.completed(code, receipt)
+                accounting?.completed(code, receipt, completedAt)
                 changed.trySend(Unit)
             }
         }

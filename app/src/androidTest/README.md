@@ -8,7 +8,12 @@ and native pad/chain views. Store tests supply a controlled catalogue to the rea
 file and JSON requests. It uses a local HTTP fixture by default. Pass the instrumentation argument
 `downloadAccountingBackend=demo-unipad` to use the Firebase emulators at `10.0.2.2:5051` (functions)
 and `10.0.2.2:9051` (database), with project `demo-unipad`; it seeds and removes its own pack rows.
-The Firebase emulator configuration is in the [server repository](https://github.com/kimjisub/unipad-project/tree/main/port/firebase-functions).
+That mode also checks response loss, replay from a fresh engine and atomic retry file, separate
+receipts, missing and non-numeric counts, disabled issuance, clock changes, expiry and queue limits.
+`DownloadAccountingProcessDeviceTest` has two ordered methods: Orchestrator ends the target process
+after a committed request loses its response, then the next process resends the stored receipt.
+It checks distinct process IDs and a single increment. Without the emulator argument, its remote
+deduplication fixture uses app preferences; with it, it uses the demo server's actual receipts.
 For manual debug-app checks, build with `-PdownloadAccountingEmulator` to select those same local
 functions. Other debug builds omit accounting requests. Release builds require a Google Play
 installer and a physical device before selecting the production accounting endpoint.

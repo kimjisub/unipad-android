@@ -31,6 +31,7 @@ import com.google.gson.JsonParser
 import com.kimjisub.launchpad.network.accounting.StoreDownloadAccounting
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.unipack.UniPackFolder
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -172,6 +173,7 @@ class StoreDownloadAccountingDeviceTest {
             assertTrue(TestCaptures.save(device, "download-accounting/requests-${if (validZip) "saved" else "invalid"}.txt") {
                 it.writeText(requests.joinToString("\n") + "\ncompletions=${completions.get()}\n"); true
             })
+            if (realEmulator && validZip) verifyEmulatorRetryBoundaries(http, id, workspace, device)
         } finally {
             screen?.close()
             accounting.close()
@@ -186,6 +188,99 @@ class StoreDownloadAccountingDeviceTest {
                 it.notification.extras.getString(Notification.EXTRA_TITLE) == "Accounting fixture"
             }.forEach { notifications.cancel(it.tag, it.id) }
             if (realEmulator) emulatorWrite("store/$id", "null")
+        }
+    }
+
+    /** The demo server's actual receipts, with real atomic files and an injectable device clock. */
+    private fun verifyEmulatorRetryBoundaries(http: HttpDownloadAccountingApi, id: String, workspace: File, device: UiDevice) = runBlocking {
+        val file = File(workspace, "retry-boundaries.json")
+        val store = FilePendingDownloadStore(file)
+        val trace = mutableListOf<String>()
+        var time = System.currentTimeMillis()
+        var loseResponse = true
+        val sent = mutableListOf<String>()
+        val api = object : DownloadAccountingApi {
+            override suspend fun issue(code: String) = http.issue(code)
+            override suspend fun complete(code: String, receipt: String): String {
+                sent += receipt
+                val result = http.complete(code, receipt)
+                trace += "complete $code $receipt $result"
+                if (loseResponse) { loseResponse = false; throw java.io.IOException("Response lost after commit") }
+                return result
+            }
+        }
+        fun engine() = DownloadAccounting(api, FilePendingDownloadStore(file)) { time }
+        fun count() = emulatorRead("store/$id/downloadCount").trim()
+        try {
+            val first = requireNotNull(engine().issue(id))
+            engine().completed(id, first)
+            engine().retryPending()
+            assertEquals("52", count())
+            assertEquals(first.receipt, store.load().single().receipt)
+            time += DownloadAccounting.RETRY_INTERVAL_MS
+            // A new engine and store read exactly the record left before an uncertain response.
+            engine().retryPending()
+            assertEquals(listOf(first.receipt, first.receipt), sent)
+            assertTrue(store.load().isEmpty())
+            assertEquals("52", count())
+            trace += "response-loss: same receipt, count=52 after recreation"
+
+            val next = requireNotNull(engine().issue(id))
+            assertNotEquals(first.receipt, next.receipt)
+            engine().completed(id, next)
+            engine().retryPending()
+            assertEquals("53", count())
+            trace += "separate completion: new receipt, count=53"
+
+            val deferred = requireNotNull(engine().issue(id))
+            engine().completed(id, deferred)
+            for (value in listOf("null", "\"invalid-count\"")) {
+                emulatorWrite("store/$id/downloadCount", value)
+                engine().retryPending()
+                assertEquals(value, count())
+                assertEquals(deferred.receipt, store.load().single().receipt)
+                time += DownloadAccounting.RETRY_INTERVAL_MS
+            }
+            emulatorWrite("store/$id/downloadCount", "53")
+            engine().retryPending()
+            assertEquals("54", count())
+            assertTrue(store.load().isEmpty())
+            trace += "missing/non-numeric count: deferred, never initialized; restored count=54"
+
+            emulatorWrite("downloadAccounting/config/enabled", "false")
+            assertNull(engine().issue(id))
+            assertTrue(store.load().isEmpty())
+            emulatorWrite("downloadAccounting/config/enabled", "true")
+            val expiring = requireNotNull(engine().issue(id))
+            engine().completed(id, expiring)
+            time = expiring.expiresAt
+            val attemptsBeforeExpiry = sent.size
+            engine().retryPending()
+            time -= 2 * DownloadAccounting.RETENTION_MS
+            engine().retryPending()
+            assertEquals(attemptsBeforeExpiry, sent.size)
+            assertTrue(store.load().isEmpty())
+            assertEquals("54", count())
+            trace += "disabled: no queue; expiry then clock rewind: no resurrection"
+
+            time = System.currentTimeMillis()
+            store.save(List(1_001) { index -> PendingDownload(id, "bounded-$index", time + index,
+                time + DownloadAccounting.RETENTION_MS, time, time, DownloadAccounting.MAX_DAILY_ATTEMPTS) })
+            engine().retryPending()
+            assertEquals(1_000, store.load().size)
+            assertEquals("bounded-1", store.load().first().receipt)
+            time += DownloadAccounting.RETENTION_MS
+            engine().retryPending()
+            assertTrue(store.load().isEmpty())
+            assertTrue(File(workspace, id).isDirectory)
+            assertEquals("54", count())
+            trace += "1001 pending: oldest removed; seven-day boundary: queue empty, pack retained"
+        } finally {
+            assertTrue(TestCaptures.save(device, "download-accounting/emulator-boundaries.txt") {
+                it.writeText(trace.joinToString("\n") + "\n"); true
+            })
+            file.delete()
+            emulatorWrite("downloadAccounting/config/enabled", "true")
         }
     }
 
