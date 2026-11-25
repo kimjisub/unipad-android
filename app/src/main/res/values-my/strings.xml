@@ -111,7 +111,7 @@
 	<string name="update_check_failed">အပ်ဒိတ်ကို စစ်ဆေး၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။</string>
 	<string name="update_check_again">ထပ်စစ်ရန်</string>
 	<string name="update_close">ပိတ်ရန်</string>
-	<string name="update_failed">အပ်ဒိတ် မပြီးဆုံးနိုင်ပါ။ နောက်မှ ထပ်စမ်းနိုင်ပါသည်။</string>
+	<string name="update_failed">အပ်ဒိတ် မပြီးပါ။ နောက်မှ ထပ်စမ်းပါ။</string>
 	<string name="update_retry">ထပ်စမ်းရန်</string>
 	<string name="update_check_in_store">စတိုးတွင် စစ်ရန်</string>
 	<string name="update_unsupported">ဤစက်တွင် အပ်ဒိတ်ကို စတိုးတွင် စစ်ဆေးပါ။</string>

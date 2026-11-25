@@ -121,7 +121,7 @@
 	<string name="update_check_failed">Impossibile cercare aggiornamenti. Controlla la connessione e riprova.</string>
 	<string name="update_check_again">Controlla di nuovo</string>
 	<string name="update_close">Chiudi</string>
-	<string name="update_failed">Impossibile completare l\'aggiornamento. Puoi riprovare più tardi.</string>
+	<string name="update_failed">Impossibile completare l\'aggiornamento. Riprova più tardi.</string>
 	<string name="update_retry">Riprova</string>
 	<string name="update_check_in_store">Controlla nel negozio</string>
 	<string name="update_unsupported">Su questo dispositivo, controlla gli aggiornamenti nel negozio.</string>
