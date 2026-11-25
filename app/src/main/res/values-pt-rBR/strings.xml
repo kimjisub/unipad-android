@@ -118,7 +118,7 @@
 	<string name="update_install">Instalar e reiniciar</string>
 	<string name="update_none">Nenhuma atualização está disponível no momento.</string>
 	<string name="update_close">Fechar</string>
-	<string name="update_failed">Não foi possível concluir a atualização. Você pode tentar novamente mais tarde.</string>
+	<string name="update_failed">Não foi possível concluir a atualização. Tente novamente mais tarde.</string>
 	<string name="update_retry">Tentar novamente</string>
 	<string name="update_unsupported">Neste dispositivo, verifique as atualizações na loja.</string>
 	<string name="update_store_notice">Verificando no Google Play. A atualização do aplicativo pode fechar o UniPad.</string>
