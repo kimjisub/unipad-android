@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.SystemClock
 import androidx.test.core.app.ActivityScenario
 import com.kimjisub.launchpad.activity.MidiSelectActivity
@@ -9,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,6 +82,7 @@ class DisplaySettingsTest {
 
     @Test fun thisDevicesDisplayRestoresExistingOverridesEvenWhenTheBlockFails() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return phoneDisplayRestoresOverridesEvenWhenTheBlockFails(device)
         // A phone's home activity may be portrait-only and ignore the user's rotation lock.
         // Use an unrestricted app window to exercise display rotation in both directions.
         ActivityScenario.launch(MidiSelectActivity::class.java).use { scenario ->
@@ -110,6 +113,7 @@ class DisplaySettingsTest {
 
     @Test fun restoresPortraitUserLockWhileTheActivityStillRequiresLandscape() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return rotationLockIsRefusedBeforeAndroid13(device)
         val original = DisplaySettings.read(device)
         val (width, height) = original.size
         val shortest = minOf(width, height)
@@ -127,6 +131,41 @@ class DisplaySettingsTest {
             }
         }
         assertEquals(original, DisplaySettings.read(device))
+    }
+
+    /** Below Android 13 the phone display changes only size and density, and restores both. */
+    private fun phoneDisplayRestoresOverridesEvenWhenTheBlockFails(device: UiDevice) {
+        val original = DisplaySettings.readMetrics(device)
+        val (width, height) = original.size
+        val shortest = minOf(width, height)
+        val phone = shortest to maxOf(width, height)
+        DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 480) {
+            val outer = DisplaySettings.readMetrics(device)
+            assertEquals(phone to shortest * 160 / 480, outer.sizeOverride to outer.densityOverride)
+            val failure = IllegalStateException("exercise display restoration")
+            val caught = assertThrows(IllegalStateException::class.java) {
+                DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 720) {
+                    assertEquals(shortest * 160 / 720, DisplaySettings.readMetrics(device).densityOverride)
+                    throw failure
+                }
+            }
+            assertTrue(caught === failure)
+            assertEquals(outer, DisplaySettings.readMetrics(device))
+        }
+        assertEquals(original, DisplaySettings.readMetrics(device))
+    }
+
+    /** Android 12's navigation bar would overwrite the lock, so the helper refuses before changing anything. */
+    private fun rotationLockIsRefusedBeforeAndroid13(device: UiDevice) {
+        val original = DisplaySettings.readMetrics(device)
+        val rotation = device.executeShellCommand("wm user-rotation").trim()
+        var ran = false
+        assertThrows(IllegalStateException::class.java) {
+            DisplaySettings.with(device, density = original.density + 1, rotation = 1) { ran = true }
+        }
+        assertFalse(ran)
+        assertEquals(original, DisplaySettings.readMetrics(device))
+        assertEquals(rotation, device.executeShellCommand("wm user-rotation").trim())
     }
 
     private fun awaitRotation(scenario: ActivityScenario<MidiSelectActivity>, expected: Int) {

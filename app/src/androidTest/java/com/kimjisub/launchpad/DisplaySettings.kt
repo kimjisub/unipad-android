@@ -23,14 +23,14 @@ internal object DisplaySettings {
     )
 
     /** The size and density overrides, which `wm` has on every supported version. */
-    private data class Metrics(
+    internal data class Metrics(
         val size: Pair<Int, Int>,
         val density: Int,
         val sizeOverride: Pair<Int, Int>?,
         val densityOverride: Int?,
     )
 
-    private fun readMetrics(device: UiDevice): Metrics {
+    internal fun readMetrics(device: UiDevice): Metrics {
         val sizes = device.executeShellCommand("wm size")
         fun size(prefix: String) = sizes.lineSequence().firstOrNull { it.startsWith(prefix) }
             ?.let { SIZE.find(it)!!.destructured.let { (w, h) -> w.toInt() to h.toInt() } }
@@ -111,10 +111,10 @@ internal object DisplaySettings {
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
      * portrait and shows the landscape app in a small letterboxed window. Before Android 12 `wm`
-     * cannot read back the user rotation preference to restore it, and on Android 12 a rotation
-     * lock written within about a second of a size or density change is re-locked to the display's
-     * current rotation (a portrait home screen's), so through Android 12 only the size and density
-     * change, and the landscape app turns a phone display itself.
+     * cannot read back the user rotation preference to restore it, and on Android 12 a size or
+     * density change re-locks a rotation lock to the portrait home screen's rotation (see [with]),
+     * so through Android 12 only the size and density change, and the landscape app turns a phone
+     * display itself.
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) with(device, size, density, Surface.ROTATION_90, block)
@@ -132,7 +132,12 @@ internal object DisplaySettings {
         }
     }
 
-    /** The display transition encloses overlay changes, so neither apply nor restore races them. */
+    /**
+     * The display transition encloses overlay changes, so neither apply nor restore races them.
+     * Requires Android 13: on Android 12 the navigation bar is rebuilt after a size or density
+     * change, and while the rotation is locked and the display shows its natural rotation, it
+     * re-locks the rotation there, overwriting the lock this writes or restores.
+     */
     fun <T> with(
         device: UiDevice,
         size: Pair<Int, Int>? = null,
@@ -140,6 +145,9 @@ internal object DisplaySettings {
         rotation: Int,
         block: () -> T,
     ): T {
+        check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            "A rotation lock with a size or density change needs Android 13; use withPhoneDisplay"
+        }
         val previous = read(device)
         var failure: Throwable? = null
         try {
