@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.accessibilityservice.AccessibilityService
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
@@ -110,15 +111,15 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	}
 
 	@Test fun goingHomeLetsGoOfTheHeldPad() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
 			holdThenLeave("going Home") {
 				assertTrue(screen.device.pressHome())
 				screen.await("Home did not hide the play screen") { screen.onMain { !vm.screenVisible } }
 			}
 			return
 		}
-		// Before Android 9 Home only minimizes the docked play screen, which stays visible and keeps
-		// playing; releasing the pad then stops it, and nothing is played again.
+		// With the docked split of Android 7–12, Home only minimizes the docked play screen, which stays
+		// visible and keeps playing; releasing the pad then stops it, and nothing is played again.
 		changeWindowWhileHeld("going Home beside the minimized dock") {
 			// pressHome reports whether the window list changed in time, which the minimized dock delays.
 			screen.device.pressHome()
@@ -357,8 +358,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	/**
 	 * Opens the other app's pad window and puts it beside the play screen. Android 12L and later
 	 * split through the system UI's window manager shell; earlier versions dock the play screen.
-	 * Before Android 9 the other window goes into the full-screen stack by its id: launched as an
-	 * adjacent window from here it lands in the docked stack, on top of the play screen.
+	 * Launched as an adjacent window from here, the other window would land in the docked stack, on
+	 * top of the play screen; before Android 9 it goes into the full-screen stack by its id instead.
 	 */
 	private fun enterSplitScreen() {
 		val pad = Intent().setClassName(screen.instrumentation.context.packageName, MidiFixturePadActivity::class.java.name)
@@ -369,8 +370,15 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			screen.await("The other app's window did not open") { screen.device.hasObject(By.desc(PAD)) }
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen moveToSideStage $playTask 0")
 		} else {
-			// The docked stack of Android 7–11; the launcher's recents fill the other half until a launch.
-			screen.device.executeShellCommand("am stack movetask $playTask $DOCKED_STACK true")
+			// The docked stack of Android 7–12; the launcher's recents fill the other half until a launch.
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+				screen.device.executeShellCommand("am stack movetask $playTask $DOCKED_STACK true")
+			} else {
+				// From Android 9 stacks are numbered as created, so the system docks the top task itself,
+				// as when the user long-presses Overview.
+				assertTrue("The system refused to split the screen",
+					screen.instrumentation.uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN))
+			}
 			screen.await("The play screen was not docked") { screen.onMain { play.isInMultiWindowMode } }
 			// Opened before them, the other app's window would be covered by those recents.
 			screen.await("The recents did not take the other half") { screen.onMain { !play.hasWindowFocus() } }
@@ -378,7 +386,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
 				screen.device.executeShellCommand("am start --stack $FULL_SCREEN_STACK -f ${pad.flags} -n ${pad.component!!.flattenToShortString()}")
 			} else {
-				screen.context.startActivity(pad.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT))
+				// From Android 9 a new task opened beside the dock fills the other half by itself.
+				screen.context.startActivity(pad)
 			}
 		}
 		screen.await("The play screen did not share the display with the other app") {
@@ -396,12 +405,33 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			// Android 12L–13 have no exit command; taking the play screen out of its side ends the split.
 			val playTask = screen.onMain { play.taskId }
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen removeFromSideStage $playTask")
+		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			// Emptying the docked stack ends the split; behind the other app, the play screen is hidden.
+			val playTask = screen.onMain { play.taskId }
+			moveTask(playTask, stackOf(padTask), toTop = false)
 		} else {
 			// Emptying the docked stack ends the split; the other app stays on top, full screen.
 			val playTask = screen.onMain { play.taskId }
 			screen.device.executeShellCommand("am stack movetask $playTask $FULL_SCREEN_STACK false")
 			screen.device.executeShellCommand("am stack movetask $padTask $FULL_SCREEN_STACK true")
 		}
+	}
+
+	/** Android 10 refuses the older `movetask` spelling, and a refused move shows only in the output. */
+	private fun moveTask(task: Int, stack: Int, toTop: Boolean) {
+		val output = screen.device.executeShellCommand("am stack move-task $task $stack $toTop").trim()
+		assertTrue("Moving task $task to stack $stack failed: $output", output.isEmpty())
+	}
+
+	/** The stack holding a task, from Android 9 numbered as stacks are created. */
+	private fun stackOf(task: Int): Int {
+		val list = screen.device.executeShellCommand("am stack list")
+		var stack: Int? = null
+		list.lineSequence().map { it.trim() }.forEach { line ->
+			STACK_LINE.find(line)?.let { stack = it.groupValues[1].toInt() }
+			if (line.startsWith("taskId=$task:")) return checkNotNull(stack) { "Task $task is listed before any stack:\n$list" }
+		}
+		throw AssertionError("Task $task is in no stack:\n$list")
 	}
 
 	private fun padPresses(): Int = fixture.call("read").getInt("padPresses")
@@ -423,6 +453,7 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		// Fixed stack ids before Android 9 (ActivityManager.StackId).
 		const val FULL_SCREEN_STACK = 1
 		const val DOCKED_STACK = 3
+		val STACK_LINE = Regex("""^Stack id=(\d+)""")
 		const val TAG = "VirtualMidiSplitScreen"
 	}
 }
