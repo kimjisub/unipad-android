@@ -62,8 +62,17 @@ class StoreDownloadAccountingDeviceTest {
 
     @Test fun savedStorePackCountsOnceAndLeavesTheDisplayedNumberUnchanged() = scenario(validZip = true)
     @Test fun invalidArchiveNeverSendsCompletion() = scenario(validZip = false)
+    @Test fun disabledAccountingDoesNotPreventSavingThePack() = scenario(validZip = true, enabled = false)
+    @Test fun unwritableWorkspaceNeverSendsCompletion() = scenario(validZip = true, storageFailure = true)
 
-    private fun scenario(validZip: Boolean) {
+    private fun scenario(validZip: Boolean, enabled: Boolean = true, storageFailure: Boolean = false) {
+        val name = when {
+            storageFailure -> "storage-error"
+            !enabled -> "disabled"
+            validZip -> "saved"
+            else -> "invalid"
+        }
+        val savesPack = validZip && !storageFailure
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val device = UiDevice.getInstance(instrumentation)
@@ -75,11 +84,11 @@ class StoreDownloadAccountingDeviceTest {
         val queueFile = File(context.noBackupFilesDir, "$id.json")
         val store = FilePendingDownloadStore(queueFile)
         val issued = CountDownLatch(1)
-        val backend = Backend(if (validZip) zip() else byteArrayOf(1, 2, 3))
+        val backend = Backend(if (validZip) zip() else byteArrayOf(1, 2, 3), enabled)
         val realEmulator = InstrumentationRegistry.getArguments().getString("downloadAccountingBackend") == "demo-unipad"
         val base = if (realEmulator) "http://10.0.2.2:5051/demo-unipad/us-central1/" else backend.url
         if (realEmulator) {
-            emulatorWrite("downloadAccounting/config/enabled", "true")
+            emulatorWrite("downloadAccounting/config/enabled", enabled.toString())
             emulatorWrite("store/$id", """{"code":"$id","downloadCount":50}""")
         }
         val http = HttpDownloadAccountingApi { base }
@@ -124,6 +133,7 @@ class StoreDownloadAccountingDeviceTest {
             }
         }
         prefs.downloadStoragePath = workspace.path
+        if (storageFailure) assertTrue(workspace.setWritable(false, false))
         loadKoinModules(override)
         var screen: ActivityScenario<FBStoreActivity>? = null
         try {
@@ -133,7 +143,7 @@ class StoreDownloadAccountingDeviceTest {
                 .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty() }
             compose.onNodeWithTag("store_pack_$id").performClick()
             compose.waitForIdle()
-            assertTrue(TestCaptures.screenshot(device, "download-accounting/before-${if (validZip) "saved" else "invalid"}.png"))
+            assertTrue(TestCaptures.screenshot(device, "download-accounting/before-$name.png"))
             compose.onNodeWithTag("store_detail").assertIsDisplayed()
             var permissionPrompt = false
             activity.onActivity { activity ->
@@ -149,17 +159,19 @@ class StoreDownloadAccountingDeviceTest {
                 assertTrue(device.wait(Until.gone(By.res("com.android.permissioncontroller", "permission_deny_button")), 2_000))
             }
             // The permission prompt must not gate the download or its accounting.
-            val expected = context.getString(if (validZip) R.string.downloaded else R.string.failed)
+            val expected = context.getString(if (savesPack) R.string.downloaded else R.string.failed)
             compose.waitUntil(20_000) { compose.onAllNodes(hasText(expected))
                 .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty() }
-            assertTrue(issued.await(10, TimeUnit.SECONDS))
-            if (validZip) {
-                assertTrue("completion was not acknowledged within the retry interval", acknowledged.await(75, TimeUnit.SECONDS))
-                assertTrue(completions.get() >= 1)
+            if (!storageFailure) assertTrue(issued.await(10, TimeUnit.SECONDS))
+            if (savesPack) {
+                if (enabled) {
+                    assertTrue("completion was not acknowledged within the retry interval", acknowledged.await(75, TimeUnit.SECONDS))
+                    assertTrue(completions.get() >= 1)
+                } else assertEquals(0, completions.get())
                 assertTrue(store.load().isEmpty())
                 assertTrue(File(workspace, id).isDirectory)
                 val count = if (realEmulator) emulatorRead("store/$id/downloadCount").trim().toInt() else backend.count.get()
-                assertEquals(51, count)
+                assertEquals(if (enabled) 51 else 50, count)
             } else {
                 assertEquals(0, completions.get())
                 assertTrue(store.load().isEmpty())
@@ -169,11 +181,11 @@ class StoreDownloadAccountingDeviceTest {
             // The catalogue still says 50: completion does not add one on the screen.
             compose.onNode(hasText("50")).assertIsDisplayed()
             assertTrue(requests.none { it.contains("increaseDownloadCount") || it.contains("downloadUniPackLegacy") })
-            assertTrue(TestCaptures.screenshot(device, "download-accounting/after-${if (validZip) "saved" else "invalid"}.png"))
-            assertTrue(TestCaptures.save(device, "download-accounting/requests-${if (validZip) "saved" else "invalid"}.txt") {
+            assertTrue(TestCaptures.screenshot(device, "download-accounting/after-$name.png"))
+            assertTrue(TestCaptures.save(device, "download-accounting/requests-$name.txt") {
                 it.writeText(requests.joinToString("\n") + "\ncompletions=${completions.get()}\n"); true
             })
-            if (realEmulator && validZip) verifyEmulatorRetryBoundaries(http, id, workspace, device)
+            if (realEmulator && savesPack && enabled) verifyEmulatorRetryBoundaries(http, id, workspace, device)
         } finally {
             screen?.close()
             accounting.close()
@@ -181,6 +193,7 @@ class StoreDownloadAccountingDeviceTest {
             unloadKoinModules(override)
             prefs.downloadStoragePath = oldPath
             prefs.prevStoreCount = oldCount
+            workspace.setWritable(true)
             workspace.deleteRecursively()
             queueFile.delete()
             val notifications = context.getSystemService(NotificationManager::class.java)
@@ -313,7 +326,7 @@ class StoreDownloadAccountingDeviceTest {
         }
     }.toByteArray()
 
-    private class Backend(private val pack: ByteArray) : AutoCloseable {
+    private class Backend(private val pack: ByteArray, private val enabled: Boolean) : AutoCloseable {
         private val socket = ServerSocket(0, 8, java.net.InetAddress.getByName("127.0.0.1"))
         val url = "http://127.0.0.1:${socket.localPort}/"
         val count = AtomicInteger(50)
@@ -339,7 +352,8 @@ class StoreDownloadAccountingDeviceTest {
                             val bytes = when {
                                 first.startsWith("GET /pack.zip") -> pack
                                 first.startsWith("POST /issueDownloadReceipt") ->
-                                    """{"status":"issued","receipt":"local-receipt","expiresAt":${System.currentTimeMillis() + 600_000}}""".toByteArray()
+                                    (if (enabled) """{"status":"issued","receipt":"local-receipt","expiresAt":${System.currentTimeMillis() + 600_000}}"""
+                                    else """{"status":"disabled"}""").toByteArray()
                                 first.startsWith("POST /completeDownload") -> {
                                     val receipt = JsonParser.parseString(String(body)).asJsonObject.get("receipt").asString
                                     val status = if (counted.add(receipt)) { count.incrementAndGet(); "counted" } else "already_counted"
