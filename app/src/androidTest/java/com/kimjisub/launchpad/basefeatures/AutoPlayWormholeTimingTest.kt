@@ -90,6 +90,43 @@ class AutoPlayWormholeTimingTest : PlaybackScreenTest() {
         assertEquals(listOf("first.wav", "move.wav"), soundNames())
     }
 
+    @Test fun stepPracticeInSongOrderKeepsProgressAfterTheHandMove() {
+        fixture("touch 1 1\nd 1\ntouch 1 2\nd 199\ntouch 1 3\nd 1000\n")
+        File(screen.pack(), "keySound").appendText("2 1 3 drum.wav\n")
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain { vm.switchPlayMode(PlayMode.StepPractice) }
+        screen.await("The first step must guide the two original-page pads") { screen.onMain {
+            vm.channelManager.get(0, 0)?.channel == Channel.GUIDE &&
+                vm.channelManager.get(0, 1)?.channel == Channel.GUIDE
+        } }
+        pressPad(0)
+        screen.await("The hand-input wormhole must keep its ordinary delayed move") {
+            screen.onMain { vm.chain.value == 1 }
+        }
+        SystemClock.sleep(300)
+        record("practice-song-order-before-return")
+        val button = chainButton(0)
+        assertTrue(screen.device.click(button.x, button.y))
+        screen.await("Returning must show only the remaining pad") { screen.onMain {
+            vm.chain.value == 0 && vm.channelManager.get(0, 1)?.channel == Channel.GUIDE &&
+                vm.channelManager.get(0, 0)?.channel != Channel.GUIDE
+        } }
+        record("practice-song-order-remaining")
+        pressPad(1)
+        val next = chainButton(1)
+        assertTrue(screen.device.click(next.x, next.y))
+        screen.await("The following group must be guided on page two") { screen.onMain {
+            vm.chain.value == 1 && vm.channelManager.get(0, 2)?.channel == Channel.GUIDE
+        } }
+        pressPad(2)
+        screen.await("Song-order step practice must finish without repeating the moving pad") {
+            screen.onMain { !vm.autoPlayRunner!!.active }
+        }
+        record("practice-song-order-complete")
+        assertEquals(listOf("move.wav", "first.wav", "drum.wav"), soundNames())
+    }
+
     /** Pauses in the actual press callback, before the runner can process its next element. */
     private fun pauseOnPress(padX: Int = 0, padY: Int = 0, plays: Int? = null) {
         val paused = AtomicBoolean()

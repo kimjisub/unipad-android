@@ -57,7 +57,9 @@ A completed screen recorder remains an unverified corpus case; it is not a confo
 `basefeatures.AutoPlayWormholeTimingTest` checks the parsed 100 ms song-time move through
 the real play screen and runners: the voice queue before a move, silence on an unmapped pad,
 the destination page's light, step-practice hints, pause/resume, normal end, stop and closing
-the screen. It records decoded sound requests using silent fixture files; it does not capture
+the screen. Step practice also presses the moving pad first, waits longer than the hand-input
+move, follows the guide back, and checks that only the unplayed pad remains before advancing
+to the next group. It records decoded sound requests using silent fixture files; it does not capture
 speaker output. Exact 99/100 ms boundaries are checked with the parser's unit tests rather
 than inferred from the time Android takes to deliver a physical tap.
 
