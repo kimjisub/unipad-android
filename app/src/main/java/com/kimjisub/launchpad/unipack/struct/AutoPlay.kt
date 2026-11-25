@@ -17,8 +17,10 @@ class AutoPlay(
 			val currChain: Int,
 		) : Element
 
+		/** [scheduled]: a sound's wormhole applied at its song time, not a `chain` line of the file. */
 		class Chain(
 			val c: Int,
+			val scheduled: Boolean = false,
 		) : Element
 
 		class Delay(

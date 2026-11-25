@@ -27,7 +27,7 @@ class UniPackFolderWormholeTest {
 		File(root, "keySound").writeText("1 1 1 a.wav 1 $wormhole\n")
 		File(root, "sounds").mkdir()
 		File(root, "sounds/a.wav").writeText("")
-		File(root, "autoPlay").writeText("o 1 1\no 1 2\n")
+		File(root, "autoPlay").writeText("o 1 1\nd 100\no 1 2\n")
 		return UniPackFolder(root).load().loadDetail()
 	}
 
@@ -48,7 +48,7 @@ class UniPackFolderWormholeTest {
 		assertEquals(1, pack.soundCount)
 		assertEquals(nearest, pack.soundGet(0, 0, 0)?.wormhole)
 		assertEquals("keySound : [1 1 1 a.wav 1 $wormhole] wormhole is incorrect", pack.errorDetail)
-		assertEquals(listOf("on 0,0 chain=0", "chain $nearest", "on 0,1 chain=$nearest"), autoPlay(pack))
+		assertEquals(listOf("on 0,0 chain=0", "delay 100", "chain $nearest", "on 0,1 chain=$nearest"), autoPlay(pack))
 	}
 
 	@Test
@@ -57,7 +57,7 @@ class UniPackFolderWormholeTest {
 
 		assertNull(pack.errorDetail)
 		assertEquals(Sound.NO_WORMHOLE, pack.soundGet(0, 0, 0)?.wormhole)
-		assertEquals(listOf("on 0,0 chain=0", "on 0,1 chain=0"), autoPlay(pack))
+		assertEquals(listOf("on 0,0 chain=0", "delay 100", "on 0,1 chain=0"), autoPlay(pack))
 	}
 
 	@Test
@@ -66,7 +66,7 @@ class UniPackFolderWormholeTest {
 
 		assertNull(pack.errorDetail)
 		assertEquals(CHAIN - 1, pack.soundGet(0, 0, 0)?.wormhole)
-		assertEquals(listOf("on 0,0 chain=0", "chain ${CHAIN - 1}", "on 0,1 chain=${CHAIN - 1}"), autoPlay(pack))
+		assertEquals(listOf("on 0,0 chain=0", "delay 100", "chain ${CHAIN - 1}", "on 0,1 chain=${CHAIN - 1}"), autoPlay(pack))
 	}
 
 	@Test

@@ -106,6 +106,44 @@ class AutoPlayRunnerPracticeProgressTest {
 
     private fun on(x: Int, c: Int = 0) = AutoPlay.Element.On(x, 0, c, 0)
 
+    @Test fun aPageMoveDuringAStepDoesNotAskForAlreadyPlayedPadsAgain() {
+        start(listOf(on(0), AutoPlay.Element.Delay(1), on(1),
+            AutoPlay.Element.Delay(99), AutoPlay.Element.Chain(1),
+            AutoPlay.Element.Delay(100), on(2, c = 1)), step = true)
+        assertEquals(setOf(0 to 0, 1 to 0), hints)
+        runner.stepPadPressed(0, 0)
+        tick(100)
+        chain.value = 1 // The first pad's ordinary hand-input wormhole expires.
+        tick(200)
+        assertEquals(listOf(0), chainHints)
+        chain.value = 0 // Follow the guide back to the page of the remaining pad.
+        tick()
+        assertEquals("Only the unplayed note is still owed", setOf(1 to 0), hints)
+        runner.stepPadPressed(1, 0)
+        tick()
+        assertEquals("After the close pair, guide the following page", 1, chainHints.last())
+        chain.value = 1
+        tick()
+        assertEquals(setOf(2 to 0), hints)
+        runner.stepPadPressed(2, 0)
+        tick()
+        assertTrue(ended)
+    }
+
+    @Test fun changingPagesBeforePlayingAStepKeepsEveryPadOwed() {
+        start(listOf(on(0), AutoPlay.Element.Delay(1), on(1)), step = true)
+        chain.value = 1
+        tick()
+        chain.value = 0
+        tick()
+        assertEquals(setOf(0 to 0, 1 to 0), hints)
+        assertFalse(ended)
+        runner.stepPadPressed(0, 0)
+        runner.stepPadPressed(1, 0)
+        tick()
+        assertTrue(ended)
+    }
+
     @Test fun aFinalTouchWaitsUntilItsPadIsPlayed() {
         start(listOf(on(0)), step = true)
         assertEquals(setOf(0 to 0), hints)

@@ -31,7 +31,7 @@ class AutoPlayTimingTest : PlaybackScreenTest() {
                 it.writeText(chains.joinToString("\n"))
                 true
             })
-            assertEquals("The parsed chain move must not be replayed after 100 ms", listOf(1, 2), chains.toList())
+            assertEquals("The explicit chain command cancels the pending wormhole", listOf(2), chains.toList())
             assertEquals(2, screen.onMain { vm.chain.value })
         } finally {
             vm.chain.removeObserver(record)

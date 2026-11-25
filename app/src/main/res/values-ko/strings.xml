@@ -446,6 +446,8 @@
     <string name="computer_pad_help_name">컴퓨터에 보이는 휴대폰 이름은 휴대폰과 운영체제마다 달라요. UniPad로 보이지 않을 수 있어요.</string>
     <string name="computer_pad_help_numbers">채널 1: 패드는 노트 11–88, 오른쪽 버튼은 노트 19–89, 위 버튼은 CC 104–111을 세기 127로 보내요.</string>
     <string name="computer_pad_help_lights">컴퓨터가 번호와 색 0–127을 보내면 패드가 켜져요. 0이나 노트 끄기는 불빛을 꺼요.</string>
+    <string name="computer_pad_help_no_midi_mode">USB 설정에 MIDI가 없는 휴대폰은 이 기능을 쓸 수 없어요.</string>
+    <string name="computer_pad_help_check_on_computer">컴퓨터가 받았는지는 컴퓨터 앱에서 확인하세요.</string>
     <string name="computer_pad_disconnect">연결 해제</string>
     <string name="midi_tab_usb">USB 장치</string>
     <string name="midi_tab_apps">이 휴대폰의 앱</string>

@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ErrorCollector
+import java.util.Locale
 
 /** Verify rendered lines, since accessibility still exposes text that has been ellipsized. */
 class AppUpdateWrappingTest : BaseUITest() {
@@ -34,6 +35,12 @@ class AppUpdateWrappingTest : BaseUITest() {
     @Test fun koreanDefault() = checkWrapping("ko", 1080 to 2400, 420, 1f)
     @Test fun englishLarge() = checkWrapping("en", 1080 to 2400, 420, 2f)
     @Test fun koreanLarge() = checkWrapping("ko", 1080 to 2400, 420, 2f)
+    @Test fun spanishSmallLarge() = checkWrapping("es", 720 to 1440, 320, 2f)
+    @Test fun indonesianSmallLarge() = checkWrapping("in", 720 to 1440, 320, 2f)
+    @Test fun portugueseSmallLarge() = checkWrapping("pt-BR", 720 to 1440, 320, 2f)
+    @Test fun spanishDefault() = checkWrapping("es", 1080 to 2400, 420, 1f)
+    @Test fun indonesianDefault() = checkWrapping("in", 1080 to 2400, 420, 1f)
+    @Test fun portugueseDefault() = checkWrapping("pt-BR", 1080 to 2400, 420, 1f)
 
     private fun checkWrapping(language: String, size: Pair<Int, Int>, density: Int, scale: Float) =
         DisplaySettings.withPhoneDisplay(device, size, density) { checkWrappingOnDisplay(language, size, density, scale) }
@@ -57,7 +64,7 @@ class AppUpdateWrappingTest : BaseUITest() {
             InstrumentationRegistry.getInstrumentation().runOnMainSync {
                 val config = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
                     .filterIsInstance<MainActivity>().single().resources.configuration
-                assertEquals(language, config.locales[0].language)
+                assertEquals(Locale.forLanguageTag(language), Locale.forLanguageTag(config.locales[0].toLanguageTag()))
                 assertEquals(density, config.densityDpi)
                 assertEquals(scale, config.fontScale, 0.01f)
                 println("Geometry: ${device.displayWidth}x${device.displayHeight}, density=$density, scale=$scale, language=$language")

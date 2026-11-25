@@ -374,6 +374,8 @@
 	<string name="computer_pad_help_name">Имя телефона на компьютере зависит от телефона и системы; оно может отличаться от UniPad.</string>
 	<string name="computer_pad_help_numbers">Канал 1: пэды отправляют ноты 11–88, правые кнопки ноты 19–89, верхние кнопки CC 104–111, всё со значением 127.</string>
 	<string name="computer_pad_help_lights">Компьютер включает подсветку пэда, отправляя его номер с цветом 0–127; 0 или note off выключает её.</string>
+	<string name="computer_pad_help_no_midi_mode">Телефоны без MIDI в настройках USB не могут использовать эту функцию.</string>
+	<string name="computer_pad_help_check_on_computer">Получает ли компьютер нажатия, видно только в приложении на компьютере.</string>
 	<string name="computer_pad_disconnect">Отключить</string>
     <string name="midi_tab_usb">USB-устройства</string>
     <string name="midi_tab_apps">Приложения на этом телефоне</string>
