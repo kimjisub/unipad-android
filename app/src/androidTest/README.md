@@ -8,6 +8,8 @@ and native pad/chain views. Store tests supply a controlled catalogue to the rea
 file and JSON requests. It uses a local HTTP fixture by default. Pass the instrumentation argument
 `downloadAccountingBackend=demo-unipad` to use the Firebase emulators at `10.0.2.2:5051` (functions)
 and `10.0.2.2:9051` (database), with project `demo-unipad`; it seeds and removes its own pack rows.
+On Android 17 and later the tests first grant the debug build `ACCESS_LOCAL_NETWORK`, without which
+the system blocks the app from 10.0.2.2 (`DemoAccountingServer`).
 That mode also checks response loss, replay from a fresh engine and atomic retry file, separate
 receipts, missing and non-numeric counts, disabled issuance, clock changes, expiry and queue limits.
 `DownloadAccountingProcessDeviceTest` has two ordered methods: Orchestrator ends the target process

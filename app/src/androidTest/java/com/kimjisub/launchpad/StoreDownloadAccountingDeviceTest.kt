@@ -41,10 +41,8 @@ import org.koin.core.context.unloadKoinModules
 import org.koin.dsl.module
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.HttpURLConnection
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.URL
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -89,11 +87,11 @@ class StoreDownloadAccountingDeviceTest {
         val store = FilePendingDownloadStore(queueFile)
         val issued = CountDownLatch(1)
         val backend = Backend(if (validZip) zip() else byteArrayOf(1, 2, 3), enabled)
-        val realEmulator = InstrumentationRegistry.getArguments().getString("downloadAccountingBackend") == "demo-unipad"
-        val base = if (realEmulator) "http://10.0.2.2:5051/demo-unipad/us-central1/" else backend.url
+        val realEmulator = DemoAccountingServer.enabled
+        val base = if (realEmulator) DemoAccountingServer.FUNCTIONS else backend.url
         if (realEmulator) {
-            emulatorWrite("downloadAccounting/config/enabled", enabled.toString())
-            emulatorWrite("store/$id", """{"code":"$id","downloadCount":50}""")
+            DemoAccountingServer.database("downloadAccounting/config/enabled", enabled.toString())
+            DemoAccountingServer.database("store/$id", """{"code":"$id","downloadCount":50}""")
         }
         val http = HttpDownloadAccountingApi { base }
         val completions = AtomicInteger()
@@ -174,13 +172,13 @@ class StoreDownloadAccountingDeviceTest {
                 } else assertEquals(0, completions.get())
                 assertTrue(store.load().isEmpty())
                 assertTrue(File(workspace, id).isDirectory)
-                val count = if (realEmulator) emulatorRead("store/$id/downloadCount").trim().toInt() else backend.count.get()
+                val count = if (realEmulator) DemoAccountingServer.database("store/$id/downloadCount").trim().toInt() else backend.count.get()
                 assertEquals(if (enabled) 51 else 50, count)
             } else {
                 assertEquals(0, completions.get())
                 assertTrue(store.load().isEmpty())
                 assertFalse(File(workspace, id).exists())
-                if (realEmulator) assertEquals("50", emulatorRead("store/$id/downloadCount").trim())
+                if (realEmulator) assertEquals("50", DemoAccountingServer.database("store/$id/downloadCount").trim())
             }
             // The catalogue still says 50: completion does not add one on the screen.
             compose.onNode(hasText("50")).assertIsDisplayed()
@@ -205,7 +203,7 @@ class StoreDownloadAccountingDeviceTest {
             notifications.activeNotifications.filter {
                 it.notification.extras.getString(Notification.EXTRA_TITLE) == "Accounting fixture"
             }.forEach { notifications.cancel(it.tag, it.id) }
-            if (realEmulator) emulatorWrite("store/$id", "null")
+            if (realEmulator) DemoAccountingServer.database("store/$id", "null")
         }
     }
 
@@ -228,7 +226,7 @@ class StoreDownloadAccountingDeviceTest {
             }
         }
         fun engine() = DownloadAccounting(api, FilePendingDownloadStore(file)) { time }
-        fun count() = emulatorRead("store/$id/downloadCount").trim()
+        fun count() = DemoAccountingServer.database("store/$id/downloadCount").trim()
         try {
             val first = requireNotNull(engine().issue(id))
             engine().completed(id, first)
@@ -253,22 +251,22 @@ class StoreDownloadAccountingDeviceTest {
             val deferred = requireNotNull(engine().issue(id))
             engine().completed(id, deferred)
             for (value in listOf("null", "\"invalid-count\"")) {
-                emulatorWrite("store/$id/downloadCount", value)
+                DemoAccountingServer.database("store/$id/downloadCount", value)
                 engine().retryPending()
                 assertEquals(value, count())
                 assertEquals(deferred.receipt, store.load().single().receipt)
                 time += DownloadAccounting.RETRY_INTERVAL_MS
             }
-            emulatorWrite("store/$id/downloadCount", "53")
+            DemoAccountingServer.database("store/$id/downloadCount", "53")
             engine().retryPending()
             assertEquals("54", count())
             assertTrue(store.load().isEmpty())
             trace += "missing/non-numeric count: deferred, never initialized; restored count=54"
 
-            emulatorWrite("downloadAccounting/config/enabled", "false")
+            DemoAccountingServer.database("downloadAccounting/config/enabled", "false")
             assertNull(engine().issue(id))
             assertTrue(store.load().isEmpty())
-            emulatorWrite("downloadAccounting/config/enabled", "true")
+            DemoAccountingServer.database("downloadAccounting/config/enabled", "true")
             val expiring = requireNotNull(engine().issue(id))
             engine().completed(id, expiring)
             time = expiring.expiresAt
@@ -298,28 +296,8 @@ class StoreDownloadAccountingDeviceTest {
                 it.writeText(trace.joinToString("\n") + "\n"); true
             })
             file.delete()
-            emulatorWrite("downloadAccounting/config/enabled", "true")
+            DemoAccountingServer.database("downloadAccounting/config/enabled", "true")
         }
-    }
-
-    private fun emulatorWrite(path: String, json: String) {
-        val connection = URL("http://10.0.2.2:9051/$path.json?ns=demo-unipad").openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 5_000; connection.readTimeout = 5_000
-            connection.requestMethod = "PUT"
-            connection.setRequestProperty("Authorization", "Bearer owner")
-            connection.doOutput = true
-            connection.outputStream.use { it.write(json.toByteArray()) }
-            assertEquals(200, connection.responseCode)
-        } finally { connection.disconnect() }
-    }
-
-    private fun emulatorRead(path: String): String {
-        val connection = URL("http://10.0.2.2:9051/$path.json?ns=demo-unipad").openConnection() as HttpURLConnection
-        return try {
-            connection.connectTimeout = 5_000; connection.readTimeout = 5_000
-            connection.inputStream.bufferedReader().use { it.readText() }
-        } finally { connection.disconnect() }
     }
 
     private fun zip(): ByteArray = ByteArrayOutputStream().also { bytes ->

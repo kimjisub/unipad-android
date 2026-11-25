@@ -16,8 +16,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 
 /** Orchestrator terminates the target process between these ordered methods, preserving app data. */
 @RunWith(AndroidJUnit4::class)
@@ -29,14 +27,14 @@ class DownloadAccountingProcessDeviceTest {
     private val file = File(context.noBackupFilesDir, "accounting-process-test.json")
     private val store = FilePendingDownloadStore(file)
     private val code = "accounting-process-test"
-    private val demo = InstrumentationRegistry.getArguments().getString("downloadAccountingBackend") == "demo-unipad"
+    private val demo = DemoAccountingServer.enabled
 
     @Test fun a_responseLostAfterCommitLeavesAnAtomicRetryFile() = runBlocking {
         file.delete()
         assertTrue(metadata.edit().clear().putInt("pid", Process.myPid()).commit())
         if (demo) {
-            database("downloadAccounting/config/enabled", "true")
-            database("store/$code", """{"code":"$code","downloadCount":50}""")
+            DemoAccountingServer.database("downloadAccounting/config/enabled", "true")
+            DemoAccountingServer.database("store/$code", """{"code":"$code","downloadCount":50}""")
         }
         val remote = api()
         val lossy = object : DownloadAccountingApi by remote {
@@ -73,19 +71,19 @@ class DownloadAccountingProcessDeviceTest {
             }
             DownloadAccounting(observed, store) { metadata.getLong("retryAt", 0) }.retryPending()
             assertTrue(store.load().isEmpty())
-            val count = if (demo) database("store/$code/downloadCount").trim().toInt()
+            val count = if (demo) DemoAccountingServer.database("store/$code/downloadCount").trim().toInt()
                 else metadata.getInt("count", 0)
             assertEquals(51, count)
             capture("after-process-restart", "oldPid=${metadata.getInt("pid", 0)} pid=${Process.myPid()} receipt=$expectedReceipt count=$count pending=0")
         } finally {
             file.delete()
             metadata.edit().clear().commit()
-            if (demo) database("store/$code", "null")
+            if (demo) DemoAccountingServer.database("store/$code", "null")
         }
     }
 
     private fun api(): DownloadAccountingApi = if (demo) {
-        HttpDownloadAccountingApi { "http://10.0.2.2:5051/demo-unipad/us-central1/" }
+        HttpDownloadAccountingApi { DemoAccountingServer.FUNCTIONS }
     } else object : DownloadAccountingApi {
         override suspend fun issue(code: String) = DownloadReceipt("process-test-receipt",
             System.currentTimeMillis() + DownloadAccounting.RETENTION_MS)
@@ -94,21 +92,6 @@ class DownloadAccountingProcessDeviceTest {
             check(metadata.edit().putBoolean("applied", true).putInt("count", 51).commit())
             return "counted"
         }
-    }
-
-    private fun database(path: String, value: String? = null): String {
-        val connection = URL("http://10.0.2.2:9051/$path.json?ns=demo-unipad").openConnection() as HttpURLConnection
-        return try {
-            connection.connectTimeout = 5_000; connection.readTimeout = 5_000
-            if (value != null) {
-                connection.requestMethod = "PUT"
-                connection.setRequestProperty("Authorization", "Bearer owner")
-                connection.doOutput = true
-                connection.outputStream.use { it.write(value.toByteArray()) }
-            }
-            assertEquals(200, connection.responseCode)
-            connection.inputStream.bufferedReader().use { it.readText() }
-        } finally { connection.disconnect() }
     }
 
     private fun capture(name: String, text: String) {
