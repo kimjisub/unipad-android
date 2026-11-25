@@ -322,4 +322,28 @@ class UniPackAutoMapperTest {
 		assertEquals(originalChains, pack.autoPlayTable!!.elements.filterIsInstance<AutoPlay.Element.Chain>().map { it.c })
 	}
 
+	/**
+	 * A wormhole moves the chain 100 ms of song time after its press, also in the written file. A press
+	 * parsed before the move must stay before it when the file is read again, and one parsed after it
+	 * must stay after it, with no chain line added that would reset the queues.
+	 */
+	@Test
+	fun pressesKeepTheirSideOfASoundsChainMove() {
+		createPack()
+		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=2\n")
+		File(root, "keySound").writeText("1 1 1 a.wav 1 2\n1 1 2 c.wav\n1 1 2 b.wav\n2 1 2 c.wav\n2 1 3 a.wav\n")
+		File(root, "autoPlay").writeText("on 1 2\nd 5\non 1 1\nd 1\non 1 2\nd 300\non 1 2\nd 20\non 1 3\n")
+		pack = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		fun presses(p: UniPackFolder) = p.autoPlayTable!!.elements.filterIsInstance<AutoPlay.Element.On>()
+			.map { "${it.currChain} ${it.x} ${it.y} ${p.soundGet(it.currChain, it.x, it.y, it.num)?.file?.name}" }
+		val parsed = presses(pack)
+
+		runBlocking { mapper(FakeReader(mapOf("a.wav" to 300, "b.wav" to 40, "c.wav" to 500))).run(noProgress) }
+
+		assertEquals("d 1000\nt 1 2\nd 500\nt 1 1\nd 1\nt 1 2\nd 99\nt 1 2\nd 500\nt 1 3\n", autoPlay())
+		val reopened = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		assertEquals(listOf("0 0 1 c.wav", "0 0 0 a.wav", "0 0 1 b.wav", "1 0 1 c.wav", "1 0 2 a.wav"), parsed)
+		assertEquals(parsed, presses(reopened))
+	}
+
 }

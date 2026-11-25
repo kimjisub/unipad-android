@@ -570,7 +570,10 @@ class AutoPlayRunner(
 								if (currentChain != stepChainValue && stepChainValue >= 0) {
 									synchronized(stepPendingPads) {
 										if (stepScanned) {
-											setProgress(stepStartProgress)
+											// A hand-input wormhole may move the page before the rest of a close
+											// pair is played. Keep completed notes when guiding the user back.
+											val exit = leaveStep()
+											setProgress(exit.firstOwed ?: exit.end)
 											stepPendingPads.clear()
 											stepScanned = false
 										}

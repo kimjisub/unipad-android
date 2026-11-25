@@ -74,7 +74,8 @@ class PlayActivityViewModelAutoPlayChainTimingTest {
 		await { !vm.soundLoadingActive && (vm.unipack.soundGet(0, 0, 0)?.id ?: -1) >= 0 }
 		vm.chain.addObserver { c, _ -> chains += clock.get() to c }
 		vm.switchPlayMode(PlayMode.AutoPlay)
-		await { engine.plays.size == 1 && vm.chain.value == 1 }
+		await { engine.plays.size == 1 }
+		assertEquals("The wormhole is still pending at song time zero", 0, vm.chain.value)
 	}
 
 	private fun moveTo(ms: Long) {
@@ -85,22 +86,24 @@ class PlayActivityViewModelAutoPlayChainTimingTest {
 
 	@Test fun parsedWormholeDoesNotOverrideTheFollowingChainCommand() {
 		start()
+		moveTo(20)
+		assertEquals("No chain move is due before the explicit command", emptyList<Pair<Long, Int>>(), chains)
 		moveTo(50)
 		await { vm.chain.value == 2 }
 		moveTo(150)
 		await { engine.plays.size == 2 }
-		assertEquals(listOf(0L to 1, 50L to 2), chains)
+		assertEquals(listOf(50L to 2), chains)
 	}
 
 	@Test fun stoppingAutoplayLeavesNoDelayedWormhole() {
 		start()
-		moveTo(50)
-		await { vm.chain.value == 2 }
+		moveTo(20)
 		vm.switchPlayMode(PlayMode.None)
 		scheduler.runCurrent()
 		val before = chains.toList()
 		moveTo(150)
 		assertEquals("A stopped sequence must not move the chain later", before, chains)
-		assertEquals(2, vm.chain.value)
+		assertEquals(emptyList<Pair<Long, Int>>(), chains)
+		assertEquals(0, vm.chain.value)
 	}
 }

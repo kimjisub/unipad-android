@@ -54,21 +54,36 @@ class UniPackAutoMapper(
 			// null: the sound's length is unknown, so the pack's own wait is kept.
 			var nextDuration: Int? = FIRST_DELAY_MS
 			var waitReplaced = false
+			// A wormhole moves the chain 100 ms of song time after its press, also when the written
+			// file is read again. Waits before a pending move keep their length, so every press stays
+			// on the side of the move it was parsed on; the wait after the move is shortened by them.
+			var pendingMoves = 0
+			var keptSincePress = 0
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						nextDuration = soundFile(e)?.let { durationOf(it) }
+						val sound = sound(e)
+						nextDuration = sound?.file?.let { durationOf(it) }
 						waitReplaced = false
+						keptSincePress = 0
+						if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) pendingMoves++
 						result.add(e)
 					}
-					is AutoPlay.Element.Chain -> result.add(e)
+					is AutoPlay.Element.Chain -> {
+						pendingMoves = if (e.scheduled) maxOf(0, pendingMoves - 1) else 0
+						result.add(e)
+					}
 					is AutoPlay.Element.Delay -> {
 						// Chain changes split the original waits, but the interval between two
 						// presses must receive the previous sound's length only once. Unknown
 						// lengths keep every original wait on its own side of each chain change.
-						if (nextDuration == null) result.add(e)
-						else if (!waitReplaced) {
-							result.add(AutoPlay.Element.Delay(nextDuration + AUTOMAPPING_DELAY_OFFSET_MS))
+						val duration = nextDuration
+						if (duration == null || pendingMoves > 0) {
+							result.add(e)
+							keptSincePress += e.delay
+						} else if (!waitReplaced) {
+							val replaced = duration + AUTOMAPPING_DELAY_OFFSET_MS - keptSincePress
+							if (replaced > 0 || keptSincePress == 0) result.add(AutoPlay.Element.Delay(maxOf(0, replaced)))
 							waitReplaced = true
 						}
 					}
@@ -78,12 +93,10 @@ class UniPackAutoMapper(
 			}
 		}
 
-		val content = render(result) { sound(it)?.wormhole?.takeIf { chain -> chain != Sound.NO_WORMHOLE } }
+		val content = render(result)
 		// withContext checks for cancellation before writing; the replacement itself is not interrupted.
 		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content, validate) }
 	}
-
-	private fun soundFile(e: AutoPlay.Element.On): File? = sound(e)?.file
 
 	private fun sound(e: AutoPlay.Element.On): Sound? {
 		val sounds = unipack.soundTable?.getOrNull(e.currChain)?.getOrNull(e.x)?.getOrNull(e.y)
@@ -126,27 +139,13 @@ class UniPackAutoMapper(
 			return merged
 		}
 
-		internal fun render(
-			elements: List<AutoPlay.Element>,
-			chainAfter: (AutoPlay.Element.On) -> Int? = { null },
-		): String = buildString {
-			var inferredChain: Int? = null
+		internal fun render(elements: List<AutoPlay.Element>): String = buildString {
 			for (e in elements) {
 				when (e) {
-					is AutoPlay.Element.On -> {
-						append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
-						inferredChain = chainAfter(e)
-					}
-					is AutoPlay.Element.Chain -> {
-						// Re-reading `t` already follows the sound's wormhole. Keep any following
-						// explicit chain commands, but do not emit that inferred change twice.
-						if (inferredChain != e.c) append("c ").append(e.c + 1).append('\n')
-						inferredChain = null
-					}
-					is AutoPlay.Element.Delay -> {
-						append("d ").append(e.delay).append('\n')
-						inferredChain = null
-					}
+					is AutoPlay.Element.On -> append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
+					// Reading `t` again schedules the sound's wormhole; only the file's own chain lines are written.
+					is AutoPlay.Element.Chain -> if (!e.scheduled) append("c ").append(e.c + 1).append('\n')
+					is AutoPlay.Element.Delay -> append("d ").append(e.delay).append('\n')
 					is AutoPlay.Element.Off -> {}
 				}
 			}
