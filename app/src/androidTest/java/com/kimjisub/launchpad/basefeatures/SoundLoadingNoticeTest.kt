@@ -174,6 +174,32 @@ class SoundLoadingNoticeTest {
         }
     }
 
+    @Test fun aDecoderTheSystemBreaksIsReplacedAndEverySoundLoads() {
+        val folder = File(screen.pack(), "sounds")
+        for (name in listOf("second.wav", "third.wav")) File(folder, name).writeBytes(File(folder, "silence.wav").readBytes())
+        File(screen.pack(), "keySound").writeText("1 1 1 silence.wav\n1 1 2 second.wav\n1 1 3 third.wav\n")
+        val created = java.util.concurrent.atomic.AtomicInteger()
+        // The first decoder is already released when the app configures it, as after the media
+        // service reports UNKNOWN_ERROR while setting it up.
+        com.kimjisub.launchpad.audio.OboeAudioEngine.createDecodersWith { mime ->
+            android.media.MediaCodec.createDecoderByType(mime).also { if (created.getAndIncrement() == 0) it.release() }
+        }
+        try {
+            screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+            screen.await("Audio did not finish loading") { screen.onMain { !screen.vm().soundLoadingActive && screen.vm().uiLoaded } }
+            screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
+            screen.capture("audio-decoder-replaced")
+            org.junit.Assert.assertEquals("one decoder per file and one replacement", 4, created.get())
+            org.junit.Assert.assertEquals(3, screen.onMain { screen.vm().soundLoadReport!!.loadedFiles })
+            org.junit.Assert.assertTrue(screen.onMain { screen.vm().soundLoadReport!!.failures.isEmpty() })
+            org.junit.Assert.assertFalse(screen.onMain { screen.vm().soundLoadNoticeVisible })
+            org.junit.Assert.assertTrue(screen.onMain { (0 until 3).all { y -> screen.vm().unipack.soundTable!![0][0][y]!![0].id >= 0 } })
+        } finally {
+            screen.close()
+            com.kimjisub.launchpad.audio.OboeAudioEngine.createDecodersWith(null)
+        }
+    }
+
     @Test fun aLightOnlyPackOpensWithoutASoundFailureNotice() {
         File(screen.pack(), "keySound").writeText("")
         screen.openPlay()
