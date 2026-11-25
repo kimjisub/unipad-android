@@ -80,7 +80,11 @@ class StoreDownloadAccountingDeviceTest {
         val prefs = PreferenceManager(context)
         val oldPath = prefs.downloadStoragePath
         val oldCount = prefs.prevStoreCount
-        val workspace = File(context.noBackupFilesDir, id).apply { mkdirs() }
+        // The internal workspace is a listed download target while it holds a pack, and unlike
+        // shared storage it honours file permissions, so the storage failure is real on every API.
+        val workspace = File(context.filesDir, "UniPack")
+        val workspaceExisted = workspace.isDirectory
+        File(workspace, "$id-listed").mkdirs()
         val queueFile = File(context.noBackupFilesDir, "$id.json")
         val store = FilePendingDownloadStore(queueFile)
         val issued = CountDownLatch(1)
@@ -194,7 +198,8 @@ class StoreDownloadAccountingDeviceTest {
             prefs.downloadStoragePath = oldPath
             prefs.prevStoreCount = oldCount
             workspace.setWritable(true)
-            workspace.deleteRecursively()
+            workspace.listFiles().orEmpty().filter { it.name.startsWith(id) }.forEach { check(it.deleteRecursively()) }
+            if (!workspaceExisted) workspace.delete()
             queueFile.delete()
             val notifications = context.getSystemService(NotificationManager::class.java)
             notifications.activeNotifications.filter {
@@ -206,7 +211,7 @@ class StoreDownloadAccountingDeviceTest {
 
     /** The demo server's actual receipts, with real atomic files and an injectable device clock. */
     private fun verifyEmulatorRetryBoundaries(http: HttpDownloadAccountingApi, id: String, workspace: File, device: UiDevice) = runBlocking {
-        val file = File(workspace, "retry-boundaries.json")
+        val file = File(workspace, "$id-retry-boundaries.json")
         val store = FilePendingDownloadStore(file)
         val trace = mutableListOf<String>()
         var time = System.currentTimeMillis()
