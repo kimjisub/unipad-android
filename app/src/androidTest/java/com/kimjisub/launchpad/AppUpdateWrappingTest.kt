@@ -82,9 +82,14 @@ class AppUpdateWrappingTest : BaseUITest() {
                     assertTrue("update overlaps settings", notice.right <= settings.left)
                     assertTrue("default footer exceeds its 48dp minimum", notice.height <= 48 * density / 160f + 1)
                 } else {
-                    val information = device.findObjects(By.scrollable(true))
+                    // While the app's window is still appearing, the home screen's scrollable
+                    // workspace can be reported too, so only the app's own panel is considered.
+                    val information = device.findObjects(By.pkg(PACKAGE_NAME).scrollable(true))
                         .filter { it.visibleBounds.left < notice.center.x }.minByOrNull { it.visibleBounds.left }
-                    assertTrue("information overlaps update", information != null && information.visibleBounds.bottom <= notice.top + 1)
+                    assertTrue(
+                        "information overlaps update: information=${information?.visibleBounds} notice=$notice",
+                        information != null && information.visibleBounds.bottom <= notice.top + 1,
+                    )
                 }
                 null
             }
