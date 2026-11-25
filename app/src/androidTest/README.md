@@ -589,5 +589,6 @@ addresses. Such manual test visits require a separate analytics exclusion mechan
 signal and outgoing intents; `PackWebsiteDeviceTest` checks the same path for pack metadata.
 For an offline Chrome capture of the real theme button, pass the instrumentation argument
 `captureBrowserLinks=true`; without it the test intercepts the outgoing intent without opening
-an external app. Save the emulator's network state, disable its Wi-Fi and mobile data before a
+an external app. The capture waits for Chrome's address bar, so dismiss Chrome's first-run and
+notice screens (for example "Enhanced ad privacy in Chrome") before the run. Save the emulator's network state, disable its Wi-Fi and mobile data before a
 normal-launch comparison, and restore that state after capturing both addresses.
