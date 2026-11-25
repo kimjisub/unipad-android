@@ -225,8 +225,39 @@ class FeatureScreen {
         ?.let { window -> Rect().also(window::getBoundsInScreen).top }
         ?: device.displayHeight
 
-    /** Returns the same keyboard boundary observed stable for 500 ms, rather than sampling again. */
+    /**
+     * Returns the same keyboard boundary observed stable for 500 ms, rather than sampling again,
+     * after closing Gboard's font size notice ([KeyboardNotice]) the way a user would: a layout
+     * check made while it shows judges the app against a keyboard users see only once.
+     */
     fun awaitKeyboardTopOnScreen(): Int {
+        val top = awaitStableKeyboardTop()
+        if (!closeFontSizeNotice()) return top
+        await("The keyboard notice did not close") { keyboardTopOnScreen() > top }
+        return awaitStableKeyboardTop().also { println("keyboard_notice_closed top_with_notice=$top top=$it") }
+    }
+
+    /** Returns whether Gboard's font size notice was found and pressed closed. */
+    private fun closeFontSizeNotice(): Boolean {
+        val keyboard = instrumentation.uiAutomation.windows
+            .firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }?.root ?: return false
+        return when (val notice = KeyboardNotice.of(KeyboardElement.of(keyboard))) {
+            KeyboardNotice.None -> false
+            is KeyboardNotice.Other -> {
+                println("keyboard_notice_left_open labels=${notice.labels}")
+                false
+            }
+            is KeyboardNotice.FontSizeUnclosable -> throw AssertionError(
+                "Gboard's font size notice has no single close button beside its message: ${notice.labels}"
+            )
+            is KeyboardNotice.FontSize -> {
+                device.click(notice.close.bounds.centerX(), notice.close.bounds.centerY())
+                true
+            }
+        }
+    }
+
+    private fun awaitStableKeyboardTop(): Int {
         var top = device.displayHeight
         var changed = SystemClock.elapsedRealtime()
         await({
