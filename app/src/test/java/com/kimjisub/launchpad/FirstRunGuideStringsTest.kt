@@ -8,7 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * The empty pack list's first-run guide and the update check are shown to everyone on first launch.
- * A language that translates the guide's button names must translate the sentences around them too,
+ * Every language translates the guide's button names, so it must translate the sentences around them too,
  * or English sentences end up with translated button names inside.
  */
 class FirstRunGuideStringsTest {
@@ -27,10 +27,15 @@ class FirstRunGuideStringsTest {
 
 	private fun placeholders(text: String) = PLACEHOLDER.findAll(text).map { it.value }.sorted().toList()
 
+	/** Every translation the app ships, so a newly added language is checked too. */
+	private fun languages() = resDir.listFiles { f -> f.name.startsWith("values-") && File(f, "strings.xml").exists() }!!
+		.map { it.name }.sorted()
+
 	@Test
 	fun guideAndUpdateCheckAreTranslatedWithTheSamePlaceholders() {
 		val english = strings("values")
-		val problems = TRANSLATED.flatMap { folder ->
+		assertTrue(languages().toString(), "values-ko" in languages() && "values-zh-rCN" in languages())
+		val problems = languages().flatMap { folder ->
 			val local = strings(folder)
 			(GUIDE + UPDATE_CHECK).mapNotNull { key ->
 				val text = local[key]
@@ -51,24 +56,8 @@ class FirstRunGuideStringsTest {
 		assertEquals(strings("values").keys.filter { it.startsWith("update_") }.toSet(), UPDATE_CHECK.toSet())
 	}
 
-	/** Every language that has these keys keeps English's placeholders, so formatting never throws or drops a name. */
-	@Test
-	fun everyLanguageKeepsTheGuidePlaceholders() {
-		val english = strings("values")
-		val folders = resDir.listFiles { f -> f.isDirectory && f.name.startsWith("values-") && File(f, "strings.xml").exists() }!!
-		val problems = folders.flatMap { folder ->
-			val local = strings(folder.name)
-			(GUIDE + UPDATE_CHECK).mapNotNull { key ->
-				val text = local[key] ?: return@mapNotNull null
-				if (placeholders(text) == placeholders(english.getValue(key))) null else "${folder.name}: $key"
-			}
-		}
-		assertTrue(problems.joinToString("\n"), problems.isEmpty())
-	}
-
 	private companion object {
 		val PLACEHOLDER = Regex("%\\d+\\$[sd]")
-		val TRANSLATED = listOf("values-in", "values-es", "values-pt-rBR")
 		val GUIDE = listOf(
 			"guide_empty_title", "guide_empty_step_get", "guide_empty_step_play", "guide_empty_step_pads",
 			"guide_empty_link", "unipack_play",

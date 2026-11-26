@@ -98,12 +98,38 @@
 	<string name="autoMappingRunning">အလိုအလျောက် မြေပုံဆွဲခြင်း…</string>
 
 	<!--Version-->
+	<string name="update_check">အပ်ဒိတ် စစ်ရန်</string>
+	<string name="update_offer_title">ဗားရှင်းအသစ် ရနိုင်ပါပြီ</string>
+	<string name="update_offer_body">ယခု သို့မဟုတ် နောက်မှ ရယူနိုင်ပါသည်။ တီးခတ်ပြီးမှ ထည့်သွင်းမည့်အချိန်ကို ရွေးပါ။</string>
+	<string name="update_download">ဗားရှင်းအသစ် ရယူရန်</string>
+	<string name="update_later">နောက်မှ</string>
+	<string name="update_downloading_title">ဗားရှင်းအသစ်ကို ရယူနေသည်</string>
+	<string name="update_ready_title">ဗားရှင်းအသစ် အသင့်ဖြစ်ပါပြီ</string>
+	<string name="update_ready_body">ထည့်သွင်းလျှင် အက်ပ် ပြန်စတင်ပါမည်။ pack စာရင်းသို့ ပြန်ရောက်ပါမည်။</string>
+	<string name="update_install">ထည့်သွင်းပြီး ပြန်စတင်ရန်</string>
+	<string name="update_none">ယခု ရနိုင်သော အပ်ဒိတ် မရှိပါ။</string>
+	<string name="update_check_failed">အပ်ဒိတ်ကို စစ်ဆေး၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။</string>
+	<string name="update_check_again">ထပ်စစ်ရန်</string>
+	<string name="update_close">ပိတ်ရန်</string>
+	<string name="update_failed">အပ်ဒိတ် မပြီးပါ။ နောက်မှ ထပ်စမ်းပါ။</string>
+	<string name="update_retry">ထပ်စမ်းရန်</string>
+	<string name="update_check_in_store">စတိုးတွင် စစ်ရန်</string>
+	<string name="update_unsupported">ဤစက်တွင် အပ်ဒိတ်ကို စတိုးတွင် စစ်ဆေးပါ။</string>
+	<string name="update_store_notice">Google Play တွင် စစ်ဆေးနေသည်။ အက်ပ်ကို အပ်ဒိတ်လုပ်လျှင် UniPad ပိတ်သွားနိုင်သည်။</string>
+	<string name="update_store_open">စတိုး ဖွင့်ရန်</string>
+	<string name="update_store_unavailable">စတိုးကို ဖွင့်၍ မရပါ။ နောက်မှ ထပ်စစ်ပါ။</string>
 
 	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
 	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>
 	<string name="guide_download_new">pack အသစ်များ ဒေါင်းလုဒ်လုပ်ရန်</string>
 	<string name="guide_import_external">ဒေါင်းလုဒ်လုပ်ထားသော pack များ တင်သွင်းရန်</string>
 	<string name="guide_restore_packs">ပျောက်ဆုံးနေသော pack များ ပြန်လည်ရယူရန်</string>
+	<string name="guide_empty_title">သင့်ပထမဆုံး UniPack ကို တီးခတ်ပါ</string>
+	<string name="guide_empty_step_get">pack ရယူရန်: စတိုးကို သုံးရန် %1$s ကို နှိပ်ပါ၊ သို့မဟုတ် ရှိပြီးသား .zip အတွက် %2$s ကို နှိပ်ပါ။</string>
+	<string name="guide_empty_step_play">စာရင်းထဲရှိ pack ကို နှိပ်ပြီး %1$s ကို နှိပ်ပါ။</string>
+	<string name="guide_empty_step_pads">Launchpad မရှိဘူးလား? မျက်နှာပြင်ပေါ်ရှိ pad များကို နှိပ်ရုံပါပဲ။</string>
+	<string name="guide_empty_link">စတင်အသုံးပြုနည်း လမ်းညွှန်</string>
+	<string name="unipack_play">ဖွင့်ရန်</string>
 	<string name="doYouWantToDeleteUniPack">ဤပရောဂျက်ကို ဖျက်လိုပါသလား?</string>
 	<string name="importComplete">Pack ကို တင်သွင်းပြီးပါပြီ!</string>
 	<string name="importPlayNow">ယခု ဖွင့်ရန်</string>

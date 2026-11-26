@@ -181,7 +181,10 @@ object OboeAudioEngine {
 			val totalSamples = buffer.sampleCount
 			val pcm = buffer.pcm ?: return null
 
-			val numFrames = totalSamples / channels
+			// Native loading copies only numFrames * channels samples; no extra PCM copy is needed.
+			val numFrames = oggOpusEndFrames(totalSamples / channels, sampleRate, decodeInspection.inspection) { padding ->
+				Log.err("Ogg Opus end padding exceeds one packet: ${file.name}, $padding frames")
+			}
 			if (numFrames <= 0) return null
 			val speakers = if (decoderEmitsVorbisOrder(mime, codec.name, channels)) {
 				vorbisOrderToChannelMask(pcm, channels, totalSamples)
