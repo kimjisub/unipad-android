@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import com.kimjisub.launchpad.tool.screenName
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -31,9 +32,12 @@ internal class ForegroundScreenRecorder(
 	private var current: ForegroundScreen? = null
 	// Only the latest screen is needed if storage or collection is slow. Never retain activities on IO.
 	private val pending = Channel<ForegroundScreen>(Channel.CONFLATED)
+	private val firstScreenCreated = CompletableDeferred<Unit>()
 
-	/** Call once with an IO scope. Read the previous process before any current-process write. */
+	/** Call once with an IO scope. Screenless starts must leave exit history and its checkpoint alone. */
 	fun start(scope: CoroutineScope, collectPreviousExit: () -> Unit) = scope.launch {
+		firstScreenCreated.await()
+		// Read the previous process before any current-process write, including a queued resume.
 		collectPreviousExit()
 		persist {
 			remove(SCREEN)
@@ -67,6 +71,7 @@ internal class ForegroundScreenRecorder(
 
 	override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
 		if (packScreen.isInstance(activity)) packScreens.add(activity)
+		firstScreenCreated.complete(Unit)
 	}
 
 	override fun onActivityResumed(activity: Activity) {
