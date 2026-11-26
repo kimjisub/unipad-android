@@ -21,6 +21,7 @@ import com.kimjisub.launchpad.midi.VirtualMidiConnection
 import com.kimjisub.launchpad.midi.VirtualMidiFixture
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.Noting
+import com.kimjisub.launchpad.splitscreen.stackOfTask
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -414,7 +415,7 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
 			// Emptying the docked stack ends the split; behind the other app, the play screen is hidden.
 			val playTask = screen.onMain { play.taskId }
-			moveTask(playTask, stackOf(padTask), toTop = false)
+			moveTask(playTask, stackOfTask(screen.device.executeShellCommand("am stack list"), padTask), toTop = false)
 		} else {
 			// Emptying the docked stack ends the split; the other app stays on top, full screen.
 			val playTask = screen.onMain { play.taskId }
@@ -427,17 +428,6 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	private fun moveTask(task: Int, stack: Int, toTop: Boolean) {
 		val output = screen.device.executeShellCommand("am stack move-task $task $stack $toTop").trim()
 		assertTrue("Moving task $task to stack $stack failed: $output", output.isEmpty())
-	}
-
-	/** The stack holding a task, from Android 9 numbered as stacks are created. */
-	private fun stackOf(task: Int): Int {
-		val list = screen.device.executeShellCommand("am stack list")
-		var stack: Int? = null
-		list.lineSequence().map { it.trim() }.forEach { line ->
-			STACK_LINE.find(line)?.let { stack = it.groupValues[1].toInt() }
-			if (line.startsWith("taskId=$task:")) return checkNotNull(stack) { "Task $task is listed before any stack:\n$list" }
-		}
-		throw AssertionError("Task $task is in no stack:\n$list")
 	}
 
 	private fun padPresses(): Int = fixture.call("read").getInt("padPresses")
@@ -459,7 +449,6 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		// Fixed stack ids before Android 9 (ActivityManager.StackId).
 		const val FULL_SCREEN_STACK = 1
 		const val DOCKED_STACK = 3
-		val STACK_LINE = Regex("""^Stack id=(\d+)""")
 		const val TAG = "VirtualMidiSplitScreen"
 	}
 }
