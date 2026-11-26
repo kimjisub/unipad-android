@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.midi
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,6 +34,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import com.kimjisub.launchpad.DisplaySettings
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.activity.ComputerPadActivity
@@ -50,7 +50,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.math.abs
 
 /** Window size and text size, drawn inside the pad screen's own activity with nothing connected. */
 @RunWith(AndroidJUnit4::class)
@@ -159,6 +158,13 @@ class ComputerPadLayoutTest {
 	 * offers three actions. The way back and every action are on screen whole, directly or by scrolling.
 	 */
 	@Test fun aShortWindowKeepsTheWayBackAndEveryActionWithinReach() {
+		turn(landscape = false)
+		val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+		// Hold every requested window, even when the test starts on a 360dp phone.
+		DisplaySettings.withPhoneDisplay(device, 1080 to 2400, 320) { checkShortWindows() }
+	}
+
+	private fun checkShortWindows() {
 		found.refresh()
 		compose.waitUntil(5000) { found.devices.value.isNotEmpty() }
 		val actions = listOf(R.string.computer_pad_connect, R.string.computer_pad_search_again, R.string.computer_pad_help)
@@ -170,12 +176,9 @@ class ComputerPadLayoutTest {
 			val label = "${window.name} ${window.width}x${window.height} dp, text x$fontScale"
 			compose.onNodeWithText(context.getString(R.string.computer_pad_found)).assertExists()
 			val bounds = compose.onNodeWithTag(WINDOW).fetchSemanticsNode().boundsInRoot
-			// A window this device's screen cannot hold is clamped and says nothing about the asked size.
 			val density = context.resources.displayMetrics.density
-			if (abs(window.width * density - bounds.width) > 1f || abs(window.height * density - bounds.height) > 1f) {
-				Log.i(TAG, "$label skipped: this screen holds only ${bounds.width / density}x${bounds.height / density} dp")
-				continue
-			}
+			assertEquals("$label: window width", window.width * density, bounds.width, 1f)
+			assertEquals("$label: window height", window.height * density, bounds.height, 1f)
 			measured += label
 			failures += listOfNotNull(
 				reach(label, bounds, hasContentDescription(context.getString(R.string.computer_pad_back)) and hasClickAction()),
@@ -183,8 +186,23 @@ class ComputerPadLayoutTest {
 			)
 			capture("short_${window.name}_text${(fontScale * 10).toInt()}")
 		}
-		assertTrue("this screen held none of the windows", measured.isNotEmpty())
+		assertEquals("every window and text size was checked", SHORT_WINDOWS.size * 3, measured.size)
 		assertTrue(failures.joinToString("\n"), failures.isEmpty())
+	}
+
+	/** A small phone still runs every short-window condition and gets its display settings back. */
+	@Test fun a360dpPhoneChecksEveryShortWindowAndRestoresItsDisplay() {
+		turn(landscape = false)
+		val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+		DisplaySettings.withPhoneDisplay(device, 720 to 1280, 320) {
+			val size = device.executeShellCommand("wm size")
+			val density = device.executeShellCommand("wm density")
+			val rotation = device.executeShellCommand("wm user-rotation")
+			aShortWindowKeepsTheWayBackAndEveryActionWithinReach()
+			assertEquals(size, device.executeShellCommand("wm size"))
+			assertEquals(density, device.executeShellCommand("wm density"))
+			assertEquals(rotation, device.executeShellCommand("wm user-rotation"))
+		}
 	}
 
 	/** Scrolls to the node when something holding it scrolls; null when it then lies whole inside [window]. */
@@ -226,7 +244,6 @@ class ComputerPadLayoutTest {
 	private data class ShortWindow(val name: String, val landscape: Boolean, val width: Int, val height: Int)
 
 	private companion object {
-		const val TAG = "ComputerPadLayoutTest"
 		const val WINDOW = "short_window"
 		val SHORT_WINDOWS = listOf(
 			// Upright phone split top and bottom: a nearly square half, wider than tall.

@@ -233,16 +233,26 @@ class ComputerPadScreenTest {
 	@Test fun comingBackWhileTheLeftPortsStillCloseWaitsToConnectAgain() {
 		val portsClose = CountDownLatch(1)
 		val sendFails = AtomicBoolean(false)
+		val holdSends = AtomicBoolean(false)
+		val screenLeft = CountDownLatch(1)
 		val reconnect = hasText(context.getString(R.string.computer_pad_reconnect)) and hasClickAction()
 		try {
-			launch(MidiTransportGate(), onClosed = { portsClose.await(15, TimeUnit.SECONDS) }, sendFails = sendFails::get)
+			launch(MidiTransportGate(), onClosed = { portsClose.await(15, TimeUnit.SECONDS) }, sendFails = {
+				// The release can be queued during leave(), but must not fail before it records the pause.
+				if (holdSends.get()) check(screenLeft.await(15, TimeUnit.SECONDS))
+				sendFails.get()
+			})
 			compose.onNodeWithText(context.getString(R.string.computer_pad_connect)).performClick()
 			awaitTrue { (created.single().state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == true }
 			compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(0, cell(0)) }
 			awaitTrue { presses().size == 1 }
-			sendFails.set(true)
+			holdSends.set(true)
 			scenario!!.moveToState(Lifecycle.State.CREATED)
+			assertEquals(Lifecycle.State.CREATED, scenario!!.state)
+			sendFails.set(true)
+			screenLeft.countDown()
 			awaitTrue { created.single().state.value is UsbPeripheralConnection.State.Failed && created.single().portsClosing.value }
+			assertEquals(UsbPeripheralConnection.Failure.SEND, (created.single().state.value as UsbPeripheralConnection.State.Failed).reason)
 			scenario!!.moveToState(Lifecycle.State.RESUMED)
 			compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { up(0) }
 			compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_paused_title))
@@ -252,6 +262,7 @@ class ComputerPadScreenTest {
 			compose.onNode(hasText(context.getString(R.string.computer_pad_search_again)) and hasClickAction()).assertIsEnabled()
 			capture("paused_while_ports_close")
 		} finally {
+			screenLeft.countDown()
 			portsClose.countDown()
 		}
 		sendFails.set(false)
