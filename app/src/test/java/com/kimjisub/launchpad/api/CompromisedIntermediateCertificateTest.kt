@@ -13,33 +13,132 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.math.BigInteger
 import java.net.InetSocketAddress
+import java.net.Socket
 import java.security.AlgorithmParameters
+import java.security.GeneralSecurityException
 import java.security.KeyFactory
 import java.security.KeyPair
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
 import java.security.spec.ECPrivateKeySpec
 import java.util.concurrent.atomic.AtomicInteger
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLEngine
+import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLPeerUnverifiedException
+import javax.net.ssl.X509ExtendedTrustManager
 
+/**
+ * OkHttp's own blocklist must refuse a server whose chain runs through the compromised eMudhra
+ * intermediate, on devices whose system certificate store still trusts the eMudhra root.
+ *
+ * The client here checks the chain with [ChainSignatureTrustManager] rather than the JDK's trust
+ * manager: JDK 21.0.13.1 and later refuse this intermediate themselves (`lib/security/blocked.certs`),
+ * which would end the handshake before OkHttp's check runs and leave it untested.
+ */
 class CompromisedIntermediateCertificateTest {
 
 	@Test
 	fun forgedServerIsRefusedBeforeAnyRequestEvenWhenItsRootIsTrusted() {
+		serve(forgedCertificate(), compromisedIntermediate) { url, requests ->
+			val refusal = assertThrows(SSLPeerUnverifiedException::class.java) {
+				fetch(clientTrusting(root), url)
+			}
+			assertTrue(refusal.message.orEmpty().contains("blocklisted by OkHttp"))
+			assertEquals("No HTTP request should reach the forged server", 0, requests.get())
+		}
+	}
+
+	/** Proves the refusal above comes from OkHttp's blocklist, not from the client's chain check. */
+	@Test
+	fun sameChainCheckAcceptsAnIntactChainAndTheRequestArrives() {
+		val ownRoot = HeldCertificate.Builder().certificateAuthority(1).build()
+		val ownIntermediate = HeldCertificate.Builder().certificateAuthority(0).signedBy(ownRoot).build()
+		val server = HeldCertificate.Builder()
+			.signedBy(ownIntermediate)
+			.addSubjectAlternativeName("127.0.0.1")
+			.build()
+
+		serve(server, ownIntermediate.certificate) { url, requests ->
+			assertEquals("fake pack list", fetch(clientTrusting(ownRoot.certificate), url))
+			assertEquals(1, requests.get())
+		}
+	}
+
+	/** Proves the client's chain check verifies signatures instead of accepting any chain. */
+	@Test
+	fun sameChainCheckRefusesTheForgedChainWithoutItsRoot() {
+		val unrelatedRoot = HeldCertificate.Builder().certificateAuthority(1).build()
+
+		serve(forgedCertificate(), compromisedIntermediate) { url, requests ->
+			val refusal = assertThrows(SSLHandshakeException::class.java) {
+				fetch(clientTrusting(unrelatedRoot.certificate), url)
+			}
+			assertTrue(refusal.toString(), generateSequence<Throwable>(refusal) { it.cause }.any {
+				it.message.orEmpty().contains("No trusted root")
+			})
+			assertEquals(0, requests.get())
+		}
+	}
+
+	/**
+	 * Proves the client's chain check verifies each signature: a trusted root with the right name
+	 * but another key must not vouch for the chain. OkHttp's certificate builder cannot copy the
+	 * eMudhra root's full name, so this uses a chain whose names it can.
+	 */
+	@Test
+	fun sameChainCheckRefusesARootWithTheRightNameButAnotherKey() {
+		val realRoot = HeldCertificate.Builder().commonName("Test Root").certificateAuthority(1).build()
+		val impostorRoot = HeldCertificate.Builder().commonName("Test Root").certificateAuthority(1).build()
+		val intermediate = HeldCertificate.Builder()
+			.commonName("Test Intermediate")
+			.certificateAuthority(0)
+			.signedBy(realRoot)
+			.build()
+		val server = HeldCertificate.Builder()
+			.signedBy(intermediate)
+			.addSubjectAlternativeName("127.0.0.1")
+			.build()
+		assertEquals(
+			intermediate.certificate.issuerX500Principal,
+			impostorRoot.certificate.subjectX500Principal,
+		)
+
+		serve(server, intermediate.certificate) { url, requests ->
+			val refusal = assertThrows(SSLHandshakeException::class.java) {
+				fetch(clientTrusting(impostorRoot.certificate), url)
+			}
+			assertTrue(refusal.toString(), generateSequence<Throwable>(refusal) { it.cause }.any {
+				it.message.orEmpty().contains("Bad signature on CN=Test Intermediate")
+			})
+			assertEquals(0, requests.get())
+		}
+	}
+
+	private fun forgedCertificate(): HeldCertificate {
 		// This intermediate's publicly known private scalar is 4. Reconstructing it lets a
-		// loopback server present a valid chain that only OkHttp's blocklist should reject.
+		// loopback server present a chain that is valid up to the eMudhra root.
 		val parameters = AlgorithmParameters.getInstance("EC").apply {
 			init(ECGenParameterSpec("secp384r1"))
 		}.getParameterSpec(ECParameterSpec::class.java)
 		val privateKey = KeyFactory.getInstance("EC")
 			.generatePrivate(ECPrivateKeySpec(BigInteger.valueOf(4), parameters))
 		val issuer = HeldCertificate(KeyPair(compromisedIntermediate.publicKey, privateKey), compromisedIntermediate)
-		val forgedCertificate = HeldCertificate.Builder()
+		return HeldCertificate.Builder()
 			.signedBy(issuer)
 			.addSubjectAlternativeName("127.0.0.1")
 			.build()
+	}
+
+	private fun serve(
+		certificate: HeldCertificate,
+		intermediate: X509Certificate,
+		block: (url: String, requests: AtomicInteger) -> Unit,
+	) {
 		val serverCertificates = HandshakeCertificates.Builder()
-			.heldCertificate(forgedCertificate, compromisedIntermediate)
+			.heldCertificate(certificate, intermediate)
 			.build()
 		val requests = AtomicInteger()
 		val server = HttpsServer.create(InetSocketAddress("127.0.0.1", 0), 0)
@@ -52,25 +151,25 @@ class CompromisedIntermediateCertificateTest {
 		}
 		server.start()
 		try {
-			val clientCertificates = HandshakeCertificates.Builder()
-				.addTrustedCertificate(root)
-				.build()
-			val client = OkHttpClient.Builder()
-				.sslSocketFactory(clientCertificates.sslSocketFactory(), clientCertificates.trustManager)
-				.build()
-			val request = Request.Builder().url("https://127.0.0.1:${server.address.port}/packs").build()
-
-			val refusal = assertThrows(SSLPeerUnverifiedException::class.java) {
-				client.newCall(request).execute().use { response ->
-					throw AssertionError("Forged server accepted: code=${response.code}, body=${response.body.string()}, requests=${requests.get()}")
-				}
-			}
-			assertTrue(refusal.message.orEmpty().contains("blocklisted by OkHttp"))
-			assertEquals("No HTTP request should reach the forged server", 0, requests.get())
+			block("https://127.0.0.1:${server.address.port}/packs", requests)
 		} finally {
 			server.stop(0)
 		}
 	}
+
+	private fun clientTrusting(anchor: X509Certificate): OkHttpClient {
+		val trustManager = ChainSignatureTrustManager(listOf(anchor))
+		val sslContext = SSLContext.getInstance("TLS").apply { init(null, arrayOf(trustManager), null) }
+		return OkHttpClient.Builder()
+			.sslSocketFactory(sslContext.socketFactory, trustManager)
+			.build()
+	}
+
+	private fun fetch(client: OkHttpClient, url: String): String =
+		client.newCall(Request.Builder().url(url).build()).execute().use { response ->
+			assertEquals(200, response.code)
+			response.body.string()
+		}
 
 	// Public certificate fixtures from OkHttp's CompromisedIntermediateTest:
 	// https://github.com/square/okhttp/blob/fb34d4da/okhttp/src/commonTest/kotlin/okhttp3/CompromisedIntermediateTest.kt
@@ -116,4 +215,49 @@ class CompromisedIntermediateCertificateTest {
 		4rSb9vGqxZzelQth
 		-----END CERTIFICATE-----
 	""".trimIndent().decodeCertificatePem()
+}
+
+/**
+ * Trusts a server chain when each certificate is in its validity period, names and is signed by
+ * the next one, every issuer is a CA, and the last one is signed by one of [anchors]: the
+ * checks a platform trust manager makes, without any platform list of blocked certificates.
+ */
+private class ChainSignatureTrustManager(private val anchors: List<X509Certificate>) : X509ExtendedTrustManager() {
+	override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
+		if (chain.isEmpty()) throw CertificateException("Empty server certificate chain")
+		chain.forEachIndexed { index, certificate ->
+			certificate.checkValidity()
+			if (index > 0 && certificate.basicConstraints < 0) {
+				throw CertificateException("Not a certificate authority: ${certificate.subjectX500Principal}")
+			}
+			val issuer = chain.getOrNull(index + 1)
+				?: anchors.firstOrNull { it.subjectX500Principal == certificate.issuerX500Principal }
+				?: throw CertificateException("No trusted root for ${certificate.issuerX500Principal}")
+			if (issuer.subjectX500Principal != certificate.issuerX500Principal) {
+				throw CertificateException("Chain out of order at ${certificate.subjectX500Principal}")
+			}
+			try {
+				certificate.verify(issuer.publicKey)
+			} catch (e: GeneralSecurityException) {
+				throw CertificateException("Bad signature on ${certificate.subjectX500Principal}", e)
+			}
+		}
+	}
+
+	override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, socket: Socket?) =
+		checkServerTrusted(chain, authType)
+
+	override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, engine: SSLEngine?) =
+		checkServerTrusted(chain, authType)
+
+	override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String): Unit =
+		throw CertificateException("Client certificates are not used")
+
+	override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String, socket: Socket?) =
+		checkClientTrusted(chain, authType)
+
+	override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String, engine: SSLEngine?) =
+		checkClientTrusted(chain, authType)
+
+	override fun getAcceptedIssuers(): Array<X509Certificate> = anchors.toTypedArray()
 }

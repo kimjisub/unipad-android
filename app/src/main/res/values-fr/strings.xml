@@ -108,12 +108,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Rechercher des mises à jour</string>
+	<string name="update_offer_title">Une nouvelle version est disponible</string>
+	<string name="update_offer_body">Téléchargez-la maintenant ou plus tard. Choisissez quand l\'installer après avoir fini de jouer.</string>
+	<string name="update_download">Obtenir la nouvelle version</string>
+	<string name="update_later">Plus tard</string>
+	<string name="update_downloading_title">Téléchargement de la nouvelle version</string>
+	<string name="update_ready_title">La nouvelle version est prête</string>
+	<string name="update_ready_body">L\'installation redémarre l\'application. Vous reviendrez à la liste des packs.</string>
+	<string name="update_install">Installer et redémarrer</string>
+	<string name="update_none">Aucune mise à jour disponible pour le moment.</string>
+	<string name="update_check_failed">Impossible de rechercher des mises à jour. Vérifiez votre connexion et réessayez.</string>
+	<string name="update_check_again">Vérifier à nouveau</string>
+	<string name="update_close">Fermer</string>
+	<string name="update_failed">La mise à jour n\'a pas pu aboutir. Vous pourrez réessayer plus tard.</string>
+	<string name="update_retry">Réessayer</string>
+	<string name="update_check_in_store">Vérifier dans la boutique</string>
+	<string name="update_unsupported">Sur cet appareil, veuillez rechercher les mises à jour dans la boutique.</string>
+	<string name="update_store_notice">Vérification sur Google Play. La mise à jour de l\'application peut fermer UniPad.</string>
+	<string name="update_store_open">Ouvrir la boutique</string>
+	<string name="update_store_unavailable">Impossible d\'ouvrir la boutique. Veuillez vérifier plus tard.</string>
 
 	<string name="permissionRequire">L\'accès au stockage externe est nécessaire pour sauvegarder les fichiers du projet.\nAccordez cette autorisation.</string>
 	<string name="permissionDenied">L\'application nécessite l\'accès au stockage externe.\nVeuillez activer les autorisations dans [Paramètres] > [Autorisations]</string>
 	<string name="guide_download_new">Télécharger de nouveaux packs</string>
 	<string name="guide_import_external">Importer les packs téléchargés</string>
 	<string name="guide_restore_packs">Récupérer les packs manquants</string>
+	<string name="guide_empty_title">Jouez votre premier UniPack</string>
+	<string name="guide_empty_step_get">Obtenir un pack : touchez %1$s pour utiliser la Boutique, ou %2$s pour un .zip que vous avez déjà.</string>
+	<string name="guide_empty_step_play">Touchez le pack dans la liste, puis touchez %1$s.</string>
+	<string name="guide_empty_step_pads">Pas de Launchpad ? Touchez simplement les pads à l\'écran.</string>
+	<string name="guide_empty_link">Guide de démarrage</string>
+	<string name="unipack_play">Jouer</string>
 	<string name="doYouWantToDeleteUniPack">Voulez-vous supprimer ce projet ?</string>
 	<string name="importComplete">Pack importé !</string>
 	<string name="importPlayNow">Jouer maintenant</string>
