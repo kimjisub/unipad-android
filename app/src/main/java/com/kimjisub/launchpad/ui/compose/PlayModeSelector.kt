@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.ui.compose
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +47,7 @@ private const val SIDE_BY_SIDE_MAX_LINES = 2
  * The play screen's mode choice. The options sit side by side while every name fits its third
  * of the width in at most two lines without breaking a word; otherwise (a long word, or larger
  * text) they are stacked so each name keeps the full width and is shown whole.
+ * Screen readers hear the options as one group of radio buttons, with the chosen mode selected.
  */
 @Composable
 fun PlayModeSelector(options: List<PlayModeOption>, textColor: Color, fillColor: Color, modifier: Modifier = Modifier) {
@@ -60,6 +63,7 @@ fun PlayModeSelector(options: List<PlayModeOption>, textColor: Color, fillColor:
 		val container = Modifier
 			.fillMaxWidth()
 			.testTag(PlayModeSelectorTags.SELECTOR)
+			.selectableGroup()
 			.background(fillColor, RoundedCornerShape(10.dp))
 			.padding(OuterPadding)
 		if (sideBySide) {
@@ -80,7 +84,7 @@ private fun Option(option: PlayModeOption, textColor: Color, modifier: Modifier,
 		modifier = modifier
 			.background(if (option.selected) option.color else Color.Transparent, RoundedCornerShape(8.dp))
 			.focusRing()
-			.clickable(onClick = option.onSelect)
+			.selectable(selected = option.selected, role = Role.RadioButton, onClick = option.onSelect)
 			.padding(vertical = 10.dp),
 		contentAlignment = Alignment.Center,
 	) {

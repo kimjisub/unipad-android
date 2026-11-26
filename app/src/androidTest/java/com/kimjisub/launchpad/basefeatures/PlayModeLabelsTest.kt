@@ -1,10 +1,18 @@
 package com.kimjisub.launchpad.basefeatures
 
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
@@ -31,6 +39,8 @@ import java.io.File
  * must be drawn whole, never cut short or broken inside a word, on a small landscape phone with
  * double-sized text as well as on a default phone, and each mode must still be selectable.
  * Accessibility exposes the full text even when it is cut, so the drawn lines are read.
+ * Screen readers must hear the modes as one radio group with the current mode, and only it,
+ * selected; free play (no mode chosen) has none selected.
  */
 @RunWith(AndroidJUnit4::class)
 class PlayModeLabelsTest : PlaybackScreenTest() {
@@ -93,6 +103,7 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
     }
 
     private fun assertLabelsAndTargets(keepOneRow: Boolean) {
+        assertSelectionAnnounced()
         val targets = MODES.map { (_, resource) ->
             val label = screen.text(resource)
             assertDrawnWhole(label)
@@ -110,6 +121,20 @@ class PlayModeLabelsTest : PlaybackScreenTest() {
                     targets.first().top, target.top, 1f)
             }
         }
+    }
+
+    private fun assertSelectionAnnounced() {
+        val current = screen.onMain { screen.vm().playMode }
+        val inSelector = hasAnyAncestor(hasTestTag(PlayModeSelectorTags.SELECTOR))
+        compose.onNode(hasTestTag(PlayModeSelectorTags.SELECTOR))
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup))
+        MODES.forEach { (mode, resource) ->
+            val option = compose.onNode(hasText(screen.text(resource)) and inSelector)
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            if (mode == current) option.assertIsSelected() else option.assertIsNotSelected()
+        }
+        val expected = if (MODES.any { (mode, _) -> mode == current }) 1 else 0
+        compose.onAllNodes(isSelected() and inSelector).assertCountEquals(expected)
     }
 
     private fun assertDrawnWhole(label: String) {
