@@ -109,12 +109,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Проверить обновления</string>
+	<string name="update_offer_title">Доступна новая версия</string>
+	<string name="update_offer_body">Скачайте сейчас или позже. Выберите, когда установить, после окончания игры.</string>
+	<string name="update_download">Скачать новую версию</string>
+	<string name="update_later">Позже</string>
+	<string name="update_downloading_title">Загрузка новой версии</string>
+	<string name="update_ready_title">Новая версия готова</string>
+	<string name="update_ready_body">Установка перезапустит приложение. Вы вернётесь к списку паков.</string>
+	<string name="update_install">Установить и перезапустить</string>
+	<string name="update_none">Сейчас обновлений нет.</string>
+	<string name="update_check_failed">Не удалось проверить обновления. Проверьте подключение и повторите попытку.</string>
+	<string name="update_check_again">Проверить снова</string>
+	<string name="update_close">Закрыть</string>
+	<string name="update_failed">Не удалось завершить обновление. Повторите попытку позже.</string>
+	<string name="update_retry">Повторить</string>
+	<string name="update_check_in_store">Проверить в магазине</string>
+	<string name="update_unsupported">На этом устройстве проверяйте обновления в магазине.</string>
+	<string name="update_store_notice">Проверка в Google Play. При обновлении UniPad может закрыться.</string>
+	<string name="update_store_open">Открыть магазин</string>
+	<string name="update_store_unavailable">Не удалось открыть магазин. Проверьте позже.</string>
 
 	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
 	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>
 	<string name="guide_download_new">Скачать новые паки</string>
 	<string name="guide_import_external">Импортировать скачанные паки</string>
 	<string name="guide_restore_packs">Восстановить потерянные паки</string>
+	<string name="guide_empty_title">Сыграйте свой первый UniPack</string>
+	<string name="guide_empty_step_get">Получите пак: нажмите %1$s, чтобы открыть Магазин, или %2$s для уже имеющегося .zip.</string>
+	<string name="guide_empty_step_play">Нажмите на пак в списке, затем нажмите %1$s.</string>
+	<string name="guide_empty_step_pads">Нет Launchpad? Просто нажимайте пэды на экране.</string>
+	<string name="guide_empty_link">Руководство для начала</string>
+	<string name="unipack_play">Играть</string>
 	<string name="doYouWantToDeleteUniPack">Вы хотите удалить этот проект?</string>
 	<string name="importComplete">Пак импортирован!</string>
 	<string name="importPlayNow">Играть</string>

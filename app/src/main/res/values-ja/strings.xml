@@ -106,12 +106,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">アップデートを確認</string>
+	<string name="update_offer_title">新しいバージョンがあります</string>
+	<string name="update_offer_body">今すぐでも後でも入手できます。インストールするタイミングは演奏を終えてから選べます。</string>
+	<string name="update_download">新しいバージョンを入手</string>
+	<string name="update_later">後で</string>
+	<string name="update_downloading_title">新しいバージョンを入手しています</string>
+	<string name="update_ready_title">新しいバージョンの準備ができました</string>
+	<string name="update_ready_body">インストールするとアプリが再起動し、パックの一覧に戻ります。</string>
+	<string name="update_install">インストールして再起動</string>
+	<string name="update_none">現在利用できるアップデートはありません。</string>
+	<string name="update_check_failed">アップデートを確認できませんでした。接続を確認してもう一度お試しください。</string>
+	<string name="update_check_again">もう一度確認</string>
+	<string name="update_close">閉じる</string>
+	<string name="update_failed">アップデートを完了できませんでした。後でもう一度お試しください。</string>
+	<string name="update_retry">もう一度試す</string>
+	<string name="update_check_in_store">ストアで確認</string>
+	<string name="update_unsupported">この端末では、ストアでアップデートを確認してください。</string>
+	<string name="update_store_notice">Google Play で確認します。アプリを更新すると UniPad が終了することがあります。</string>
+	<string name="update_store_open">ストアを開く</string>
+	<string name="update_store_unavailable">ストアを開けませんでした。後でもう一度確認してください。</string>
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
 	<string name="guide_download_new">新しいパックをダウンロード</string>
 	<string name="guide_import_external">ダウンロードしたパックをインポート</string>
 	<string name="guide_restore_packs">消えたパックを復元</string>
+	<string name="guide_empty_title">最初の UniPack を演奏しよう</string>
+	<string name="guide_empty_step_get">パックを入手：ストアを使うなら「%1$s」、手元の .zip なら「%2$s」をタップします。</string>
+	<string name="guide_empty_step_play">一覧でパックをタップし、「%1$s」をタップします。</string>
+	<string name="guide_empty_step_pads">Launchpad がなくても、画面のパッドをタップして演奏できます。</string>
+	<string name="guide_empty_link">はじめかたガイド</string>
+	<string name="unipack_play">演奏</string>
 	<string name="doYouWantToDeleteUniPack">このプロジェクトを削除しますか？</string>
 	<string name="importComplete">パックをインポートしました！</string>
 	<string name="importPlayNow">今すぐ演奏</string>
