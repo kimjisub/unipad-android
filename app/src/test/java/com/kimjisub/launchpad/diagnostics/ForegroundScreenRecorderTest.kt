@@ -47,7 +47,9 @@ class ForegroundScreenRecorderTest {
 			"process_started_at" to 10L, "process_started_pid" to 6))
 		var previous: ForegroundScreen? = null
 		recorder.start(backgroundScope) { previous = ForegroundScreenRecorder.read(preferences) }
-		recorder.onActivityResumed(mockk<Screen>())
+		val screen = mockk<Screen>()
+		recorder.onActivityCreated(screen, null)
+		recorder.onActivityResumed(screen)
 		verify(exactly = 0) { editor.commit() }
 		runCurrent()
 		assertEquals(ForegroundScreen("OldScreen", true, 20, 6, 10), previous)
@@ -56,18 +58,54 @@ class ForegroundScreenRecorderTest {
 		assertEquals(ForegroundScreen(current.screen, false, 100, 7, 50), current)
 	}
 
-	@Test fun processStartIsSavedWithoutGuessingAScreen() = runTest {
-		recorder.start(backgroundScope) {}
+	@Test fun backgroundStartLeavesPreviousRecordAndCheckpointUntouchedUntilFirstScreen() = runTest {
+		saved.putAll(mapOf("foreground_screen" to "OldScreen", "foreground_pack_open" to true,
+			"foreground_since" to 20L, "foreground_pid" to 6,
+			"process_started_at" to 10L, "process_started_pid" to 6,
+			"last_processed_timestamp" to 30L))
+		val before = saved.toMap()
+		var collections = 0
+		recorder.start(backgroundScope) { collections++ }
 		runCurrent()
+		assertEquals(0, collections)
+		assertEquals(before, saved)
+		verify(exactly = 0) { context.getSharedPreferences(any(), any()) }
+
+		clock = 1000
+		recorder.onActivityCreated(mockk<Screen>(), null)
+		runCurrent()
+		assertEquals(1, collections)
 		assertEquals(50L, saved["process_started_at"])
 		assertEquals(7, saved["process_started_pid"])
+		assertEquals(30L, saved["last_processed_timestamp"])
 		assertNull(ForegroundScreenRecorder.read(preferences))
+	}
+
+	@Test fun secondScreenAndRotationDoNotCollectAgain() = runTest {
+		var collections = 0
+		recorder.start(backgroundScope) { collections++ }
+		val pack = mockk<PackScreen>()
+		every { pack.isChangingConfigurations } returns true
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityResumed(pack)
+		runCurrent()
+		assertEquals(1, collections)
+		recorder.onActivityPaused(pack)
+		recorder.onActivityDestroyed(pack)
+		val replacement = mockk<PackScreen>()
+		recorder.onActivityCreated(replacement, mockk())
+		recorder.onActivityResumed(replacement)
+		runCurrent()
+		recorder.onActivityCreated(mockk<Screen>(), null)
+		runCurrent()
+		assertEquals(1, collections)
 	}
 
 	@Test fun resumedScreenIsSavedOnceAndReturningStartsANewStay() = runTest {
 		recorder.start(backgroundScope) {}
 		runCurrent()
 		val screen = mockk<Screen>()
+		recorder.onActivityCreated(screen, null)
 		recorder.onActivityResumed(screen)
 		runCurrent()
 		clock = 200
@@ -169,7 +207,9 @@ class ForegroundScreenRecorderTest {
 		saved["background_screen"] = "PlayActivity"
 		saved["background_since"] = 12L
 		recorder.start(backgroundScope) {}
-		recorder.onActivityResumed(mockk<PackScreen>())
+		val pack = mockk<PackScreen>()
+		recorder.onActivityCreated(pack, null)
+		recorder.onActivityResumed(pack)
 		clock = 300
 		recorder.onActivityResumed(mockk<Screen>())
 		runCurrent()
