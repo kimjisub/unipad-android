@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.accessibilityservice.AccessibilityService
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
@@ -20,6 +21,7 @@ import com.kimjisub.launchpad.midi.VirtualMidiConnection
 import com.kimjisub.launchpad.midi.VirtualMidiFixture
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.Noting
+import com.kimjisub.launchpad.splitscreen.stackOfTask
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -71,7 +73,13 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 		if (::play.isInitialized) screen.onMain { if (!play.isDestroyed) play.finish() }
 		// Before Android 9 the docked stack outlives the other half; removing it closes the play screen.
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) screen.device.executeShellCommand("am stack remove $DOCKED_STACK")
-		screen.await("The other app's window stayed open after the test") { !screen.device.hasObject(By.desc(PAD)) }
+		// A pad window being recreated (a display change, or its process restarted after a test killed
+		// it) misses a single close request, so it is asked again while one is shown.
+		screen.await("The other app's window stayed open after the test") {
+			val open = screen.device.hasObject(By.desc(PAD))
+			if (open) runCatching { fixture.call("closePad") }
+			!open
+		}
 		if (::play.isInitialized) screen.await("The play screen stayed open after the test") { screen.onMain { play.isDestroyed } }
 	}
 
@@ -110,15 +118,15 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	}
 
 	@Test fun goingHomeLetsGoOfTheHeldPad() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
 			holdThenLeave("going Home") {
 				assertTrue(screen.device.pressHome())
 				screen.await("Home did not hide the play screen") { screen.onMain { !vm.screenVisible } }
 			}
 			return
 		}
-		// Before Android 9 Home only minimizes the docked play screen, which stays visible and keeps
-		// playing; releasing the pad then stops it, and nothing is played again.
+		// With the docked split of Android 7–12, Home only minimizes the docked play screen, which stays
+		// visible and keeps playing; releasing the pad then stops it, and nothing is played again.
 		changeWindowWhileHeld("going Home beside the minimized dock") {
 			// pressHome reports whether the window list changed in time, which the minimized dock delays.
 			screen.device.pressHome()
@@ -357,8 +365,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 	/**
 	 * Opens the other app's pad window and puts it beside the play screen. Android 12L and later
 	 * split through the system UI's window manager shell; earlier versions dock the play screen.
-	 * Before Android 9 the other window goes into the full-screen stack by its id: launched as an
-	 * adjacent window from here it lands in the docked stack, on top of the play screen.
+	 * Launched as an adjacent window from here, the other window would land in the docked stack, on
+	 * top of the play screen; before Android 9 it goes into the full-screen stack by its id instead.
 	 */
 	private fun enterSplitScreen() {
 		val pad = Intent().setClassName(screen.instrumentation.context.packageName, MidiFixturePadActivity::class.java.name)
@@ -369,8 +377,15 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			screen.await("The other app's window did not open") { screen.device.hasObject(By.desc(PAD)) }
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen moveToSideStage $playTask 0")
 		} else {
-			// The docked stack of Android 7–11; the launcher's recents fill the other half until a launch.
-			screen.device.executeShellCommand("am stack movetask $playTask $DOCKED_STACK true")
+			// The docked stack of Android 7–12; the launcher's recents fill the other half until a launch.
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+				screen.device.executeShellCommand("am stack movetask $playTask $DOCKED_STACK true")
+			} else {
+				// From Android 9 stacks are numbered as created, so the system docks the top task itself,
+				// as when the user long-presses Overview.
+				assertTrue("The system refused to split the screen",
+					screen.instrumentation.uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN))
+			}
 			screen.await("The play screen was not docked") { screen.onMain { play.isInMultiWindowMode } }
 			// Opened before them, the other app's window would be covered by those recents.
 			screen.await("The recents did not take the other half") { screen.onMain { !play.hasWindowFocus() } }
@@ -378,7 +393,8 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
 				screen.device.executeShellCommand("am start --stack $FULL_SCREEN_STACK -f ${pad.flags} -n ${pad.component!!.flattenToShortString()}")
 			} else {
-				screen.context.startActivity(pad.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT))
+				// From Android 9 a new task opened beside the dock fills the other half by itself.
+				screen.context.startActivity(pad)
 			}
 		}
 		screen.await("The play screen did not share the display with the other app") {
@@ -396,12 +412,22 @@ class VirtualMidiSplitScreenTest : PlaybackScreenTest() {
 			// Android 12L–13 have no exit command; taking the play screen out of its side ends the split.
 			val playTask = screen.onMain { play.taskId }
 			screen.device.executeShellCommand("dumpsys activity service SystemUIService WMShell splitscreen removeFromSideStage $playTask")
+		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			// Emptying the docked stack ends the split; behind the other app, the play screen is hidden.
+			val playTask = screen.onMain { play.taskId }
+			moveTask(playTask, stackOfTask(screen.device.executeShellCommand("am stack list"), padTask), toTop = false)
 		} else {
 			// Emptying the docked stack ends the split; the other app stays on top, full screen.
 			val playTask = screen.onMain { play.taskId }
 			screen.device.executeShellCommand("am stack movetask $playTask $FULL_SCREEN_STACK false")
 			screen.device.executeShellCommand("am stack movetask $padTask $FULL_SCREEN_STACK true")
 		}
+	}
+
+	/** Android 10 refuses the older `movetask` spelling, and a refused move shows only in the output. */
+	private fun moveTask(task: Int, stack: Int, toTop: Boolean) {
+		val output = screen.device.executeShellCommand("am stack move-task $task $stack $toTop").trim()
+		assertTrue("Moving task $task to stack $stack failed: $output", output.isEmpty())
 	}
 
 	private fun padPresses(): Int = fixture.call("read").getInt("padPresses")
