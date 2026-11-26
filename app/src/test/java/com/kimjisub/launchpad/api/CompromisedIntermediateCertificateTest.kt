@@ -83,6 +83,40 @@ class CompromisedIntermediateCertificateTest {
 		}
 	}
 
+	/**
+	 * Proves the client's chain check verifies each signature: a trusted root with the right name
+	 * but another key must not vouch for the chain. OkHttp's certificate builder cannot copy the
+	 * eMudhra root's full name, so this uses a chain whose names it can.
+	 */
+	@Test
+	fun sameChainCheckRefusesARootWithTheRightNameButAnotherKey() {
+		val realRoot = HeldCertificate.Builder().commonName("Test Root").certificateAuthority(1).build()
+		val impostorRoot = HeldCertificate.Builder().commonName("Test Root").certificateAuthority(1).build()
+		val intermediate = HeldCertificate.Builder()
+			.commonName("Test Intermediate")
+			.certificateAuthority(0)
+			.signedBy(realRoot)
+			.build()
+		val server = HeldCertificate.Builder()
+			.signedBy(intermediate)
+			.addSubjectAlternativeName("127.0.0.1")
+			.build()
+		assertEquals(
+			intermediate.certificate.issuerX500Principal,
+			impostorRoot.certificate.subjectX500Principal,
+		)
+
+		serve(server, intermediate.certificate) { url, requests ->
+			val refusal = assertThrows(SSLHandshakeException::class.java) {
+				fetch(clientTrusting(impostorRoot.certificate), url)
+			}
+			assertTrue(refusal.toString(), generateSequence<Throwable>(refusal) { it.cause }.any {
+				it.message.orEmpty().contains("Bad signature on CN=Test Intermediate")
+			})
+			assertEquals(0, requests.get())
+		}
+	}
+
 	private fun forgedCertificate(): HeldCertificate {
 		// This intermediate's publicly known private scalar is 4. Reconstructing it lets a
 		// loopback server present a chain that is valid up to the eMudhra root.
