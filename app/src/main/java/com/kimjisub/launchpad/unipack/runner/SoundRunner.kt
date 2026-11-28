@@ -66,7 +66,12 @@ class SoundRunner(
 	class NoPlayableSoundsException(val report: LoadReport? = null) : IllegalStateException("This pack has no playable sound files")
 
 	enum class FailureReason { LIMIT, UNREADABLE, DECODE, MEMORY }
-	data class FileFailure(val file: File, val reason: FailureReason, val exclusion: AudioExclusion? = null)
+	data class FileFailure(
+		val file: File,
+		val reason: FailureReason,
+		val exclusion: AudioExclusion? = null,
+		val originalName: String = file.name,
+	)
 	data class LoadReport(val usedFiles: Int, val loadedFiles: Int, val failures: List<FileFailure>, val reservedCost: Long) {
 		val allFailed: Boolean get() = usedFiles > 0 && loadedFiles == 0
 		val compatibilityFailed: Boolean get() = failures.any { it.reason == FailureReason.DECODE || it.reason == FailureReason.MEMORY }
@@ -222,7 +227,7 @@ class SoundRunner(
 						if (destroyed) return@launch
 						sounds.forEach { it.id = if (reason == null) soundId else Sound.UNDECODABLE }
 					}
-					if (reason == null) loadedFiles++ else failures.add(FileFailure(file, reason, selection.exclusion))
+					if (reason == null) loadedFiles++ else failures.add(FileFailure(file, reason, selection.exclusion, sounds.first().originalName))
 					repeat(sounds.size) { loadingListener.onProgressTick() }
 				}
 				ensureActive()

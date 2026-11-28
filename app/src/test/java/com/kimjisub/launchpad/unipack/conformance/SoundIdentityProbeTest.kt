@@ -67,13 +67,13 @@ class SoundIdentityProbeTest {
         assertEquals("fail", soundIdentityOutcome(case, observation)["status"]?.jsonPrimitive?.content)
     }
 
-    @Test fun anUntraceableIdentityRemainsUnverifiedEvenWhenStorageLossIsKnown() {
+    @Test fun provenStorageLossRemainsAFailureEvenWhenSelectionCannotBeTraced() {
         val case = buildJsonObject { put("id", "example"); put("fingerprint", "input"); put("expected", JsonNull) }
         val observation = buildJsonObject {
             put("actual", JsonNull); put("identityTraced", false)
             put("storage", JsonArray(listOf(buildJsonObject { put("contentsPreserved", false) })))
         }
-        assertEquals("unverified", soundIdentityOutcome(case, observation)["status"]?.jsonPrimitive?.content)
+        assertEquals("fail", soundIdentityOutcome(case, observation)["status"]?.jsonPrimitive?.content)
     }
 
     @Test fun identicalBytesInTwoOriginalNormalizationCandidatesRemainUnverified() {

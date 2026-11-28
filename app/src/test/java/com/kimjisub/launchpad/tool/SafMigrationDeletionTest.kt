@@ -8,6 +8,9 @@ import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import com.kimjisub.launchpad.unipack.UniPackFolder
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -85,6 +88,31 @@ class SafMigrationDeletionTest(private val route: String) {
         Dispatchers.resetMain()
         unmockkAll()
         tmp.root.walkTopDown().forEach { it.setWritable(true) }
+    }
+
+    @Test fun restoringAnOriginalBackupZipPreservesCaseAndNormalizationVariants() = runBlocking {
+        assumeTrue(route == "zip")
+        val archive = File(tmp.root, "original.zip")
+        ZipOutputStream(archive.outputStream()).use { zip ->
+            val entries = linkedMapOf(
+                "info" to "title=Backup\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=1\n",
+                "keySound" to "1 1 1 end.wav\n1 1 2 END.wav\n1 1 3 café.wav\n1 1 4 cafe\u0301.wav\n",
+                "sounds/end.wav" to "lower", "sounds/END.wav" to "upper",
+                "sounds/café.wav" to "composed", "sounds/cafe\u0301.wav" to "decomposed")
+            for ((path, text) in entries) {
+                zip.putNextEntry(ZipEntry(path)); zip.write(text.toByteArray()); zip.closeEntry()
+            }
+        }
+        every { resolver.openInputStream(any()) } answers { File(firstArg<Uri>().path!!).inputStream() }
+        val result = SafMigrationHelper(context).transferSafZipToFile(
+            listOf(DocumentFile.fromFile(archive)), target, false) { _, _, _ -> }
+        assertEquals(1, result.transferred)
+        assertEquals(0, result.failed)
+        val pack = UniPackFolder(File(target, "original")).load().loadDetail()
+        assertNull(pack.errorDetail)
+        assertEquals(listOf("lower", "upper", "composed", "decomposed"), (0..3).map {
+            pack.soundTable!![0][0][it]!!.first().file.readText()
+        })
     }
 
     @Test fun movingAPackWithAnExistingLinkPreservesTheOtherPack() = runBlocking {

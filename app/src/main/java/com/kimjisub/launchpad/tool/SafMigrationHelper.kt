@@ -6,10 +6,10 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PackStaging
+import com.kimjisub.launchpad.manager.PackArchive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.UnzipParameters
 import java.io.File
 import java.io.IOException
 import java.util.UUID
@@ -199,9 +199,7 @@ class SafMigrationHelper(
 							tempZip.outputStream().use { input.copyTo(it) }
 						} ?: throw IOException("openInputStream returned null")
 						copyThroughStaging(targetDir, dest) { staged ->
-							ZipFile(tempZip).use { zip ->
-								zip.extractAll(staged.absolutePath, UnzipParameters().apply { isExtractSymbolicLinks = false })
-							}
+							PackArchive.extract(tempZip, staged)
 						}
 					}
 					transferred++

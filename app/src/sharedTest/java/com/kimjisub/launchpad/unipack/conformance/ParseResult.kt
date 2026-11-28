@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack.conformance
 
+import com.kimjisub.launchpad.manager.PackFileNames
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
@@ -22,10 +23,11 @@ internal fun hex8(value: Int) = "%08x".format(value)
 
 /** The pack's sounds folder as it is on disk; the parser finds it whatever its letter case. */
 internal fun soundsDirOf(root: File): File =
-	root.listFiles()?.firstOrNull { it.isDirectory && it.name.equals("sounds", ignoreCase = true) } ?: File(root, "sounds")
+	PackFileNames.children(root).firstOrNull { it.file.isDirectory && it.name.equals("sounds", ignoreCase = true) }?.file ?: File(root, "sounds")
 
 internal fun parseResult(pack: UniPack, root: File): JsonElement {
 	val soundsDir = soundsDirOf(root)
+	val originalNames = PackFileNames.files(soundsDir).associate { it.file to it.name }
 	return buildJsonObject {
 		put("loaded", true)
 		putJsonObject("info") {
@@ -45,7 +47,7 @@ internal fun parseResult(pack: UniPack, root: File): JsonElement {
 					put("c", c); put("x", x); put("y", y)
 					putJsonArray("queue") {
 						for (s in queue) add(buildJsonObject {
-							put("file", s.file.relativeTo(soundsDir).path.replace(File.separatorChar, '/'))
+							put("file", originalNames[s.file] ?: s.file.relativeTo(soundsDir).invariantSeparatorsPath)
 							put("loop", s.loop)
 							put("wormhole", s.wormhole)
 						})

@@ -32,6 +32,27 @@ class SoundLoadingNoticeTest {
         screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
     }
 
+    @Test fun aliasedFailuresKeepOriginalFileNamesInDetails() {
+        val archive = File(screen.context.cacheDir, "colliding-failures.zip")
+        try {
+            java.util.zip.ZipOutputStream(archive.outputStream()).use { zip ->
+                for ((path, text) in linkedMapOf(
+                    "keySound" to "1 1 1 silence.wav\n1 1 2 end.wav\n1 1 3 END.wav\n",
+                    "sounds/end.wav" to "unreadable lower", "sounds/END.wav" to "unreadable upper")) {
+                    zip.putNextEntry(java.util.zip.ZipEntry(path)); zip.write(text.toByteArray()); zip.closeEntry()
+                }
+            }
+            com.kimjisub.launchpad.manager.PackArchive.extract(archive, screen.pack())
+            screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+            screen.node(By.text("2 sound files cannot be read"))
+            screen.click(By.text("Details"))
+            screen.node(By.textContains("end.wav"))
+            screen.capture("audio-colliding-filename-details")
+            screen.node(By.textContains("END.wav"))
+            org.junit.Assert.assertFalse(screen.has(By.textContains(".unipad-entry-")))
+        } finally { archive.delete() }
+    }
+
     @Test fun anAllFailedPackOffersRetryAndReturnsToTheSameSelection() {
         File(screen.pack(), "sounds/broken.wav").writeText("not an audio file")
         File(screen.pack(), "keySound").writeText("1 1 1 broken.wav\n")

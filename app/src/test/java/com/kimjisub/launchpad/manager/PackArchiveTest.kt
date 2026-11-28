@@ -86,6 +86,124 @@ class PackArchiveTest {
 	}
 
 	@Test
+	fun collidingSoundNames_keepBothBytesAfterUnwrapMoveDeleteAndReimport() {
+		val pairs = listOf("end.wav" to "END.wav", "café.wav" to "cafe\u0301.wav",
+			"가.wav" to "\u1100\u1161.wav", "fx/a.wav" to "FX/a.wav")
+		for ((first, second) in pairs) {
+			val archive = zip(Charsets.UTF_8, linkedMapOf(
+				"Pack/info" to packFiles.getValue("info"),
+				"Pack/keySound" to "1 1 1 $first\n1 1 2 $second\n",
+				"Pack/sounds/$first" to "first", "Pack/sounds/$second" to "second"))
+			repeat(2) {
+				val dir = extracted(archive)
+				FileManager.removeDoubleFolder(dir.path)
+				val moved = File(tmp.newFolder(), "moved")
+				FileManager.moveDirectory(dir, moved)
+				val pack = UniPackFolder(moved).load().loadDetail()
+				assertNull(pack.errorDetail)
+				assertEquals("first", pack.soundTable!![0][0][0]!!.first().file.readText())
+				assertEquals("second", pack.soundTable!![0][0][1]!!.first().file.readText())
+				assertEquals("wav", pack.soundTable!![0][0][1]!!.first().file.extension)
+				assertEquals(first.substringAfterLast('/'), pack.soundTable!![0][0][0]!!.first().originalName)
+				assertEquals(second.substringAfterLast('/'), pack.soundTable!![0][0][1]!!.first().originalName)
+				assertEquals(true, pack.delete())
+				assertFalse(moved.exists())
+			}
+		}
+	}
+
+	@Test
+	fun caseFallback_usesOriginalFullNamesNotAllocatedStorageNames() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"), "keySound" to "1 1 1 End.wav\n",
+			"sounds/end.wav" to "lower", "sounds/END.wav" to "upper")))
+		val pack = UniPackFolder(dir).load().loadDetail()
+		assertNull(pack.errorDetail)
+		assertEquals("upper", pack.soundTable!![0][0][0]!!.first().file.readText())
+		assertEquals("END.wav", pack.soundTable!![0][0][0]!!.first().originalName)
+	}
+
+	@Test
+	fun collidingKeyLedNames_keepBothAnimationsAndTheirOriginalQueueOrder() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"), "keySound" to "",
+			"keyLED/1 1 1 1 café" to "on 1 1 auto 5\n", "keyLED/1 1 1 1 cafe\u0301" to "on 1 1 auto 6\n")))
+		val pack = UniPackFolder(dir).load().loadDetail()
+		assertNull(pack.errorDetail)
+		assertEquals(listOf(5, 6), pack.ledAnimationTable!![0][0][0]!!.map {
+			(it.ledEvents.first() as com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent.On).velocity
+		})
+	}
+
+	@Test
+	fun collidingAutoPlayNames_preserveBothFilesAndPreferTheExactConventionalName() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"), "keySound" to "",
+			"autoPlay" to "delay 10\n", "AUTOPLAY" to "delay 20\n")))
+		val pack = UniPackFolder(dir).load().loadDetail()
+		assertEquals("delay 10\n", (pack as UniPackFolder).autoPlayFile!!.readText())
+		assertEquals(true, dir.walkTopDown().filter { it.isFile }.any { it.readText() == "delay 20\n" })
+	}
+
+	@Test
+	fun ordinaryPack_hasExactlyItsOriginalLayoutIncludingEmptyFolders() {
+		val entries = packFiles + linkedMapOf("empty/" to null, "sounds/.unipad-entry-1" to "ordinary")
+		val dir = extracted(zip(Charsets.UTF_8, entries))
+		assertEquals(entries.keys.map { it.trimEnd('/') }.sorted(), dir.walkTopDown().drop(1)
+			.map { it.relativeTo(dir).invariantSeparatorsPath }.toList().sorted())
+	}
+
+	@Test
+	fun generatedNames_neverOverwriteAnOriginalWithTheSameName() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"),
+			"keySound" to "1 1 1 end.wav\n1 1 2 END.wav\n1 1 3 .unipad-entry-1\n",
+			"sounds/end.wav" to "lower", "sounds/END.wav" to "upper",
+			"sounds/.unipad-entry-1" to "original", "sounds/.unipad-filenames.json" to "user file")))
+		val pack = UniPackFolder(dir).load().loadDetail()
+		assertNull(pack.errorDetail)
+		assertEquals(listOf("lower", "upper", "original"), (0..2).map {
+			pack.soundTable!![0][0][it]!!.first().file.readText()
+		})
+		assertEquals(true, dir.walkTopDown().any { it.isFile && it.readText() == "user file" })
+	}
+
+	@Test
+	fun aBackupArchiveOfAnInstalledPack_keepsTheOriginalNames() {
+		val first = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"), "keySound" to "1 1 1 end.wav\n1 1 2 END.wav\n",
+			"sounds/end.wav" to "lower", "sounds/END.wav" to "upper")))
+		val backup = first.walkTopDown().filter { it.isFile }.associate {
+			it.relativeTo(first).invariantSeparatorsPath to it.readText()
+		}
+		val pack = UniPackFolder(extracted(zip(Charsets.UTF_8, backup))).load().loadDetail()
+		assertNull(pack.errorDetail)
+		assertEquals("lower", pack.soundTable!![0][0][0]!!.first().file.readText())
+		assertEquals("upper", pack.soundTable!![0][0][1]!!.first().file.readText())
+	}
+
+	@Test
+	fun collidingPackDirectories_areNotMistakenForOneWrappedPack() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"Pack/info" to packFiles.getValue("info"), "Pack/keySound" to "",
+			"pack/info" to packFiles.getValue("info"), "pack/keySound" to "")))
+		FileManager.removeDoubleFolder(dir.path)
+		assertEquals(2, dir.listFiles()!!.count { it.isDirectory })
+		assertEquals(true, UniPackFolder(dir).load().criticalError)
+	}
+
+	@Test
+	fun caseDistinctSoundsDirectories_areBothSearchedByTheirOriginalPaths() {
+		val dir = extracted(zip(Charsets.UTF_8, linkedMapOf(
+			"info" to packFiles.getValue("info"), "keySound" to "1 1 1 end.wav\n1 1 2 END.wav\n",
+			"sounds/end.wav" to "lower", "SOUNDS/END.wav" to "upper")))
+		val pack = UniPackFolder(dir).load().loadDetail()
+		assertNull(pack.errorDetail)
+		assertEquals("lower", pack.soundTable!![0][0][0]!!.first().file.readText())
+		assertEquals("upper", pack.soundTable!![0][0][1]!!.first().file.readText())
+	}
+
+	@Test
 	fun unicodePathExtraField_preservesTheWrittenName() {
 		val dir = extracted(unicodePathArchive("sounds/caf\u00e9.wav"))
 		assertEquals("sound", File(dir, "sounds/caf\u00e9.wav").readText())
@@ -124,7 +242,7 @@ class PackArchiveTest {
 
 	@Test
 	fun asciiNamesAndFolders_extractAsBefore() {
-		val dir = extracted(zip(Charsets.UTF_8, mapOf("Pack/" to null, "Pack/info" to "title=Pack", "Pack/empty/" to null)))
+		val dir = extracted(zip(Charsets.UTF_8, mapOf("./" to null, "Pack/" to null, "Pack/info" to "title=Pack", "Pack/empty/" to null)))
 
 		assertEquals("title=Pack", File(dir, "Pack/info").readText())
 		assertEquals(true, File(dir, "Pack/empty").isDirectory)

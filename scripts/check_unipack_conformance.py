@@ -24,6 +24,12 @@ DEVICE_SOURCES = {
     "files": "device-internal-files",
 }
 
+
+def device_source_matches(kind, source):
+    return kind in DEVICE_SOURCES and (source == DEVICE_SOURCES[kind]
+                                       or kind == "files" and source == "device-archive-files")
+
+
 # The play screen's own input path (finger tracker, controller entry, the screen's auto-play
 # listener); the only way the host harness may observe a screen-input case.
 PLAY_SCREEN_INPUTS = "play-screen"
@@ -75,7 +81,10 @@ def device_evidence(kind, record):
     filesystem = record.get("filesystem", {})
     evidence = {"caseSensitive": filesystem.get("caseSensitive") is True,
                 "normalizationSensitive": filesystem.get("normalizationSensitive") is True}
-    if kind == "sound-identity":
+    if record.get("archiveExtracted") is True:
+        evidence["archiveExtracted"] = True
+        evidence["storageLocation"] = record.get("storageLocation")
+    if kind == "sound-identity" or record.get("archiveExtracted") is True:
         storage = record.get("storage", [])
         evidence["identityTraced"] = record.get("identityTraced") is True
         evidence["storageEntries"] = len(storage)
@@ -87,10 +96,11 @@ def device_evidence_problem(kind, evidence):
     """Why the evidence cannot support a device observation; contents that changed are a failure, not a gap."""
     if not isinstance(evidence, dict):
         return "device observation carries no storage evidence"
-    if evidence.get("caseSensitive") is not True or evidence.get("normalizationSensitive") is not True:
+    archive = evidence.get("archiveExtracted") is True and evidence.get("storageLocation") in ("internal", "external")
+    if not archive and (evidence.get("caseSensitive") is not True or evidence.get("normalizationSensitive") is not True):
         return "device storage merges names the case keeps apart"
-    if kind == "sound-identity":
-        if evidence.get("identityTraced") is not True:
+    if kind == "sound-identity" or archive:
+        if evidence.get("identityTraced") is not True and evidence.get("contentsPreserved") is not False:
             return "device could not trace every selected sound to its archive entry"
         if not isinstance(evidence.get("storageEntries"), int) or evidence["storageEntries"] < 1:
             return "device recorded no archive entry"
@@ -158,13 +168,16 @@ def check_report(corpus, report, corpus_hash, require_file_cases=False):
         restricted = file_restricted or other_restricted
         if result.get("observedOn") == "device":
             kind = device_kind(case, changed_names)
-            if not file_restricted or kind is None:
+            evidence = result.get("deviceEvidence")
+            default_archive = (isinstance(evidence, dict) and evidence.get("archiveExtracted") is True
+                               and result.get("storageLocation") == evidence.get("storageLocation") == "external")
+            if (not file_restricted and not default_archive) or kind is None:
                 problems.append(f"{case_id}: device observation replaces a host observation")
                 continue
             if other_restricted:
                 problems.append(f"{case_id}: device observation cannot lift a restriction outside file names")
                 continue
-            if result.get("source") != DEVICE_SOURCES[kind]:
+            if not device_source_matches(kind, result.get("source")):
                 problems.append(f"{case_id}: device observation from {result.get('source')} cannot observe a {kind} case")
                 continue
             evidence = result.get("deviceEvidence")
@@ -172,7 +185,7 @@ def check_report(corpus, report, corpus_hash, require_file_cases=False):
             if why is not None:
                 problems.append(f"{case_id}: {why}")
                 continue
-            if kind == "sound-identity" and evidence.get("contentsPreserved") is not True:
+            if (kind == "sound-identity" or evidence.get("archiveExtracted") is True) and evidence.get("contentsPreserved") is not True:
                 if status != "fail":
                     problems.append(f"{case_id}: changed sound contents cannot be {status}")
                 problems.append(f"{case_id}: the app's archive extraction changed a sound file's contents")
