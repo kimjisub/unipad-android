@@ -35,6 +35,7 @@ class PackFileNamesTest {
         val index = SoundFileIndex(dir)
         assertEquals(alias, index.find("cafe\u0301.wav"))
         assertEquals(alias, index.find("café.wav"))
+        assertEquals("cafe\u0301.wav", index.originalName(alias))
         assertNull(index.find(PackFileNames.MANIFEST))
         assertNull(index.find(alias.name))
     }

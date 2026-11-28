@@ -104,6 +104,8 @@ class PackArchiveTest {
 				assertEquals("first", pack.soundTable!![0][0][0]!!.first().file.readText())
 				assertEquals("second", pack.soundTable!![0][0][1]!!.first().file.readText())
 				assertEquals("wav", pack.soundTable!![0][0][1]!!.first().file.extension)
+				assertEquals(first.substringAfterLast('/'), pack.soundTable!![0][0][0]!!.first().originalName)
+				assertEquals(second.substringAfterLast('/'), pack.soundTable!![0][0][1]!!.first().originalName)
 				assertEquals(true, pack.delete())
 				assertFalse(moved.exists())
 			}
@@ -118,6 +120,7 @@ class PackArchiveTest {
 		val pack = UniPackFolder(dir).load().loadDetail()
 		assertNull(pack.errorDetail)
 		assertEquals("upper", pack.soundTable!![0][0][0]!!.first().file.readText())
+		assertEquals("END.wav", pack.soundTable!![0][0][0]!!.first().originalName)
 	}
 
 	@Test

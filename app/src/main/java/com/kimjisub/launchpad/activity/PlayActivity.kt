@@ -529,7 +529,7 @@ class PlayActivity : BaseActivity() {
 								SoundRunner.FailureReason.DECODE -> string.audio_load_reason_decode
 								SoundRunner.FailureReason.MEMORY -> string.audio_load_reason_memory
 							}
-							Text("${failure.file.name} — ${stringResource(reason)}")
+							Text("${failure.originalName} — ${stringResource(reason)}")
 						}
 					}
 				} else {

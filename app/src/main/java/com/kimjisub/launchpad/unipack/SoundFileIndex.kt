@@ -15,6 +15,7 @@ import java.text.Normalizer
 internal class SoundFileIndex(soundDirs: List<File>) {
 	constructor(soundsDir: File) : this(listOf(soundsDir))
 	private val byPath: Map<String, File>
+	private val originalNames: Map<File, String>
 	private val byCanonicalPath: Map<String, File>
 	private val byCaseFoldedPath: Map<String, File>
 
@@ -25,6 +26,7 @@ internal class SoundFileIndex(soundDirs: List<File>) {
 		}
 			.sortedBy { it.first }
 			.toList()
+		originalNames = files.associate { (path, file) -> file to path.substringAfterLast('/') }
 		byPath = HashMap<String, File>().apply {
 			for ((path, file) in files) putIfAbsent(path, file)
 		}
@@ -35,6 +37,8 @@ internal class SoundFileIndex(soundDirs: List<File>) {
 			for ((path, file) in files) putIfAbsent(canonicalName(path).lowercase(), file)
 		}
 	}
+
+	fun originalName(file: File): String = originalNames[file] ?: file.name
 
 	fun find(name: String): File? {
 		val components = name.replace('\\', '/').split('/').filter { it.isNotEmpty() && it != "." }

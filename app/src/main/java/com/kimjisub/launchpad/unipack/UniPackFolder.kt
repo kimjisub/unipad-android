@@ -348,7 +348,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 							addErr("keySound : [$s] sound was not found")
 							continue
 						}
-						val sound = Sound(soundFile, loop, wormhole)
+						val sound = Sound(soundFile, loop, wormhole, originalName = soundFiles.originalName(soundFile))
 						if (table[c][x][y] == null)
 							table[c][x][y] = ArrayDeque()
 						sound.num = table[c][x][y]?.size ?: 0
