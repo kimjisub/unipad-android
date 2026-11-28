@@ -61,6 +61,22 @@ class AudioFileDecoderRetryTest {
     }
 
     @Test
+    fun cleanupFailureDoesNotHideTheDecoderFailureThatNeedsARetry() {
+        val decoder = decoder(
+            FakeCodec(failConfigure = true, releaseFailure = IllegalStateException("decoder already released")),
+            FakeCodec(),
+        )
+
+        val decoded = decoder.decode(file, { false })!!
+
+        assertArrayEquals(cleanPcm(), decoded.pcm.copyOf(PACKETS * SAMPLES_PER_PACKET))
+        assertEquals(2, codecs.size)
+        assertTrue(codecs.all { it.released })
+        assertEquals(listOf(AudioFileDecoder.RETRY_PAUSE_MS), pauses)
+        assertTrue(errors.any { it == "decode recovered: s_02.ogg on attempt 2 of 3" })
+    }
+
+    @Test
     fun aDecoderLostMidFileDropsItsPartialPcmAndCountsOnlyTheNewBuffer() {
         val broken = FakeCodec(failAtQueue = 2, failure = mockk<MediaCodec.CodecException>(relaxed = true), fill = BROKEN_SAMPLE)
         val decoder = decoder(broken, FakeCodec())
@@ -124,6 +140,23 @@ class AudioFileDecoderRetryTest {
         assertEquals(1, codecs.size)
         assertTrue(codecs[0].released)
         assertEquals(emptyList<Long>(), pauses)
+    }
+
+    @Test
+    fun leavingTheScreenOnTheLastFailureStillReportsInterruption() {
+        var leaving = false
+        val decoder = decoder(
+            FakeCodec(failConfigure = true),
+            FakeCodec(failConfigure = true),
+            FakeCodec(failAtQueue = 1, onFailure = { leaving = true }),
+        )
+
+        assertThrows(OboeAudioEngine.DecodeInterruptedException::class.java) { decoder.decode(file, { leaving }) }
+
+        assertEquals(3, codecs.size)
+        assertTrue(codecs.all { it.released })
+        assertEquals(listOf(AudioFileDecoder.RETRY_PAUSE_MS, 2 * AudioFileDecoder.RETRY_PAUSE_MS), pauses)
+        assertTrue(errors.none { it.startsWith("decode failed") })
     }
 
     @Test
@@ -193,6 +226,7 @@ class AudioFileDecoderRetryTest {
         private val fill: Short? = null,
         private val answerEndOfStream: Boolean = true,
         private val onFailure: () -> Unit = {},
+        private val releaseFailure: IllegalStateException? = null,
     ) {
         var released = false
         var started = false
@@ -242,7 +276,10 @@ class AudioFileDecoderRetryTest {
                 }
             }
             every { codec.getOutputBuffer(any()) } answers { output }
-            every { codec.release() } answers { released = true }
+            every { codec.release() } answers {
+                released = true
+                releaseFailure?.let { throw it }
+            }
         }
 
         private fun fail(): Nothing {
