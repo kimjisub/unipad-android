@@ -2,11 +2,14 @@ package com.kimjisub.launchpad.unipack
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.documentfile.provider.DocumentFile
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.manager.PackArchive
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.tool.SafMigrationHelper
+import kotlinx.coroutines.runBlocking
 import com.kimjisub.launchpad.unipack.conformance.*
 import kotlinx.serialization.json.*
 import org.junit.Assert.assertEquals
@@ -52,20 +55,43 @@ class PackStorageObservationDeviceTest {
                 PackArchive.extract(archive, source)
                 FileManager.removeDoubleFolder(source.path)
                 FileManager.moveDirectory(source, target)
-                val pack = UniPackFolder(target).load().loadDetail()
-                assertEquals(null, pack.errorDetail)
-                assertEquals(listOf("lower", "upper", "composed", "decomposed"), (0..3).map {
-                    pack.soundTable!![0][0][it]!!.first().file.readText()
-                })
-                assertEquals(listOf(5, 6), pack.ledAnimationTable!![0][0][0]!!.map {
-                    (it.ledEvents.first() as com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent.On).velocity
-                })
-                assertEquals("delay 10\n", (pack as UniPackFolder).autoPlayFile!!.readText())
-                assertTrue(target.walkTopDown().any { it.isFile && it.readText() == "delay 20\n" })
+                val pack = checkedLifecyclePack(target)
+                val helper = SafMigrationHelper(context)
+                val backups = File(roots[1 - direction], "backups").apply { deleteRecursively(); check(mkdirs()) }
+                val exported = runBlocking {
+                    helper.transferFileToSafZip(listOf(target), DocumentFile.fromFile(backups), false) { _, _, _ -> }
+                }
+                assertEquals(1, exported.transferred)
+                assertEquals(0, exported.failed)
+                val workspace = File(roots[direction], "restored").apply { deleteRecursively(); check(mkdirs()) }
+                val restored = runBlocking {
+                    helper.transferSafZipToFile(listOf(DocumentFile.fromFile(File(backups, "installed.zip"))),
+                        workspace, false) { _, _, _ -> }
+                }
+                assertEquals(1, restored.transferred)
+                assertEquals(0, restored.failed)
+                val restoredRoot = File(workspace, "installed")
+                FileManager.removeDoubleFolder(restoredRoot.path)
+                assertTrue(checkedLifecyclePack(restoredRoot).delete())
                 assertTrue(pack.delete())
                 assertTrue(!target.exists())
             }
         } finally { roots.forEach { it.deleteRecursively() } }
+    }
+
+    private fun checkedLifecyclePack(root: File): UniPackFolder {
+        val pack = UniPackFolder(root)
+        pack.load().loadDetail()
+        assertEquals(null, pack.errorDetail)
+        assertEquals(listOf("lower", "upper", "composed", "decomposed"), (0..3).map {
+            pack.soundTable!![0][0][it]!!.first().file.readText()
+        })
+        assertEquals(listOf(5, 6), pack.ledAnimationTable!![0][0][0]!!.map {
+            (it.ledEvents.first() as com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent.On).velocity
+        })
+        assertEquals("delay 10\n", pack.autoPlayFile!!.readText())
+        assertTrue(root.walkTopDown().any { it.isFile && it.readText() == "delay 20\n" })
+        return pack
     }
 
     private fun observe(location: String, storage: File) {

@@ -30,7 +30,7 @@ object FileManager {
 		// as long as only one folder holds an info; two packs in one archive are left unopened.
 		repeat(MAX_UNWRAP_DEPTH) {
 			val children = rootFolder.listFiles() ?: return
-			val content = children.filter { !isHiddenEntry(it) }
+			val content = PackFileNames.children(rootFolder).filter { !isHiddenEntry(it.name) }.map { it.file }
 			val packFolder = content.singleOrNull()?.takeIf { isDirectoryWithoutLinks(it) }
 				?: soleFolderHoldingInfo(rootFolder, content)
 				?: return
@@ -41,10 +41,7 @@ object FileManager {
 		}
 	}
 
-	private fun isHiddenEntry(file: File): Boolean {
-		val name = PackFileNames.originalName(file)
-		return name.startsWith(".") || name == MACOSX_FOLDER
-	}
+	private fun isHiddenEntry(name: String) = name.startsWith(".") || name == MACOSX_FOLDER
 
 	/** Resolve the parent first: an alias in a parent is not a link at this entry (API 24 too). */
 	private fun isSymbolicLink(file: File): Boolean {
@@ -70,13 +67,13 @@ object FileManager {
 
 	private fun isDirectoryWithoutLinks(file: File) = file.isDirectory && !isSymbolicLink(file)
 
-	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any {
-		it.isFile && PackFileNames.originalName(it).equals("info", ignoreCase = true) && !isSymbolicLink(it)
+	private fun hasInfoFile(dir: File) = PackFileNames.children(dir).any {
+		it.file.isFile && it.name.equals("info", ignoreCase = true) && !isSymbolicLink(it.file)
 	}
 
 	private fun holdsInfo(dir: File, depth: Int): Boolean =
-		hasInfoFile(dir) || depth > 0 && dir.listFiles().orEmpty()
-			.any { isDirectoryWithoutLinks(it) && !isHiddenEntry(it) && holdsInfo(it, depth - 1) }
+		hasInfoFile(dir) || depth > 0 && PackFileNames.children(dir)
+			.any { isDirectoryWithoutLinks(it.file) && !isHiddenEntry(it.name) && holdsInfo(it.file, depth - 1) }
 
 	private fun soleFolderHoldingInfo(rootFolder: File, content: List<File>): File? {
 		if (hasInfoFile(rootFolder)) return null

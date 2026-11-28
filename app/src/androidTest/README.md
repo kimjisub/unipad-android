@@ -5,7 +5,7 @@ and native pad/chain views. Store tests supply a controlled catalogue to the rea
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
 `PackStorageObservationDeviceTest` checks thirteen archive-name cases on both internal and default
-external storage, plus cross-storage moves, deletion and reimport. Reports are saved under
+external storage, plus cross-storage moves, ZIP backup roundtrips, deletion and reimport. Reports are saved under
 `pack-storage/internal` and `pack-storage/external`; include both when merging conformance results.
 The default external observation takes precedence over internal or host passes. No speaker stream
 is opened by this observation; native decoding and the selected original ZIP bytes are checked.

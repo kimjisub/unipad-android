@@ -56,9 +56,11 @@ internal object PackFileNames {
             .map { Entry(it.name, it) }
     }
 
-    fun originalName(file: File): String = file.parentFile?.let { parent ->
-        children(parent).firstOrNull { it.file == file }?.name
-    } ?: file.name
+    fun originalName(file: File): String {
+        val parent = file.parentFile ?: return file.name
+        val names = names(parent)
+        return names[file.name] ?: names.entries.firstOrNull { folded(it.key) == folded(file.name) }?.value ?: file.name
+    }
 
     fun files(dir: File): Sequence<Entry> = sequence {
         val pending = ArrayDeque<Entry>()

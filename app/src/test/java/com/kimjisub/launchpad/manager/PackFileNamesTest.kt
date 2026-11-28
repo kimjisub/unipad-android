@@ -11,6 +11,23 @@ import java.io.File
 class PackFileNamesTest {
     @get:Rule val tmp = TemporaryFolder()
 
+    @Test fun oneNameLookupDoesNotNeedToEnumerateUnrelatedSiblings() {
+        for (mapped in listOf(false, true)) {
+            val dir = tmp.newFolder()
+            val stored = if (mapped) ".unipad-entry-1.wav" else "ordinary.wav"
+            val original = if (mapped) "cafe\u0301.wav" else stored
+            File(dir, stored).writeText("sound")
+            if (mapped) PackFileNames.write(dir, mapOf(stored to original))
+            val parent = object : File(dir.path) {
+                override fun listFiles(): Array<File>? = error("A name lookup must not list every sibling")
+            }
+            val child = object : File(dir, stored) {
+                override fun getParentFile(): File = parent
+            }
+            assertEquals(original, PackFileNames.originalName(child))
+        }
+    }
+
     @Test fun metadataIsNotIndexedAsASound() {
         val dir = tmp.newFolder()
         val alias = File(dir, ".unipad-entry-1").apply { writeText("sound") }

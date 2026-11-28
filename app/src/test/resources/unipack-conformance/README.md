@@ -89,7 +89,8 @@ every stored file's hash.
 app-specific external storage for KS-G601–604 and KS-G617–625. It saves one record per location
 in `pack-storage/internal` and `pack-storage/external`, tracing actual decoder/runner choices and
 checking every original entry's contents. Its third test moves wrapped packs in both directions,
-deletes them and imports them again, including colliding keyLED and autoPlay files.
+exports and restores ZIP backups, deletes them and imports them again, including colliding keyLED
+and autoPlay files.
 
 Merge both locations with the earlier file records:
 
