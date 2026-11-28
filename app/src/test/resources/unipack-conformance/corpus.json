@@ -9288,12 +9288,12 @@
         "P-03"
       ],
       "area": "autoPlay",
-      "title": "a sound with a wormhole switches the chain after its on",
+      "title": "same-time presses stay on the original chain before normal-end wormholes",
       "basis": [
         {
           "type": "doc",
           "ref": "content/docs/en/unipack/auto-play.mdx",
-          "note": "If a sound has a wormhole set, executing on will automatically switch to that chain"
+          "note": "Sound wormholes apply after 100 ms of song time, or at normal end without adding a wait; queues reset only on application"
         }
       ],
       "expectation": "determined",
@@ -9371,15 +9371,19 @@
             0
           ],
           [
+            "on",
+            0,
+            0,
+            0,
+            1
+          ],
+          [
             "chain",
             1
           ],
           [
-            "on",
-            0,
-            0,
-            1,
-            0
+            "chain",
+            1
           ]
         ],
         "errors": []
@@ -9631,12 +9635,12 @@
         "P-04"
       ],
       "area": "autoPlay",
-      "title": "a touch of a pad whose sound has a wormhole switches the chain",
+      "title": "same-time touches release on the original chain before normal-end wormholes",
       "basis": [
         {
           "type": "doc",
           "ref": "content/docs/en/unipack/auto-play.mdx",
-          "note": "touch is on + off in one line, and an on of a sound with a wormhole switches to that chain; the pad is released on the chain it was pressed on"
+          "note": "touch is on + immediate off on the press chain; its wormhole uses the same song-time delay and normal-end handling as on"
         }
       ],
       "expectation": "determined",
@@ -9720,20 +9724,24 @@
             0
           ],
           [
-            "chain",
-            1
-          ],
-          [
             "on",
             0,
             0,
-            1,
-            0
+            0,
+            1
           ],
           [
             "off",
             0,
             0,
+            0
+          ],
+          [
+            "chain",
+            1
+          ],
+          [
+            "chain",
             1
           ]
         ],
@@ -23058,14 +23066,14 @@
         "RA-04",
         "RS-09"
       ],
-      "title": "autoPlay applies a wormhole immediately without a delayed second switch",
+      "title": "an explicit autoPlay chain cancels a pending song-time wormhole without a second manual switch",
       "area": "G6",
       "layer": "run",
       "basis": [
         {
           "type": "decision",
           "ref": "meta/unipack-conformance/GRAMMAR.md G6 RA-04, RS-09",
-          "note": "autoPlay applies a wormhole immediately without a delayed second switch"
+          "note": "an explicit autoPlay chain cancels a pending song-time wormhole without a second manual switch"
         }
       ],
       "expectedFailing": [
@@ -23143,10 +23151,6 @@
               0,
               "a.wav",
               0
-            ],
-            [
-              "autoChain",
-              1
             ]
           ],
           [
@@ -24801,16 +24805,276 @@
               0,
               "a.wav",
               0
-            ],
-            [
-              "autoChain",
-              1
             ]
           ],
           []
         ]
       },
       "known": {}
+    },
+    {
+      "id": "AP-G602",
+      "items": [
+        "P-03",
+        "P-04",
+        "RA-04",
+        "RS-09"
+      ],
+      "title": "an early voice stays on the original chain until the 100 ms wormhole",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 P-03, P-04, RA-04, RS-09",
+          "note": "an early voice stays on the original chain until the 100 ms wormhole"
+        }
+      ],
+      "expectedFailing": [],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2\n1 1 2 voice.wav\n2 1 2 drum.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 1\ntouch 1 2\nd 199"
+        },
+        {
+          "path": "sounds/voice.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/drum.wav",
+          "asset": "tone-660"
+        }
+      ],
+      "fingerprint": "1d676f4b7517f3ad61ee211550ceabbc89d1926769ea8b52f9a9376e190b028c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "voice.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "drum.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "delay",
+            1
+          ],
+          [
+            "on",
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            "off",
+            0,
+            1,
+            0
+          ],
+          [
+            "delay",
+            99
+          ],
+          [
+            "chain",
+            1
+          ],
+          [
+            "delay",
+            100
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "id": "AP-G603",
+      "items": [
+        "P-03",
+        "P-04",
+        "RA-04",
+        "RS-09"
+      ],
+      "title": "an unmapped early press stays silent and never advances a wormhole",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 P-03, P-04, RA-04, RS-09",
+          "note": "an unmapped early press stays silent and never advances a wormhole"
+        }
+      ],
+      "expectedFailing": [],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2\n2 1 2 drum.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 1\ntouch 1 2\nd 199"
+        },
+        {
+          "path": "sounds/voice.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/drum.wav",
+          "asset": "tone-660"
+        }
+      ],
+      "fingerprint": "0f937bdb3eae714c5ab14e82578cd12bcf88f54ca7ec2cfed944ad6818e7e6a3",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "drum.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "delay",
+            1
+          ],
+          [
+            "on",
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            "off",
+            0,
+            1,
+            0
+          ],
+          [
+            "delay",
+            99
+          ],
+          [
+            "chain",
+            1
+          ],
+          [
+            "delay",
+            100
+          ]
+        ],
+        "errors": []
+      }
     },
     {
       "id": "SAFE-C001",

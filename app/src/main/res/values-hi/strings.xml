@@ -107,12 +107,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">अपडेट देखें</string>
+	<string name="update_offer_title">नया संस्करण उपलब्ध है</string>
+	<string name="update_offer_body">इसे अभी या बाद में पाएँ। बजाना पूरा करने के बाद चुनें कि इसे कब इंस्टॉल करना है।</string>
+	<string name="update_download">नया संस्करण पाएँ</string>
+	<string name="update_later">बाद में</string>
+	<string name="update_downloading_title">नया संस्करण लिया जा रहा है</string>
+	<string name="update_ready_title">नया संस्करण तैयार है</string>
+	<string name="update_ready_body">इंस्टॉल करने पर ऐप फिर से शुरू होगा। आप पैक सूची पर लौट आएँगे।</string>
+	<string name="update_install">इंस्टॉल करें और फिर से शुरू करें</string>
+	<string name="update_none">अभी कोई अपडेट उपलब्ध नहीं है।</string>
+	<string name="update_check_failed">अपडेट नहीं देखे जा सके। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+	<string name="update_check_again">फिर से देखें</string>
+	<string name="update_close">बंद करें</string>
+	<string name="update_failed">अपडेट पूरा नहीं हो सका। आप बाद में फिर से कोशिश कर सकते हैं।</string>
+	<string name="update_retry">फिर से कोशिश करें</string>
+	<string name="update_check_in_store">स्टोर में देखें</string>
+	<string name="update_unsupported">इस डिवाइस पर, कृपया स्टोर में अपडेट देखें।</string>
+	<string name="update_store_notice">Google Play में देखा जा रहा है। ऐप अपडेट करने पर UniPad बंद हो सकता है।</string>
+	<string name="update_store_open">स्टोर खोलें</string>
+	<string name="update_store_unavailable">स्टोर नहीं खुल सका। कृपया बाद में फिर से देखें।</string>
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
 	<string name="guide_download_new">नए पैक डाउनलोड करें</string>
 	<string name="guide_import_external">डाउनलोड किए पैक आयात करें</string>
 	<string name="guide_restore_packs">गायब पैक पुनर्प्राप्त करें</string>
+	<string name="guide_empty_title">अपना पहला UniPack बजाएँ</string>
+	<string name="guide_empty_step_get">पैक पाएँ: स्टोर इस्तेमाल करने के लिए %1$s पर टैप करें, या आपके पास पहले से मौजूद .zip के लिए %2$s पर टैप करें।</string>
+	<string name="guide_empty_step_play">सूची में पैक पर टैप करें, फिर %1$s पर टैप करें।</string>
+	<string name="guide_empty_step_pads">Launchpad नहीं है? बस स्क्रीन पर पैड टैप करें।</string>
+	<string name="guide_empty_link">शुरुआती गाइड</string>
+	<string name="unipack_play">बजाएँ</string>
 	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
 	<string name="importComplete">पैक आयात हो गया!</string>
 	<string name="importPlayNow">अभी बजाएँ</string>
@@ -372,6 +398,8 @@
 	<string name="computer_pad_help_name">कंप्यूटर पर फ़ोन का नाम फ़ोन और सिस्टम के अनुसार अलग होता है; हो सकता है वह UniPad न दिखे।</string>
 	<string name="computer_pad_help_numbers">चैनल 1: पैड नोट 11–88, दाएँ बटन नोट 19–89, ऊपरी बटन CC 104–111 भेजते हैं, सभी 127 पर।</string>
 	<string name="computer_pad_help_lights">कंप्यूटर पैड का नंबर रंग 0–127 के साथ भेजकर उसे जलाता है; 0 या note off उसे बुझाता है।</string>
+	<string name="computer_pad_help_no_midi_mode">जिन फ़ोन की USB सेटिंग में MIDI नहीं है, वे यह सुविधा इस्तेमाल नहीं कर सकते।</string>
+	<string name="computer_pad_help_check_on_computer">कंप्यूटर को पैड दबाने के संकेत मिले या नहीं, यह सिर्फ़ कंप्यूटर ऐप में दिखता है।</string>
 	<string name="computer_pad_disconnect">डिस्कनेक्ट करें</string>
     <string name="midi_tab_usb">USB डिवाइस</string>
     <string name="midi_tab_apps">इस फ़ोन के ऐप</string>

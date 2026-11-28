@@ -106,12 +106,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Kiểm tra cập nhật</string>
+	<string name="update_offer_title">Đã có phiên bản mới</string>
+	<string name="update_offer_body">Tải ngay hoặc để sau. Chọn thời điểm cài đặt sau khi bạn chơi xong.</string>
+	<string name="update_download">Tải phiên bản mới</string>
+	<string name="update_later">Để sau</string>
+	<string name="update_downloading_title">Đang tải phiên bản mới</string>
+	<string name="update_ready_title">Phiên bản mới đã sẵn sàng</string>
+	<string name="update_ready_body">Cài đặt sẽ khởi động lại ứng dụng. Bạn sẽ quay về danh sách pack.</string>
+	<string name="update_install">Cài đặt và khởi động lại</string>
+	<string name="update_none">Hiện không có bản cập nhật nào.</string>
+	<string name="update_check_failed">Không thể kiểm tra cập nhật. Hãy kiểm tra kết nối rồi thử lại.</string>
+	<string name="update_check_again">Kiểm tra lại</string>
+	<string name="update_close">Đóng</string>
+	<string name="update_failed">Không thể hoàn tất cập nhật. Bạn có thể thử lại sau.</string>
+	<string name="update_retry">Thử lại</string>
+	<string name="update_check_in_store">Kiểm tra trong cửa hàng</string>
+	<string name="update_unsupported">Trên thiết bị này, vui lòng kiểm tra cập nhật trong cửa hàng.</string>
+	<string name="update_store_notice">Đang kiểm tra trên Google Play. Cập nhật ứng dụng có thể đóng UniPad.</string>
+	<string name="update_store_open">Mở cửa hàng</string>
+	<string name="update_store_unavailable">Không thể mở cửa hàng. Vui lòng kiểm tra lại sau.</string>
 
 	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
 	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>
 	<string name="guide_download_new">Tải pack mới</string>
 	<string name="guide_import_external">Nhập pack đã tải</string>
 	<string name="guide_restore_packs">Khôi phục pack bị mất</string>
+	<string name="guide_empty_title">Chơi UniPack đầu tiên của bạn</string>
+	<string name="guide_empty_step_get">Lấy pack: chạm %1$s để dùng Cửa hàng, hoặc %2$s cho tệp .zip bạn đã có.</string>
+	<string name="guide_empty_step_play">Chạm vào pack trong danh sách, rồi chạm %1$s.</string>
+	<string name="guide_empty_step_pads">Không có Launchpad? Chỉ cần chạm vào các pad trên màn hình.</string>
+	<string name="guide_empty_link">Hướng dẫn bắt đầu</string>
+	<string name="unipack_play">Chơi</string>
 	<string name="doYouWantToDeleteUniPack">Bạn có muốn xóa dự án này không?</string>
 	<string name="importComplete">Đã nhập pack!</string>
 	<string name="importPlayNow">Chơi ngay</string>
@@ -371,6 +397,8 @@
 	<string name="computer_pad_help_name">Tên điện thoại trên máy tính tùy điện thoại và hệ điều hành; có thể không hiện là UniPad.</string>
 	<string name="computer_pad_help_numbers">Kênh 1: pad gửi nốt 11–88, nút phải nốt 19–89, nút trên CC 104–111, tất cả với giá trị 127.</string>
 	<string name="computer_pad_help_lights">Máy tính bật đèn pad bằng cách gửi số của pad kèm màu 0–127; 0 hoặc note off sẽ tắt.</string>
+	<string name="computer_pad_help_no_midi_mode">Điện thoại không có MIDI trong cài đặt USB không dùng được tính năng này.</string>
+	<string name="computer_pad_help_check_on_computer">Chỉ ứng dụng trên máy tính cho biết máy tính có nhận được thao tác nhấn hay không.</string>
 	<string name="computer_pad_disconnect">Ngắt kết nối</string>
     <string name="midi_tab_usb">Thiết bị USB</string>
     <string name="midi_tab_apps">Ứng dụng trên điện thoại này</string>

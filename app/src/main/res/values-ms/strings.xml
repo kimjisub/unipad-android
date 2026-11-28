@@ -106,12 +106,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Semak kemas kini</string>
+	<string name="update_offer_title">Versi baharu tersedia</string>
+	<string name="update_offer_body">Dapatkannya sekarang atau kemudian. Pilih masa untuk memasangnya selepas anda selesai bermain.</string>
+	<string name="update_download">Dapatkan versi baharu</string>
+	<string name="update_later">Kemudian</string>
+	<string name="update_downloading_title">Mendapatkan versi baharu</string>
+	<string name="update_ready_title">Versi baharu sudah sedia</string>
+	<string name="update_ready_body">Pemasangan akan memulakan semula apl. Anda akan kembali ke senarai pack.</string>
+	<string name="update_install">Pasang dan mulakan semula</string>
+	<string name="update_none">Tiada kemas kini tersedia buat masa ini.</string>
+	<string name="update_check_failed">Tidak dapat menyemak kemas kini. Semak sambungan anda dan cuba lagi.</string>
+	<string name="update_check_again">Semak semula</string>
+	<string name="update_close">Tutup</string>
+	<string name="update_failed">Kemas kini tidak dapat diselesaikan. Anda boleh cuba lagi kemudian.</string>
+	<string name="update_retry">Cuba lagi</string>
+	<string name="update_check_in_store">Semak di kedai</string>
+	<string name="update_unsupported">Pada peranti ini, sila semak kemas kini di kedai.</string>
+	<string name="update_store_notice">Menyemak di Google Play. Mengemas kini apl mungkin menutup UniPad.</string>
+	<string name="update_store_open">Buka kedai</string>
+	<string name="update_store_unavailable">Tidak dapat membuka kedai. Sila semak semula kemudian.</string>
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>
 	<string name="guide_download_new">Muat turun pack baru</string>
 	<string name="guide_import_external">Import pack yang dimuat turun</string>
 	<string name="guide_restore_packs">Pulihkan pack yang hilang</string>
+	<string name="guide_empty_title">Mainkan UniPack pertama anda</string>
+	<string name="guide_empty_step_get">Dapatkan pack: ketik %1$s untuk menggunakan Kedai, atau %2$s untuk fail .zip yang sudah anda miliki.</string>
+	<string name="guide_empty_step_play">Ketik pack dalam senarai, kemudian ketik %1$s.</string>
+	<string name="guide_empty_step_pads">Tiada Launchpad? Ketik sahaja pad pada skrin.</string>
+	<string name="guide_empty_link">Panduan bermula</string>
+	<string name="unipack_play">Main</string>
 	<string name="doYouWantToDeleteUniPack">Adakah anda mahu memadamkan projek ini?</string>
 	<string name="importComplete">Pack berjaya diimport!</string>
 	<string name="importPlayNow">Main sekarang</string>
@@ -371,6 +397,8 @@
 	<string name="computer_pad_help_name">Nama telefon pada komputer berbeza mengikut telefon dan sistem; mungkin tidak dipaparkan sebagai UniPad.</string>
 	<string name="computer_pad_help_numbers">Saluran 1: pad menghantar not 11–88, butang kanan not 19–89, butang atas CC 104–111, semuanya 127.</string>
 	<string name="computer_pad_help_lights">Komputer menyalakan pad dengan menghantar nombornya bersama warna 0–127; 0 atau note off memadamkannya.</string>
+	<string name="computer_pad_help_no_midi_mode">Telefon tanpa MIDI dalam tetapan USB tidak dapat menggunakan ciri ini.</string>
+	<string name="computer_pad_help_check_on_computer">Sama ada komputer menerima tekanan pad hanya dapat dilihat dalam apl komputer.</string>
 	<string name="computer_pad_disconnect">Putuskan sambungan</string>
     <string name="midi_tab_usb">Peranti USB</string>
     <string name="midi_tab_apps">Apl pada telefon ini</string>

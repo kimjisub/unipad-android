@@ -187,10 +187,10 @@ class SoundLoadingNoticeTest {
         try {
             screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
             screen.await("Audio did not finish loading") { screen.onMain { !screen.vm().soundLoadingActive && screen.vm().uiLoaded } }
-            screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
             screen.capture("audio-decoder-replaced")
-            org.junit.Assert.assertEquals("one decoder per file and one replacement", 4, created.get())
             org.junit.Assert.assertEquals(3, screen.onMain { screen.vm().soundLoadReport!!.loadedFiles })
+            org.junit.Assert.assertEquals("one decoder per file and one replacement", 4, created.get())
+            screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
             org.junit.Assert.assertTrue(screen.onMain { screen.vm().soundLoadReport!!.failures.isEmpty() })
             org.junit.Assert.assertFalse(screen.onMain { screen.vm().soundLoadNoticeVisible })
             org.junit.Assert.assertTrue(screen.onMain { (0 until 3).all { y -> screen.vm().unipack.soundTable!![0][0][y]!![0].id >= 0 } })

@@ -107,12 +107,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Güncellemeleri denetle</string>
+	<string name="update_offer_title">Yeni sürüm mevcut</string>
+	<string name="update_offer_body">Şimdi ya da daha sonra indirin. Çalmayı bitirdikten sonra ne zaman yükleneceğini seçin.</string>
+	<string name="update_download">Yeni sürümü al</string>
+	<string name="update_later">Daha sonra</string>
+	<string name="update_downloading_title">Yeni sürüm alınıyor</string>
+	<string name="update_ready_title">Yeni sürüm hazır</string>
+	<string name="update_ready_body">Yükleme uygulamayı yeniden başlatır. Paket listesine geri dönersiniz.</string>
+	<string name="update_install">Yükle ve yeniden başlat</string>
+	<string name="update_none">Şu anda güncelleme yok.</string>
+	<string name="update_check_failed">Güncellemeler denetlenemedi. Bağlantınızı kontrol edip tekrar deneyin.</string>
+	<string name="update_check_again">Tekrar denetle</string>
+	<string name="update_close">Kapat</string>
+	<string name="update_failed">Güncelleme tamamlanamadı. Daha sonra tekrar deneyebilirsiniz.</string>
+	<string name="update_retry">Tekrar dene</string>
+	<string name="update_check_in_store">Mağazada denetle</string>
+	<string name="update_unsupported">Bu cihazda lütfen güncellemeleri mağazada denetleyin.</string>
+	<string name="update_store_notice">Google Play\'de denetleniyor. Uygulamayı güncellemek UniPad\'i kapatabilir.</string>
+	<string name="update_store_open">Mağazayı aç</string>
+	<string name="update_store_unavailable">Mağaza açılamadı. Lütfen daha sonra tekrar denetleyin.</string>
 
 	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
 	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>
 	<string name="guide_download_new">Yeni paketler indir</string>
 	<string name="guide_import_external">İndirilen paketleri içe aktar</string>
 	<string name="guide_restore_packs">Kayıp paketleri kurtar</string>
+	<string name="guide_empty_title">İlk UniPack\'inizi çalın</string>
+	<string name="guide_empty_step_get">Paket edinin: Mağazayı kullanmak için %1$s, elinizdeki bir .zip için %2$s öğesine dokunun.</string>
+	<string name="guide_empty_step_play">Listedeki pakete, ardından %1$s öğesine dokunun.</string>
+	<string name="guide_empty_step_pads">Launchpad\'iniz yok mu? Ekrandaki padlere dokunmanız yeterli.</string>
+	<string name="guide_empty_link">Başlangıç kılavuzu</string>
+	<string name="unipack_play">Çal</string>
 	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
 	<string name="importComplete">Paket içe aktarıldı!</string>
 	<string name="importPlayNow">Şimdi çal</string>
@@ -372,6 +398,8 @@
 	<string name="computer_pad_help_name">Telefonun bilgisayardaki adı telefona ve sisteme göre değişir; UniPad olarak görünmeyebilir.</string>
 	<string name="computer_pad_help_numbers">Kanal 1: pad\'ler 11–88, sağ düğmeler 19–89 notalarını, üst düğmeler CC 104–111 gönderir; hepsi 127 ile.</string>
 	<string name="computer_pad_help_lights">Bilgisayar bir pad\'in numarasını 0–127 arası bir renkle gönderince pad yanar; 0 veya note off söndürür.</string>
+	<string name="computer_pad_help_no_midi_mode">USB ayarlarında MIDI olmayan telefonlar bu özelliği kullanamaz.</string>
+	<string name="computer_pad_help_check_on_computer">Bilgisayarın basışları alıp almadığı yalnızca bilgisayar uygulamasında görünür.</string>
 	<string name="computer_pad_disconnect">Bağlantıyı kes</string>
     <string name="midi_tab_usb">USB cihazları</string>
     <string name="midi_tab_apps">Bu telefondaki uygulamalar</string>

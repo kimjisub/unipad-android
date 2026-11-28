@@ -43,7 +43,7 @@
     </queries>
     <!-- Gradle applies its runner overrides to the first instrumentation element. -->
     <instrumentation
-        android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:name="com.kimjisub.launchpad.BrowserTestRunner"
         android:targetPackage="com.kimjisub.launchpad.dev" />
     <!-- A preparation probe, separate from JUnit discovery and the test suites. -->
     <instrumentation

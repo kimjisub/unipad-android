@@ -107,12 +107,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Nach Updates suchen</string>
+	<string name="update_offer_title">Eine neue Version ist verfügbar</string>
+	<string name="update_offer_body">Jetzt oder später herunterladen. Wählen Sie nach dem Spielen, wann sie installiert wird.</string>
+	<string name="update_download">Neue Version laden</string>
+	<string name="update_later">Später</string>
+	<string name="update_downloading_title">Neue Version wird geladen</string>
+	<string name="update_ready_title">Die neue Version ist bereit</string>
+	<string name="update_ready_body">Die Installation startet die App neu. Sie kehren zur Pack-Liste zurück.</string>
+	<string name="update_install">Installieren und neu starten</string>
+	<string name="update_none">Derzeit ist kein Update verfügbar.</string>
+	<string name="update_check_failed">Updates konnten nicht geprüft werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+	<string name="update_check_again">Erneut prüfen</string>
+	<string name="update_close">Schließen</string>
+	<string name="update_failed">Das Update wurde nicht abgeschlossen. Versuchen Sie es später erneut.</string>
+	<string name="update_retry">Erneut versuchen</string>
+	<string name="update_check_in_store">Im Store prüfen</string>
+	<string name="update_unsupported">Suchen Sie auf diesem Gerät bitte im Store nach Updates.</string>
+	<string name="update_store_notice">Prüfung in Google Play. Beim Aktualisieren kann UniPad geschlossen werden.</string>
+	<string name="update_store_open">Store öffnen</string>
+	<string name="update_store_unavailable">Der Store konnte nicht geöffnet werden. Bitte prüfen Sie es später erneut.</string>
 
 	<string name="permissionRequire">Zugriff auf externen Speicher wird zum Speichern von Projektdateien benötigt.\nErteilen Sie die Berechtigung.</string>
 	<string name="permissionDenied">Die App benötigt Zugriff auf den externen Speicher.\nBitte aktivieren Sie die Berechtigungen unter [Einstellungen] > [Berechtigungen]</string>
 	<string name="guide_download_new">Neue Packs herunterladen</string>
 	<string name="guide_import_external">Heruntergeladene Packs importieren</string>
 	<string name="guide_restore_packs">Fehlende Packs wiederherstellen</string>
+	<string name="guide_empty_title">Spielen Sie Ihr erstes UniPack</string>
+	<string name="guide_empty_step_get">Pack holen: Tippen Sie auf %1$s, um den Store zu nutzen, oder auf %2$s für eine vorhandene .zip-Datei.</string>
+	<string name="guide_empty_step_play">Tippen Sie in der Liste auf das Pack und dann auf %1$s.</string>
+	<string name="guide_empty_step_pads">Kein Launchpad? Tippen Sie einfach auf die Pads auf dem Bildschirm.</string>
+	<string name="guide_empty_link">Erste Schritte</string>
+	<string name="unipack_play">Spielen</string>
 	<string name="doYouWantToDeleteUniPack">Möchten Sie dieses Projekt löschen?</string>
 	<string name="importComplete">Pack importiert!</string>
 	<string name="importPlayNow">Jetzt spielen</string>
@@ -372,6 +398,8 @@
 	<string name="computer_pad_help_name">Der Name des Smartphones auf dem Computer hängt von Smartphone und System ab; er lautet vielleicht nicht UniPad.</string>
 	<string name="computer_pad_help_numbers">Kanal 1: Pads senden Noten 11–88, rechte Tasten Noten 19–89, obere Tasten CC 104–111, jeweils mit 127.</string>
 	<string name="computer_pad_help_lights">Der Computer beleuchtet ein Pad, indem er dessen Nummer mit einer Farbe 0–127 sendet; 0 oder Note-Off schaltet es aus.</string>
+	<string name="computer_pad_help_no_midi_mode">Smartphones ohne MIDI in den USB-Einstellungen können diese Funktion nicht nutzen.</string>
+	<string name="computer_pad_help_check_on_computer">Ob der Computer die Tastendrücke empfängt, zeigt nur die Computer-App.</string>
 	<string name="computer_pad_disconnect">Trennen</string>
     <string name="midi_tab_usb">USB-Geräte</string>
     <string name="midi_tab_apps">Apps auf diesem Telefon</string>

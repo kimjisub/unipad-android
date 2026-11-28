@@ -6,6 +6,7 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.content.ActivityNotFoundException
 import android.hardware.usb.UsbManager
+import android.os.Build
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import android.view.ViewGroup
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Direction
@@ -178,7 +180,7 @@ class MidiSelectScreenTest {
     }
 
     @Test fun browserReturnKeepsTheExpandedHelp() {
-        val page = "https://unipad.io/docs/guide#custom-firmware"
+        val page = "https://unipad.io/docs/guide?no_analytics=1#custom-firmware"
         val appPackage = compose.activity.packageName
         val browsers = device.executeShellCommand("cmd package query-activities --brief -a android.intent.action.VIEW -d $page")
             .lines().map { it.trim().substringBefore('/') }
@@ -217,12 +219,14 @@ class MidiSelectScreenTest {
         }
     }
 
+    // ActivityMonitor.onStartActivity is API 26+.
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     @Test fun failedGuideLaunchKeepsTheExpandedHelp() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         var attempted = false
         val monitor = object : Instrumentation.ActivityMonitor() {
             override fun onStartActivity(intent: Intent): Instrumentation.ActivityResult? {
-                if (intent.action == Intent.ACTION_VIEW && intent.dataString == "https://unipad.io/docs/guide#custom-firmware") {
+                if (intent.action == Intent.ACTION_VIEW && intent.dataString == "https://unipad.io/docs/guide?no_analytics=1#custom-firmware") {
                     attempted = true
                     throw ActivityNotFoundException("No browser for this test")
                 }

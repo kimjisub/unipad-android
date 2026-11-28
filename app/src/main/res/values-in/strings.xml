@@ -106,12 +106,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_offer_title">Versi baru tersedia</string>
+	<string name="update_offer_body">Unduh sekarang atau nanti. Pilih waktu pemasangan setelah Anda selesai bermain.</string>
+	<string name="update_download">Unduh versi baru</string>
+	<string name="update_later">Nanti</string>
+	<string name="update_downloading_title">Mengunduh versi baru</string>
+	<string name="update_ready_title">Versi baru siap dipasang</string>
+	<string name="update_ready_body">Pemasangan akan memulai ulang aplikasi. Anda akan kembali ke daftar paket.</string>
+	<string name="update_install">Pasang dan mulai ulang</string>
+	<string name="update_none">Tidak ada pembaruan yang tersedia saat ini.</string>
+	<string name="update_close">Tutup</string>
+	<string name="update_failed">Pembaruan tidak dapat diselesaikan. Anda dapat mencoba lagi nanti.</string>
+	<string name="update_retry">Coba lagi</string>
+	<string name="update_unsupported">Di perangkat ini, periksa pembaruan di toko.</string>
+	<string name="update_store_notice">Memeriksa di Google Play. Memperbarui aplikasi dapat menutup UniPad.</string>
+	<string name="update_store_open">Buka toko</string>
+	<string name="update_store_unavailable">Tidak dapat membuka toko. Silakan periksa lagi nanti.</string>
+	<string name="update_check">Periksa pembaruan</string>
+	<string name="update_check_failed">Tidak dapat memeriksa pembaruan. Periksa koneksi Anda lalu coba lagi.</string>
+	<string name="update_check_again">Periksa lagi</string>
+	<string name="update_check_in_store">Periksa di toko</string>
 
 	<string name="permissionRequire">Akses penyimpanan eksternal diperlukan untuk menyimpan file proyek.\nDapatkan izin untuk hak ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke penyimpanan eksternal.\nSilakan aktifkan izin di [Pengaturan] > [Izin]</string>
 	<string name="guide_download_new">Unduh pack baru</string>
 	<string name="guide_import_external">Impor pack yang diunduh</string>
 	<string name="guide_restore_packs">Pulihkan pack yang hilang</string>
+	<string name="guide_empty_title">Mainkan UniPack pertama Anda</string>
+	<string name="guide_empty_step_get">Dapatkan pack: ketuk %1$s untuk memakai Toko, atau %2$s untuk file .zip yang sudah Anda miliki.</string>
+	<string name="guide_empty_step_play">Ketuk pack di daftar, lalu ketuk %1$s.</string>
+	<string name="guide_empty_step_pads">Tidak punya Launchpad? Cukup ketuk pad di layar.</string>
+	<string name="guide_empty_link">Panduan memulai</string>
+	<string name="unipack_play">Main</string>
 	<string name="doYouWantToDeleteUniPack">Apakah Anda ingin menghapus proyek ini?</string>
 	<string name="importComplete">Pack berhasil diimpor!</string>
 	<string name="importPlayNow">Main sekarang</string>
@@ -371,6 +397,8 @@
 	<string name="computer_pad_help_name">Nama ponsel di komputer berbeda menurut ponsel dan sistem; mungkin tidak tampil sebagai UniPad.</string>
 	<string name="computer_pad_help_numbers">Kanal 1: pad mengirim not 11–88, tombol kanan not 19–89, tombol atas CC 104–111, semuanya 127.</string>
 	<string name="computer_pad_help_lights">Komputer menyalakan pad dengan mengirim nomornya beserta warna 0–127; 0 atau note off mematikannya.</string>
+	<string name="computer_pad_help_no_midi_mode">Ponsel tanpa MIDI di setelan USB tidak dapat memakai fitur ini.</string>
+	<string name="computer_pad_help_check_on_computer">Apakah komputer menerima tekanan pad hanya terlihat di aplikasi komputer.</string>
 	<string name="computer_pad_disconnect">Putuskan</string>
     <string name="midi_tab_usb">Perangkat USB</string>
     <string name="midi_tab_apps">Aplikasi di ponsel ini</string>

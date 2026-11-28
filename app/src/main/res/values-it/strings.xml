@@ -108,12 +108,38 @@
 	</plurals>
 
 	<!--Version-->
+	<string name="update_check">Cerca aggiornamenti</string>
+	<string name="update_offer_title">È disponibile una nuova versione</string>
+	<string name="update_offer_body">Scaricala ora o più tardi. Scegli quando installarla dopo aver finito di suonare.</string>
+	<string name="update_download">Scarica la nuova versione</string>
+	<string name="update_later">Più tardi</string>
+	<string name="update_downloading_title">Download della nuova versione</string>
+	<string name="update_ready_title">La nuova versione è pronta</string>
+	<string name="update_ready_body">L\'installazione riavvia l\'app. Tornerai all\'elenco dei pack.</string>
+	<string name="update_install">Installa e riavvia</string>
+	<string name="update_none">Al momento non ci sono aggiornamenti disponibili.</string>
+	<string name="update_check_failed">Impossibile cercare aggiornamenti. Controlla la connessione e riprova.</string>
+	<string name="update_check_again">Controlla di nuovo</string>
+	<string name="update_close">Chiudi</string>
+	<string name="update_failed">Impossibile completare l\'aggiornamento. Riprova più tardi.</string>
+	<string name="update_retry">Riprova</string>
+	<string name="update_check_in_store">Controlla nel negozio</string>
+	<string name="update_unsupported">Su questo dispositivo, controlla gli aggiornamenti nel negozio.</string>
+	<string name="update_store_notice">Controllo su Google Play. L\'aggiornamento dell\'app potrebbe chiudere UniPad.</string>
+	<string name="update_store_open">Apri negozio</string>
+	<string name="update_store_unavailable">Impossibile aprire il negozio. Controlla di nuovo più tardi.</string>
 
 	<string name="permissionRequire">È necessario l\'accesso alla memoria esterna per salvare i file del progetto.\nConcedi l\'autorizzazione.</string>
 	<string name="permissionDenied">L\'app richiede l\'accesso alla memoria esterna.\nAttiva le autorizzazioni in [Impostazioni] > [Autorizzazioni]</string>
 	<string name="guide_download_new">Scarica nuovi pack</string>
 	<string name="guide_import_external">Importa pack scaricati</string>
 	<string name="guide_restore_packs">Recupera pack mancanti</string>
+	<string name="guide_empty_title">Suona il tuo primo UniPack</string>
+	<string name="guide_empty_step_get">Ottieni un pack: tocca %1$s per usare il Negozio, o %2$s per un .zip che hai già.</string>
+	<string name="guide_empty_step_play">Tocca il pack nell\'elenco, poi tocca %1$s.</string>
+	<string name="guide_empty_step_pads">Niente Launchpad? Tocca semplicemente i pad sullo schermo.</string>
+	<string name="guide_empty_link">Guida introduttiva</string>
+	<string name="unipack_play">Suona</string>
 	<string name="doYouWantToDeleteUniPack">Vuoi eliminare questo progetto?</string>
 	<string name="importComplete">Pack importato!</string>
 	<string name="importPlayNow">Suona ora</string>
@@ -373,6 +399,8 @@
 	<string name="computer_pad_help_name">Il nome del telefono sul computer dipende da telefono e sistema; potrebbe non apparire come UniPad.</string>
 	<string name="computer_pad_help_numbers">Canale 1: i pad inviano le note 11–88, i tasti destri 19–89, quelli superiori CC 104–111, tutti a 127.</string>
 	<string name="computer_pad_help_lights">Il computer accende un pad inviando il suo numero con un colore 0–127; 0 o note off lo spegne.</string>
+	<string name="computer_pad_help_no_midi_mode">I telefoni senza MIDI nelle impostazioni USB non possono usare questa funzione.</string>
+	<string name="computer_pad_help_check_on_computer">Solo l\'app del computer mostra se il computer riceve le pressioni.</string>
 	<string name="computer_pad_disconnect">Disconnetti</string>
     <string name="midi_tab_usb">Dispositivi USB</string>
     <string name="midi_tab_apps">App su questo telefono</string>
