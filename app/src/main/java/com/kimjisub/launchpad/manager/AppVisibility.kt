@@ -12,15 +12,22 @@ class AppVisibility : Application.ActivityLifecycleCallbacks {
 	// Work without an activity can run until the first visibility event, as before.
 	private val isVisible = MutableStateFlow(true)
 	val visible = isVisible.asStateFlow()
+	// Unlike general startup work, completion retries require an actual app screen.
+	private val foregroundState = MutableStateFlow(false)
+	val foreground = foregroundState.asStateFlow()
 
 	override fun onActivityStarted(activity: Activity) {
 		started++
 		isVisible.value = true
+		foregroundState.value = true
 	}
 
 	override fun onActivityStopped(activity: Activity) {
 		started--
-		if (started == 0 && !activity.isChangingConfigurations) isVisible.value = false
+		if (started == 0 && !activity.isChangingConfigurations) {
+			isVisible.value = false
+			foregroundState.value = false
+		}
 	}
 
 	override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}

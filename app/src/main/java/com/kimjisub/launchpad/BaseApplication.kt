@@ -12,6 +12,7 @@ import com.kimjisub.launchpad.diagnostics.ForegroundScreenRecorder
 import com.kimjisub.launchpad.diagnostics.InstallSource
 import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.network.accounting.StoreDownloadAccounting
 import com.kimjisub.launchpad.manager.AppVisibility
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.resolveBundledThemeId
@@ -75,6 +76,8 @@ class BaseApplication : Application() {
 			androidContext(applicationContext)
 			modules(appModule)
 		}
+		// Resume completed-store receipts when a screen opens, including after process death.
+		GlobalContext.get().get<StoreDownloadAccounting>()
 		clearPackStagingLeftovers()
 	}
 

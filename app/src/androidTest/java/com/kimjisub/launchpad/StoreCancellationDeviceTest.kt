@@ -27,6 +27,11 @@ import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.StoreCatalog
+import com.kimjisub.launchpad.network.accounting.DownloadAccounting
+import com.kimjisub.launchpad.network.accounting.DownloadAccountingApi
+import com.kimjisub.launchpad.network.accounting.DownloadReceipt
+import com.kimjisub.launchpad.network.accounting.FilePendingDownloadStore
+import com.kimjisub.launchpad.network.accounting.StoreDownloadAccounting
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
@@ -90,7 +95,20 @@ class StoreCancellationDeviceTest {
         val client = OkHttpClient.Builder().readTimeout(30, TimeUnit.SECONDS).build()
         val service = Retrofit.Builder().baseUrl(server.url).client(client).build().create(FileApi.FileService::class.java)
         val cancelled = CountDownLatch(1)
+        val completionReceipts = CopyOnWriteArrayList<String>()
+        val accountingFile = File(context.noBackupFilesDir, "$id-completions.json")
+        val accountingStore = FilePendingDownloadStore(accountingFile)
+        val accounting = StoreDownloadAccounting(DownloadAccounting(object : DownloadAccountingApi {
+            override suspend fun issue(code: String) = DownloadReceipt(UUID.randomUUID().toString(),
+                System.currentTimeMillis() + DownloadAccounting.RETENTION_MS)
+            override suspend fun complete(code: String, receipt: String): String {
+                assertTrue(File(workspace, code).isDirectory)
+                completionReceipts += receipt
+                return "counted"
+            }
+        }, accountingStore))
         val override = module {
+            single<StoreDownloadAccounting> { accounting }
             single<FileApi.FileService> {
                 object : FileApi.FileService {
                     override fun download(url: String): Call<okhttp3.ResponseBody> {
@@ -209,6 +227,8 @@ class StoreCancellationDeviceTest {
             assertTrue("cancellation did not reach the real HTTP call", cancelledPromptly)
             assertEquals(before, hashes(existing))
             assertEquals(otherBefore, hashes(otherFolder))
+            assertTrue("cancelled transfer or unrelated downloader sent a completion", completionReceipts.isEmpty())
+            assertTrue(accountingStore.load().isEmpty())
             // The local server supplies a complete ZIP on the next request from the real screen.
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
             selectFixture()
@@ -226,6 +246,7 @@ class StoreCancellationDeviceTest {
             assertEquals(before, hashes(existing))
             assertEquals(otherBefore, hashes(otherFolder))
             assertFalse(partial.exists())
+            await("saved retry did not send its completion", timeoutMs = 75_000) { completionReceipts.size == 1 }
             await("completed notification missing") { progressNotifications().any { !it.isOngoing } }
             capture("retried")
             evidence("PASS retried=${hashes(retried)} other=${hashes(otherFolder)} existing=${hashes(existing)}")
@@ -243,6 +264,8 @@ class StoreCancellationDeviceTest {
             server.close()
             otherScope.cancel()
             finish(otherScope)
+            accounting.close()
+            accountingFile.delete()
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
             unloadKoinModules(override)
@@ -307,8 +330,8 @@ class StoreCancellationDeviceTest {
         override fun onException(throwable: Throwable) { error = throwable }
     }
     private fun finish(scope: CoroutineScope) = runBlocking { withTimeout(15000) { scope.coroutineContext.job.children.toList().joinAll() } }
-    private fun await(message: String, condition: () -> Boolean) {
-        val until = SystemClock.elapsedRealtime() + 2000
+    private fun await(message: String, timeoutMs: Long = 2000, condition: () -> Boolean) {
+        val until = SystemClock.elapsedRealtime() + timeoutMs
         while (!condition() && SystemClock.elapsedRealtime() < until) SystemClock.sleep(10)
         assertTrue(message, condition())
     }

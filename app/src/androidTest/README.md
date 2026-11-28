@@ -4,6 +4,22 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+`StoreDownloadAccountingDeviceTest` checks the real store download callback, the completion retry
+file and JSON requests. It uses a local HTTP fixture by default. Pass the instrumentation argument
+`downloadAccountingBackend=demo-unipad` to use the Firebase emulators at `10.0.2.2:5051` (functions)
+and `10.0.2.2:9051` (database), with project `demo-unipad`; it seeds and removes its own pack rows.
+On Android 17 and later the tests first grant the debug build `ACCESS_LOCAL_NETWORK`, without which
+the system blocks the app from 10.0.2.2 (`DemoAccountingServer`).
+That mode also checks response loss, replay from a fresh engine and atomic retry file, separate
+receipts, missing and non-numeric counts, disabled issuance, clock changes, expiry and queue limits.
+`DownloadAccountingProcessDeviceTest` has two ordered methods: Orchestrator ends the target process
+after a committed request loses its response, then the next process resends the stored receipt.
+It checks distinct process IDs and a single increment. Without the emulator argument, its remote
+deduplication fixture uses app preferences; with it, it uses the demo server's actual receipts.
+For manual debug-app checks, build with `-PdownloadAccountingEmulator` to select those same local
+functions. Other debug builds omit accounting requests. Release builds require a Google Play
+installer and a physical device before selecting the production accounting endpoint.
+
 `ThemePreviewLayoutTest` checks narrow (180 × 260 dp), wide (320 × 120 dp), and square
 (220 × 220 dp) preview areas. It requires the full pad grid and all eight chain buttons to fit,
 with no artwork covering the logo. A logo-free case checks pads and chains without requiring

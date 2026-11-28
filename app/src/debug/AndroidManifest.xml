@@ -7,6 +7,13 @@
         A crash collection value saved earlier through the Crashlytics API overrides the one here:
         clear the app's data before a run that must not report.
     -->
+    <!--
+        Lets a debug build made with -PdownloadAccountingEmulator, and the device tests run with
+        downloadAccountingBackend=demo-unipad, reach the local Firebase emulators at 10.0.2.2 on
+        Android 17, which blocks local network addresses without it. Nothing requests it at run time;
+        grant it with `adb shell pm grant <package> android.permission.ACCESS_LOCAL_NETWORK`.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <application>
         <!-- false only in a build made for an analytics server check, see UsageEventRouting. -->
         <meta-data android:name="firebase_analytics_collection_deactivated" android:value="${analyticsCollectionDeactivated}" />

@@ -10,6 +10,7 @@ import com.kimjisub.launchpad.diagnostics.PlayCrashKeys
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.network.FirebaseStoreCatalog
+import com.kimjisub.launchpad.network.accounting.StoreDownloadAccounting
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.tool.CrashContext
 import com.kimjisub.launchpad.tool.FirebaseCrashContext
@@ -17,6 +18,7 @@ import org.koin.dsl.module
 
 val appModule = module {
 	factory<StoreCatalog> { FirebaseStoreCatalog() }
+	single { StoreDownloadAccounting(get<android.content.Context>()) }
 
 	single {
 		val db = AppDatabase.getInstance(get())
