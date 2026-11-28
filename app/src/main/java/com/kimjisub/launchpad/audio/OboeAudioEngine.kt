@@ -1,10 +1,9 @@
 package com.kimjisub.launchpad.audio
 
 import android.media.MediaCodec
-import com.kimjisub.launchpad.tool.Log
-import android.media.MediaFormat
+import androidx.annotation.VisibleForTesting
+import com.kimjisub.launchpad.BuildConfig
 import java.io.File
-import java.nio.ByteOrder
 
 /**
  * Low-latency audio engine backed by Oboe (C++ NDK).
@@ -37,7 +36,7 @@ object OboeAudioEngine {
 	 * [interrupted] is polled between decoder steps; once it answers true the decoder is released
 	 * and [DecodeInterruptedException] is thrown, so the partial PCM is discarded.
 	 */
-	fun decodeOnly(file: File, interrupted: () -> Boolean = { false }): DecodedAudio? = decodeAudioFile(file, interrupted)
+	fun decodeOnly(file: File, interrupted: () -> Boolean = { false }): DecodedAudio? = fileDecoder.decode(file, interrupted)
 
 	/**
 	 * Load pre-decoded PCM data into native engine.
@@ -82,130 +81,19 @@ object OboeAudioEngine {
 	class DecodeInterruptedException : Exception("Decode interrupted")
 
 	internal fun decodeObservingPcm(file: File, onAllocation: (Int, Int) -> Unit): DecodedAudio? =
-		decodeAudioFile(file, { false }, onAllocation)
+		fileDecoder.decode(file, { false }, onAllocation)
 
-	private fun decodeAudioFile(file: File, interrupted: () -> Boolean,
-		onAllocation: ((Int, Int) -> Unit)? = null): DecodedAudio? {
-		// Opening the file is already a call into the media service.
-		if (interrupted()) throw DecodeInterruptedException()
-		var source: AudioPacketSource? = null
-		try {
-			val decodeInspection = AudioFileInspector.inspectForDecode(file)
-			if (interrupted()) throw DecodeInterruptedException()
-			source = openAudioPacketSource(file) ?: return null
-			val format = source.format
-			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
-			val codecConfig = format.getByteBuffer("csd-0")?.duplicate()
-			var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-			var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-			var channelMask = if (format.containsKey(MediaFormat.KEY_CHANNEL_MASK)) format.getInteger(MediaFormat.KEY_CHANNEL_MASK) else 0
-			// Ask for 16-bit PCM explicitly; FLAC/WAV tracks can otherwise decode to float, which
-			// asShortBuffer() would read as noise.
-			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
+	@Volatile
+	private var fileDecoder = AudioFileDecoder()
 
-			if (interrupted()) throw DecodeInterruptedException()
-			val codec = MediaCodec.createDecoderByType(mime)
-			try {
-			codec.configure(format, null, null, 0)
-			codec.start()
-
-			// Single growing array instead of chunk list
-			var pcmBuffer: PcmBuffer? = null
-			val bufferInfo = MediaCodec.BufferInfo()
-			var inputDone = false
-			var outputDone = false
-			val timeoutUs = 5_000L
-			// Some OEM decoders answer TRY_AGAIN_LATER forever on a truncated file; without a
-			// budget the loading dialog never closes.
-			var idleRounds = 0
-			val maxIdleRounds = 2_000 // 2000 x 5 ms = 10 s of nothing after EOS
-
-			while (!outputDone) {
-				if (interrupted()) throw DecodeInterruptedException()
-				if (!inputDone) {
-					val inputIndex = codec.dequeueInputBuffer(timeoutUs)
-					if (inputIndex >= 0) {
-						val inputBuffer = codec.getInputBuffer(inputIndex)!!
-						val bytesRead = source.readPacket(inputBuffer)
-						if (bytesRead < 0) {
-							codec.queueInputBuffer(inputIndex, 0, 0, 0,
-								MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-							inputDone = true
-						} else {
-							codec.queueInputBuffer(inputIndex, 0, bytesRead,
-								source.packetTimeUs, 0)
-							source.advance()
-						}
-					}
-				}
-
-				val outputIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs)
-				if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-					// HE-AAC (SBR) decodes at twice the container rate; keep the real output layout.
-					val out = codec.outputFormat
-					if (out.containsKey(MediaFormat.KEY_SAMPLE_RATE)) sampleRate = out.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-					if (out.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) channels = out.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-					channelMask = if (out.containsKey(MediaFormat.KEY_CHANNEL_MASK)) out.getInteger(MediaFormat.KEY_CHANNEL_MASK) else 0
-				} else if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-					if (inputDone && ++idleRounds > maxIdleRounds) {
-						Log.err("decode stalled after EOS: ${file.name}")
-						return null
-					}
-				}
-				if (outputIndex >= 0) {
-					idleRounds = 0
-					if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-						outputDone = true
-					}
-
-					val outputBuffer = codec.getOutputBuffer(outputIndex)
-					if (outputBuffer != null && bufferInfo.size > 0) {
-						outputBuffer.order(ByteOrder.nativeOrder())
-						outputBuffer.position(bufferInfo.offset)
-						outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
-						val shortBuf = outputBuffer.asShortBuffer()
-						// Wait for real PCM and the decoder's output layout before allocating.
-						val buffer = pcmBuffer ?: PcmBuffer(
-							initialPcmCapacity(sampleRate, channels, decodeInspection.inspection, decodeInspection.fullPacketFrames), onAllocation,
-						).also { pcmBuffer = it }
-						buffer.append(shortBuf)
-					}
-
-					codec.releaseOutputBuffer(outputIndex, false)
-				}
-			}
-
-			codec.stop()
-
-			val buffer = pcmBuffer ?: return null
-			val totalSamples = buffer.sampleCount
-			val pcm = buffer.pcm ?: return null
-
-			// Native loading copies only numFrames * channels samples; no extra PCM copy is needed.
-			val numFrames = oggOpusEndFrames(totalSamples / channels, sampleRate, decodeInspection.inspection) { padding ->
-				Log.err("Ogg Opus end padding exceeds one packet: ${file.name}, $padding frames")
-			}
-			if (numFrames <= 0) return null
-			val speakers = if (decoderEmitsVorbisOrder(mime, codec.name, channels)) {
-				vorbisOrderToChannelMask(pcm, channels, totalSamples)
-			} else if (decoderEmitsLegacyQuadAacOrder(mime, codec.name, channels, android.os.Build.VERSION.SDK_INT, codecConfig)) {
-				legacyQuadAacOrderToChannelMask(pcm, totalSamples)
-			} else decoderChannelMask(channels, channelMask)
-			return DecodedAudio(stereoPcm(pcm, channels, speakers, totalSamples),
-				numFrames, minOf(channels, 2), sampleRate)
-			} finally {
-				// Released on every path; a codec leaked per failed file exhausted the device's
-				// codec instances and made every later sound fail to load.
-				codec.release()
-			}
-		} catch (e: DecodeInterruptedException) {
-			throw e
-		} catch (e: Exception) {
-			Log.err("decode failed: ${file.name}", e)
-			return null
-		} finally {
-			source?.close()
-		}
+	/**
+	 * Debug builds only: hands every later decode a decoder made by [createCodec] (null restores the
+	 * platform's), so device tests can reproduce a decoder the media service breaks.
+	 */
+	@VisibleForTesting
+	internal fun createDecodersWith(createCodec: ((String) -> MediaCodec)?) {
+		check(BuildConfig.DEBUG) { "Decoder replacement is for debug builds" }
+		fileDecoder = if (createCodec == null) AudioFileDecoder() else AudioFileDecoder(createCodec = createCodec)
 	}
 
 }
