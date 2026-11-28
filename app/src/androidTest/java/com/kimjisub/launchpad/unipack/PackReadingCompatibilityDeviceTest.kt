@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PackArchive
+import com.kimjisub.launchpad.manager.PackFileNames
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,10 @@ class PackReadingCompatibilityDeviceTest {
 			val packRoot = File(root, "extracted").apply { mkdir() }
 			PackArchive.extract(zip, packRoot)
 			FileManager.removeDoubleFolder(packRoot.path)
-			assertEquals(2, packRoot.listFiles()!!.count { it.isDirectory && it.name.equals("sounds", true) })
+			val soundFolders = PackFileNames.children(packRoot)
+				.filter { it.file.isDirectory && it.name.equals("sounds", true) }
+			assertEquals(setOf("Sounds", "sounds"), soundFolders.map { it.name }.toSet())
+			assertEquals(2, soundFolders.map { it.file.canonicalPath }.toSet().size)
 			val pack = UniPackFolder(packRoot).load().loadDetail()
 			assertNull(pack.errorDetail)
 			assertEquals(listOf("first", "second"), (0..1).map { pack.soundGet(0, 0, it)?.file?.readText() })
