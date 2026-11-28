@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack
 
+import com.kimjisub.launchpad.manager.PackFileNames
 import java.io.File
 import java.text.Normalizer
 
@@ -7,9 +8,9 @@ import java.text.Normalizer
  * Finds a sound by its relative path: exact spelling first, then canonical Unicode equivalence,
  * then canonical equivalence ignoring case. A folder is never a sound.
  *
- * The names are matched against the stored names instead of asking the disk, so a pack finds the same
+ * The names are matched against original archive names (or unmodified installed names), so a pack finds the same
  * sounds on case-sensitive internal storage as on case-insensitive shared storage, and each sound
- * carries the name it is stored under.
+ * keeps its own stored bytes.
  */
 internal class SoundFileIndex(soundDirs: List<File>) {
 	constructor(soundsDir: File) : this(listOf(soundsDir))
@@ -19,8 +20,8 @@ internal class SoundFileIndex(soundDirs: List<File>) {
 
 	init {
 		// Sorted so that, of several files differing only in case, the same one is chosen every time.
-		val files = soundDirs.sortedBy { it.name }.asSequence().flatMap { dir ->
-			dir.walkTopDown().filter { it.isFile }.map { it.relativeTo(dir).invariantSeparatorsPath to it }
+		val files = soundDirs.sortedBy { PackFileNames.originalName(it) }.asSequence().flatMap { dir ->
+			PackFileNames.files(dir).filter { it.file.isFile }.map { it.name to it.file }
 		}
 			.sortedBy { it.first }
 			.toList()

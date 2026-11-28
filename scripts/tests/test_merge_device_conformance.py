@@ -131,6 +131,87 @@ class MergeDeviceConformanceTest(unittest.TestCase):
         self.assertNotIn("observedOn", report["cases"][2])
         self.assertIn("host observed", report["cases"][2]["deviceRefused"])
 
+    def test_default_storage_failure_replaces_even_a_passing_host_observation(self):
+        self.host["cases"][0].update(actual=EXPECTED, status="pass")
+        self.records["S"].update(storageLocation="external", archiveExtracted=True,
+            filesystem={"caseSensitive": False, "normalizationSensitive": False},
+            storage=[{"contentsPreserved": False}], identityTraced=False, status="fail")
+        report = self.merged()
+        self.assertEqual("fail", self.statuses(report)["S"])
+        self.assertIn("S: the app's archive extraction changed a sound file's contents",
+                      merger.check_report(self.corpus, report, "digest"))
+
+    def test_preserved_archive_names_can_pass_on_default_storage_that_merges_names(self):
+        self.records["S"].update(storageLocation="external", archiveExtracted=True,
+            filesystem={"caseSensitive": False, "normalizationSensitive": False})
+        report = self.merged()
+        self.assertEqual("pass", self.statuses(report)["S"])
+        self.assertEqual([], merger.check_report(self.corpus, report, "digest"))
+
+    def test_default_storage_is_chosen_over_internal_storage_regardless_of_input_order(self):
+        import tempfile
+        import json
+        with tempfile.TemporaryDirectory() as root:
+            internal, external = Path(root) / "internal", Path(root) / "external"
+            internal.mkdir(); external.mkdir()
+            record = dict(self.records["S"], storageLocation="internal")
+            (internal / "S.json").write_text(json.dumps(record))
+            record.update(storageLocation="external", status="fail")
+            (external / "S.json").write_text(json.dumps(record))
+            for folders in ([internal, external], [external, internal]):
+                chosen = merger.load_records(folders)["S"][0]
+                self.assertEqual("external", chosen["storageLocation"])
+                self.assertEqual("fail", chosen["status"])
+
+    def test_default_archive_case_variants_replace_a_case_sensitive_host_result(self):
+        self.host["caseSensitiveFileSystem"] = True
+        self.host["cases"][1].update(actual=EXPECTED, status="pass")
+        self.records["C"].update(source="device-archive-files", storageLocation="external", archiveExtracted=True,
+            identityTraced=True, storage=[{"contentsPreserved": True}],
+            filesystem={"caseSensitive": False, "normalizationSensitive": False})
+        report = self.merged()
+        self.assertEqual("device", report["cases"][1]["observedOn"])
+        self.assertEqual([], merger.check_report(self.corpus, report, "digest"))
+
+    def test_default_storage_wins_when_legacy_and_new_internal_records_are_both_present(self):
+        import itertools
+        import tempfile
+        import json
+        with tempfile.TemporaryDirectory() as root:
+            folders = [Path(root) / name for name in ("legacy", "internal", "external")]
+            for folder, location in zip(folders, (None, "internal", "external")):
+                folder.mkdir()
+                record = dict(self.records["S"])
+                if location:
+                    record["storageLocation"] = location
+                (folder / "S.json").write_text(json.dumps(record))
+            for order in itertools.permutations(folders):
+                self.assertEqual("external", merger.load_records(order)["S"][0]["storageLocation"])
+
+    def test_malformed_device_evidence_is_reported_instead_of_crashing(self):
+        for evidence in (None, [], "invalid"):
+            report = self.merged()
+            report["cases"][0]["deviceEvidence"] = evidence
+            self.assertIn("S: device observation carries no storage evidence",
+                          merger.check_report(self.corpus, report, "digest"))
+
+    def test_required_file_cases_cannot_be_certified_without_default_storage(self):
+        self.corpus["cases"][0]["id"] = "KS-G620"
+        self.host["cases"][0]["id"] = "KS-G620"
+        self.records["KS-G620"] = self.records.pop("S")
+        self.records["KS-G620"]["id"] = "KS-G620"
+        with self.assertRaisesRegex(SystemExit, "default external storage observations missing: KS-G620"):
+            self.merged()
+
+    def test_invalid_default_record_cannot_fall_back_to_a_host_pass(self):
+        self.corpus["cases"][0]["id"] = "KS-G620"
+        self.host["cases"][0].update(id="KS-G620", actual=EXPECTED, status="pass")
+        record = self.records.pop("S")
+        record.update(id="KS-G620", storageLocation="external", actual={"loaded": False})
+        self.records["KS-G620"] = record
+        with self.assertRaisesRegex(SystemExit, "default external storage observation refused"):
+            self.merged()
+
     def test_the_checker_refuses_a_device_observation_from_the_wrong_recorder(self):
         report = self.merged()
         report["cases"][0]["source"] = "device-internal-files"

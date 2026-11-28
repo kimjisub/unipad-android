@@ -36,11 +36,15 @@ object FileManager {
 				?: return
 			children.filter { it.name == MACOSX_FOLDER || (it in content && it != packFolder) }
 				.forEach { deleteDirectory(it) }
+			PackFileNames.clear(rootFolder)
 			moveDirectory(renameAside(packFolder), rootFolder)
 		}
 	}
 
-	private fun isHiddenEntry(file: File) = file.name.startsWith(".") || file.name == MACOSX_FOLDER
+	private fun isHiddenEntry(file: File): Boolean {
+		val name = PackFileNames.originalName(file)
+		return name.startsWith(".") || name == MACOSX_FOLDER
+	}
 
 	/** Resolve the parent first: an alias in a parent is not a link at this entry (API 24 too). */
 	private fun isSymbolicLink(file: File): Boolean {
@@ -67,7 +71,7 @@ object FileManager {
 	private fun isDirectoryWithoutLinks(file: File) = file.isDirectory && !isSymbolicLink(file)
 
 	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any {
-		it.isFile && it.name.equals("info", ignoreCase = true) && !isSymbolicLink(it)
+		it.isFile && PackFileNames.originalName(it).equals("info", ignoreCase = true) && !isSymbolicLink(it)
 	}
 
 	private fun holdsInfo(dir: File, depth: Int): Boolean =

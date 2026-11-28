@@ -4,6 +4,12 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+`PackStorageObservationDeviceTest` checks thirteen archive-name cases on both internal and default
+external storage, plus cross-storage moves, deletion and reimport. Reports are saved under
+`pack-storage/internal` and `pack-storage/external`; include both when merging conformance results.
+The default external observation takes precedence over internal or host passes. No speaker stream
+is opened by this observation; native decoding and the selected original ZIP bytes are checked.
+
 `ThemePreviewLayoutTest` checks narrow (180 × 260 dp), wide (320 × 120 dp), and square
 (220 × 220 dp) preview areas. It requires the full pad grid and all eight chain buttons to fit,
 with no artwork covering the logo. A logo-free case checks pads and chains without requiring

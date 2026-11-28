@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.unipack
 
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.PackFileNames
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.packWebsiteAddress
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
@@ -173,8 +174,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	override fun checkFile() {
 		folderModified = rootFolder.lastModified()
 		soundsDirs.clear()
-		rootFolder.listFiles()?.forEach {
-			when (it.name.lowercase()) {
+		PackFileNames.children(rootFolder).sortedByDescending { it.name }.sortedBy {
+			// The conventional spelling wins when root control files differ only in case.
+			it.name in setOf("info", "keySound", "autoPlay", "keyLED")
+		}.forEach { entry ->
+			val it = entry.file
+			when (entry.name.lowercase()) {
 				"info" -> infoFile = if (it.isFile) it else null
 				"sounds" -> if (it.isDirectory) soundsDirs.add(it)
 				"keysound" -> keySoundFile = if (it.isFile) it else null
@@ -369,10 +374,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		ledAnimationTable = table
 		ledTableCount = 0
 		run {
-			val fileList = inKeyLedOrder(keyLedDir.listFiles() ?: return)
-			for (file in fileList) {
+			val fileList = PackFileNames.children(keyLedDir).sortedBy {
+				Normalizer.normalize(it.name, Normalizer.Form.NFC).lowercase()
+			}
+			for ((originalName, file) in fileList) {
 				if (file.isFile) {
-					val fileName: String = file.name.trim()
+					val fileName: String = originalName.trim()
 					val split1 = fileName.trim().split(TOKEN_SPLIT).toTypedArray()
 					var c: Int
 					var x: Int

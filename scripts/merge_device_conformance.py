@@ -17,7 +17,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from check_unipack_conformance import (DEVICE_SOURCES, check_report, device_evidence, device_evidence_problem,
+from check_unipack_conformance import (REQUIRED_FILE_CASE_IDS, device_source_matches, check_report, device_evidence, device_evidence_problem,
                                        device_kind, restriction_outside_file_names, same_json, stored_names_changed)
 
 
@@ -31,7 +31,15 @@ def load_records(folders):
             if "id" not in record or "source" not in record:
                 continue
             if record["id"] in records:
-                raise SystemExit(f"{record['id']}: two device records ({records[record['id']][1]} and {path})")
+                previous = records[record["id"]][0]
+                # Default external storage governs the verdict even if internal storage passed.
+                rank = {"external": 2, "internal": 1}
+                previous_rank = rank.get(previous.get("storageLocation"), 0)
+                current_rank = rank.get(record.get("storageLocation"), 0)
+                if previous_rank > current_rank:
+                    continue
+                if previous_rank == current_rank:
+                    raise SystemExit(f"{record['id']}: two device records ({records[record['id']][1]} and {path})")
             records[record["id"]] = (record, path, hashlib.sha256(raw).hexdigest())
     return records
 
@@ -44,9 +52,9 @@ def refusal(case, host, record, corpus_hash, kind, evidence):
         return "the device record ran another corpus"
     if record.get("fingerprint") != case["fingerprint"]:
         return "the device record ran other input"
-    if host.get("actual") is not None:
+    if host.get("actual") is not None and record.get("storageLocation") != "external":
         return "the host observed this case itself"
-    if kind is None or record.get("source") != DEVICE_SOURCES[kind]:
+    if not device_source_matches(kind, record.get("source")):
         return f"{record.get('source')} does not observe this kind of case"
     # The merged entry carries no input or operation adapter, so the check sees it as this empty result does.
     why = restriction_outside_file_names(case, {})
@@ -60,7 +68,7 @@ def refusal(case, host, record, corpus_hash, kind, evidence):
     if why is not None:
         return why
     # Extraction that changed a sound's bytes is the app's failure, whatever name it chose.
-    contents_changed = kind == "sound-identity" and not evidence["contentsPreserved"]
+    contents_changed = evidence.get("contentsPreserved") is False
     status = "pass" if not contents_changed and same_json(record["actual"], case.get("expected")) else "fail"
     if record.get("status") != status:
         return f"the device record says {record.get('status')} but its actual value is a {status}"
@@ -68,6 +76,10 @@ def refusal(case, host, record, corpus_hash, kind, evidence):
 
 
 def merge(corpus, corpus_hash, host, records):
+    missing = [result["id"] for result in host["cases"] if result["id"] in REQUIRED_FILE_CASE_IDS
+               and (result["id"] not in records or records[result["id"]][0].get("storageLocation") != "external")]
+    if missing:
+        raise SystemExit("default external storage observations missing: " + ", ".join(sorted(missing)))
     cases = {case["id"]: case for case in corpus["cases"]}
     merged = dict(host)
     used = []
@@ -83,6 +95,8 @@ def merge(corpus, corpus_hash, host, records):
         evidence = None if kind is None else device_evidence(kind, record)
         why = refusal(case, result, record, corpus_hash, kind, evidence)
         if why is not None:
+            if case["id"] in REQUIRED_FILE_CASE_IDS:
+                raise SystemExit(f"{case['id']}: default external storage observation refused: {why}")
             out.append({**result, "deviceRefused": f"{path.name}: {why}"})
             continue
         entry = {
@@ -90,6 +104,7 @@ def merge(corpus, corpus_hash, host, records):
             "detail": f"observed on {record.get('device', 'an Android device')} API {record.get('sdkInt', '?')} by {record['source']}",
             "actual": record["actual"], "observedOn": "device", "source": record["source"],
             "deviceEvidence": evidence,
+            "storageLocation": record.get("storageLocation"),
             "deviceRecord": {"file": path.name, "sha256": digest},
         }
         if "storedInputPaths" in result:

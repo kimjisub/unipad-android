@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.unipack.conformance
 
 import com.kimjisub.launchpad.audio.OboeAudioEngine
+import com.kimjisub.launchpad.manager.PackFileNames
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
@@ -22,7 +23,7 @@ import java.util.zip.ZipOutputStream
 
 /** Reads only the actual input ZIP and selected disk bytes; has no access to expected results. */
 class SoundIdentityProbe(archive: ByteArray, private val root: File) {
-    private data class Entry(val path: String, val hash: String)
+    private data class Entry(val path: String, val hash: String, val storedPath: String = path)
     private val entries = buildList {
         ZipInputStream(archive.inputStream()).use { zip ->
             while (true) {
@@ -34,7 +35,8 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
 
     fun identity(file: File): JsonObject {
         val hash = sha256Hex(file.readBytes())
-        val path = file.relativeTo(root).invariantSeparatorsPath
+        val path = PackFileNames.files(root).firstOrNull { it.file == file }?.name
+            ?: file.relativeTo(root).invariantSeparatorsPath
         val matchingBytes = entries.filter { it.hash == hash }
         val candidates = equivalentPaths(matchingBytes, path)
         return buildJsonObject {
@@ -55,15 +57,17 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
 
     /** Storage spellings are diagnostics; only matching names AND bytes establish preservation. */
     fun diagnostics(): JsonArray {
-        val storedFiles = root.walkTopDown().filter { it.isFile }.associate { file ->
-            file.relativeTo(root).invariantSeparatorsPath to sha256Hex(file.readBytes())
-        }
+        val storedFiles = PackFileNames.files(root).filter { it.file.isFile }.map {
+            Entry(it.name, sha256Hex(it.file.readBytes()), it.file.relativeTo(root).invariantSeparatorsPath)
+        }.toList()
         return diagnostics(storedFiles)
     }
 
     /** A path/hash snapshot also allows case-sensitive storage to be checked on any host. */
-    internal fun diagnostics(storedHashes: Map<String, String>): JsonArray {
-        val storedFiles = storedHashes.map { (path, hash) -> Entry(path, hash) }
+    internal fun diagnostics(storedHashes: Map<String, String>): JsonArray =
+        diagnostics(storedHashes.map { (path, hash) -> Entry(path, hash) })
+
+    private fun diagnostics(storedFiles: List<Entry>): JsonArray {
         val remaining = storedFiles.toMutableList()
         val matched = mutableMapOf<Entry, Entry>()
         // Reserve exact spellings first, independent of ZIP order. When distinct spellings
@@ -91,7 +95,7 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
                 add(buildJsonObject {
                     put("archiveEntry", entry.path)
                     put("originalSha256", entry.hash)
-                    put("storedPath", stored?.let { JsonPrimitive(it.path) } ?: JsonNull)
+                    put("storedPath", stored?.let { JsonPrimitive(it.storedPath) } ?: JsonNull)
                     put("storedSha256", stored?.let { JsonPrimitive(it.hash) } ?: JsonNull)
                     put("contentsPreserved", matchedFile?.hash == entry.hash)
                 })
@@ -240,8 +244,8 @@ fun observeSoundIdentity(
 fun soundIdentityOutcome(case: JsonObject, observation: JsonObject): JsonObject = JsonObject(observation + mapOf(
     "id" to case.getValue("id"), "fingerprint" to case.getValue("fingerprint"),
     "status" to JsonPrimitive(when {
-        observation.getValue("identityTraced").jsonPrimitive.boolean.not() -> "unverified"
         observation.getValue("storage").jsonArray.any { !it.jsonObject.getValue("contentsPreserved").jsonPrimitive.boolean } -> "fail"
+        observation.getValue("identityTraced").jsonPrimitive.boolean.not() -> "unverified"
         observation.getValue("actual") == case.getValue("expected") -> "pass"
         else -> "fail"
     }),

@@ -19,25 +19,82 @@ object PackArchive {
 	 * as CP437, so a sound named in Korean was not found under the name keySound gives it.
 	 *
 	 * zip4j decodes every name with one charset and checks each entry against its central directory
-	 * name, so names are read as ISO-8859-1, which keeps each byte as one char, and every file is
-	 * extracted under its decoded name.
+	 * name, so names are read as ISO-8859-1, which keeps each byte as one char, and decoded names are
+	 * retained alongside portable aliases when shared storage would merge two entries.
 	 */
 	fun extract(archive: File, destination: File) {
 		val root = destination.canonicalFile
 		ZipFile(archive).use { zip ->
 			zip.charset = Charsets.ISO_8859_1
 			val parameters = UnzipParameters().apply { isExtractSymbolicLinks = false }
+			// Allocate names before touching disk, even on case-sensitive storage: the installed
+			// folder must also survive a later copy to FUSE or an SD card.
+			val tree = Node("")
 			for (header in zip.fileHeaders) {
 				val rawName = header.fileName.toByteArray(Charsets.ISO_8859_1)
 				val name = unicodePath(header, rawName) ?: LegacyText.decode(rawName)
-				if (header.isDirectory) {
-					val dir = File(root, name).canonicalFile
-					if (!dir.startsWith(root)) throw IOException("Entry outside the destination: $name")
-					dir.mkdirs()
-				} else {
-					zip.extractFile(header, root.path, name, parameters)
+				val path = name.replace('\\', '/')
+				if (path.startsWith('/') || Regex("^[A-Za-z]:").containsMatchIn(path))
+					throw IOException("Entry outside the destination: $name")
+				val parts = path.split('/').filter { it.isNotEmpty() && it != "." }
+				if (parts.isEmpty() && header.isDirectory) continue
+				if (parts.isEmpty() || parts.any { !PackFileNames.validName(it) })
+					throw IOException("Invalid entry path: $name")
+				var node = tree
+				for ((index, part) in parts.withIndex()) {
+					if (node.header?.isDirectory == false) throw IOException("File used as a folder: $name")
+					node = node.children.getOrPut(part) { Node(part) }
+					if (index == parts.lastIndex) {
+						if (node.children.isNotEmpty() && !header.isDirectory)
+							throw IOException("Folder used as a file: $name")
+						node.header = header
+					}
 				}
 			}
+			extractChildren(zip, tree, root, root, parameters)
+		}
+	}
+
+	private class Node(val name: String) {
+		var header: FileHeader? = null
+		val children = linkedMapOf<String, Node>()
+	}
+
+	private fun extractChildren(zip: ZipFile, node: Node, dir: File, root: File, parameters: UnzipParameters) {
+		val pending = ArrayDeque<Pair<Node, File>>()
+		pending.addLast(node to dir)
+		while (pending.isNotEmpty()) {
+			val (current, folder) = pending.removeLast()
+			if (!folder.isDirectory && !folder.mkdirs()) throw IOException("Could not create $folder")
+			val children = current.children.values
+			val collisionKeys = children.groupingBy { PackFileNames.folded(it.name) }.eachCount()
+				.filterValues { it > 1 }.keys
+			val collisions = collisionKeys.isNotEmpty()
+			val reserved = children.map { PackFileNames.folded(it.name) }.toMutableSet()
+			val manifestName = PackFileNames.folded(PackFileNames.MANIFEST)
+			if (collisions) reserved += manifestName
+			val allocated = mutableSetOf<String>()
+			val names = linkedMapOf<String, String>()
+			var nextAlias = 0
+			for (child in children) {
+				val folded = PackFileNames.folded(child.name)
+				val stored = if (!allocated.add(folded) || collisions && folded == manifestName) {
+					val extension = child.name.substringAfterLast('.', "").takeIf {
+						Regex("[A-Za-z0-9]{1,16}").matches(it)
+					}?.let { ".$it" }.orEmpty()
+					var alias: String
+					do { alias = "${PackFileNames.ALIAS_PREFIX}${++nextAlias}$extension" } while (!reserved.add(PackFileNames.folded(alias)))
+					alias
+				} else child.name
+				if (folded in collisionKeys || stored != child.name) names[stored] = child.name
+				val target = File(folder, stored).canonicalFile
+				if (!target.startsWith(root)) throw IOException("Entry outside the destination: ${child.name}")
+				val header = child.header
+				if (header == null || header.isDirectory) pending.addLast(child to target)
+				else zip.extractFile(header, root.path, File(folder, stored).relativeTo(root).invariantSeparatorsPath, parameters)
+			}
+			// Ordinary packs have exactly the same names and folder layout as before.
+			if (collisions) PackFileNames.write(folder, names)
 		}
 	}
 

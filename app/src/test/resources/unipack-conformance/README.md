@@ -85,24 +85,36 @@ extractor, decoder and sound runner, reporting the selected original ZIP entry a
 case leaves `conformance-files/<id>.json` with its `actual`, its status against the corpus and
 every stored file's hash.
 
-Those records fill the host report's gaps:
+`PackStorageObservationDeviceTest` also imports the original archives on internal and default
+app-specific external storage for KS-G601–604 and KS-G617–625. It saves one record per location
+in `pack-storage/internal` and `pack-storage/external`, tracing actual decoder/runner choices and
+checking every original entry's contents. Its third test moves wrapped packs in both directions,
+deletes them and imports them again, including colliding keyLED and autoPlay files.
+
+Merge both locations with the earlier file records:
 
 ```sh
-adb -s <leased-device-id> pull /data/local/tmp/unipad_tests/conformance-files device/
+adb -s <device-id> pull /data/local/tmp/unipad_tests/conformance-files device/
+adb -s <device-id> pull /data/local/tmp/unipad_tests/pack-storage device/
 python3 scripts/merge_device_conformance.py build/unipack-conformance/android.json \
-  device/conformance-files -o build/unipack-conformance/android-merged.json
+  device/conformance-files device/pack-storage/internal device/pack-storage/external \
+  -o build/unipack-conformance/android-merged.json
 ```
 
 A record is merged only when it ran the same corpus and input, comes from the recorder for that kind
 of case, the case has no restriction other than file names (screen input, an operation adapter, or an
-`unobserved` reason other than the case-insensitive host's), it kept every name apart, traced every
+`unobserved` reason other than the case-insensitive host's), it preserved the original entries, traced every
 selected sound to its archive entry, and its status agrees with its actual value; otherwise the case
 stays unverified with the reason. A sound whose bytes the app's archive extraction changed is a failure
 even when the chosen names match: the device test fails and the merged case is `fail`. The merged
 report names the device, each record's SHA-256 and a summary of its storage evidence
 (`deviceEvidence`). `check_unipack_conformance.py` reads only the merged report, not the device
 records: it checks that each `deviceEvidence` summary supports its case's result and accepts a device
-observation only for a case the host cannot see because of its file names.
+observation for a case the host cannot see because of its file names, or for that case's default
+external-storage import. Default storage takes precedence over internal storage and host results,
+even when they passed. A merge requires default-storage observations for all thirteen sound file
+cases; missing or invalid default records cannot silently fall back to an internal-storage pass.
+Filesystems that merge spellings may pass only with actual archive-content and selection evidence.
 
 The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
 and `AudioSelector.select` for 115 cases. Physical WAV fixtures use real PCM
