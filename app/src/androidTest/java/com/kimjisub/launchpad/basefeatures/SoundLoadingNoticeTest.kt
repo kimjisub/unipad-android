@@ -186,11 +186,26 @@ class SoundLoadingNoticeTest {
         }
         try {
             screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
-            screen.await("Audio did not finish loading") { screen.onMain { !screen.vm().soundLoadingActive && screen.vm().uiLoaded } }
+            screen.await("Audio did not finish loading") {
+                screen.onMain { !screen.vm().soundLoadingActive && screen.vm().uiLoaded && screen.vm().soundLoadReport != null }
+            }
+            val failures = screen.onMain { screen.vm().soundLoadReport!!.failures.size }
+            val menu = By.desc(screen.text(com.kimjisub.launchpad.R.string.menu))
+            val warning = By.text(screen.text(com.kimjisub.launchpad.R.string.warning))
+            val notice = By.text(screen.context.resources.getQuantityString(
+                com.kimjisub.launchpad.R.plurals.audio_load_decode, failures, failures))
+            // Loading state can finish before Compose draws its result. Wait for the actual window;
+            // a decoder without retries must also leave a visible failure before its value check fails.
+            screen.await("The completed audio result was not shown") {
+                !screen.has(By.text(screen.text(com.kimjisub.launchpad.R.string.loading))) &&
+                    !screen.has(By.textStartsWith(screen.text(com.kimjisub.launchpad.R.string.loading_phase_audio))) &&
+                    (if (failures > 0) screen.has(warning) && screen.has(notice)
+                    else screen.has(menu) && !screen.has(warning))
+            }
             screen.capture("audio-decoder-replaced")
             org.junit.Assert.assertEquals(3, screen.onMain { screen.vm().soundLoadReport!!.loadedFiles })
             org.junit.Assert.assertEquals("one decoder per file and one replacement", 4, created.get())
-            screen.node(By.desc(screen.text(com.kimjisub.launchpad.R.string.menu)))
+            screen.node(menu)
             org.junit.Assert.assertTrue(screen.onMain { screen.vm().soundLoadReport!!.failures.isEmpty() })
             org.junit.Assert.assertFalse(screen.onMain { screen.vm().soundLoadNoticeVisible })
             org.junit.Assert.assertTrue(screen.onMain { (0 until 3).all { y -> screen.vm().unipack.soundTable!![0][0][y]!![0].id >= 0 } })
