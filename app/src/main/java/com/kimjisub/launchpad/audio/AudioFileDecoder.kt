@@ -107,7 +107,9 @@ internal class AudioFileDecoder(
 								}
 								inputDone = true
 							} else {
-								during(DecoderStage.IO) { codec.queueInputBuffer(inputIndex, 0, bytesRead, source.packetTimeUs, 0) }
+								// An extractor state error belongs to the file read, not the decoder.
+								val packetTimeUs = source.packetTimeUs
+								during(DecoderStage.IO) { codec.queueInputBuffer(inputIndex, 0, bytesRead, packetTimeUs, 0) }
 								source.advance()
 							}
 						}

@@ -126,6 +126,7 @@ class AudioFileDecoderRetryTest {
         assertTriedOnce("stalled after the last packet", decoder(FakeCodec(answerEndOfStream = false)))
         assertTriedOnce("no decoder for the type", AudioFileDecoder(openSource = ::openFake, createCodec = { throw IOException("no decoder") }, pause = { pauses += it }))
         assertTriedOnce("extractor state", AudioFileDecoder(openSource = { opened++; FakeSource(PACKETS, readFailure = IllegalStateException("extractor")) }, createCodec = ::nextCodec, pause = { pauses += it }))
+        assertTriedOnce("extractor timestamp", AudioFileDecoder(openSource = { opened++; FakeSource(PACKETS, timeFailure = IllegalStateException("extractor timestamp")) }, createCodec = ::nextCodec, pause = { pauses += it }))
         assertTrue(errors.toString(), errors.contains("decode stalled after EOS: s_02.ogg"))
         assertTrue(errors.none { it.contains("retrying") })
     }
@@ -194,6 +195,7 @@ class AudioFileDecoderRetryTest {
         private val packets: Int,
         mime: String? = "audio/vorbis",
         private val readFailure: Exception? = null,
+        private val timeFailure: Exception? = null,
     ) : AudioPacketSource {
         private var index = 0
         override val format: MediaFormat = mockk<MediaFormat>(relaxed = true).also {
@@ -210,7 +212,10 @@ class AudioFileDecoderRetryTest {
             buffer.put(index.toByte())
             return 1
         }
-        override val packetTimeUs: Long get() = index * 1_000L
+        override val packetTimeUs: Long get() {
+            timeFailure?.let { throw it }
+            return index * 1_000L
+        }
         override fun advance() { index++ }
         override fun close() {}
     }
