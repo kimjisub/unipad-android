@@ -21,8 +21,11 @@ internal sealed interface ComputerPadPhase {
 	data class Open(val generation: Long, val lights: Lights) : ComputerPadPhase
 	data object Closing : ComputerPadPhase
 	data class Failed(val failure: Failure, val attempt: Long) : ComputerPadPhase
-	/** The screen was left while connected; nothing resumes until the user connects again. */
-	data object Paused : ComputerPadPhase
+	/**
+	 * The screen was left while connected; nothing resumes until the user connects again, which
+	 * waits while [previousClosing] because a connection is refused until the ended ports close.
+	 */
+	data class Paused(val previousClosing: Boolean) : ComputerPadPhase
 
 	enum class Lights { NOT_RECEIVING, NO_SIGNAL_YET, RECENT }
 }
@@ -59,7 +62,7 @@ internal object ComputerPadRules {
 			}
 			else -> Unit
 		}
-		if (paused) return ComputerPadPhase.Paused
+		if (paused) return ComputerPadPhase.Paused(portsClosing)
 		if (state is State.Failed && state.attempt != dismissedAttempt) return ComputerPadPhase.Failed(state.reason, state.attempt)
 		if (devices.isEmpty()) return ComputerPadPhase.NotFound(discoveryFailure)
 		return ComputerPadPhase.Ready(devices, portsClosing)
