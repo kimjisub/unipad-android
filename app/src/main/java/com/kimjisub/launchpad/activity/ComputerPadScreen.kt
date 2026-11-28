@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
@@ -59,6 +60,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,6 +83,8 @@ internal object ComputerPadTags {
 	const val GRID = "computer_pad_grid"
 	const val STATUS = "computer_pad_status"
 	const val TOO_SMALL = "computer_pad_too_small"
+	/** The window's content area, inside the system bars and the outer padding. */
+	const val CONTENT = "computer_pad_content"
 }
 
 private val ScreenBg = Color(0xFF161E2B)
@@ -123,7 +127,8 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 			.fillMaxSize()
 			.background(ScreenBg)
 			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Vertical))
-			.padding(8.dp),
+			.padding(8.dp)
+			.testTag(ComputerPadTags.CONTENT),
 	) {
 		val landscape = maxWidth >= maxHeight
 		val gridSide = if (landscape) minOf(maxHeight, maxWidth * 0.6f) else minOf(maxWidth, maxHeight * 0.6f)
@@ -132,14 +137,14 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 		val generation = (phase as? ComputerPadPhase.Open)?.generation?.takeIf { !tooSmall }
 		LaunchedEffect(generation) { controller.input.accept(generation) }
 		val panel: @Composable (Modifier) -> Unit = { modifier ->
-			// The guide scrolls when it does not fit; the actions below it always stay in the window.
-			Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-				Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+			GuideAndActions(
+				modifier,
+				guide = {
 					Header(phase, onBack)
 					PhaseContent(phase, controller)
-				}
-				PhaseActions(phase, controller, onBack = onBack, onHelp = { showHelp = true })
-			}
+				},
+				actions = { PhaseActions(phase, controller, onBack = onBack, onHelp = { showHelp = true }) },
+			)
 		}
 		val grid: @Composable () -> Unit = { PadArea(phase, controller, gridSide, tooSmall) }
 		if (landscape) {
@@ -155,6 +160,37 @@ internal fun ComputerPadScreen(controller: ComputerPadController, onBack: () -> 
 		}
 	}
 	if (showHelp) HelpDialog { showHelp = false }
+}
+
+/**
+ * The guide above the actions. While the actions take at most half the height they stay in view
+ * and only the guide scrolls; taller actions (a short window or large text) scroll together with
+ * the guide, so neither the way back at its top nor any action is pushed out of reach.
+ */
+@Composable
+private fun GuideAndActions(modifier: Modifier, guide: @Composable ColumnScope.() -> Unit, actions: @Composable ColumnScope.() -> Unit) {
+	BoxWithConstraints(modifier) {
+		val viewport = constraints.maxHeight
+		Layout(
+			content = {
+				Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp), content = guide)
+				Column(verticalArrangement = Arrangement.spacedBy(8.dp), content = actions)
+			},
+			modifier = Modifier.verticalScroll(rememberScrollState()),
+		) { (guidePart, actionsPart), constraints ->
+			val width = constraints.maxWidth
+			val actionsPlaced = actionsPart.measure(Constraints(maxWidth = width))
+			val gap = if (actionsPlaced.height > 0) 8.dp.roundToPx() else 0
+			val pinned = viewport != Constraints.Infinity && actionsPlaced.height <= viewport / 2
+			// Not pinned, the guide gets its whole height, so only the panel as a whole scrolls.
+			val guideHeight = if (pinned) (viewport - gap - actionsPlaced.height).coerceAtLeast(0) else guidePart.maxIntrinsicHeight(width)
+			val guidePlaced = guidePart.measure(Constraints(maxWidth = width, maxHeight = guideHeight))
+			layout(width, guidePlaced.height + gap + actionsPlaced.height) {
+				guidePlaced.place(0, 0)
+				actionsPlaced.place(0, guidePlaced.height + gap)
+			}
+		}
+	}
 }
 
 @Composable
@@ -193,7 +229,7 @@ private fun statusLine(phase: ComputerPadPhase): Pair<String, Color> = when (pha
 	is ComputerPadPhase.Open -> stringResource(R.string.computer_pad_port_open) to Good
 	ComputerPadPhase.Closing -> stringResource(R.string.computer_pad_closing) to TextSecondary
 	is ComputerPadPhase.Failed -> stringResource(failureTitle(phase.failure)) to Warning
-	ComputerPadPhase.Paused -> stringResource(R.string.computer_pad_paused_title) to Warning
+	is ComputerPadPhase.Paused -> stringResource(R.string.computer_pad_paused_title) to Warning
 }
 
 private fun failureTitle(failure: Failure): Int = when (ComputerPadRules.kind(failure)) {
@@ -229,7 +265,6 @@ private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: Comput
 		}
 		is ComputerPadPhase.Ready -> {
 			Choices(phase.devices, controller, portName)
-			if (phase.previousClosing) Note(stringResource(R.string.computer_pad_closing_previous), Warning)
 			Note(stringResource(R.string.computer_pad_preview))
 		}
 		ComputerPadPhase.Connecting, ComputerPadPhase.LightsUnavailable, ComputerPadPhase.Closing -> Unit
@@ -265,16 +300,23 @@ private fun ColumnScope.PhaseContent(phase: ComputerPadPhase, controller: Comput
 				}
 			}
 		}
-		ComputerPadPhase.Paused -> {
+		is ComputerPadPhase.Paused -> {
 			Note(stringResource(R.string.computer_pad_paused_desc))
 			Note(stringResource(R.string.computer_pad_stop_sound))
 		}
 	}
 }
 
+/** The actions of each phase; a connect action that waits for the previous ports says why next to it. */
 @Composable
 private fun PhaseActions(phase: ComputerPadPhase, controller: ComputerPadController, onBack: () -> Unit, onHelp: () -> Unit) {
 	val portName = portNamer()
+	val previousClosing = when (phase) {
+		is ComputerPadPhase.Ready -> phase.previousClosing
+		is ComputerPadPhase.Paused -> phase.previousClosing
+		else -> false
+	}
+	if (previousClosing) Note(stringResource(R.string.computer_pad_closing_previous), Warning)
 	when (phase) {
 		ComputerPadPhase.Unsupported -> Buttons { PrimaryButton(R.string.computer_pad_back, onClick = onBack) }
 		is ComputerPadPhase.NotFound -> Buttons {
@@ -309,7 +351,11 @@ private fun PhaseActions(phase: ComputerPadPhase, controller: ComputerPadControl
 			}
 			ComputerPadFailureKind.DISCONNECTED -> Buttons { PrimaryButton(R.string.computer_pad_search_again) { controller.search() } }
 		}
-		ComputerPadPhase.Paused -> Buttons { PrimaryButton(R.string.computer_pad_reconnect) { controller.reconnect(portName) } }
+		is ComputerPadPhase.Paused -> Buttons {
+			PrimaryButton(R.string.computer_pad_reconnect, enabled = !phase.previousClosing) { controller.reconnect(portName) }
+			// While the old ports close, searching again is the way out after the cable has been plugged in again.
+			if (phase.previousClosing) SecondaryButton(R.string.computer_pad_search_again) { controller.search() }
+		}
 	}
 }
 
@@ -358,7 +404,8 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 	val active = open && !tooSmall
 	val pressAction = stringResource(R.string.computer_pad_press_action)
 	val pressedState = stringResource(R.string.computer_pad_pressed)
-	Box(contentAlignment = Alignment.Center) {
+	// The lock note stays inside the pads' square: wider, it would take the guide's and actions' width.
+	Box(Modifier.size(side), contentAlignment = Alignment.Center) {
 		LaunchpadPadGrid(
 			colors = { index ->
 				val color = controller.colors[index]
@@ -398,15 +445,16 @@ private fun PadArea(phase: ComputerPadPhase, controller: ComputerPadController, 
 			},
 		)
 		if (tooSmall) {
-			Text(
-				stringResource(R.string.computer_pad_too_small),
-				color = TextPrimary,
-				fontSize = 13.sp,
-				modifier = Modifier
+			// With large text the note can be taller than the square; it then scrolls instead of being cut off.
+			Box(
+				Modifier
 					.testTag(ComputerPadTags.TOO_SMALL)
 					.background(Color(0xE6111825), RoundedCornerShape(8.dp))
+					.verticalScroll(rememberScrollState())
 					.padding(8.dp),
-			)
+			) {
+				Text(stringResource(R.string.computer_pad_too_small), color = TextPrimary, fontSize = 13.sp)
+			}
 		}
 	}
 }

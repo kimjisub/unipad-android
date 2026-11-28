@@ -14,6 +14,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
@@ -49,6 +51,7 @@ import org.junit.runner.RunWith
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The computer pad screen against real Android MIDI ports of a test-only virtual peer, which
@@ -176,8 +179,7 @@ class ComputerPadScreenTest {
 		scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
 		awaitTrue { orientation() == "landscape" }
 		compose.waitForIdle()
-		// In landscape the pads take the whole height, so their bottom is where the window's content ends.
-		val contentBottom = compose.onNodeWithTag(ComputerPadTags.GRID).fetchSemanticsNode().boundsInRoot.bottom
+		val contentBottom = compose.onNodeWithTag(ComputerPadTags.CONTENT).fetchSemanticsNode().boundsInRoot.bottom
 		for (button in listOf(R.string.computer_pad_help, R.string.computer_pad_disconnect)) {
 			// boundsInRoot is clipped to the scrolling guide, which would hide a cut-off button; its unclipped end is checked.
 			val node = compose.onNode(hasText(context.getString(button)) and hasClickAction()).assertIsDisplayed().fetchSemanticsNode()
@@ -223,6 +225,49 @@ class ComputerPadScreenTest {
 		Thread.sleep(300)
 		assertEquals(2, presses().size)
 		compose.onNodeWithText(context.getString(R.string.computer_pad_reconnect)).performClick()
+		awaitTrue { created.single().state.value is UsbPeripheralConnection.State.Open }
+		compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_port_open))
+	}
+
+	/** The left session's release failed and its ports are still closing: connecting again waits for them and says why. */
+	@Test fun comingBackWhileTheLeftPortsStillCloseWaitsToConnectAgain() {
+		val portsClose = CountDownLatch(1)
+		val sendFails = AtomicBoolean(false)
+		val holdSends = AtomicBoolean(false)
+		val screenLeft = CountDownLatch(1)
+		val reconnect = hasText(context.getString(R.string.computer_pad_reconnect)) and hasClickAction()
+		try {
+			launch(MidiTransportGate(), onClosed = { portsClose.await(15, TimeUnit.SECONDS) }, sendFails = {
+				// The release can be queued during leave(), but must not fail before it records the pause.
+				if (holdSends.get()) check(screenLeft.await(15, TimeUnit.SECONDS))
+				sendFails.get()
+			})
+			compose.onNodeWithText(context.getString(R.string.computer_pad_connect)).performClick()
+			awaitTrue { (created.single().state.value as? UsbPeripheralConnection.State.Open)?.lightsAvailable == true }
+			compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { down(0, cell(0)) }
+			awaitTrue { presses().size == 1 }
+			holdSends.set(true)
+			scenario!!.moveToState(Lifecycle.State.CREATED)
+			assertEquals(Lifecycle.State.CREATED, scenario!!.state)
+			sendFails.set(true)
+			screenLeft.countDown()
+			awaitTrue { created.single().state.value is UsbPeripheralConnection.State.Failed && created.single().portsClosing.value }
+			assertEquals(UsbPeripheralConnection.Failure.SEND, (created.single().state.value as UsbPeripheralConnection.State.Failed).reason)
+			scenario!!.moveToState(Lifecycle.State.RESUMED)
+			compose.onNodeWithTag(ComputerPadTags.GRID).performTouchInput { up(0) }
+			compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_paused_title))
+			compose.onNode(reconnect).assertIsNotEnabled()
+			compose.onNodeWithText(context.getString(R.string.computer_pad_closing_previous)).assertIsDisplayed()
+			// Searching again stays possible, for a cable plugged in again while the old ports close.
+			compose.onNode(hasText(context.getString(R.string.computer_pad_search_again)) and hasClickAction()).assertIsEnabled()
+			capture("paused_while_ports_close")
+		} finally {
+			screenLeft.countDown()
+			portsClose.countDown()
+		}
+		sendFails.set(false)
+		awaitTrue { !created.single().portsClosing.value }
+		compose.onNode(reconnect).assertIsEnabled().performClick()
 		awaitTrue { created.single().state.value is UsbPeripheralConnection.State.Open }
 		compose.onNodeWithTag(ComputerPadTags.STATUS).assertTextEquals(context.getString(R.string.computer_pad_port_open))
 	}
@@ -294,9 +339,22 @@ class ComputerPadScreenTest {
 		compose.waitForIdle()
 	}
 
-	private fun launch(gate: MidiTransportGate, defer: ((() -> Unit) -> Unit)? = null, onClosed: () -> Unit = {}) {
+	private fun launch(
+		gate: MidiTransportGate,
+		defer: ((() -> Unit) -> Unit)? = null,
+		onClosed: () -> Unit = {},
+		sendFails: () -> Boolean = { false },
+	) {
+		val refusing = { sender: PeripheralMidiAccess.Sender ->
+			object : PeripheralMidiAccess.Sender by sender {
+				override fun send(bytes: ByteArray) {
+					if (sendFails()) throw java.io.IOException("the test peer refuses this send")
+					sender.send(bytes)
+				}
+			}
+		}
 		ComputerPadActivity.connectionFactory = {
-			UsbPeripheralConnection(PeerAccess(manager, info, defer, onClosed), gate).also { created.add(it) }
+			UsbPeripheralConnection(PeerAccess(manager, info, defer, onClosed, refusing), gate).also { created.add(it) }
 		}
 		scenario = ActivityScenario.launch(ComputerPadActivity::class.java)
 		compose.onNodeWithText(context.getString(R.string.computer_pad_found)).assertIsDisplayed()

@@ -144,8 +144,20 @@ class AppUpdateWrappingTest : BaseUITest() {
             assertTrue("more than three lines", layout.lineCount <= 3)
             if (requireComplete) assertFalse("update text is ellipsized: ${layout.layoutInput.text}", layout.multiParagraph.didExceedMaxLines)
             for (line in 0 until layout.lineCount) {
+                val visibleEnd = layout.getLineEnd(line, visibleEnd = true)
+                val visibleRight = if (visibleEnd > layout.getLineStart(line)) layout.getBoundingBox(visibleEnd - 1).right else 0f
+                // The first omitted offset holds the ellipsis; later offsets have no drawn width.
+                val ellipsis = if (layout.isLineEllipsized(line)) layout.getBoundingBox(visibleEnd) else null
+                println("Line $line: left=${layout.getLineLeft(line)}, right=${layout.getLineRight(line)}, visibleEnd=$visibleEnd, visibleRight=$visibleRight, ellipsis=$ellipsis")
                 assertTrue("line clipped vertically", layout.getLineBottom(line) <= layout.size.height + 1)
-                assertTrue("line clipped horizontally", layout.getLineRight(line) - layout.getLineLeft(line) <= layout.size.width + 1)
+                if (ellipsis != null) {
+                    // Android 11/12 line extents can include hidden text after an end ellipsis.
+                    assertTrue("line $line visible text clipped horizontally", visibleRight <= layout.size.width + 1)
+                    assertTrue("line $line ellipsis has no width", ellipsis.width > 0f)
+                    assertTrue("line $line ellipsis clipped horizontally", ellipsis.left >= -1f && ellipsis.right <= layout.size.width + 1)
+                } else {
+                    assertTrue("line $line clipped horizontally", layout.getLineRight(line) - layout.getLineLeft(line) <= layout.size.width + 1)
+                }
             }
             assertTrue("visible bounds clip the text", text.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(layout.lineCount - 1) - 1)
             null

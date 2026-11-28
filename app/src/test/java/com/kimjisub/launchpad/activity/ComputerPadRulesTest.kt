@@ -63,8 +63,10 @@ class ComputerPadRulesTest {
 	}
 
 	@Test fun returningAfterLeavingShowsTheStoppedStateInsteadOfReconnecting() {
-		assertEquals(ComputerPadPhase.Paused, phase { copy(paused = true) })
-		assertEquals(ComputerPadPhase.Paused, phase { copy(paused = true, state = State.Failed(Failure.RELEASE, 2)) })
+		assertEquals(ComputerPadPhase.Paused(false), phase { copy(paused = true) })
+		assertEquals(ComputerPadPhase.Paused(false), phase { copy(paused = true, state = State.Failed(Failure.RELEASE, 2)) })
+		// The release failed and the ports are still closing: connecting again has to wait for them.
+		assertEquals(ComputerPadPhase.Paused(true), phase { copy(paused = true, state = State.Failed(Failure.RELEASE, 2), portsClosing = true) })
 		assertTrue(ComputerPadRules.pausesOnLeave(ComputerPadPhase.Open(1, ComputerPadPhase.Lights.RECENT)))
 		assertTrue(ComputerPadRules.pausesOnLeave(ComputerPadPhase.Connecting))
 		assertFalse(ComputerPadRules.pausesOnLeave(ComputerPadPhase.NotFound(null)))
