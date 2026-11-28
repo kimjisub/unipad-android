@@ -38,16 +38,16 @@ internal class AudioFileDecoder(
 			val allocations = onAllocation?.let { mutableListOf<Pair<Int, Int>>() }
 			try {
 				val decoded = decodeOnce(file, interrupted, allocations?.let { list -> { old: Int, new: Int -> list += old to new } })
-				allocations?.forEach { (old, new) -> onAllocation?.invoke(old, new) }
+				allocations?.forEach { (old, new) -> onAllocation.invoke(old, new) }
 				if (decoded != null && attempt > 1) Log.err("decode recovered: ${file.name} on attempt $attempt of $MAX_ATTEMPTS")
 				return decoded
 			} catch (e: DecoderFailure) {
+				if (interrupted()) throw DecodeInterruptedException()
 				if (attempt == MAX_ATTEMPTS) {
 					Log.err("decode failed: ${file.name} (decoder ${e.stage.label} failed on attempt $attempt of $MAX_ATTEMPTS)", e.cause)
 					return null
 				}
 				Log.err("decoder ${e.stage.label} failed on attempt $attempt of $MAX_ATTEMPTS, retrying: ${file.name}: ${e.cause}")
-				if (interrupted()) throw DecodeInterruptedException()
 				pause(RETRY_PAUSE_MS * attempt)
 				attempt++
 			} catch (e: DecodeInterruptedException) {
@@ -77,6 +77,7 @@ internal class AudioFileDecoder(
 
 			if (interrupted()) throw DecodeInterruptedException()
 			val codec = during(DecoderStage.SETUP) { createCodec(mime) }
+			var decodeFailure: Throwable? = null
 			try {
 				val decoderName = during(DecoderStage.SETUP) {
 					codec.configure(format, null, null, 0)
@@ -162,10 +163,20 @@ internal class AudioFileDecoder(
 					legacyQuadAacOrderToChannelMask(pcm, totalSamples)
 				} else decoderChannelMask(channels, channelMask)
 				DecodedAudio(stereoPcm(pcm, channels, speakers, totalSamples), numFrames, minOf(channels, 2), sampleRate)
+			} catch (e: Throwable) {
+				decodeFailure = e
+				throw e
 			} finally {
 				// Released on every path, before any retry asks for a new one; a codec leaked per
 				// failed file exhausted the device's codec instances and made every later sound fail.
-				codec.release()
+				try {
+					codec.release()
+				} catch (e: Exception) {
+					// Cleanup must not replace the decoder error that triggers a retry, or a
+					// caller's cancellation. Keep it attached to the original failure instead.
+					val original = decodeFailure ?: throw e
+					original.addSuppressed(e)
+				}
 			}
 		}
 	}
