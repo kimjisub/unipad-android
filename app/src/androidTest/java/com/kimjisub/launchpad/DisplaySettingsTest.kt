@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.SystemClock
 import androidx.test.core.app.ActivityScenario
 import com.kimjisub.launchpad.activity.MidiSelectActivity
@@ -9,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,8 +49,43 @@ class DisplaySettingsTest {
         assertTrue(DisplaySettings.applied(windows(), 1600 to 2560, 533, "free", "free"))
     }
 
+    @Test fun android12PrintsTheDisplayConfigurationBeforeItsDisplayLine() {
+        val applied = android12Windows()
+        assertTrue(DisplaySettings.applied(applied, 720 to 1440, 320, "lock 1", "lock 1"))
+        for (stale in listOf(
+            applied.replace("cur=720x1440", "cur=1080x2400"),
+            applied.replace("h625dp 320dpi", "h625dp 420dpi"),
+            applied.replace("mRotation=ROTATION_0", "mRotation=ROTATION_90"),
+            applied.replace("mLayoutNeeded=false", "mLayoutNeeded=true"),
+            applied.replace("mDisplayId=0", "mDisplayId=1"),
+        )) {
+            assertFalse(stale, DisplaySettings.applied(stale, 720 to 1440, 320, "lock 1", "lock 1"))
+        }
+        assertTrue(DisplaySettings.applied(applied.replace("mRotation=ROTATION_0", "mRotation=ROTATION_90"), 1440 to 720, 320, "free", "free"))
+    }
+
+    @Test fun android12UsesOnlyTheConfigurationPrintedForDisplayZero() {
+        val otherDisplayFirst = """
+            WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)
+              overrideConfig={1.0 ?mcc?mnc [en_US] ldltr sw360dp w360dp h640dp 320dpi nrml port winConfig={ mBounds=Rect(0, 0 - 720, 1280) mRotation=ROTATION_0}}
+              Display: mDisplayId=2 rootTasks=1
+                init=720x1280 320dpi cur=720x1280 app=720x1280 rng=720x720-1280x1280
+                deferred=false mLayoutNeeded=false
+              Display areas in top down Z order:
+        """.trimIndent() + "\n" + android12Windows().substringAfter("\n")
+        assertTrue(DisplaySettings.applied(otherDisplayFirst, 720 to 1440, 320, "lock 1", "lock 1"))
+        val withoutOwnConfig = otherDisplayFirst.lines().filterIndexed { i, line ->
+            i < 2 || !line.trimStart().startsWith("overrideConfig=")
+        }.joinToString("\n")
+        assertFalse(DisplaySettings.applied(withoutOwnConfig, 720 to 1440, 320, "lock 1", "lock 1"))
+    }
+
     @Test fun thisDevicesDisplayRestoresExistingOverridesEvenWhenTheBlockFails() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            phoneDisplayRestoresOverridesEvenWhenTheBlockFails(device)
+            return phoneDisplayKeepsALockedRotationOrRefuses(device)
+        }
         // A phone's home activity may be portrait-only and ignore the user's rotation lock.
         // Use an unrestricted app window to exercise display rotation in both directions.
         ActivityScenario.launch(MidiSelectActivity::class.java).use { scenario ->
@@ -79,6 +116,7 @@ class DisplaySettingsTest {
 
     @Test fun restoresPortraitUserLockWhileTheActivityStillRequiresLandscape() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return rotationLockIsRefusedBeforeAndroid13(device)
         val original = DisplaySettings.read(device)
         val (width, height) = original.size
         val shortest = minOf(width, height)
@@ -98,6 +136,91 @@ class DisplaySettingsTest {
         assertEquals(original, DisplaySettings.read(device))
     }
 
+    /**
+     * Below Android 13 the phone display changes only size and density, and restores both. The
+     * rotation setting found (free or locked to the natural rotation) must survive both exits.
+     */
+    private fun phoneDisplayRestoresOverridesEvenWhenTheBlockFails(device: UiDevice) {
+        val rotation = rotationSetting(device)
+        val original = DisplaySettings.readMetrics(device)
+        val (width, height) = original.size
+        val shortest = minOf(width, height)
+        val phone = shortest to maxOf(width, height)
+        DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 480) {
+            val outer = DisplaySettings.readMetrics(device)
+            // A size equal to the physical size is reported as no override, so compare what applies.
+            assertEquals(phone to shortest * 160 / 480, outer.size to outer.density)
+            val failure = IllegalStateException("exercise display restoration")
+            val caught = assertThrows(IllegalStateException::class.java) {
+                DisplaySettings.withPhoneDisplay(device, phone, shortest * 160 / 720) {
+                    assertEquals(shortest * 160 / 720, DisplaySettings.readMetrics(device).density)
+                    throw failure
+                }
+            }
+            assertTrue(caught === failure)
+            assertEquals(outer, DisplaySettings.readMetrics(device))
+        }
+        assertEquals(original, DisplaySettings.readMetrics(device))
+        SystemClock.sleep(SYSTEM_UI_RELOCK_MS)
+        assertEquals("rotation setting after the phone display", rotation, rotationSetting(device))
+    }
+
+    /**
+     * Below Android 13, a size or density change makes the navigation bar re-lock a locked rotation
+     * to the natural one, so a lock to another rotation cannot be kept and is refused untouched.
+     */
+    private fun phoneDisplayKeepsALockedRotationOrRefuses(device: UiDevice) {
+        val saved = rotationSetting(device)
+        try {
+            setRotationSetting(device, ACCELEROMETER_OFF to "1")
+            val original = DisplaySettings.readMetrics(device)
+            val (width, height) = original.size
+            val shortest = minOf(width, height)
+            var ran = false
+            val result = runCatching {
+                DisplaySettings.withPhoneDisplay(device, shortest to maxOf(width, height), shortest * 160 / 480) { ran = true }
+            }
+            SystemClock.sleep(SYSTEM_UI_RELOCK_MS)
+            assertEquals("rotation setting after the phone display", ACCELEROMETER_OFF to "1", rotationSetting(device))
+            assertTrue("expected a refusal, got $result", result.exceptionOrNull() is IllegalStateException)
+            assertFalse(ran)
+            assertEquals(original, DisplaySettings.readMetrics(device))
+        } finally {
+            setRotationSetting(device, saved)
+        }
+    }
+
+    /** The auto-rotate switch and the user rotation, as `settings` stores them on every version. */
+    private fun rotationSetting(device: UiDevice) =
+        device.executeShellCommand("settings get system accelerometer_rotation").trim() to
+            device.executeShellCommand("settings get system user_rotation").trim()
+
+    private fun setRotationSetting(device: UiDevice, setting: Pair<String, String>) {
+        for ((name, value) in listOf("accelerometer_rotation" to setting.first, "user_rotation" to setting.second)) {
+            device.executeShellCommand(if (value == "null") "settings delete system $name" else "settings put system $name $value")
+        }
+    }
+
+    /** Android 12's navigation bar would overwrite the lock, so the helper refuses before changing anything. */
+    private fun rotationLockIsRefusedBeforeAndroid13(device: UiDevice) {
+        val original = DisplaySettings.readMetrics(device)
+        val rotation = device.executeShellCommand("wm user-rotation").trim()
+        var ran = false
+        assertThrows(IllegalStateException::class.java) {
+            DisplaySettings.with(device, density = original.density + 1, rotation = 1) { ran = true }
+        }
+        assertFalse(ran)
+        assertEquals(original, DisplaySettings.readMetrics(device))
+        assertEquals(rotation, device.executeShellCommand("wm user-rotation").trim())
+    }
+
+    private companion object {
+        const val ACCELEROMETER_OFF = "0"
+
+        /** An Android 12 emulator re-locked the rotation about 0.3 s after a display change. */
+        const val SYSTEM_UI_RELOCK_MS = 2000L
+    }
+
     private fun awaitRotation(scenario: ActivityScenario<MidiSelectActivity>, expected: Int) {
         val deadline = SystemClock.elapsedRealtime() + 10000
         var rotation: Int? = null
@@ -108,6 +231,18 @@ class DisplaySettingsTest {
         } while (SystemClock.elapsedRealtime() < deadline)
         assertEquals("Requested activity rotation did not reach its window", expected, rotation)
     }
+
+    // The fields used by the wait, as an Android 12 (API 31) emulator printed them with a 720x1440
+    // 320dpi override while its portrait home screen kept rotation 0.
+    private fun android12Windows() = """
+        WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)
+          mLastOrientationSource=WindowedMagnification:0:31@217892158
+          overrideConfig={1.0 310mcc260mnc [en_US] ldltr sw360dp w360dp h625dp 320dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 720, 1440) mAppBounds=Rect(0, 0 - 720, 1314) mMaxBounds=Rect(0, 0 - 720, 1440) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.96 fontWeightAdjustment=0}
+          Display: mDisplayId=0 rootTasks=6
+            init=1080x2400 420dpi base=720x1440 320dpi cur=720x1440 app=720x1314 rng=720x657-1314x1251
+            deferred=false mLayoutNeeded=false mTouchExcludeRegion=SkRegion((0,0,720,1440))
+          Display areas in top down Z order:
+    """.trimIndent()
 
     // The fields used by the wait, as Android 16's dumpsys window displays prints them.
     private fun windows() = """

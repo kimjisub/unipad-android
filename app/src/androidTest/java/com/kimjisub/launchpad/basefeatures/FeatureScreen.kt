@@ -520,6 +520,13 @@ class FeatureScreen {
         val unknown = workspace.listFiles().orEmpty().filter { it.isDirectory && it.name !in IDS }
         assertTrue("Use a dedicated test installation; existing packs: ${unknown.map { it.name }}", unknown.isEmpty())
     }
+    fun assertEmptyLibrary() {
+        val packs = WorkspaceManager(context).availableWorkspaces.flatMap {
+            assertNotNull("Cannot inspect workspace for empty-library test: ${it.file}", it.file.listFiles())
+            WorkspaceManager.packFolders(it.file)
+        }
+        assertTrue("Empty-library test requires no packs; existing packs: ${packs.map { it.absolutePath }}", packs.isEmpty())
+    }
     fun cleanPacks() {
         for (id in IDS) {
             File(workspace, id).deleteRecursively()

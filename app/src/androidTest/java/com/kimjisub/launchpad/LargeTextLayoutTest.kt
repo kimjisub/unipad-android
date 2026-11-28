@@ -2,6 +2,7 @@ package com.kimjisub.launchpad
 
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -272,7 +273,16 @@ class LargeTextLayoutTest : BaseUITest() {
     }
 
     private fun checkFooter(prefix: String) {
-        for (label in listOf(R.string.guide_download_new, R.string.guide_import_external, R.string.guide_restore_packs)) {
+        val labels = buildList {
+            add(R.string.guide_download_new)
+            add(R.string.guide_import_external)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) add(R.string.guide_restore_packs)
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            compose.onNode(hasText(str(R.string.guide_restore_packs)), useUnmergedTree = true)
+                .assertDoesNotExist()
+        }
+        for (label in labels) {
             errors.checkSucceeds {
                 val node = compose.onNode(hasText(str(label)), useUnmergedTree = true)
                 node.performScrollTo()

@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.manager
 
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertNotNull
@@ -52,7 +53,10 @@ class ZipThemeResourcesTest {
 		File(dir, "theme.json").writeText("""{"name":"Alias Skin","author":"tester","version":"1.0.0"}""")
 		val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
 		// play_bg instead of playbg, and webp instead of png: what iOS and web accept.
-		File(dir, "play_bg.webp").outputStream().use { bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 100, it) }
+		@Suppress("DEPRECATION")
+		val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Bitmap.CompressFormat.WEBP_LOSSLESS
+			else Bitmap.CompressFormat.WEBP
+		File(dir, "play_bg.webp").outputStream().use { bitmap.compress(format, 100, it) }
 
 		val theme = ZipThemeResources(context, dir, fullLoad = true)
 

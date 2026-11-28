@@ -72,6 +72,30 @@ and final releases. It also makes the peer stop reading, like a computer with no
 MIDI, and checks that the release and overflow deadlines still hand the connection back. The production endpoint filter rejects this virtual service. These checks do
 not establish USB peripheral support, desktop compatibility, or USB cable latency.
 
+`LargeTextLayoutTest` checks both languages at default and enlarged text sizes. Below API 30,
+it checks the download and import actions and requires the recovery action to be absent; from
+API 30 it also checks the recovery action's rendered text. `ZipThemeResourcesTest` creates its
+WebP fixture with the legacy encoder below API 30, so the alias and extension check runs there too.
+
+`AppUpdateWrappingTest` changes only size and density through API 32, letting the phone app's
+landscape orientation turn the display. The `wm user-rotation` read-back used to save and restore
+the rotation preference is available from API 31; API 30 only has a write-only
+`wm set-user-rotation` command. On API 31 and 32 the navigation bar, rebuilt after a size or
+density change, re-locks a locked rotation to the portrait home screen's rotation, so the test
+locks rotation and waits for the window configuration only from API 33. Below API 33 the
+size-and-density path runs only when auto-rotate is on or the rotation is locked to 0, which that
+re-locking leaves unchanged; another lock is refused before anything changes. Every version still
+checks the activity's density and font scale and the rendered text layout. `DisplaySettings`
+reads the window configuration in both the Android 12 layout (the display's configuration printed
+before its `Display:` line, rotation as `mRotation`) and the later one (`mDisplayRotation`).
+
+`LibraryAndFileTest.launcherEmptyLibrarySettingsThenPopulatedLibrary` grants legacy storage
+access before checking that every workspace the app reads is empty, including `Documents/Unipad`
+below API 30. Remaining packs cause a precondition failure that names their full paths; the
+check never deletes them. `emptyLibraryPreconditionRejectsPacksInEveryWorkspace` creates a
+temporary pack in each available workspace and checks both that diagnostic and preservation of
+the pack's contents, then removes only its own fixture.
+
 `ComputerPadPortLoadTest` drives the computer pad screen against the same peer, which also sends
 lights on request and reports how many bytes reached its press port. Ten connect–disconnect rounds,
 each with a tap, a pad held through the disconnect and a light, carry no light and no late press or
@@ -452,7 +476,7 @@ claimed here as audio or hardware proof.
 | `MainScreenReaderOrderTest` | `english`, `korean`: the items a screen reader steps through on the pack list and what it says for each, read from the accessibility tree by TalkBack's rules (`ScreenReaderOrder`): logo, version, play count, pack count and size with their values, the small update notice, Settings, sort method, sort order with its direction, Search, Store, Import, then the pack rows (title first, no hidden Play label) and the guide actions. The notice is named once in each of its states (check, offer, downloading with its percentage, ready, failed); no control is unnamed; a selected row's Play flag is the next item. It does not drive TalkBack itself or hear its speech. |
 | `OggOpusEndTrimDeviceTest` | Generated mono, stereo and 5.1 Ogg Opus tones decode to their exact 14,448-frame granule length at 48 kHz, even with a `.wav` filename; real audio remains at both ends. |
 | `AudioFormatDecodeDeviceTest` | `pcmWavUsesAnExactlySizedArray` checks an exact PCM allocation; `mp3UsesPhysicalCapacityForAllSpellings` checks one bounded allocation for three MP3 spellings; `opusDoesNotExceedLegacyPcmPeak` checks actual Opus allocations including its stereo down-mix; `aacReservesWholePacketsOnOldAndNewDecoders` checks full-packet allocation for mono, stereo, quad and surround AAC on the supported Android versions; `decodesPcmWav`, `decodesMp3`, `decodesOggVorbis`, `decodesAacInM4a`, `decodesMp3NamedWavByItsContent`, `decodesTaggedMp3NamedWavByItsContent`: `OboeAudioEngine` decodes a 0.3 s 440 Hz tone in each format packs use (an MP3 under a `.wav` name, bare as official packs ship it and with an ID3v2 tag) with the device's codecs, to the right rate, length, level and pitch. No sound is played. |
-| `DisplaySettingsTest` | Display override waits require the written user rotation preference to read back, along with the applied size, density and completed layout, within the same 10-second deadline. Window dimensions follow the actual activity rotation: a landscape activity may stay landscape while the restored user preference is portrait. Checks reject an old rotation preference even when the window is already settled, and a real-device nested override preserves existing size, density and user rotation settings even when its block throws. `restoresPortraitUserLockWhileTheActivityStillRequiresLandscape` keeps a landscape activity open while restoring a portrait user lock. `AppearanceAndInsetsTest` uses the same scope for phone side bars and tablet bottom bars; both the preference and window configuration settle before navigation overlays change. |
+| `DisplaySettingsTest` | Display override waits require the written user rotation preference to read back, along with the applied size, density and completed layout, within the same 10-second deadline. Window dimensions follow the actual activity rotation: a landscape activity may stay landscape while the restored user preference is portrait. Checks reject an old rotation preference even when the window is already settled, and a real-device nested override preserves existing size, density and user rotation settings even when its block throws. `restoresPortraitUserLockWhileTheActivityStillRequiresLandscape` keeps a landscape activity open while restoring a portrait user lock. Below API 33, where `DisplaySettings.with` refuses to lock rotation, these two device checks instead restore nested size and density overrides through `withPhoneDisplay` when its block throws while keeping the rotation setting found, check that `withPhoneDisplay` refuses a rotation locked to 1 and leaves it locked, and confirm the refusal leaves size, density and rotation unchanged. Two parsing checks use an API 31 emulator's window dump, where display 0's configuration precedes its `Display:` line and names the rotation `mRotation`, and reject another display's configuration. `AppearanceAndInsetsTest` uses the same scope for phone side bars and tablet bottom bars; both the preference and window configuration settle before navigation overlays change. |
 | `SystemWindowStateTest` | Reading the system's own windows for the waits in `DisplayOverlays`: a home app that is resumed, drawn, focused and has the current resources counts as settled; a pending relaunch, an undrawn window, older resources or the system's "isn't responding" dialog do not, and the dialog is named only when it is visible and owned by the system. `thisDevicesHomeScreenReadsAsSettled` presses Home and reads the device's real output. |
 
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |

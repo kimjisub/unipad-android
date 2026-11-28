@@ -11,6 +11,8 @@ import androidx.test.uiautomator.UiDevice
 internal object DisplaySettings {
     private const val APPLY_TIMEOUT_MS = 10000L
     private val SIZE = Regex("""(\d+)x(\d+)""")
+    private val ROTATION_FIELDS = listOf("mDisplayRotation", "mRotation")
+        .map { Regex("\\b$it=ROTATION_(0|90|180|270)\\b") }
 
     data class State(
         val size: Pair<Int, Int>,
@@ -21,14 +23,14 @@ internal object DisplaySettings {
     )
 
     /** The size and density overrides, which `wm` has on every supported version. */
-    private data class Metrics(
+    internal data class Metrics(
         val size: Pair<Int, Int>,
         val density: Int,
         val sizeOverride: Pair<Int, Int>?,
         val densityOverride: Int?,
     )
 
-    private fun readMetrics(device: UiDevice): Metrics {
+    internal fun readMetrics(device: UiDevice): Metrics {
         val sizes = device.executeShellCommand("wm size")
         fun size(prefix: String) = sizes.lineSequence().firstOrNull { it.startsWith(prefix) }
             ?.let { SIZE.find(it)!!.destructured.let { (w, h) -> w.toInt() to h.toInt() } }
@@ -44,7 +46,7 @@ internal object DisplaySettings {
         )
     }
 
-    /** Also reads the user rotation preference, which `wm` can read and set only from Android 11. */
+    /** Also reads the user rotation preference, which `wm` can read back from Android 12. */
     fun read(device: UiDevice): State {
         val metrics = readMetrics(device)
         val rotation = device.executeShellCommand("wm user-rotation").trim()
@@ -108,15 +110,29 @@ internal object DisplaySettings {
     /**
      * A phone display of [size] (portrait, as a phone reports it) and [density], turned to landscape as
      * the app runs on a phone. A naturally landscape display (a tablet) given only the size stays
-     * portrait and shows the landscape app in a small letterboxed window. Before Android 11 `wm`
-     * cannot lock the rotation, so there only the size and density change, and the landscape app
-     * turns a phone display itself.
+     * portrait and shows the landscape app in a small letterboxed window. Before Android 12 `wm`
+     * cannot read back the user rotation preference to restore it, and on Android 12 a size or
+     * density change re-locks a rotation lock to the portrait home screen's rotation (see [with]),
+     * so through Android 12 only the size and density change, and the landscape app turns a phone
+     * display itself. A rotation lock it cannot keep is refused (see [withSizeAndDensity]).
      */
     fun <T> withPhoneDisplay(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) with(device, size, density, Surface.ROTATION_90, block)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) with(device, size, density, Surface.ROTATION_90, block)
         else withSizeAndDensity(device, size, density, block)
 
+    /**
+     * Below Android 13 a size or density change makes the navigation bar re-lock a locked rotation to
+     * the natural one, and nothing reports when it has, so only a setting that re-locking leaves as
+     * it is (auto-rotate on, or locked to the natural rotation) is changed around; any other lock is
+     * refused before anything changes.
+     */
     private fun <T> withSizeAndDensity(device: UiDevice, size: Pair<Int, Int>, density: Int, block: () -> T): T {
+        val autoRotate = device.executeShellCommand("settings get system accelerometer_rotation").trim()
+        val userRotation = device.executeShellCommand("settings get system user_rotation").trim()
+        check(autoRotate == "1" || userRotation in setOf("0", "null")) {
+            "Display rotation is locked to $userRotation, which a size or density change before Android 13 " +
+                "re-locks to ${Surface.ROTATION_0}; turn auto-rotate on or lock it to ${Surface.ROTATION_0} first"
+        }
         val previous = readMetrics(device)
         try {
             setSize(device, size)
@@ -128,7 +144,12 @@ internal object DisplaySettings {
         }
     }
 
-    /** The display transition encloses overlay changes, so neither apply nor restore races them. */
+    /**
+     * The display transition encloses overlay changes, so neither apply nor restore races them.
+     * Requires Android 13: on Android 12 the navigation bar is rebuilt after a size or density
+     * change, and while the rotation is locked and the display shows its natural rotation, it
+     * re-locks the rotation there, overwriting the lock this writes or restores.
+     */
     fun <T> with(
         device: UiDevice,
         size: Pair<Int, Int>? = null,
@@ -136,6 +157,9 @@ internal object DisplaySettings {
         rotation: Int,
         block: () -> T,
     ): T {
+        check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            "A rotation lock with a size or density change needs Android 13; use withPhoneDisplay"
+        }
         val previous = read(device)
         var failure: Throwable? = null
         try {
@@ -179,10 +203,18 @@ internal object DisplaySettings {
         throw AssertionError("Display did not reach size=$size density=$density userRotation=$expectedUserRotation (was $userRotation) at the actual rotation within ${APPLY_TIMEOUT_MS}ms: $windows")
     }
 
+    /**
+     * Android 13 and later print the display's own configuration after its `Display:` line and name
+     * its rotation `mDisplayRotation`; Android 12 prints it just before that line, with only `mRotation`.
+     */
     internal fun applied(windows: String, size: Pair<Int, Int>, density: Int, userRotation: String, expectedUserRotation: String): Boolean {
-        val display = windows.substringAfter("mDisplayId=0 ", "").substringBefore("Display areas")
-        val config = display.lineSequence().firstOrNull { it.trimStart().startsWith("overrideConfig=") } ?: return false
-        val degrees = Regex("mDisplayRotation=ROTATION_(0|90|180|270)\\b").find(config)?.groupValues?.get(1)?.toInt() ?: return false
+        if ("mDisplayId=0 " !in windows) return false
+        val display = windows.substringAfter("mDisplayId=0 ").substringBefore("Display areas")
+        fun String.isConfig() = trimStart().startsWith("overrideConfig=")
+        val config = display.lineSequence().firstOrNull { it.isConfig() }
+            ?: windows.substringBefore("mDisplayId=0 ").substringAfterLast("mDisplayId=").lineSequence().lastOrNull { it.isConfig() }
+            ?: return false
+        val degrees = (ROTATION_FIELDS.firstNotNullOfOrNull { it.find(config) } ?: return false).groupValues[1].toInt()
         val actualRotation = degrees / 90
         val (width, height) = if (actualRotation % 2 == 0) size else size.second to size.first
         return userRotation == expectedUserRotation &&
